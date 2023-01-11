@@ -175,16 +175,16 @@ void Fontsel_impl::on_display() {
 void Fontsel_impl::update_font() {
     try {
         if (!family_.empty() && !face_.empty() && counter_->value() >= 1) {
-            ustring spec = font_spec_build(family_, face_, counter_->value());
-            fontspec_->assign(spec);
+            ustring spc = font_spec_build(family_, face_, counter_->value());
+            fontspec_->assign(spc);
 
             if (Painter pr = entry_->painter()) {
-                Font font = pr.select_font(spec);
+                Font font = pr.select_font(spc);
                 ustring psname = font.psname();
                 psname_->assign(psname.empty() ? "Not available" : psname);
             }
 
-            entry_->style().font("font").set(spec);
+            entry_->style().font("font") = spc;
         }
     }
 
@@ -266,15 +266,15 @@ void Fontsel_impl::update_tooltips() {
     table->hint_margin(4, 4, 2, 2);
     table->align_column(0, ALIGN_START);
     table->align_column(1, ALIGN_END);
-    ustring spec = font_size_change(style().font("font").spec(), 7);
+    ustring spc = font_size_change(style().font("font").spec(), 7);
 
     auto tp = std::make_shared<Text_impl>("++size:", ALIGN_END);
     table->put(tp, 0, 0, 1, 1, false, true);
-    tp->style().font("font").set(spec);
+    tp->style().font("font") = spc;
 
     tp = std::make_shared<Text_impl>("--size:", ALIGN_END);
     table->put(tp, 0, 1, 1, 1, false, true);
-    tp->style().font("font").set(spec);
+    tp->style().font("font") = spc;
 
     ustring iaccels, oaccels;
 
@@ -288,14 +288,14 @@ void Fontsel_impl::update_tooltips() {
         oaccels += accel.label();
     }
 
-    spec = font_set_face(spec, "Bold");
+    spc = font_set_face(spc, "Bold");
     tp = std::make_shared<Text_impl>(iaccels, ALIGN_END);
     table->put(tp, 1, 0, 1, 1, true, true);
-    tp->style().font("font").set(spec);
+    tp->style().font("font") = spc;
 
     tp = std::make_shared<Text_impl>(oaccels, ALIGN_END);
     table->put(tp, 1, 1, 1, 1, true, true);
-    tp->style().font("font").set(spec);
+    tp->style().font("font") = spc;
 
     counter_->set_tooltip(table);
 }

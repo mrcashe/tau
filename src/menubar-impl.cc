@@ -30,9 +30,9 @@
 namespace tau {
 
 Menubar_impl::Menubar_impl():
-    Menu_impl(OR_EAST)
+    Menu_impl(OR_EAST),
+    box_(std::make_shared<Box_impl>(OR_EAST, 12))
 {
-    box_ = std::make_shared<Box_impl>(OR_EAST, 12);
     insert(box_);
     connect_action(left_action_);
     connect_action(right_action_);

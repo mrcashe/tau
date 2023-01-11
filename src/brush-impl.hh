@@ -37,7 +37,7 @@ public:
     Color color;
 
     Brush_impl() {}
-    Brush_impl(const Color & c): color(c) {}
+    explicit Brush_impl(const Color & c): color(c) {}
 };
 
 } // namespace tau

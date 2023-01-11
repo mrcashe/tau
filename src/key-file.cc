@@ -47,7 +47,7 @@ public:
     Key_section & operator=(const Key_section & other) = default;
 
     void set_value(const ustring & name, const ustring & val) {
-        auto i = std::find_if(elems_.begin(), elems_.end(), [name](Pair & pair) { return name == pair.first; });
+        auto i = std::find_if(elems_.begin(), elems_.end(), [name](const Pair & pair) { return name == pair.first; });
 
         if (i == elems_.end()) {
             elems_.emplace_back(name, val);
@@ -64,7 +64,7 @@ public:
     }
 
     Storage::iterator find(const ustring & key_name) {
-        return std::find_if(elems_.begin(), elems_.end(), [key_name](Pair & pair) { return key_name == pair.first; });
+        return std::find_if(elems_.begin(), elems_.end(), [key_name](const Pair & pair) { return key_name == pair.first; });
     }
 
     void stream_out(ustring & os, char csep) {
@@ -136,22 +136,22 @@ public:
     }
 
     Storage::iterator find(const ustring & sect_name) {
-        return std::find_if(sections_.begin(), sections_.end(), [sect_name](Pair & pair) { return sect_name == pair.first; });
+        return std::find_if(sections_.begin(), sections_.end(), [sect_name](const Pair & pair) { return sect_name == pair.first; } );
     }
 
     bool has_section(const ustring & sect_name) const {
-        auto i = std::find_if(sections_.begin(), sections_.end(), [sect_name](const Pair & pair) { return sect_name == pair.first; });
+        auto i = std::find_if(sections_.begin(), sections_.end(), [sect_name](const Pair & pair) { return sect_name == pair.first; } );
         return sections_.end() != i;
     }
 
     bool has_key(const ustring & sect_name, const ustring & key_name) const {
-        auto i = std::find_if(sections_.begin(), sections_.end(), [sect_name](const Pair & pair) { return sect_name == pair.first; });
+        auto i = std::find_if(sections_.begin(), sections_.end(), [sect_name](const Pair & pair) { return sect_name == pair.first; } );
         if (i != sections_.end()) { return i->second.has_key(key_name); }
         return false;
     }
 
     Key_section & section(const ustring & sect_name) {
-        auto i = std::find_if(sections_.begin(), sections_.end(), [sect_name](Pair & pair) { return sect_name == pair.first; });
+        auto i = std::find_if(sections_.begin(), sections_.end(), [sect_name](const Pair & pair) { return sect_name == pair.first; } );
 
         if (i == sections_.end()) {
             sections_.emplace_back(sect_name,Key_section());

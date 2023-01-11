@@ -32,7 +32,7 @@ namespace tau {
 class Fileinfo_linux: public Fileinfo_posix {
 public:
 
-    Fileinfo_linux(const ustring & uri):
+    explicit Fileinfo_linux(const ustring & uri):
         Fileinfo_posix(uri)
     {
     }

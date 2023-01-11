@@ -48,27 +48,27 @@ static const std::map<Oper, DWORD> rops_ = {
 Painter_win::Painter_win():
     Painter_impl()
 {
-    select_font(Font::normal());
+    select_font_priv(Font::normal());
 }
 
 Painter_win::Painter_win(Winface_win * wf):
-    Painter_impl()
+    Painter_impl(),
+    hwnd_(wf->handle())
 {
-    hwnd_ = wf->handle();
     hdc_ = GetDC(hwnd_);
     dpi_ = wf->wdp()->dpi();
     SetBkMode(hdc_, TRANSPARENT);
-    select_font(Font::normal());
+    select_font_priv(Font::normal());
     wstate().wclip.set(wf->self()->size());
     wf->self()->signal_destroy().connect(fun(this, &Painter_win::on_destroy));
-    update_clip();
+    update_clip_priv();
 }
 
 Painter_win::Painter_win(Winface_win * wf, PAINTSTRUCT * pstruct):
     Painter_impl()
 {
     dpi_ = wf->wdp()->dpi();
-    select_font(Font::normal());
+    select_font_priv(Font::normal());
     begin_paint(wf, pstruct);
 }
 
@@ -94,7 +94,7 @@ void  Painter_win::done_dc() {
 
 void Painter_win::begin_paint(Winface_win * wf, PAINTSTRUCT * pstruct) {
     done_dc();
-    update_clip();
+    update_clip_priv();
     hdc_ = BeginPaint(wf->handle(), pstruct);
 
     if (hdc_) {
@@ -125,11 +125,11 @@ void Painter_win::set_font(Font_ptr font) {
             }
         }
 
-        select_font(font->spec());
+        select_font_priv(font->spec());
     }
 }
 
-Font_ptr Painter_win::select_font(const ustring & font_spec) {
+Font_ptr Painter_win::select_font_priv(const ustring & font_spec) {
     if (font_spec != state().font_spec) {
         auto wfp = std::make_shared<Font_win>(hdc_, dpi_, font_spec);
         signal_invalidate_.connect(fun(wfp, &Font_win::invalidate));
@@ -227,7 +227,7 @@ void Painter_win::set_clip() {
     }
 }
 
-void Painter_win::update_clip() {
+void Painter_win::update_clip_priv() {
     cr_ = to_winrect(wstate().wclip);
     set_clip();
 }

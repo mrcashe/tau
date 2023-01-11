@@ -42,9 +42,9 @@ class Text_impl: public Widget_impl {
 public:
 
     Text_impl();
-    Text_impl(Align xalign, Align yalign=ALIGN_CENTER);
-    Text_impl(const ustring & text, Align xalign=ALIGN_CENTER, Align yalign=ALIGN_CENTER);
-    Text_impl(Buffer buf, Align xalign=ALIGN_CENTER, Align yalign=ALIGN_CENTER);
+    explicit Text_impl(Align xalign, Align yalign=ALIGN_CENTER);
+    explicit Text_impl(const ustring & text, Align xalign=ALIGN_CENTER, Align yalign=ALIGN_CENTER);
+    explicit Text_impl(Buffer buf, Align xalign=ALIGN_CENTER, Align yalign=ALIGN_CENTER);
 
     // Overriden by Edit_impl.
     virtual void assign(const ustring & text);

@@ -36,7 +36,7 @@ namespace tau {
 class Pixmap_win: public Pixmap_impl {
 public:
 
-    Pixmap_win(unsigned depth, const Size & sz=Size());
+    explicit Pixmap_win(unsigned depth, const Size & sz=Size());
 
     // Overrides pure Pixmap_impl.
     Painter painter() override { return wrap(std::make_shared<Pixmap_painter_win>(this)); }
@@ -54,7 +54,9 @@ public:
     const uint8_t * raw() const override;
 
     // Overrides pure Pixmap_impl.
-    void resize(const Size & sz) override;
+    void resize(const Size & size) override {
+        resize_priv(size);
+    }
 
     // Overrides pure Pixmap_impl.
     void fill_rectangles(const Rect * rs, std::size_t nrs, const Color & c) override;
@@ -72,6 +74,7 @@ private:
     unsigned bpp() const;
     void put_pixel_impl(const Point & pt, uint32_t rgb);
     uint32_t get_pixel_impl(const Point & pt) const;
+    void resize_priv(const Size & sz);
 
 private:
 

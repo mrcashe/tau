@@ -112,9 +112,9 @@ private:
 
     Winmap              winmap_;
     ustring             copied_text_;
-    Loop_win_ptr        loop_;
     Painter_win_ptr     pr_;
     HINSTANCE           hinstance_;
+    Loop_win_ptr        loop_;
 
 private:
 

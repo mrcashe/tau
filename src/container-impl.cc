@@ -79,8 +79,6 @@ void Container_impl::unparent_child(Widget_impl * wi) {
     auto i = std::find_if(children_.begin(), children_.end(), [wi](Widget_ptr wp) { return wi == wp.get(); } );
 
     if (children_.end() != i) {
-//         std::cerr << "++ " << this << ": Container_impl::unparent_child(): " << wi << "\n";
-        Widget_impl * wi = i->get();
         wi->end_modal();
         wi->drop_focus();
         wi->ungrab_mouse();

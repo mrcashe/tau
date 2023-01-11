@@ -40,13 +40,13 @@ namespace tau {
 class Fileman_win: public Fileman_impl {
 public:
 
-    Fileman_win(Fileman_mode fs_type):
-        Fileman_impl(fs_type)
+    explicit Fileman_win(Fileman_mode fm_mode):
+        Fileman_impl(fm_mode)
     {
     }
 
-    Fileman_win(Fileman_mode fs_type, const ustring & path):
-        Fileman_impl(fs_type, path)
+    Fileman_win(Fileman_mode fm_mode, const ustring & path):
+        Fileman_impl(fm_mode, path)
     {
     }
 
@@ -166,13 +166,13 @@ protected:
 };
 
 // static
-Fileman_ptr Fileman_impl::create(Fileman_mode fs_type) {
-    return std::make_shared<Fileman_win>(fs_type);
+Fileman_ptr Fileman_impl::create(Fileman_mode fm_mode) {
+    return std::make_shared<Fileman_win>(fm_mode);
 }
 
 // static
-Fileman_ptr Fileman_impl::create(Fileman_mode fs_type, const ustring & path) {
-    return std::make_shared<Fileman_win>(fs_type, path);
+Fileman_ptr Fileman_impl::create(Fileman_mode fm_mode, const ustring & path) {
+    return std::make_shared<Fileman_win>(fm_mode, path);
 }
 
 } // namespace tau

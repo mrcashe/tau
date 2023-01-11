@@ -41,7 +41,7 @@ public:
 
     static Display_linux_ptr this_linux_display();
 
-    Display_linux(std::thread::id tid, const ustring & args=ustring());
+    explicit Display_linux(std::thread::id tid, const ustring & args=ustring());
 
     // Overrides pure Display_impl.
     Loop_ptr loop() override { return loop_; }

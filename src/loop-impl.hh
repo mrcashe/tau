@@ -75,7 +75,7 @@ protected:
     int                     runlevel_ = 0;
     Timers                  timers_;
     uint64_t                uidle_ = 200000;    // Idle timeout in microseconds.
-    uint64_t                next_idle_;
+    uint64_t                next_idle_ = 0;
     std::thread::id         tid_;
 
     signal<void()>          signal_start_;

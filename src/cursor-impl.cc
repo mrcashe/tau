@@ -63,7 +63,6 @@ bool Cursor_impl::check_ani_header(std::ifstream & is) {
 //static
 std::vector<unsigned> Cursor_impl::list_ani_sizes(std::ifstream & is) {
     std::vector<unsigned> v;
-    bool is_cursor = false;
 
     if (check_ani_header(is)) {
         while (!is.eof()) {
@@ -71,6 +70,8 @@ std::vector<unsigned> Cursor_impl::list_ani_sizes(std::ifstream & is) {
             is.read(buf, 8);
 
             if (!is.eof()) {
+                // FIXME this code needs to be rewritten!
+                bool is_cursor = false;
                 if (std::streamsize(8) != is.gcount()) { return v; }
                 std::string chunk(buf, 4);
                 std::streamoff cbytes = u32(buf+4), cnext = is.tellg()+cbytes;

@@ -411,16 +411,12 @@ std::string Encoding::encode(const ustring & str) const {
 
         for (ustring::size_type i = 0; i < str.size(); ++i) {
             char32_t uc = str[i];
-            char c = '\0';
+            char c = uc;
 
             if (uc > 0x007f) {
                 c = data->encode(uc);
                 // FIXME What about 0 here?
                 if ('\0' == c) { c = 0xff; }
-            }
-
-            else {
-                c = static_cast<char>(uc);
             }
 
             result += c;

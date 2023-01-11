@@ -32,8 +32,8 @@ class Slider_impl: public Box_impl {
 public:
 
     Slider_impl();
-    Slider_impl(Orientation orient, bool autohide=false);
-    Slider_impl(Scroller_ptr scroller);
+    explicit Slider_impl(Orientation orient, bool autohide=false);
+    explicit Slider_impl(Scroller_ptr scroller);
     Slider_impl(Scroller_ptr scroller, Orientation orient, bool autohide=false);
 
     double location() const;

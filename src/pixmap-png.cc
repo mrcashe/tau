@@ -53,14 +53,14 @@ Pixmap_ptr Pixmap_impl::load_png_from_file(const ustring & path) {
     png_set_sig_bytes(png_ptr, 8);
     png_read_info(png_ptr, info_ptr);
     unsigned ctype = png_get_color_type(png_ptr, info_ptr);
-    unsigned depth = png_get_bit_depth(png_ptr, info_ptr);
+    unsigned bit_depth = png_get_bit_depth(png_ptr, info_ptr);
 
     if (PNG_COLOR_TYPE_PALETTE == ctype) { png_set_palette_to_rgb(png_ptr); }
-    if (16 == depth) { png_set_strip_16(png_ptr); }
+    if (16 == bit_depth) { png_set_strip_16(png_ptr); }
     png_read_update_info(png_ptr, info_ptr);
     ctype = png_get_color_type(png_ptr, info_ptr);
-    depth = png_get_bit_depth(png_ptr, info_ptr);
-    if (8 != depth) { throw bad_pixmap(str_format(path, ": PNG: failed to set 8 bit depth")); }
+    bit_depth = png_get_bit_depth(png_ptr, info_ptr);
+    if (8 != bit_depth) { throw bad_pixmap(str_format(path, ": PNG: failed to set 8 bit depth")); }
     int width = png_get_image_width(png_ptr, info_ptr);
     int height = png_get_image_height(png_ptr, info_ptr);
 

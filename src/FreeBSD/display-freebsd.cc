@@ -55,11 +55,11 @@ tau::Display_freebsd_ptr new_display(std::thread::id tid, const tau::ustring & a
 namespace tau {
 
 Display_freebsd::Display_freebsd(std::thread::id tid, const ustring & args):
-    Display_xcb()
+    Display_xcb(),
+    loop_(Loop_freebsd::this_freebsd_loop())
 {
     tid_ = tid;
     dpid_ = dpcnt_;
-    loop_ = Loop_freebsd::this_freebsd_loop();
     open(args);
 }
 

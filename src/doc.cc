@@ -44,35 +44,24 @@ bool Element::has_attributes() const {
 }
 
 bool Element::has_attribute(const ustring & attr_name) const {
-    for (auto & attr: pdata->attrs) {
-        if (attr.first == attr_name) {
-            return true;
-        }
-    }
-
-    return false;
+    return std::any_of(pdata->attrs.begin(), pdata->attrs.end(), [&attr_name](const std::pair<ustring, ustring> & p) { return attr_name == p.first; } );
 }
 
 ustring Element::attribute(const ustring & attr_name) const {
-    for (auto & attr: pdata->attrs) {
-        if (attr.first == attr_name) {
-            return attr.second;
-        }
-    }
-
-    return ustring();
+    auto i = std::find_if(pdata->attrs.begin(), pdata->attrs.end(), [&attr_name](const std::pair<ustring, ustring> & p) { return attr_name == p.first; } );
+    return i != pdata->attrs.end() ? i->second : ustring();
 }
 
 void Element::set_attribute(const ustring & attr_name, const ustring & attr_value) {
-    for (auto & attr: pdata->attrs) {
-        if (attr.first == attr_name) {
-            attr.first = attr_name;
-            attr.second = attr_value;
-            return;
-        }
+    auto i = std::find_if(pdata->attrs.begin(), pdata->attrs.end(), [&attr_name](const std::pair<ustring, ustring> & p) { return attr_name == p.first; } );
+
+    if (i != pdata->attrs.end()) {
+        i->first = attr_name;
+        i->second = attr_value;
+        return;
     }
 
-    pdata->attrs.emplace_back(std::pair<ustring, ustring>(attr_name, attr_value));
+    pdata->attrs.emplace_back(std::make_pair(attr_name, attr_value));
 }
 
 void Element::remove_attribute(const ustring & attr_name) {

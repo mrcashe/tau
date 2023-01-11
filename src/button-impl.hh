@@ -37,12 +37,12 @@ class Button_base_impl: public Frame_impl {
 protected:
 
     Button_base_impl();
-    Button_base_impl(const ustring & label);
-    Button_base_impl(Widget_ptr img);
+    explicit Button_base_impl(const ustring & label);
+    explicit Button_base_impl(Widget_ptr img);
     Button_base_impl(Widget_ptr img, const ustring & label);
     Button_base_impl(const ustring & icon_name, int icon_size);
     Button_base_impl(const ustring & label, const ustring & icon_name, int icon_size);
-    Button_base_impl(Action_base & action, bool use_label=true);
+    explicit Button_base_impl(Action_base & action, bool use_label=true);
     Button_base_impl(Action_base & action, int icon_size, bool use_label=true);
 
 public:
@@ -92,12 +92,12 @@ class Button_impl: public Button_base_impl {
 public:
 
     Button_impl();
-    Button_impl(const ustring & label);
-    Button_impl(Widget_ptr img);
+    explicit Button_impl(const ustring & label);
+    explicit Button_impl(Widget_ptr img);
     Button_impl(Widget_ptr img, const ustring & label);
     Button_impl(const ustring & icon_name, int icon_size);
     Button_impl(const ustring & label, const ustring & icon_name, int icon_size);
-    Button_impl(Action & action, bool use_label=true);
+    explicit Button_impl(Action & action, bool use_label=true);
     Button_impl(Action & action, int icon_size, bool use_label=true);
 
     void enable_repeat();
@@ -141,12 +141,12 @@ class Toggle_impl: public Button_base_impl {
 public:
 
     Toggle_impl();
-    Toggle_impl(const ustring & label);
-    Toggle_impl(Widget_ptr img);
+    explicit Toggle_impl(const ustring & label);
+    explicit Toggle_impl(Widget_ptr img);
     Toggle_impl(Widget_ptr img, const ustring & label);
     Toggle_impl(const ustring & icon_name, int icon_size);
     Toggle_impl(const ustring & label, const ustring & icon_name, int icon_size);
-    Toggle_impl(Toggle_action & action, bool use_label=true);
+    explicit Toggle_impl(Toggle_action & action, bool use_label=true);
     Toggle_impl(Toggle_action & action, int icon_size, bool use_label=true);
 
     bool toggled() const { return toggled_; }

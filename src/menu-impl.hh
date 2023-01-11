@@ -148,12 +148,14 @@ protected:
 
     Icon_ptr icon_;
 
-    Menu_image() {
-        icon_ = std::make_shared<Icon_impl>();
+    Menu_image():
+        icon_(std::make_shared<Icon_impl>())
+    {
     }
 
-    Menu_image(const ustring & icon_name) {
-        icon_ = std::make_shared<Icon_impl>(icon_name, SMALL_ICON);
+    explicit Menu_image(const ustring & icon_name):
+        icon_(std::make_shared<Icon_impl>(icon_name, SMALL_ICON))
+    {
     }
 
     void assign_icon(const ustring & icon_name) {
@@ -168,7 +170,7 @@ class Menu_item_impl: public Text_impl {
 protected:
 
     Menu_item_impl();
-    Menu_item_impl(const ustring & label);
+    explicit Menu_item_impl(const ustring & label);
 };
 
 // ----------------------------------------------------------------------------
@@ -214,7 +216,7 @@ private:
 class Action_menu_impl: public Menu_item_impl, public Menu_image {
 public:
 
-    Action_menu_impl(Action & action);
+    explicit Action_menu_impl(Action & action);
 
     Action & action() {
         return action_;
@@ -260,7 +262,7 @@ private:
 class Toggle_menu_impl: public Menu_item_impl {
 public:
 
-    Toggle_menu_impl(Toggle_action & toggle_action, Check_style check_style=CHECK_VSTYLE, Border_style border_style=BORDER_INSET);
+    explicit Toggle_menu_impl(Toggle_action & toggle_action, Check_style check_style=CHECK_VSTYLE, Border_style border_style=BORDER_INSET);
 
     Text_ptr accel_label() {
         return accel_label_;
@@ -350,7 +352,7 @@ private:
 class Check_menu_impl: public Menu_item_impl {
 public:
 
-    Check_menu_impl(const ustring & label, bool checked=false);
+    explicit Check_menu_impl(const ustring & label, bool checked=false);
     Check_menu_impl(const ustring & label, Check_style check_style, bool checked=false);
     Check_menu_impl(const ustring & label, Border_style border_style, bool checked=false);
     Check_menu_impl(const ustring & label, Check_style check_style, Border_style border_style, bool checked=false);

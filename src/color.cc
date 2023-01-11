@@ -361,9 +361,11 @@ void Color::calc_rgb() {
 void Color::calc_hsv() {
     double cmax = std::max(red_, std::max(green_, blue_));
     double cmin = std::min(red_, std::min(green_, blue_));
-    double hue = 0.0, d = cmax-cmin;
+    double d = cmax-cmin;
 
     if (0.0 != d) {
+        double hue = 0.0;
+
         if (green_ == cmax) {
             hue = 2.0+((blue_-red_)/d);
         }

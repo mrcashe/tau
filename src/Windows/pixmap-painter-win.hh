@@ -36,7 +36,7 @@ namespace tau {
 class Pixmap_painter_win: public Painter_impl {
 public:
 
-    Pixmap_painter_win(Pixmap_impl * pixmap);
+    explicit Pixmap_painter_win(Pixmap_impl * pixmap);
 
     // Overrides pure Painter_impl.
     Vector text_size(const ustring & s) override;

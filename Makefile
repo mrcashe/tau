@@ -38,7 +38,7 @@ export hh_impl_options = $(hh_option) -I$(topdir)/src -I$(confdir)/src
 SUBDIRS = $(builddir)
 RECURSIVE_TARGETS = all-recursive install-recursive uninstall-recursive clean-recursive
 
-.PHONY: $(RECURSIVE_TARGETS) configure rm dist
+.PHONY: $(RECURSIVE_TARGETS) configure rm dist test-links
 
 $(RECURSIVE_TARGETS):
 	@target=`echo $@ | sed s/-recursive//`;\
@@ -53,6 +53,15 @@ configure:
 
 rm:
 	@rm -vrf $(builddir) $(bindir) $(topdir)/conf
+
+test-links:
+	@if [ ! -d $$builddir/test ]; then \
+	mkdir -vp "$$builddir/test"; \
+	for f in $(wildcard $(srcdir)/test/*.cc); do \
+	    cc=`basename $$f`; \
+	    $$link "$$srcdir/test/$$cc" "$$builddir/test/$$cc"; \
+	done; \
+	fi
 
 xz:
 	@cd ../; \

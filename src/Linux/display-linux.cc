@@ -59,11 +59,11 @@ tau::Display_linux_ptr new_display(std::thread::id tid, const tau::ustring & arg
 namespace tau {
 
 Display_linux::Display_linux(std::thread::id tid, const ustring & args):
-    Display_xcb()
+    Display_xcb(),
+    loop_(Loop_linux::this_linux_loop())
 {
     tid_ = tid;
     dpid_ = dpcnt_;
-    loop_ = Loop_linux::this_linux_loop();
     open(args);
 }
 

@@ -100,11 +100,10 @@ Window_cptr Display_impl::winptr(const Widget_impl * wi) const {
 }
 
 void Display_impl::add_window(Window_ptr wip) {
-    Loop loop;
     windows_.push_back(wip);
     Window_impl * wii = wip.get();
-    if (!loop.running()) { loop.signal_start().connect(fun(wii, &Window_impl::show)); }
-    loop.signal_quit().connect(fun(wii, &Window_impl::close));
+    if (!loop()->running()) { loop()->signal_start().connect(fun(wii, &Window_impl::show)); }
+    loop()->signal_quit().connect(fun(wii, &Window_impl::close));
     wii->signal_close().connect(tau::bind(fun(this, &Display_impl::remove_window), wii));
     wii->signal_enable().connect(tau::bind(fun(this, &Display_impl::on_window_sensitivity), wii));
     wii->signal_disable().connect(tau::bind(fun(this, &Display_impl::on_window_sensitivity), wii));

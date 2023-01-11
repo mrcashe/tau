@@ -429,46 +429,46 @@ double Counter_impl::get_value() {
     ustring s = entry_->text();
 
     if (16 == base_) {
-        uintmax_t value = 0;
+        uintmax_t val = 0;
 
         for (char32_t wc: s) {
-            value <<= 4;
-            if (wc < 0x0030) { return value; }
-            if (wc < 0x003A) { value |= wc-0x0030; continue; }
-            if (wc < 0x0041) { return value; }
-            if (wc < 0x0047) { value |= wc-0x0037; continue; }
-            if (wc < 0x0061) { return value; }
-            if (wc < 0x0067) { value |= wc-0x0057; continue; }
-            return value;
+            val <<= 4;
+            if (wc < 0x0030) { return val; }
+            if (wc < 0x003A) { val |= wc-0x0030; continue; }
+            if (wc < 0x0041) { return val; }
+            if (wc < 0x0047) { val |= wc-0x0037; continue; }
+            if (wc < 0x0061) { return val; }
+            if (wc < 0x0067) { val |= wc-0x0057; continue; }
+            return val;
         }
 
-        return value;
+        return val;
     }
 
     if (8 == base_) {
-        uintmax_t value = 0;
+        uintmax_t val = 0;
 
         for (char32_t wc: s) {
-            value <<= 3;
-            if (wc < 0x0030) { return value; }
-            if (wc < 0x0038) { value |= wc-0x0030; continue; }
-            return value;
+            val <<= 3;
+            if (wc < 0x0030) { return val; }
+            if (wc < 0x0038) { val |= wc-0x0030; continue; }
+            return val;
         }
 
-        return value;
+        return val;
     }
 
     if (2 == base_) {
-        uintmax_t value = 0;
+        uintmax_t val = 0;
 
         for (char32_t wc: s) {
-            value <<= 1;
-            if (wc < 0x0030) { return value; }
-            if (wc < 0x0032) { value |= wc-0x0030; continue; }
-            return value;
+            val <<= 1;
+            if (wc < 0x0030) { return val; }
+            if (wc < 0x0032) { val |= wc-0x0030; continue; }
+            return val;
         }
 
-        return value;
+        return val;
     }
 
     double d = 0;

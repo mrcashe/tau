@@ -36,7 +36,7 @@ class Painter_win: public Painter_impl {
 public:
 
     Painter_win();
-    Painter_win(Winface_win * wf);
+    explicit Painter_win(Winface_win * wf);
     Painter_win(Winface_win * wf, PAINTSTRUCT * pstruct);
    ~Painter_win();
 
@@ -55,10 +55,14 @@ protected:
     void set_font(Font_ptr font) override;
 
     // Overrides pure Painter_impl.
-    Font_ptr select_font(const ustring & font_spec) override;
+    Font_ptr select_font(const ustring & spec) override {
+        return select_font_priv(spec);
+    }
 
     // Overrides pure Painter_impl.
-    void update_clip() override;
+    void update_clip() override {
+        update_clip_priv();
+    }
 
     // Overrides pure Painter_impl.
     void stroke_rectangle(const tau::Rect & r) override;
@@ -99,6 +103,8 @@ private:
     DWORD rop(Oper op);
     void  on_destroy();
     void  set_clip();
+    Font_ptr select_font_priv(const ustring & font_spec);
+    void update_clip_priv();
 
 private:
 

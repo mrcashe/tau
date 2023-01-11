@@ -136,32 +136,32 @@ ustring List_text_impl::at(int row) const {
     return ustring();
 }
 
-void List_text_impl::on_row_selected(int br) {
+void List_text_impl::on_row_selected(int row) {
     for (const Holder & hol: holders_) {
-        if (hol.row == br) {
-            selrow_ = br;
+        if (hol.row == row) {
+            selrow_ = row;
             selected_ = hol.str;
-            signal_text_selected_(br, hol.str);
+            signal_text_selected_(row, hol.str);
             break;
         }
     }
 }
 
-void List_text_impl::on_row_activated(int br) {
+void List_text_impl::on_row_activated(int row) {
     for (const Holder & hol: holders_) {
-        if (hol.row == br) {
-            signal_text_activated_(br, hol.str);
+        if (hol.row == row) {
+            signal_text_activated_(row, hol.str);
             break;
         }
     }
 }
 
-void List_text_impl::on_row_removed(int br) {
+void List_text_impl::on_row_removed(int row) {
     for (auto i = holders_.begin(); i != holders_.end(); ++i) {
-        if (i->row == br) {
+        if (i->row == row) {
             const ustring str = i->str;
             holders_.erase(i);
-            signal_text_removed_(br, str);
+            signal_text_removed_(row, str);
             break;
         }
     }
@@ -178,14 +178,14 @@ void List_text_impl::on_row_moved(int old_br, int new_br) {
 }
 
 void List_text_impl::refresh_selection() {
-    int br = selected_row();
+    int row = selected_row();
 
-    if (INT_MIN != br) {
+    if (INT_MIN != row) {
         for (const Holder & hol: holders_) {
-            if (hol.row == br) {
-                selrow_ = br;
+            if (hol.row == row) {
+                selrow_ = row;
                 selected_ = hol.str;
-                signal_text_selected_(br, hol.str);
+                signal_text_selected_(row, hol.str);
                 break;
             }
         }

@@ -40,8 +40,8 @@ public:
     using Radio_signal_ptr = std::shared_ptr<Radio_signal>;
 
     Check_impl(bool checked=false);
-    Check_impl(Check_style cs, bool checked=false);
-    Check_impl(Border_style bs, bool checked=false);
+    explicit Check_impl(Check_style cs, bool checked=false);
+    explicit Check_impl(Border_style bs, bool checked=false);
     Check_impl(Check_style cs, Border_style bs, bool checked=false);
 
     void set_check_style(Check_style cs);

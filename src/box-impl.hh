@@ -36,7 +36,7 @@ namespace tau {
 class Box_impl: public Container_impl {
 public:
 
-    Box_impl(Orientation orient, unsigned spacing=0);
+    explicit Box_impl(Orientation orient, unsigned spacing=0);
    ~Box_impl() { destroy_ = true; }
 
     Align align() const { return align_; }

@@ -314,13 +314,7 @@ void Menu_impl::unmark() {
 }
 
 bool Menu_impl::has_enabled_items() const {
-    for (auto wp: items_) {
-        if (!wp->disabled()) {
-            return true;
-        }
-    }
-
-    return false;
+    return std::any_of(items_.begin(), items_.end(), [](Widget_ptr wp) { return !wp->disabled(); } );
 }
 
 bool Menu_impl::on_escape() {

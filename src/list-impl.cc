@@ -39,9 +39,9 @@
 namespace tau {
 
 List_impl::List_impl():
-    Table_impl()
+    Table_impl(),
+    table_(std::make_shared<Table_impl>())
 {
-    table_ = std::make_shared<Table_impl>();
     table_->style().redirect("background-whitespace", "background");
     table_->signal_mouse_down().connect(fun(this, &List_impl::on_table_mouse_down));
     table_->signal_mouse_double_click().connect(fun(this, &List_impl::on_table_mouse_double_click));
@@ -213,9 +213,9 @@ int List_impl::insert(Widget_ptr wp, int position, Align align, bool shrink) {
     Table::Span trng = table_->span();
     auto wps = table_->children_within_range(trng.xmin, position, trng.xmax, trng.ymax);
 
-    for (auto wp: wps) {
-        Table::Span rng = table_->span(wp);
-        table_->respan(wp, rng.xmin, rng.ymin+1, rng.xmax-rng.xmin, rng.ymax-rng.ymin);
+    for (auto w: wps) {
+        Table::Span rng = table_->span(w);
+        table_->respan(w, rng.xmin, rng.ymin+1, rng.xmax-rng.xmin, rng.ymax-rng.ymin);
     }
 
     int xx = trng.xmax > trng.xmin ? trng.xmin : 0;
@@ -562,7 +562,7 @@ int List_impl::prev_row() {
     if (sel.xmax > sel.xmin && sel.ymax > sel.ymin) {
         if (branches_.size() > 1) {
             auto iter = std::find_if(branches_.rbegin(), branches_.rend(),
-                                     [sel](std::pair<const int, Branch> & p) { return p.first == sel.ymin; });
+                                     [sel](const std::pair<const int, Branch> & p) { return p.first == sel.ymin; });
 
             if (branches_.rend() != iter) {
                 if (++iter != branches_.rend()) {
@@ -681,11 +681,11 @@ void List_impl::align(Widget_ptr wp, Align xalign, Align yalign) {
     table_->align(wp.get(), xalign, yalign);
 }
 
-bool List_impl::row_marked(int br) {
+bool List_impl::row_marked(int row) {
     std::vector<Table::Span> v = table_->marks();
 
     for (Table::Span & rng: v) {
-        if (rng.ymin == br) {
+        if (rng.ymin == row) {
             return true;
         }
     }
@@ -954,23 +954,22 @@ void List_impl::hide_header(int column) {
 
 void List_impl::show_sort_marker(int column, bool descend) {
     hide_sort_marker();
+    auto i = std::find_if(headers_.begin(), headers_.end(), [column](Header & hdr) { return hdr.column == column; } );
 
-    for (auto & hdr: headers_) {
-        if (column == hdr.column) {
-            ustring picto_name = descend ? "picto-up" : "picto-down";
+    if (i != headers_.end()) {
+        ustring picto_name = descend ? "picto-up" : "picto-down";
 
-            if (!hdr.marker) {
-                hdr.marker = std::make_shared<Icon_impl>(picto_name, 12);
-                hdr.marker->hint_margin(2, 4, 0, 0);
-                hdr.box->insert_after(hdr.marker, hdr.title.get(), true);
-            }
-
-            else {
-                std::static_pointer_cast<Icon_impl>(hdr.marker)->assign(picto_name, 12);
-            }
-
-            return;
+        if (!i->marker) {
+            i->marker = std::make_shared<Icon_impl>(picto_name, 12);
+            i->marker->hint_margin(2, 4, 0, 0);
+            i->box->insert_after(i->marker, i->title.get(), true);
         }
+
+        else {
+            std::static_pointer_cast<Icon_impl>(i->marker)->assign(picto_name, 12);
+        }
+
+        return;
     }
 }
 
