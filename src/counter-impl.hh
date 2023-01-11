@@ -38,7 +38,7 @@ class Counter_impl: public Frame_impl {
 public:
 
     Counter_impl(double value=0.0, double max_value=0.0, double min_value=0.0);
-    Counter_impl(Border_style bs, double value=0.0, double max_value=0.0, double min_value=0.0);
+    explicit Counter_impl(Border_style bs, double value=0.0, double max_value=0.0, double min_value=0.0);
 
     // Overrides Frame_impl.
     void set_border_style(Border_style bs) override;

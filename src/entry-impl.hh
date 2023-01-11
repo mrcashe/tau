@@ -39,8 +39,8 @@ class Entry_impl: public Frame_impl {
 public:
 
     Entry_impl(Border_style border_style=BORDER_INSET);
-    Entry_impl(Align text_align, Border_style border_style=BORDER_INSET);
-    Entry_impl(const ustring & text, Border_style border_style=BORDER_INSET);
+    explicit Entry_impl(Align text_align, Border_style border_style=BORDER_INSET);
+    explicit Entry_impl(const ustring & text, Border_style border_style=BORDER_INSET);
     Entry_impl(const ustring & text, Align text_align, Border_style border_style=BORDER_INSET);
 
     void allow_edit();

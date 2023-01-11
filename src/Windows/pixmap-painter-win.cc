@@ -34,8 +34,10 @@ Pixmap_painter_win::Pixmap_painter_win(Pixmap_impl * pixmap):
     Painter_impl(),
     pixmap_(pixmap)
 {
-    pixmap->signal_destroy().connect(fun(this, &Pixmap_painter_win::on_pixmap_destroy));
-    if (pixmap) { wstate().wclip.set(pixmap->size()); }
+    if (pixmap) {
+        pixmap->signal_destroy().connect(fun(this, &Pixmap_painter_win::on_pixmap_destroy));
+        wstate().wclip.set(pixmap->size());
+    }
 }
 
 // Overrides pure Painter_impl.

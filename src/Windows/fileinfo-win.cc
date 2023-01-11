@@ -35,7 +35,7 @@ namespace tau {
 
 struct Fileinfo_win: public Fileinfo_impl {
 
-    Fileinfo_win(const ustring & uri) {
+    explicit Fileinfo_win(const ustring & uri) {
         uri_ = uri;
         update_stat();
     }

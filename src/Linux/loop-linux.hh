@@ -83,7 +83,7 @@ class Loop_linux: public Loop_posix {
 public:
 
     static Loop_linux_ptr this_linux_loop();
-    Loop_linux(std::thread::id tid);
+    explicit Loop_linux(std::thread::id tid);
 
     // Overrides pure Loop_impl.
     File_monitor_ptr create_file_monitor(const ustring & path, int mask) override;

@@ -37,7 +37,7 @@ class Navigator_impl: public Bin_impl {
 public:
 
     Navigator_impl();
-    Navigator_impl(const ustring & path);
+    explicit Navigator_impl(const ustring & path);
    ~Navigator_impl();
 
     ustring dir() const;

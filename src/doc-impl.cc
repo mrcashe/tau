@@ -284,9 +284,10 @@ const std::map<tau::ustring, tau::ustring> ent_ = {
 };
 
 std::size_t count_lines(const tau::ustring & str) {
-    std::size_t n = 0, pos = 0, len = str.size();
+    std::size_t n = 0, len = str.size();
 
     if (0 != len) {
+        std::size_t pos = 0;
         ++n;
 
         while (pos < len) {

@@ -36,7 +36,7 @@ Pixmap_win::Pixmap_win(unsigned depth, const Size & sz):
 {
     std::memset(&info_, 0, sizeof(info_));
     info_.bmiHeader.biSize = sizeof(info_);
-    if (sz) { resize(sz); }
+    if (sz) { resize_priv(sz); }
 }
 
 // Overrides pure Pixmap_impl.
@@ -64,14 +64,13 @@ unsigned Pixmap_win::bpp() const {
     return 0 == nbits ? 1 : nbits;
 }
 
-// Overrides pure Pixmap_impl.
-void Pixmap_win::resize(const Size & sz) {
-    std::size_t nwords, nbytes;
+void Pixmap_win::resize_priv(const Size & sz) {
+    std::size_t nbytes;
     unsigned nbits = 1 == depth_ ? 1 : 32;
 
     if (1 == nbits) {
-        nwords = sz.width() >> 5;
-        stride_ = 0x1f & sz.width() ? 1 : 0;
+        std::size_t nwords = sz.width() >> 5;
+        stride_ = (0x1f & sz.width()) ? 1 : 0;
         stride_ += nwords;
         stride_ *= 4;
         nbytes = stride_*sz.height();
@@ -129,7 +128,7 @@ uint32_t Pixmap_win::get_pixel_impl(const Point & pt) const {
         unsigned shift = 7-(0x07 & pt.x());
 
         if (index < raw_.size()) {
-            return raw_[index] & (1 << shift) ? 0 : 0x00ffffff;
+            return (raw_[index] & (1 << shift)) ? 0 : 0x00ffffff;
         }
 
         return 0;

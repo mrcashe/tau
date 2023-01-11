@@ -80,10 +80,9 @@ void Submenu_impl::on_menu_disable() {
 
 Action_menu_impl::Action_menu_impl(Action & action):
     Menu_item_impl(action.label()),
-    action_(action)
+    action_(action),
+    accel_label_(std::make_shared<Text_impl>())
 {
-    accel_label_ = std::make_shared<Text_impl>();
-
     if (action_.disabled()) { freeze(); }
     if (action_.hidden()) { disappear(); }
 
@@ -162,10 +161,9 @@ void Action_menu_impl::on_action_destroy() {
 Toggle_menu_impl::Toggle_menu_impl(Toggle_action & toggle_action, Check_style check_style, Border_style border_style):
     Menu_item_impl(toggle_action.label()),
     action_(toggle_action),
-    check_(std::make_shared<Check_impl>(check_style, border_style))
+    check_(std::make_shared<Check_impl>(check_style, border_style)),
+    accel_label_(std::make_shared<Text_impl>())
 {
-    accel_label_ = std::make_shared<Text_impl>();
-
     if (action_.disabled()) { freeze(); }
     if (action_.hidden()) { disappear(); }
 
@@ -309,30 +307,30 @@ void Slot_menu_impl::init() {
 // ----------------------------------------------------------------------------
 
 Check_menu_impl::Check_menu_impl(const ustring & label, bool checked):
-    Menu_item_impl(label)
+    Menu_item_impl(label),
+    check_(std::make_shared<Check_impl>(checked))
 {
-    check_ = std::make_shared<Check_impl>(checked);
     init();
 }
 
 Check_menu_impl::Check_menu_impl(const ustring & label, Check_style check_style, bool checked):
-    Menu_item_impl(label)
+    Menu_item_impl(label),
+    check_(std::make_shared<Check_impl>(check_style, checked))
 {
-    check_ = std::make_shared<Check_impl>(check_style, checked);
     init();
 }
 
 Check_menu_impl::Check_menu_impl(const ustring & label, Border_style border_style, bool checked):
-    Menu_item_impl(label)
+    Menu_item_impl(label),
+    check_(std::make_shared<Check_impl>(border_style, checked))
 {
-    check_ = std::make_shared<Check_impl>(border_style, checked);
     init();
 }
 
 Check_menu_impl::Check_menu_impl(const ustring & label, Check_style check_style, Border_style border_style, bool checked):
-    Menu_item_impl(label)
+    Menu_item_impl(label),
+    check_(std::make_shared<Check_impl>(check_style, border_style, checked))
 {
-    check_ = std::make_shared<Check_impl>(check_style, border_style, checked);
     init();
 }
 

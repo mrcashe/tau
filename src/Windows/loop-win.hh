@@ -120,7 +120,7 @@ public:
 
     static Loop_win_ptr this_win_loop();
 
-    Loop_win(std::thread::id tid);
+    explicit Loop_win(std::thread::id tid);
 
     // Overrides pure Loop_impl.
     File_monitor_ptr create_file_monitor(const ustring & path, int mask) override;

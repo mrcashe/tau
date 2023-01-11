@@ -131,15 +131,15 @@ private:
     Display_win_ptr     dp_;
     HWND                hwnd_;
     RECT                keep_rect_;
-    unsigned            keep_style_;
+    unsigned            keep_style_ = 0;
     bool                tme_ = false;  // TrackMouseEvent() called.
     bool                want_fullscreen_ = false;
     bool                want_maximize_ = false;
     bool                want_minimize_ = false;
     bool                visible_ = false;
-    Window_impl *       self_;
-    Toplevel_impl *     tpl_;
-    Popup_impl *        popup_;
+    Window_impl *       self_ = nullptr;
+    Toplevel_impl *     tpl_ = nullptr;
+    Popup_impl *        popup_ = nullptr;
     HCURSOR             icursor_ = NULL;    // hCursor from class.
 
 private:

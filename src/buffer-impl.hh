@@ -69,7 +69,7 @@ struct Buffer_impl {
         std::u32string  s;
 
         Holder() = default;
-        Holder(const std::u32string & str): s(str) {}
+        explicit Holder(const std::u32string & str): s(str) {}
     };
 
     using Rows = std::vector<Holder>;

@@ -35,7 +35,7 @@ class Cycle_text_impl: public Cycle_impl {
 public:
 
     Cycle_text_impl(Border_style bs=BORDER_INSET);
-    Cycle_text_impl(Align align);
+    explicit Cycle_text_impl(Align align);
     Cycle_text_impl(Border_style bs, Align align);
 
     void add_text(const ustring & text, const ustring & tooltip=ustring());

@@ -56,7 +56,7 @@ tau::ustring read_utf16(const char * p, std::size_t nbytes) {
     while (nbytes > 1) {
         char16_t wc = u16(p);
         p += 2;
-        nbytes = nbytes > 1 ? nbytes-2 : 0;
+        nbytes -= 2;
 
         if (0 == sur) {
             if (tau::char16_is_surrogate(wc)) {
@@ -203,7 +203,7 @@ Font_win::Font_win(HDC hdc, unsigned dpi, const ustring & font_spec):
     lf.lfQuality = DEFAULT_QUALITY;
     lf.lfPitchAndFamily = DEFAULT_PITCH|FF_DONTCARE;
     ustring fam = font_family_from_spec(font_spec);
-    size_t len = std::min(size_t(LF_FACESIZE), fam.bytes());
+    std::size_t len = std::min(std::size_t(LF_FACESIZE), fam.bytes());
     memcpy(lf.lfFaceName, fam.c_str(), len);
     lf.lfFaceName[len < LF_FACESIZE ? len : LF_FACESIZE-1] = '\0';
 
@@ -277,16 +277,16 @@ Font_win::Font_win(HDC hdc, unsigned dpi, const ustring & font_spec):
                     uint16_t pse = u16(b+index+2);
                     uint16_t name_id = u16(b+index+6);
                     uint16_t ofs = storage+u16(b+index+10);
-                    uint16_t len = u16(b+index+8);
+                    uint16_t pslen = u16(b+index+8);
 
                     if (6 == name_id) {
                         if (1 == plat_id && 0 == pse) {
-                            psname_.assign(b+ofs, len);
+                            psname_.assign(b+ofs, pslen);
                             break;
                         }
 
                         else if (3 == plat_id && (0 == pse || 1 == pse)) {
-                            psname_ = read_utf16(b+ofs, len);
+                            psname_ = read_utf16(b+ofs, pslen);
                             break;
                         }
                     }
@@ -337,10 +337,8 @@ Glyph_ptr Font_win::glyph(char32_t wc) {
             int sx = gm.gmBlackBoxX;
             int sy = gm.gmBlackBoxY;
 
-            Vector max(ox+sx, oy);
-            Vector min(ox, oy-sy);
-            glyph->set_min(min);
-            glyph->set_max(max);
+            glyph->set_min(Vector(ox, oy-sy));
+            glyph->set_max(Vector(ox+sx, oy));
             glyph->set_advance(Vector(gm.gmCellIncX, gm.gmCellIncY));
 
             for (const uint8_t * p = buffer; p < bmax; ) {

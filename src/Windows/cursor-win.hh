@@ -36,7 +36,7 @@ class Cursor_win: public Cursor_impl {
 public:
 
     Cursor_win();
-    Cursor_win(HCURSOR hc);
+    explicit Cursor_win(HCURSOR hc);
    ~Cursor_win();
 
     HCURSOR handle();

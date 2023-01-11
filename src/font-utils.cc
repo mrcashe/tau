@@ -64,14 +64,13 @@ double font_size_from_spec(const std::vector<ustring> & specv, double fallback) 
 
     for (std::string s: specv) {
         if (is_size(s)) {
-            std::size_t pos, rpos = 0, sign, len = s.size(), end;
+            std::size_t pos, rpos = 0, len = s.size();
             for (pos = s.find(','); pos < len; pos = s.find(',')) { s[pos] = '.'; }
             pos = std::strchr(signs, s[0]) ? 1 : 0;
 
             while (pos < len) {
                 char sgn = s[rpos];
-                sign = s.find_first_of(signs, pos);
-                end = std::min(sign, len);
+                std::size_t sign = s.find_first_of(signs, pos), end = std::min(sign, len);
                 if ('=' == sgn) { ++rpos; }
                 double d; std::istringstream is(s.substr(rpos, end-rpos)); is >> d;
                 if ('=' == sgn) { return d > 0.0 ? d : fallback; }
@@ -128,13 +127,7 @@ ustring font_face_from_spec(const ustring & spec) {
 
 ustring font_family_from_spec(const std::vector<ustring> & specv) {
     std::vector<ustring> rv;
-
-    for (const ustring & s: specv) {
-        if (!is_size(s) && !is_face(s)) {
-            rv.push_back(s);
-        }
-    }
-
+    std::copy_if(specv.begin(), specv.end(), std::back_inserter(rv), [](const ustring & s) { return !is_size(s) && !is_face(s); } );
     return str_implode(rv, ' ');
 }
 

@@ -36,7 +36,7 @@ class Fontsel_impl: public Table_impl {
 public:
 
     Fontsel_impl();
-    Fontsel_impl(const ustring & spec, const ustring & sample=ustring());
+    explicit Fontsel_impl(const ustring & spec, const ustring & sample=ustring());
 
     void select(const ustring & spec);
     ustring spec() const;

@@ -32,7 +32,7 @@ namespace tau {
 class Fileinfo_freebsd: public Fileinfo_posix {
 public:
 
-    Fileinfo_freebsd(const ustring & uri):
+    explicit Fileinfo_freebsd(const ustring & uri):
         Fileinfo_posix(uri)
     {
     }

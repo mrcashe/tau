@@ -58,23 +58,23 @@ Pixmap_ptr Pixmap_impl::load_ico_from_file(const ustring & path) {
     if (0 == img_count) { throw bad_pixmap("invalid ICO image count"); }
 
     //unsigned w = buf[6] , h = buf[7], ncolors = buf[8];
-    std::streamsize bytes = u32(buf+14);
+    std::streamsize nbytes = u32(buf+14);
     std::streamoff ofs = u32(buf+18);
 
     is.seekg(ofs);
     if (std::streampos(ofs) != is.tellg()) { throw bad_pixmap("ICO file seek failed"); }
 
-    if (bytes < 32768) {
-        char v[bytes];
-        is.read(v, bytes);
-        if (bytes != is.gcount()) { throw bad_pixmap("corrupted ICO data"); }
-        return Pixmap_impl::load_bmp_from_memory(v, bytes, true);
+    if (nbytes < 32768) {
+        char v[nbytes];
+        is.read(v, nbytes);
+        if (nbytes != is.gcount()) { throw bad_pixmap("corrupted ICO data"); }
+        return Pixmap_impl::load_bmp_from_memory(v, nbytes, true);
     }
 
-    auto v = std::make_unique<char[]>(bytes);
-    is.read(v.get(), bytes);
-    if (bytes != is.gcount()) { throw bad_pixmap("corrupted ICO data"); }
-    return Pixmap_impl::load_bmp_from_memory(v.get(), bytes, true);
+    auto v = std::make_unique<char[]>(nbytes);
+    is.read(v.get(), nbytes);
+    if (nbytes != is.gcount()) { throw bad_pixmap("corrupted ICO data"); }
+    return Pixmap_impl::load_bmp_from_memory(v.get(), nbytes, true);
 }
 
 } // namespace tau

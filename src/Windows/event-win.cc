@@ -30,9 +30,9 @@
 namespace tau {
 
 Event_win::Event_win():
-    Event_impl()
+    Event_impl(),
+    handle_(CreateEvent(NULL, true, false, NULL))
 {
-    handle_ = CreateEvent(NULL, true, false, NULL);
     if (!handle_) { throw sys_error(); }
 }
 

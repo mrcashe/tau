@@ -96,10 +96,9 @@ Buffer_iter Buffer::replace(Buffer_iter i, const std::u32string & str) {
             std::size_t d_eol = d.find_first_of(impl->newlines);
             if (std::u32string::npos == d_eol) { d_eol = d.size(); }
             std::size_t n_repl = std::min(eol-n, (i.col() < d_eol ? d_eol-i.col() : 0));
-            std::u32string replaced_text;
 
             if (0 != n_repl) {
-                replaced_text = d.substr(i.col(), n_repl);
+                std::u32string replaced_text = d.substr(i.col(), n_repl);
                 d.replace(i.col(), n_repl, str, n, n_repl);
                 std::size_t col = i.col()+n_repl;
                 impl->signal_replace(i, iter(i.row(), col), replaced_text);
@@ -136,7 +135,7 @@ Buffer_iter Buffer::insert(Buffer_iter i, const std::u32string & str) {
         return i;
     }
 
-    std::size_t n = 0, len = str.size(), row, col, eol;
+    std::size_t n = 0, len = str.size(), row, col;
 
     if (impl->rows.empty()) {
         row = 0;
@@ -154,7 +153,7 @@ Buffer_iter Buffer::insert(Buffer_iter i, const std::u32string & str) {
     }
 
     while (n < len) {
-        eol = str.find_first_of(impl->newlines, n);
+        std::size_t eol = str.find_first_of(impl->newlines, n);
 
         // No EOL character.
         // Add text at current position and exit.
@@ -168,7 +167,7 @@ Buffer_iter Buffer::insert(Buffer_iter i, const std::u32string & str) {
         // Have EOL character.
         else {
             // Insert text between col and next at current position.
-            std::u32string::size_type next, eeol = std::u32string::npos;
+            std::u32string::size_type next, eeol;
 
             if (0x000a == str[eol] && eol+1 < len && 0x000d == str[eol+1]) { eeol = eol+2; }
             else if (0x000d == str[eol] && eol+1 < len && 0x000a == str[eol+1]) { eeol = eol+2; }

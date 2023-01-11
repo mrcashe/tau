@@ -39,10 +39,10 @@ public:
     Frame_impl();
    ~Frame_impl() { destroy_ = true; }
 
-    Frame_impl(const ustring & label);
+    explicit Frame_impl(const ustring & label);
     Frame_impl(const ustring & label, Align align);
 
-    Frame_impl(Border_style bs, unsigned border_width=1, int border_radius=0);
+    explicit Frame_impl(Border_style bs, unsigned border_width=1, int border_radius=0);
     Frame_impl(const ustring & label, Border_style bs, unsigned border_width=1, int border_radius=0);
     Frame_impl(const ustring & label, Align align, Border_style bs, unsigned border_width=1, int border_radius=0);
 
@@ -78,7 +78,10 @@ public:
     void set_border(unsigned left, unsigned right, unsigned top, unsigned bottom);
 
     // Overriden by Counter_impl.
-    virtual void set_border_style(Border_style bs);
+    virtual void set_border_style(Border_style bs) {
+        set_border_style_priv(bs);
+    }
+
     void set_border_style(Border_style left, Border_style right, Border_style top, Border_style bottom);
     void set_border_left_style(Border_style bs);
     void set_border_right_style(Border_style bs);
@@ -156,6 +159,7 @@ private:
 
     void init();
     void init_border_style(Border_style bs, unsigned width, int radius);
+    void set_border_style_priv(Border_style bs);
     void update_requisition();
     Size child_requisition(Widget_impl * wp);
     unsigned eradius() const; // Radius value used for border stroking.

@@ -34,7 +34,7 @@ namespace tau {
 class Twins_impl: public Container_impl {
 public:
 
-    Twins_impl(Orientation orient, double ratio=0.5);
+    explicit Twins_impl(Orientation orient, double ratio=0.5);
    ~Twins_impl() { destroy_ = true; }
 
     void insert_first(Widget_ptr wp);

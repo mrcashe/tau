@@ -35,9 +35,9 @@ class Edit_impl: public Text_impl {
 public:
 
     Edit_impl();
-    Edit_impl(Align halign, Align valign=ALIGN_START);
-    Edit_impl(const ustring & s, Align halign=ALIGN_START, Align valign=ALIGN_START);
-    Edit_impl(Buffer buf, Align halign=ALIGN_START, Align valign=ALIGN_START);
+    explicit Edit_impl(Align halign, Align valign=ALIGN_START);
+    explicit Edit_impl(const ustring & s, Align halign=ALIGN_START, Align valign=ALIGN_START);
+    explicit Edit_impl(Buffer buf, Align halign=ALIGN_START, Align valign=ALIGN_START);
 
     // Overrides Text_impl.
     void assign(Buffer buf) override;

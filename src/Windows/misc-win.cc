@@ -119,7 +119,7 @@ ustring ustr_error(DWORD error) {
                    NULL, error, MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
                    (LPWSTR)&bufp, 0, NULL);
 
-    if (bufp) {
+    if (*bufp) {
         result = str_trimright(str_from_wstring(std::wstring(bufp)));
         LocalFree(bufp);
     }

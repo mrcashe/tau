@@ -83,7 +83,7 @@ public:
 class Doctype_impl: public Doctype {
 public:
 
-    Doctype_impl(const ustring & name):
+    explicit Doctype_impl(const ustring & name):
         name_(name)
     {
     }

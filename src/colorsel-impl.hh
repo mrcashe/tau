@@ -34,7 +34,7 @@ namespace tau {
 class Colorsel_impl: public Table_impl {
 public:
 
-    Colorsel_impl(const Color & initial_color);
+    explicit Colorsel_impl(const Color & initial_color);
     void set_color(const Color & color);
     Color color() { return color_; }
 

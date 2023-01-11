@@ -85,7 +85,7 @@ public:
 
     static Loop_freebsd_ptr this_freebsd_loop();
 
-    Loop_freebsd(std::thread::id tid);
+    explicit Loop_freebsd(std::thread::id tid);
 
     // Overrides pure Loop.
     File_monitor_ptr create_file_monitor(const ustring & path, int mask) override;

@@ -47,19 +47,19 @@
 
 namespace tau {
 
-Fileman_impl::Fileman_impl(Fileman_mode fs_type):
+Fileman_impl::Fileman_impl(Fileman_mode fm_mode):
     Twins_impl(OR_WEST, 0.75),
-    fm_mode_(fs_type)
+    fm_mode_(fm_mode),
+    navi_(std::make_shared<Navigator_impl>())
 {
-    navi_ = std::make_shared<Navigator_impl>();
     init();
 }
 
-Fileman_impl::Fileman_impl(Fileman_mode fs_type, const ustring & path):
+Fileman_impl::Fileman_impl(Fileman_mode fm_mode, const ustring & path):
     Twins_impl(OR_WEST, 0.75),
-    fm_mode_(fs_type)
+    fm_mode_(fm_mode),
+    navi_(std::make_shared<Navigator_impl>(path))
 {
-    navi_ = std::make_shared<Navigator_impl>(path);
     init();
 }
 
@@ -464,11 +464,11 @@ void Fileman_impl::on_mkdir() {
             tp = std::make_shared<Text_impl>(dir(), ALIGN_START, ALIGN_CENTER);
             box->append(tp, true);
 
-            Entry_ptr entry = std::make_shared<Entry_impl>();
-            box->append(entry, true);
-            entry->cancel_action().connect(fun(entry, &Widget_impl::quit_dialog));
-            entry->signal_activate().connect(tau::bind(fun(this, &Fileman_impl::on_mkdir_activate), entry.get()));
-            entry->signal_changed().connect(fun(this, &Fileman_impl::on_mkdir_changed));
+            Entry_ptr ent = std::make_shared<Entry_impl>();
+            box->append(ent, true);
+            ent->cancel_action().connect(fun(ent, &Widget_impl::quit_dialog));
+            ent->signal_activate().connect(tau::bind(fun(this, &Fileman_impl::on_mkdir_activate), ent.get()));
+            ent->signal_changed().connect(fun(this, &Fileman_impl::on_mkdir_changed));
 
             Box_ptr bbox = std::make_shared<Box_impl>(OR_RIGHT, 12);
             bbox->set_align(ALIGN_CENTER);
@@ -477,7 +477,7 @@ void Fileman_impl::on_mkdir() {
 
             mkdir_ok_button_ = std::make_shared<Button_impl>("OK", "dialog-ok", SMALL_ICON);
             bbox->append(mkdir_ok_button_, true);
-            mkdir_ok_button_->signal_click().connect(tau::bind(fun(this, &Fileman_impl::on_mkdir_apply), entry.get()));
+            mkdir_ok_button_->signal_click().connect(tau::bind(fun(this, &Fileman_impl::on_mkdir_apply), ent.get()));
             mkdir_ok_button_->disable();
 
             Button_ptr cancel_button = std::make_shared<Button_impl>("Cancel", "dialog-cancel", SMALL_ICON);
@@ -488,7 +488,7 @@ void Fileman_impl::on_mkdir() {
             dlg->set_title("Create Folder");
             dlg->insert(box);
             dlg->show();
-            entry->take_focus();
+            ent->take_focus();
             dlg->run();
             mkdir_ok_button_.reset();
         }
@@ -758,7 +758,7 @@ void Fileman_impl::next() {
     if (1+ihistory_ < history_.size()) {
         bool p_avail = prev_avail();
         ++ihistory_;
-        if (ihistory_ < history_.size()) { navi_->chdir(history_[ihistory_]); }
+        navi_->chdir(history_[ihistory_]);
         if (!next_avail()) { next_action_.disable(); }
         if (!p_avail && prev_avail()) { prev_action_.enable(); }
     }

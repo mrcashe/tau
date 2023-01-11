@@ -39,13 +39,14 @@
 namespace {
 
 tau::ustring special_folder(int csidl) {
-    wchar_t path[MAX_PATH+1];
     HRESULT hr;
     LPITEMIDLIST pidl = NULL;
     tau::ustring result;
 
     hr = SHGetSpecialFolderLocation(NULL, csidl, &pidl);
     if (hr == S_OK) {
+        wchar_t path[MAX_PATH+1];
+
         if (SHGetPathFromIDListW(pidl, path)) {
             result = tau::str_from_wstring(std::wstring(path));
         }
@@ -99,7 +100,7 @@ struct tm Timeval::gmtime() const {
 
 struct tm Timeval::localtime() const {
     time_t t(usec_/1000000);
-    struct tm res;
+    struct tm res { 0 };
     localtime_s(&res, &t);
     return res;
 }

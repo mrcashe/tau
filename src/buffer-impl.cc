@@ -474,8 +474,6 @@ bool Buffer_iter::find(const ustring & text, Buffer_iter other) {
 
 bool Buffer_iter::find_first_of(const ustring & chars) {
     if (impl->buf && !chars.empty()) {
-        std::u32string wchars = chars.to_u32string();
-
         while (!eof()) {
             char32_t wc = operator*();
 
@@ -512,8 +510,6 @@ bool Buffer_iter::find_first_of(const ustring & chars, Buffer_iter other) {
 
 bool Buffer_iter::find_first_not_of(const ustring & chars) {
     if (impl->buf && !chars.empty()) {
-        std::u32string wchars = chars.to_u32string();
-
         while (!eof()) {
             char32_t wc = operator*();
 

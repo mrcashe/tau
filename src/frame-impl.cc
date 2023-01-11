@@ -93,7 +93,7 @@ void Frame_impl::init() {
 void Frame_impl::init_border_style(Border_style bs, unsigned width, int radius) {
     unsigned s = min_border_size(bs);
     radius_ = std::max(0, radius);
-    set_border_style(0 != s ? bs : BORDER_NONE);
+    set_border_style_priv(0 != s ? bs : BORDER_NONE);
     set_border(0 != s ? std::max(s, width) : 0);
 }
 
@@ -254,7 +254,6 @@ void Frame_impl::arrange() {
                     unsigned new_left = std::max(left, req.width());
                     csize.decrease(new_left-left, 0);
                     corigin.translate(new_left-left, 0);
-                    left = new_left;
                     x = 0;
                     y = corigin.y();
                     lleft_ = std::max(lleft_, req.width());
@@ -304,7 +303,6 @@ void Frame_impl::arrange() {
                 if (label_->update_origin(origin)) { changed = true; }
                 if (label_->update_size(size)) { changed = true; }
                 if (changed) { invalidate(was|lb_); }
-                changed = false;
             }
         }
     }
@@ -803,7 +801,7 @@ void Frame_impl::set_border_style(Border_style left, Border_style right, Border_
 }
 
 // Overriden by Counter_impl.
-void Frame_impl::set_border_style(Border_style bs) {
+void Frame_impl::set_border_style_priv(Border_style bs) {
     if (set_style(bs)) { queue_arrange(); invalidate(); }
 }
 

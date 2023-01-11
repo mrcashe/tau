@@ -34,7 +34,7 @@ namespace tau {
 class Roller_impl: public Box_impl {
 public:
 
-    Roller_impl(Orientation orient, bool autohide=true);
+    explicit Roller_impl(Orientation orient, bool autohide=true);
    ~Roller_impl() { destroy_ = true; }
 
     void set_autohide();
