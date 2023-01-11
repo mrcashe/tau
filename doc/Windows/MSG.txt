@@ -1,0 +1,300 @@
+#define WM_SYSKEYUP 0x0105
+--------------------------
+
+Posted to the window with the keyboard focus when the user releases a key that was pressed while
+the ALT key was held down. It also occurs when no window currently has the keyboard focus;
+in this case, the WM_SYSKEYUP message is sent to the active window.
+The window that receives the message can distinguish between these two contexts by checking
+the context code in the lParam parameter.
+A window receives this message through its WindowProc function.
+
+wParam  The virtual-key code of the key being released. See Virtual-Key Codes.
+lParam  The repeat count, scan code, extended-key flag, context code, previous key-state flag,
+        and transition-state flag, as shown in the following table.
+
+Bits    Meaning
+0-15    The repeat count for the current message. The value is the number of times the keystroke
+        is autorepeated as a result of the user holding down the key. The repeat count is always
+        one for a WM_SYSKEYUP message.
+16-23   The scan code. The value depends on the OEM.
+24      Indicates whether the key is an extended key, such as the right-hand ALT and CTRL keys
+        that appear on an enhanced 101- or 102-key keyboard. The value is 1 if it is an extended key;
+        otherwise, it is zero.
+25-28   Reserved; do not use.
+29      The context code. The value is 1 if the ALT key is down while the key is released;
+        it is zero if the WM_SYSKEYUP message is posted to the active window because no window
+        has the keyboard focus.
+30      The previous key state. The value is always 1 for a WM_SYSKEYUP message.
+31      The transition state. The value is always 1 for a WM_SYSKEYUP message.
+
+Return: An application should return zero if it processes this message.
+
+Remarks:
+        The DefWindowProc function sends a WM_SYSCOMMAND message to the top-level window if
+        the F10 key or the ALT key was released. The wParam parameter of the message is set to SC_KEYMENU.
+        When the context code is zero, the message can be passed to the TranslateAccelerator function,
+        which will handle it as though it were a normal key message instead of a character-key message.
+        This allows accelerator keys to be used with the active window even if the active window
+        does not have the keyboard focus.
+        For enhanced 101- and 102-key keyboards, extended keys are the right ALT and CTRL keys
+        on the main section of the keyboard; the INS, DEL, HOME, END, PAGE UP, PAGE DOWN,
+        and arrow keys in the clusters to the left of the numeric keypad; and the divide (/) and ENTER keys
+        in the numeric keypad. Other keyboards may support the extended-key bit in the lParam parameter.
+        For non-U.S. enhanced 102-key keyboards, the right ALT key is handled as a CTRL+ALT key.
+        The following table shows the sequence of messages that result when the user presses and releases this key.
+
+        Message         Virtual-key code
+        WM_KEYDOWN      VK_CONTROL
+        WM_KEYDOWN      VK_MENU
+        WM_KEYUP        VK_CONTROL
+        WM_SYSKEYUP     VK_MENU
+
+#define WM_CHAR 0x0102
+----------------------
+
+Posted to the window with the keyboard focus when a WM_KEYDOWN message is translated
+by the TranslateMessage function. The WM_CHAR message contains the character code of
+the key that was pressed.
+
+Parameters
+wParam  The character code of the key.
+
+lParam  The repeat count, scan code, extended-key flag, context code, previous key-state flag,
+        and transition-state flag, as shown in the following table.
+Bits    Meaning
+0-15    The repeat count for the current message. The value is the number of times
+        the keystroke is autorepeated as a result of the user holding down the key.
+        If the keystroke is held long enough, multiple messages are sent. However,
+        the repeat count is not cumulative.
+16-23   The scan code. The value depends on the OEM.
+24      Indicates whether the key is an extended key, such as the right-hand
+        ALT and CTRL keys that appear on an enhanced 101- or 102-key keyboard.
+        The value is 1 if it is an extended key; otherwise, it is 0.
+25-28   Reserved; do not use.
+29      The context code. The value is 1 if the ALT key is held down while the key
+        is pressed; otherwise, the value is 0.
+30      The previous key state. The value is 1 if the key is down before the message
+        is sent, or it is 0 if the key is up.
+31      The transition state. The value is 1 if the key is being released,
+        or it is 0 if the key is being pressed.
+
+Return: An application should return zero if it processes this message.
+
+#define WM_GETMINMAXINFO 0x0024
+-------------------------------
+
+Sent to a window when the size or position of the window is about to change.
+An application can use this message to override the window's default maximized size
+and position, or its default minimum or maximum tracking size.
+A window receives this message through its WindowProc function.
+
+wParam  This parameter is not used.
+lParam  A pointer to a MINMAXINFO structure that contains the default maximized position
+        and dimensions, and the default minimum and maximum tracking sizes.
+        An application can override the defaults by setting the members of this structure.
+
+Return: Type: LRESULT If an application processes this message, it should return zero.
+
+Remarks:The maximum tracking size is the largest window size that can be produced
+        by using the borders to size the window. The minimum tracking size is the
+        smallest window size that can be produced by using the borders to size the window.
+
+#define WM_SYSKEYDOWN 0x0104
+----------------------------
+
+Posted to the window with the keyboard focus when the user presses the F10 key
+(which activates the menu bar) or holds down the ALT key and then presses another key.
+It also occurs when no window currently has the keyboard focus; in this case,
+the WM_SYSKEYDOWN message is sent to the active window. The window that receives
+the message can distinguish between these two contexts by checking the context
+code in the lParam parameter.
+
+wParam  The virtual-key code of the key being pressed. See Virtual-Key Codes.
+lParam  The repeat count, scan code, extended-key flag, context code, previous
+        key-state flag, and transition-state flag, as shown in the following table.
+Bits    Meaning
+0-15    The repeat count for the current message. The value is the number of times
+        the keystroke is autorepeated as a result of the user holding down the key.
+        If the keystroke is held long enough, multiple messages are sent.
+        However, the repeat count is not cumulative.
+16-23   The scan code. The value depends on the OEM.
+24      Indicates whether the key is an extended key, such as the right-hand
+        ALT and CTRL keys that appear on an enhanced 101- or 102-key keyboard.
+        The value is 1 if it is an extended key; otherwise, it is 0.
+25-28   Reserved; do not use.
+29      The context code. The value is 1 if the ALT key is down while the key is pressed;
+        it is 0 if the WM_SYSKEYDOWN message is posted to the active window because
+        no window has the keyboard focus.
+30      The previous key state. The value is 1 if the key is down before the message is sent,
+        or it is 0 if the key is up.
+31      The transition state. The value is always 0 for a WM_SYSKEYDOWN message.
+
+Return: An application should return zero if it processes this message.
+
+Remarks:
+        The DefWindowProc function examines the specified key and generates a WM_SYSCOMMAND
+        message if the key is either TAB or ENTER.
+        When the context code is zero, the message can be passed to the TranslateAccelerator
+        function, which will handle it as though it were a normal key message instead
+        of a character-key message. This allows accelerator keys to be used with the
+        active window even if the active window does not have the keyboard focus.
+        Because of automatic repeat, more than one WM_SYSKEYDOWN message may occur before
+        a WM_SYSKEYUP message is sent. The previous key state (bit 30) can be used to determine
+        whether the WM_SYSKEYDOWN message indicates the first down transition or a repeated down transition.
+        For enhanced 101- and 102-key keyboards, enhanced keys are the right ALT and CTRL keys
+        on the main section of the keyboard; the INS, DEL, HOME, END, PAGE UP, PAGE DOWN,
+        and arrow keys in the clusters to the left of the numeric keypad; and the divide
+        (/) and ENTER keys in the numeric keypad. Other keyboards may support the extended-key
+        bit in the lParam parameter.
+        This message is also sent whenever the user presses the F10 key without the ALT key.
+
+#define WM_KEYUP 0x0101
+-----------------------
+
+Posted to the window with the keyboard focus when a nonsystem key is released.
+A nonsystem key is a key that is pressed when the ALT key is not pressed, or a keyboard key
+that is pressed when a window has the keyboard focus.
+
+wParam  The virtual-key code of the nonsystem key. See Virtual-Key Codes.
+lParam  The repeat count, scan code, extended-key flag, context code, previous key-state flag,
+        and transition-state flag, as shown in the following table.
+Bits    Meaning
+0-15    The repeat count for the current message. The value is the number of times the keystroke
+        is autorepeated as a result of the user holding down the key. The repeat count is always
+        1 for a WM_KEYUP message.
+16-23   The scan code. The value depends on the OEM.
+24      Indicates whether the key is an extended key, such as the right-hand ALT and CTRL
+        keys that appear on an enhanced 101- or 102-key keyboard. The value is 1 if it is
+        an extended key; otherwise, it is 0.
+25-28   Reserved; do not use.
+29      The context code. The value is always 0 for a WM_KEYUP message.
+30      The previous key state. The value is always 1 for a WM_KEYUP message.
+31      The transition state. The value is always 1 for a WM_KEYUP message.
+
+Return: An application should return zero if it processes this message.
+
+Remarks:
+        The DefWindowProc function sends a WM_SYSCOMMAND message to the top-level window
+        if the F10 key or the ALT key was released. The wParam parameter of the message
+        is set to SC_KEYMENU.
+        For enhanced 101- and 102-key keyboards, extended keys are the right ALT and CTRL
+        keys on the main section of the keyboard; the INS, DEL, HOME, END, PAGE UP, PAGE DOWN,
+        and arrow keys in the clusters to the left of the numeric keypad;
+        and the divide (/) and ENTER keys in the numeric keypad. Other keyboards may support
+        the extended-key bit in the lParam parameter.
+        Applications must pass wParam to TranslateMessage without altering it at all.
+
+#define WM_KEYDOWN 0x0100
+-------------------------
+
+Posted to the window with the keyboard focus when a nonsystem key is pressed.
+A nonsystem key is a key that is pressed when the ALT key is not pressed.
+
+wParam  The virtual-key code of the nonsystem key. See Virtual-Key Codes.
+lParam  The repeat count, scan code, extended-key flag, context code, previous key-state flag,
+        and transition-state flag, as shown following.
+
+Bits    Meaning
+0-15    The repeat count for the current message. The value is the number of times
+        the keystroke is autorepeated as a result of the user holding down the key.
+        If the keystroke is held long enough, multiple messages are sent.
+        However, the repeat count is not cumulative.
+16-23   The scan code. The value depends on the OEM.
+24      Indicates whether the key is an extended key, such as the right-hand ALT and CTRL
+        keys that appear on an enhanced 101- or 102-key keyboard. The value is 1 if it is
+        an extended key; otherwise, it is 0.
+25-28   Reserved; do not use.
+29      The context code. The value is always 0 for a WM_KEYDOWN message.
+30      The previous key state. The value is 1 if the key is down before the message is sent,
+        or it is zero if the key is up.
+31      The transition state. The value is always 0 for a WM_KEYDOWN message.
+
+Return: An application should return zero if it processes this message.
+
+Remarks:
+        If the F10 key is pressed, the DefWindowProc function sets an internal flag.
+        When DefWindowProc receives the WM_KEYUP message, the function checks whether
+        the internal flag is set and, if so, sends a WM_SYSCOMMAND message to the
+        top-level window. The WM_SYSCOMMAND parameter of the message is set to SC_KEYMENU.
+        Because of the autorepeat feature, more than one WM_KEYDOWN message may be posted
+        before a WM_KEYUP message is posted. The previous key state (bit 30) can be used
+        to determine whether the WM_KEYDOWN message indicates the first down transition
+        or a repeated down transition.
+        For enhanced 101- and 102-key keyboards, extended keys are the right ALT and CTRL
+        keys on the main section of the keyboard; the INS, DEL, HOME, END, PAGE UP, PAGE DOWN,
+        and arrow keys in the clusters to the left of the numeric keypad; and the divide (/)
+        and ENTER keys in the numeric keypad. Other keyboards may support the extended-key
+        bit in the lParam parameter.
+        Applications must pass wParam to TranslateMessage without altering it at all.
+
+
+WM_SIZING message
+-----------------
+
+Sent to a window that the user is resizing. By processing this message, an application can
+monitor the size and position of the drag rectangle and, if needed, change its size or position.
+
+A window receives this message through its WindowProc function.
+
+#define WM_SIZING                       0x0214
+
+Parameters
+
+wParam
+
+    The edge of the window that is being sized. This parameter can be one of the following values.
+    Value   Meaning
+
+    WMSZ_BOTTOM
+    6
+
+        Bottom edge
+
+    WMSZ_BOTTOMLEFT
+    7
+
+        Bottom-left corner
+
+    WMSZ_BOTTOMRIGHT
+    8
+
+        Bottom-right corner
+
+    WMSZ_LEFT
+    1
+
+        Left edge
+
+    WMSZ_RIGHT
+    2
+
+        Right edge
+
+    WMSZ_TOP
+    3
+
+        Top edge
+
+    WMSZ_TOPLEFT
+    4
+
+        Top-left corner
+
+    WMSZ_TOPRIGHT
+    5
+
+        Top-right corner
+
+
+
+lParam
+
+    A pointer to a RECT structure with the screen coordinates of the drag rectangle.
+    To change the size or position of the drag rectangle, an application must change the members of this structure.
+
+Return value
+
+Type: LRESULT
+
+An application should return TRUE if it processes this message.
+

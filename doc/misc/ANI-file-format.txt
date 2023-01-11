@@ -1,0 +1,204 @@
+The ANI Format
+
+RIFF provides only a generic chunk-based format for storing multimedia data.
+A more specific RIFF-based format (such as the WAVE format illustrated earlier
+by richo.wav) is required to name the multimedia data’s various chunks, define
+the data structures stored in the chunks, and identify the order (if necessary)
+in which the chunks appear in the RIFF file. For .ani files, this format is known as ANI.
+
+ANI Internals
+
+The ANI format fully defines an animated cursor. ANI is assigned form type ACON
+and identifies various mandatory and optional chunks. For example, the optional
+LIST/INFO chunk is often the first chunk located within the RIFF chunks of many .ani files.
+This chunk is illustrated in the following descriptive excerpt from Microsoft’s
+6,712-byte stopwtch.ani file:
+
+Chunk: RIFF
+Chunk size: 6712
+{
+    Form type: ACON
+
+    Chunk: LIST
+    Chunk size: 68
+    {
+        List type: INFO
+
+        Chunk: INAM
+        Chunk size: 10
+        {
+        }
+
+        Chunk: IART
+        Chunk size: 38
+        {
+        }
+    }
+}
+
+LIST/INFO contains INAM and IART subchunks. The animated cursor’s name is stored in the
+INAM subchunk; IART identifies the animation’s artist and often includes a copyright message.
+For example, stopwtch.ani stores StopWatch in INAM and Microsoft Corporation, Copyright 1993 in IART.
+
+
+
+NOTE
+
+The excerpt reveals the "RIFF chunk header size field containing the size of the file instead
+of the file size minus eight bytes" problem, which I discussed earlier. Although this RIFF
+violation prevents the animated cursor library’s basic implementation from reading stopwtch.ani,
+this article’s library implementation overcomes the problem.
+
+The next chunk contained within an .ani file’s RIFF chunk is anih. This mandatory ANI header chunk
+stores an ANIHEADER data structure in its data area and must precede all other chunks located
+within the RIFF chunk. The ANIHEADER data structure is conveniently expressed by the following
+C language structure type definition:
+
+typedef struct {
+    DWORD cbSize;    // Data structure size (in bytes)
+    DWORD nFrames;   // Number of images (also known as frames) stored in the file
+    DWORD nSteps;    // Number of frames to be displayed before the animation repeats
+    DWORD iWidth;    // Width of frame (in pixels)
+    DWORD iHeight;   // Height of frame (in pixels)
+    DWORD iBitCount;  // Number of bits per pixel
+    DWORD nPlanes;   // Number of color planes
+    DWORD iDispRate;  // Default frame display rate (measured in 1/60th-of-a-second units)
+    DWORD bfAttributes; // ANI attribute bit flags
+}
+ANIHEADER;
+
+ANIHEADER’s cbSize field contains the structure’s size (in bytes) and is always set to 36.
+This field is followed by nFrames, which identifies the number of images (also known as frames)
+that are stored in the .ani file. All of these images are stored in Microsoft Icon Resource Format
+resources, in Microsoft Cursor Resource Format resources, or as raw bitmaps.
+
+The nSteps field specifies the number of frames to be displayed prior to repeating the animation.
+This value often is set to the same value as found in the nFrames field, and the display order
+is first stored image through last stored image. However, if a seq chunk (which I discuss later)
+is present, this field identifies the number of values in this chunk’s array, and the order differs.
+
+Following the nSteps field are iWidth, iHeight, iBitCount, and nPlanes. These four fields contain
+non-zero values if images are stored as raw bitmaps, and are useful for interpreting bitmap
+dimensions and color information. These fields contain zeroes if the images are stored in icon
+resources or cursor resources.
+
+The iDispRate field identifies the default display rate for animation frames. In the absence of
+a rate chunk (which I discuss later), the value in this field is used to determine how long each
+frame in the animation remains on the screen. The value is expressed in 1/60th-of-a-second units,
+which are known as jiffies. If this value is zero, there’s no delay between successive frames.
+
+The final bfAttributes field provides two bit flags that determine whether images are stored
+in icon or cursor resources (the least-significant bit is one) or as raw bitmaps (the
+least-significant bit is zero), and whether seq chunks are present (the next-to-least-significant
+bit is one) or absent (the next-to-least-significant bit is zero). This field and its
+predecessors are illustrated below:
+
+Chunk: anih
+Chunk size: 36
+{
+    cbSize = 36
+    nFrames = 8
+    nSteps = 45
+    iWidth = 0
+    iHeight = 0
+    iBitCount = 0
+    nPlanes = 0
+    iDispRate = 8
+    bfAttributes = 3
+}
+
+This descriptive anih chunk was excerpted from stopwtch.ani. It reveals that this file
+stores eight frames, each animation cycle consists of 45 steps, the default display rate
+is set to eight jiffies (each frame is displayed for 8/60ths of a second), each frame
+is stored in an icon or cursor resource, and a seq chunk is present.
+
+The anih chunk can be followed by the optional rate chunk, which lets you determine how
+long each frame appears. This chunk stores a DWORD array of duration values (expressed
+as jiffies). ANIHEADER’s nSteps field identifies the number of entries in the array—each
+entry corresponds to one of the steps in an animation cycle (entry zero corresponds
+to the first step).
+
+The following descriptive excerpt from stopwtch.ani reveals this file’s rate chunk.
+With two exceptions, each frame in the animation sequence is displayed for eight jiffies:
+
+Chunk: rate
+Chunk size: 180
+{
+    8, 16, 16, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
+    8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
+    8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8
+}
+
+The anih chunk can be followed by the optional seq chunk, which lets you specify
+a display order other than the default first-stored-image to last-stored-image order.
+You can even repeat images during an animation cycle. This chunk stores a DWORD array
+of frame indexes. The number of array entries is indicated by ANIHEADER’s nSteps field.
+
+The following descriptive excerpt from stopwtch.ani reveals this file’s seq chunk.
+The sequence starts and ends with the first frame (at index zero):
+
+Chunk: seq
+Chunk size: 180
+{
+    0, 1, 0, 2, 3, 4, 5, 6, 7, 0, 2, 3, 4, 5, 6, 7, 0,
+    2, 3, 4, 5, 6, 7, 0, 2, 3, 4, 5, 6, 7, 0, 2, 3, 4,
+    5, 6, 7, 0, 2, 3, 4, 5, 6, 7, 0
+}
+
+The final chunk of interest within the RIFF chunk is LIST/fram. This chunk contains
+several icon subchunks, where each subchunk defines one image via a cursor or icon
+resource, or a raw bitmap. For example, stopwtch.ani contains eight subchunks,
+as revealed earlier via ANIHEADER’s nFrames field, and as revealed in the following excerpt:
+
+Chunk: LIST
+Chunk size: 6196
+{
+    List type: fram
+
+    Chunk: icon
+    Chunk size: 766
+    {
+    }
+
+    Chunk: icon
+    Chunk size: 766
+    {
+    }
+
+    Chunk: icon
+    Chunk size: 766
+    {
+    }
+
+    Chunk: icon
+    Chunk size: 766
+    {
+    }
+
+    Chunk: icon
+    Chunk size: 766
+    {
+    }
+
+    Chunk: icon
+    Chunk size: 766
+    {
+    }
+
+    Chunk: icon
+    Chunk size: 766
+    {
+    }
+
+    Chunk: icon
+    Chunk size: 766
+    {
+    }
+}
+}
+
+Each icon subchunk is implicitly assigned a zero-based index, which is determined
+by its order of appearance within the LIST/fram chunk. This index is used to locate
+the corresponding duration in a rate chunk’s DWORD array of durations, and may appear
+in the seq chunk’s DWORD array of frame indexes.
+

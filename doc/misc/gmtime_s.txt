@@ -1,0 +1,24 @@
+Difference between gmtime_r and gmtime_s
+----------------------------------------
+
+The difference is that gmtime_r(3) is a standard SUSv2 function. The closest you can find to gmtime_r() on a windows environment is gmtime_s(), which has its arguments reversed:
+
+    gmtime_r(const time_t*, struct tm*)
+    gmtime_s(struct tm*, const time_t*)
+
+Basically, they both convert a time value to a tm structure. gmtime_r then return a pointer to this structure (or NULL if failed), whereas gmtime_s returns 0 if successful, and a errno_t in case of failure.
+
+The tm structure has the following body, as can be seen from both docs listed above:
+
+struct tm {
+    int tm_sec;         /* seconds */
+    int tm_min;         /* minutes */
+    int tm_hour;        /* hours */
+    int tm_mday;        /* day of the month */
+    int tm_mon;         /* month */
+    int tm_year;        /* year */
+    int tm_wday;        /* day of the week */
+    int tm_yday;        /* day in the year */
+    int tm_isdst;       /* daylight saving time */
+};
+

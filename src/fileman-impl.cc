@@ -1,0 +1,784 @@
+// ----------------------------------------------------------------------------
+// Copyright © 2014-2022 Konstantin Shmelkov <mrcashe@gmail.com>.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// 1. Redistributions of source code must retain the above copyright notice,
+//    this list of conditions and the following disclaimer.
+//
+// 2. Redistributions in binary form must reproduce the above copyright notice,
+//    this list of conditions and the following disclaimer in the documentation
+//    and/or other materials provided with the distribution.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+// OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+// EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// ----------------------------------------------------------------------------
+
+#include <tau/exception.hh>
+#include <tau/sys.hh>
+#include <tau/painter.hh>
+#include <button-impl.hh>
+#include <check-impl.hh>
+#include <cycle-text-impl.hh>
+#include <display-impl.hh>
+#include <entry-impl.hh>
+#include <fileman-impl.hh>
+#include <frame-impl.hh>
+#include <icon-impl.hh>
+#include <list-impl.hh>
+#include <loop-impl.hh>
+#include <menu-impl.hh>
+#include <roller-impl.hh>
+#include <scroller-impl.hh>
+#include <separator-impl.hh>
+#include <slider-impl.hh>
+#include <dialog-impl.hh>
+#include <iostream>
+
+namespace tau {
+
+Fileman_impl::Fileman_impl(Fileman_mode fs_type):
+    Twins_impl(OR_WEST, 0.75),
+    fm_mode_(fs_type)
+{
+    navi_ = std::make_shared<Navigator_impl>();
+    init();
+}
+
+Fileman_impl::Fileman_impl(Fileman_mode fs_type, const ustring & path):
+    Twins_impl(OR_WEST, 0.75),
+    fm_mode_(fs_type)
+{
+    navi_ = std::make_shared<Navigator_impl>(path);
+    init();
+}
+
+void Fileman_impl::init() {
+    dir_creation_allowed_ = (FILEMAN_SAVE == fm_mode_);
+
+    table_ = std::make_shared<Table_impl>();
+    table_->hint_margin(3, 3, 0, 0);
+    table_->set_row_spacing(3);
+    table_->set_column_margin(1, 0, 3);
+    table_->set_row_margin(2, 0, 3);
+    insert_first(table_);
+
+    // Path buttons.
+    Roller_ptr roller = std::make_shared<Roller_impl>(OR_RIGHT);
+    table_->put(roller, 0, -1, 4, 1, false, true);
+    pathbox_ = std::make_shared<Box_impl>(OR_RIGHT);
+    roller->insert(pathbox_);
+
+    // Navigator inside of frame.
+    signal_places_chdir_.connect(fun(this, &Fileman_impl::chdir));
+    navi_->signal_dir_changed().connect(fun(this, &Fileman_impl::on_dir_changed));
+    navi_->signal_file_select().connect(fun(this, &Fileman_impl::on_file_select));
+    navi_->signal_file_unselect().connect(fun(this, &Fileman_impl::on_file_unselect));
+    navi_->signal_file_activate().connect(fun(this, &Fileman_impl::on_file_activate));
+    navi_->hint_margin(2, 0, 2, 2);
+    Frame_ptr frame = std::make_shared<Frame_impl>(BORDER_INSET);
+    frame->insert(navi_);
+    table_->put(frame, 0, 0, 3, 1, false, false);
+
+    // File name or path entry.
+    Text_ptr tp = std::make_shared<Text_impl>("Name:", tau::ALIGN_END);
+    tp->hint_margin(3, 3, 0, 0);
+    table_->put(tp, 0, 1, 1, 1, true, true);
+    table_->align(tp.get(), ALIGN_END, ALIGN_CENTER);
+    entry_ = std::make_shared<Entry_impl>();
+    table_->put(entry_, 1, 1, 1, 1, false, true);
+    entry_->signal_activate().connect(fun(this, &Fileman_impl::on_entry_activate));
+    entry_->signal_changed().connect(fun(this, &Fileman_impl::on_entry_changed));
+    entry_->signal_mouse_down().connect(fun(this, &Fileman_impl::on_entry_mouse_down));
+
+    // Filters.
+    tp = std::make_shared<Text_impl>("Filter:", tau::ALIGN_END);
+    tp->hint_margin(3, 3, 0, 0);
+    table_->put(tp, 0, 2, 1, 1, true, true);
+    table_->align(tp.get(), ALIGN_END, ALIGN_CENTER);
+    filters_ = std::make_shared<Cycle_impl>();
+    table_->put(filters_, 1, 2, 1, 1, false, true);
+    add_filter("*", "All Files");
+
+    // Buttons "Open"/"Save" & "Cancel".
+    if (FILEMAN_BROWSE != fm_mode_) {
+        apply_action_.set_label(FILEMAN_SAVE == fm_mode_ ? "Save" : "Load");
+        apply_button_ = std::make_shared<Button_impl>(apply_action_, true);
+        table_->put(apply_button_, 2, 1, 1, 1, true, true);
+        table_->align(apply_button_.get(), ALIGN_FILL, ALIGN_CENTER);
+    }
+
+    Button_ptr button = std::make_shared<Button_impl>(cancel_action_, true);
+    table_->put(button, 2, 2, 1, 1, true, true);
+    table_->align(button.get(), ALIGN_FILL, ALIGN_CENTER);
+
+    // Make tool container here and fill it in on_parent().
+    tools_ = std::make_shared<Table_impl>();
+    tools_->set_row_spacing(4);
+    tools_->hint_margin(2, 2, 0, 0);
+    tools_->align_columns(ALIGN_FILL);
+    table_->put(tools_, 3, 0, 1, 1, true, false);
+
+    prev_action_.disable();
+    next_action_.disable();
+    apply_action_.disable();
+
+    refresh_action_.connect(fun(navi_, &Navigator_impl::reload));
+
+    connect_action(cancel_action_);
+    connect_action(next_action_);
+    connect_action(prev_action_);
+    connect_action(updir_action_);
+    connect_action(apply_action_);
+    connect_action(refresh_action_);
+
+    signal_display_.connect(fun(this, &Fileman_impl::on_display));
+    signal_take_focus_.connect(fun(navi_, &Widget_impl::take_focus), true);
+}
+
+void Fileman_impl::on_display() {
+    if (places_visible_) { init_places(); fill_places(); }
+
+    if (auto dp = display()) {
+        if (auto loop = dp->loop()) {
+            loop->signal_mount().connect(fun(this, &Fileman_impl::on_mount));
+        }
+    }
+
+    up_button_ = std::make_shared<Button_impl>(updir_action_, false);
+    tools_->put(up_button_, 0, 0, 1, 1, true, true);
+    tools_->put(std::make_shared<Separator_impl>(), 0, 1, 1, 1, false, true);
+
+    prev_button_ = std::make_shared<Button_impl>(prev_action_, false);
+    tools_->put(prev_button_, 0, 2, 1, 1, true, true);
+
+    next_button_ = std::make_shared<Button_impl>(next_action_, false);
+    tools_->put(next_button_, 0, 3, 1, 1, true, true);
+    tools_->put(std::make_shared<Separator_impl>(), 0, 4, 1, 1, false, true);
+
+    reload_button_ = std::make_shared<Button_impl>(refresh_action_, false);
+    tools_->put(reload_button_, 0, 5, 1, 1, true, true);
+
+    if (FILEMAN_SAVE == fm_mode_) { show_mkdir_button(); }
+
+    Separator_ptr sep = std::make_shared<Separator_impl>();
+    sep->hint_margin(0, 0, 2, 2);
+    tools_->put(sep, 0, 7, 1, 1, false, true);
+
+    conf_button_ = std::make_shared<Button_impl>(std::make_shared<Icon_impl>("configure", MEDIUM_ICON));
+    conf_button_->set_tooltip("Configure file open widget");
+    conf_button_->signal_click().connect(fun(this, &Fileman_impl::on_configure));
+    tools_->put(conf_button_, 0, 8, 1, 1, true, true);
+}
+
+ustring Fileman_impl::dir() const {
+    return navi_->dir();
+}
+
+void Fileman_impl::chdir(const ustring & dirpath) {
+    add_to_history(dir());
+    navi_->chdir(dirpath);
+}
+
+ustring Fileman_impl::entry() const {
+    return entry_->text();
+}
+
+std::vector<ustring> Fileman_impl::selection() const {
+    return selection_;
+}
+
+void Fileman_impl::on_file_activate(const ustring & path) {
+    selection_.clear();
+    selection_.push_back(path_notdir(path));
+    apply();
+}
+
+void Fileman_impl::entry_from_selection() {
+    if (selection_.size() > 1) {
+        ustring s;
+
+        for (const ustring & name: selection_) {
+            s += '"';
+            s += name;
+            s += "\" ";
+        }
+
+        entry_->assign(s);
+    }
+
+    else {
+        if (selection_.empty()) {
+            entry_->clear();
+        }
+
+        else {
+            entry_->assign(selection_.front());
+        }
+    }
+}
+
+void Fileman_impl::on_file_select(const ustring & filename) {
+    if (navi_->multiple_select_allowed()) {
+        auto iter = std::find(selection_.begin(), selection_.end(), filename);
+        if (iter == selection_.end()) { selection_.push_back(filename); }
+    }
+
+    else {
+        selection_.clear();
+        selection_.push_back(filename);
+    }
+
+    ustring p = path_build(navi_->dir(), filename);
+
+    if (file_is_dir(p) && !navi_->dir_select_allowed()) { apply_action_.disable(); }
+    else { apply_action_.enable(); }
+
+    entry_from_selection();
+    entry_->move_to(entry_->buffer().end());
+}
+
+void Fileman_impl::on_file_unselect(const ustring & filename) {
+    if (navi_->multiple_select_allowed()) {
+        auto iter = std::find(selection_.begin(), selection_.end(), filename);
+        if (iter != selection_.end()) { selection_.erase(iter); }
+    }
+
+    entry_from_selection();
+}
+
+void Fileman_impl::on_dir_changed(const ustring & path) {
+    entry_->clear();
+    apply_action_.disable();
+    pathbox_->clear();
+
+    if (up_button_) {
+        ustring pdir = path_dirname(path);
+        if (pdir.empty() || pdir == path) { up_button_->disable(); }
+        else { up_button_->enable(); }
+    }
+
+    if (prev_avail()) { prev_action_.enable(); }
+    else { prev_action_.disable(); }
+
+    if (next_avail()) { next_action_.enable(); }
+    else { next_action_.disable(); }
+
+    if (!path.empty()) {
+        ustring p = path, q;
+
+        for (;;) {
+            Button_ptr button = std::make_shared<Button_impl>(path_notdir(p));
+            button->hint_min_size(Size(14, 0));
+            button->signal_click().connect(tau::bind(fun(this, &Fileman_impl::chdir), p));
+            button->hide_relief();
+            pathbox_->prepend(button, true);
+            q = path_dirname(p);
+            if (q == p) { break; }
+            pathbox_->prepend(std::make_shared<Text_impl>(">"), true);
+            p = q;
+        }
+    }
+}
+
+void Fileman_impl::apply() {
+    if (FILEMAN_SAVE == fm_mode_) {
+        if (!silent_overwrite_allowed_) {
+            ustring path = path_build(dir(), entry_->text());
+
+            if (file_exists(path)) {
+                if (auto dp = display()) {
+                    if (auto toplevel = root()) {
+                        Box_ptr box = std::make_shared<Box_impl>(OR_DOWN, 5);
+                        box->set_align(ALIGN_CENTER);
+                        box->hint_margin(8);
+
+                        Text_ptr tp = std::make_shared<Text_impl>(str_format("File ", entry_->text(), " exist."));
+                        box->append(tp, true);
+
+                        tp = std::make_shared<Text_impl>("Are your sure to overwrite it?");
+                        box->append(tp, true);
+
+                        Box_ptr bbox = std::make_shared<Box_impl>(OR_RIGHT, 12);
+                        bbox->set_align(ALIGN_CENTER);
+                        bbox->hint_margin(0, 0, 10, 0);
+                        box->append(bbox, true);
+
+                        Button_ptr yes = std::make_shared<Button_impl>("Yes", "dialog-ok", MEDIUM_ICON);
+                        yes->signal_click().connect(fun(yes, &Widget_impl::quit_dialog));
+                        yes->signal_click().connect(fun(this, &Widget_impl::quit_dialog));
+                        yes->signal_click().connect(fun(signal_apply_));
+                        bbox->append(yes, true);
+
+                        Button_ptr no = std::make_shared<Button_impl>("No", "dialog-cancel", MEDIUM_ICON);
+                        no->signal_click().connect(fun(yes, &Widget_impl::quit_dialog));
+                        bbox->append(no, true);
+
+                        auto dlg = dp->create_dialog(toplevel);
+                        dlg->set_title("Confirm File Overwrite");
+                        dlg->insert(box);
+                        dlg->show();
+                        dlg->run();
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    quit_dialog();
+    signal_apply_();
+}
+
+void Fileman_impl::on_apply() {
+    if (FILEMAN_OPEN == fm_mode_) {
+        if (!selection_.empty()) {
+            apply();
+        }
+    }
+
+    else {
+        if (!entry_->empty()) {
+            apply();
+        }
+    }
+}
+
+void Fileman_impl::on_cancel() {
+    entry_->clear();
+    selection_.clear();
+    quit_dialog();
+}
+
+void Fileman_impl::on_entry_changed(const ustring & s) {
+    if (selection_.size() > 1) {
+        apply_action_.enable();
+    }
+
+    else {
+        ustring p = path_build(dir(), s);
+
+        if (("." == s || ".." == s || ustring::npos != s.find_first_of("/\\")) || s.empty()
+            || ((!navi_->dirs_only_visible() && !navi_->dir_select_allowed()) && file_is_dir(p)))
+        {
+            apply_action_.disable();
+        }
+
+        else {
+            if (FILEMAN_OPEN == fm_mode_) {
+                if (!file_exists(p)) {
+                    apply_action_.disable();
+                }
+
+                else {
+                    if (!multiple_select_allowed()) {
+                        auto iter = std::find(selection_.begin(), selection_.end(), s);
+                        if (selection_.end() == iter) { selection_.push_back(s); }
+                    }
+
+                    apply_action_.enable();
+                }
+            }
+
+            else {
+                apply_action_.enable();
+            }
+        }
+    }
+}
+
+void Fileman_impl::on_entry_activate(const ustring & s) {
+    if (!s.empty()) {
+        if ("." == s || ".." == s || ustring::npos != s.find_first_of("/\\")) {
+            ustring p = path_is_absolute(s) ? s : path_real(path_build(dir(), s));
+            if (file_exists(p)) { entry_->clear(); chdir(p); }
+        }
+
+        else {
+            ustring p = path_build(dir(), s);
+
+            if (file_is_dir(p)) {
+                if (navi_->dir_select_allowed()) {
+                    apply();
+                }
+
+                else {
+                    entry_->clear();
+                    chdir(p);
+                }
+            }
+
+            else {
+                if (FILEMAN_OPEN == fm_mode_) {
+                    if (file_exists(p)) {
+                        if (!multiple_select_allowed()) {
+                            auto iter = std::find(selection_.begin(), selection_.end(), s);
+                            if (selection_.end() == iter) { selection_.push_back(s); }
+                        }
+
+                        apply();
+                    }
+                }
+
+                else if (FILEMAN_SAVE == fm_mode_) {
+                    apply();
+                }
+            }
+        }
+    }
+}
+
+bool Fileman_impl::on_entry_mouse_down(int mbt, int mm, const Point & pt) {
+    if (MBT_LEFT == mbt) {
+        if (!entry_->empty()) {
+            entry_->move_to(entry_->buffer().end());
+            entry_->select_all();
+        }
+
+        return true;
+    }
+
+    return false;
+}
+
+void Fileman_impl::on_mkdir() {
+    if (auto dp = display()) {
+        if (auto toplevel = root()) {
+            Box_ptr box = std::make_shared<Box_impl>(OR_DOWN);
+            box->hint_margin(8);
+            box->set_align(ALIGN_CENTER);
+
+            Text_ptr tp = std::make_shared<Text_impl>("Create new folder in:", ALIGN_START, ALIGN_CENTER);
+            box->append(tp, true);
+
+            tp = std::make_shared<Text_impl>(dir(), ALIGN_START, ALIGN_CENTER);
+            box->append(tp, true);
+
+            Entry_ptr entry = std::make_shared<Entry_impl>();
+            box->append(entry, true);
+            entry->cancel_action().connect(fun(entry, &Widget_impl::quit_dialog));
+            entry->signal_activate().connect(tau::bind(fun(this, &Fileman_impl::on_mkdir_activate), entry.get()));
+            entry->signal_changed().connect(fun(this, &Fileman_impl::on_mkdir_changed));
+
+            Box_ptr bbox = std::make_shared<Box_impl>(OR_RIGHT, 12);
+            bbox->set_align(ALIGN_CENTER);
+            bbox->hint_margin(0, 0, 10, 4);
+            box->append(bbox, true);
+
+            mkdir_ok_button_ = std::make_shared<Button_impl>("OK", "dialog-ok", SMALL_ICON);
+            bbox->append(mkdir_ok_button_, true);
+            mkdir_ok_button_->signal_click().connect(tau::bind(fun(this, &Fileman_impl::on_mkdir_apply), entry.get()));
+            mkdir_ok_button_->disable();
+
+            Button_ptr cancel_button = std::make_shared<Button_impl>("Cancel", "dialog-cancel", SMALL_ICON);
+            bbox->append(cancel_button, true);
+            cancel_button->signal_click().connect(fun(cancel_button, &Widget_impl::quit_dialog));
+
+            auto dlg = dp->create_dialog(toplevel);
+            dlg->set_title("Create Folder");
+            dlg->insert(box);
+            dlg->show();
+            entry->take_focus();
+            dlg->run();
+            mkdir_ok_button_.reset();
+        }
+    }
+}
+
+void Fileman_impl::mkdir(const ustring & path) {
+    if (!path.empty()) {
+        try {
+            path_mkdir(path);
+            chdir(path);
+            entry_->clear();
+        }
+
+        catch (tau::exception & x) {
+            std::cerr << "** Fileman_impl::mkdir(): tau::exception thrown: " << x.what() << std::endl;
+        }
+    }
+}
+
+void Fileman_impl::on_mkdir_apply(Entry_impl * entry) {
+    ustring path = path_build(dir(), entry->text());
+    mkdir(path);
+    entry->quit_dialog();
+}
+
+void Fileman_impl::on_mkdir_activate(const ustring & dirname, Entry_impl * entry) {
+    ustring path = path_build(dir(), dirname);
+    mkdir(path);
+    entry->quit_dialog();
+}
+
+void Fileman_impl::on_mkdir_changed(const ustring & s) {
+    if (s.empty() || ".." == s || "." == s || "../" == s || "./" == s || "..\\" == s || ".\\" == s) {
+        mkdir_ok_button_->disable();
+    }
+
+    else {
+        ustring p = path_build(dir(), s);
+        if (file_exists(p)) { mkdir_ok_button_->disable(); }
+        else { mkdir_ok_button_->enable(); }
+    }
+}
+
+void Fileman_impl::show_mkdir_button() {
+    if (!mkdir_button_) {
+        mkdir_button_ = std::make_shared<Button_impl>(std::make_shared<Icon_impl>("folder-new:folder", MEDIUM_ICON));
+        mkdir_button_->set_tooltip("Create a new folder");
+        mkdir_button_->signal_click().connect(fun(this, &Fileman_impl::on_mkdir));
+        tools_->put(mkdir_button_, 0, 6, 1, 1, true, true);
+    }
+}
+
+void Fileman_impl::allow_dir_creation() {
+    if (!dir_creation_allowed_) {
+        if (FILEMAN_SAVE == fm_mode_) {
+            dir_creation_allowed_ = false;
+            show_mkdir_button();
+        }
+    }
+}
+
+void Fileman_impl::disallow_dir_creation() {
+    if (dir_creation_allowed_) {
+        dir_creation_allowed_ = false;
+        tools_->remove(mkdir_button_.get());
+        mkdir_button_.reset();
+    }
+}
+
+void Fileman_impl::init_places() {
+    auto frame = std::make_shared<Frame_impl>(BORDER_GROOVE);
+    frame->hint_margin_right(3);
+    insert_second(frame);
+
+    Box_ptr vbox = std::make_shared<Box_impl>(OR_DOWN, 3);
+    vbox->hint_margin(3);
+    frame->insert(vbox);
+
+    Box_ptr hbox = std::make_shared<Box_impl>(OR_RIGHT, 8);
+    vbox->append(hbox, true);
+    hbox->append(std::make_shared<Text_impl>("Places", ALIGN_START, ALIGN_CENTER));
+
+    Button_ptr button = std::make_shared<Button_impl>(std::make_shared<Icon_impl>("picto-close", 12));
+    button->hide_relief();
+    button->signal_click().connect(fun(this, &Fileman_impl::hide_places));
+    hbox->append(button, true);
+
+    places_list_ = std::make_shared<List_impl>();
+    vbox->append(places_list_);
+}
+
+void Fileman_impl::show_places() {
+    places_visible_ = true;
+
+    if (!has_second()) {
+        init_places();
+        fill_places();
+    }
+}
+
+void Fileman_impl::hide_places() {
+    remove_second();
+    places_visible_ = false;
+    places_list_.reset();
+}
+
+void Fileman_impl::on_mount(int flags, const ustring & mpoint) {
+    fill_places();
+}
+
+void Fileman_impl::add_filter(const ustring & patterns, const ustring & title) {
+    if (filters_->empty()) { navi_->set_filter(patterns); }
+    ustring s = title.empty() ? patterns : str_format(patterns, " – ", title);
+    Text_ptr tp = std::make_shared<Text_impl>(s, ALIGN_START);
+    tp->signal_select().connect(tau::bind(fun(navi_, &Navigator_impl::set_filter), patterns));
+    filters_->add(tp);
+}
+
+void Fileman_impl::sort_forward() {
+    navi_->sort_forward();
+}
+
+void Fileman_impl::sort_backward() {
+    navi_->sort_backward();
+}
+
+bool Fileman_impl::sorted_backward() const {
+    return navi_->sorted_backward();
+}
+
+void Fileman_impl::show_hidden_files() {
+    navi_->show_hidden_files();
+}
+
+void Fileman_impl::hide_hidden_files() {
+    navi_->hide_hidden_files();
+}
+
+bool Fileman_impl::hidden_files_visible() const {
+    return navi_->hidden_files_visible();
+}
+
+void Fileman_impl::allow_multiple_select() {
+    navi_->allow_multiple_select();
+}
+
+void Fileman_impl::disallow_multiple_select() {
+    navi_->disallow_multiple_select();
+}
+
+bool Fileman_impl::multiple_select_allowed() const {
+    return navi_->multiple_select_allowed();
+}
+
+void Fileman_impl::allow_dir_select() {
+    navi_->allow_dir_select();
+}
+
+void Fileman_impl::disallow_dir_select() {
+    navi_->disallow_dir_select();
+}
+
+bool Fileman_impl::dir_select_allowed() const {
+    return navi_->dir_select_allowed();
+}
+
+void Fileman_impl::set_show_dirs_only() {
+    navi_->set_show_dirs_only();
+}
+
+void Fileman_impl::unset_show_dirs_only() {
+    navi_->unset_show_dirs_only();
+}
+
+bool Fileman_impl::dirs_only_visible() const {
+    return navi_->dirs_only_visible();
+}
+
+void Fileman_impl::allow_silent_overwrite() {
+    silent_overwrite_allowed_ = true;
+}
+
+void Fileman_impl::disallow_silent_overwrite() {
+    silent_overwrite_allowed_ = false;
+}
+
+void Fileman_impl::on_configure() {
+    Menubox_ptr menu = std::make_shared<Menubox_impl>();
+    Menubox_ptr sort_menu = std::make_shared<Menubox_impl>();
+    Submenu_ptr sort_item = std::make_shared<Submenu_impl>("Sort", sort_menu);
+    menu->append_widget(sort_item);
+
+    Check_menu_ptr sort_name = std::make_shared<Check_menu_impl>("By Name", CHECK_RSTYLE, "name" == sorted_by());
+    sort_name->signal_check().connect(tau::bind(fun(this, &Fileman_impl::sort_by), "name"));
+    sort_menu->append_widget(sort_name);
+
+    Check_menu_ptr sort_size = std::make_shared<Check_menu_impl>("By Size", CHECK_RSTYLE, "bytes" == sorted_by());
+    sort_size->join(sort_name);
+    sort_size->signal_check().connect(tau::bind(fun(this, &Fileman_impl::sort_by), "bytes"));
+    sort_menu->append_widget(sort_size);
+
+    Check_menu_ptr sort_date = std::make_shared<Check_menu_impl>("By Date", CHECK_RSTYLE, "date" == sorted_by());
+    sort_date->join(sort_name);
+    sort_date->signal_check().connect(tau::bind(fun(this, &Fileman_impl::sort_by), "date"));
+    sort_menu->append_widget(sort_date);
+
+    Check_menu_ptr sort_unsorted = std::make_shared<Check_menu_impl>("Keep Unsorted", CHECK_RSTYLE, "" == sorted_by());
+    sort_unsorted->join(sort_name);
+    sort_unsorted->signal_check().connect(tau::bind(fun(this, &Fileman_impl::sort_by), ""));
+    sort_menu->append_widget(sort_unsorted);
+
+    Menubox_ptr columns_menu = std::make_shared<Menubox_impl>();
+    Submenu_ptr columns_item = std::make_shared<Submenu_impl>("Columns", columns_menu);
+    menu->append_widget(columns_item);
+
+    Check_menu_ptr columns_size = std::make_shared<Check_menu_impl>("Show File Size", CHECK_VSTYLE, info_visible("bytes"));
+    columns_size->signal_check().connect(tau::bind(fun(this, &Fileman_impl::show_info), "bytes", U':'));
+    columns_size->signal_uncheck().connect(tau::bind(fun(this, &Fileman_impl::hide_info), "bytes", U':'));
+    columns_menu->append_widget(columns_size);
+
+    Check_menu_ptr columns_date = std::make_shared<Check_menu_impl>("Show File Date", CHECK_VSTYLE, info_visible("date"));
+    columns_date->signal_check().connect(tau::bind(fun(this, &Fileman_impl::show_info), "date", U':'));
+    columns_date->signal_uncheck().connect(tau::bind(fun(this, &Fileman_impl::hide_info), "date", U':'));
+    columns_menu->append_widget(columns_date);
+
+    sort_menu->append_separator();
+
+    Check_menu_ptr sort_back = std::make_shared<Check_menu_impl>("Sort Descent", CHECK_VSTYLE, sorted_backward());
+    sort_back->signal_check().connect(fun(this, &Fileman_impl::sort_backward));
+    sort_back->signal_uncheck().connect(fun(this, &Fileman_impl::sort_forward));
+    sort_menu->append_widget(sort_back);
+
+    menu->append_separator();
+
+    Check_menu_ptr show_hidden = std::make_shared<Check_menu_impl>("Show Hidden Files", CHECK_VSTYLE, hidden_files_visible());
+    show_hidden->signal_check().connect(fun(this, &Fileman_impl::show_hidden_files));
+    show_hidden->signal_uncheck().connect(fun(this, &Fileman_impl::hide_hidden_files));
+    menu->append_widget(show_hidden);
+
+    Check_menu_ptr show_qpanel = std::make_shared<Check_menu_impl>("Show Places", CHECK_VSTYLE, places_visible());
+    show_qpanel->signal_check().connect(fun(this, &Fileman_impl::show_places));
+    show_qpanel->signal_uncheck().connect(fun(this, &Fileman_impl::hide_places));
+    menu->append_widget(show_qpanel);
+
+    if (root()) {
+        Point pos = conf_button_->to_root();
+        menu->popup(root(), menu, pos, GRAVITY_TOP_RIGHT, nullptr);
+    }
+}
+
+bool Fileman_impl::next_avail() const {
+    return 1+ihistory_ < history_.size();
+}
+
+bool Fileman_impl::prev_avail() const {
+    return ihistory_ > 0;
+}
+
+void Fileman_impl::add_to_history(const ustring & path) {
+    for (unsigned n = ihistory_; n < history_.size(); ++n) { history_.pop_back(); }
+    history_.push_back(path);
+    ihistory_ = history_.size();
+}
+
+void Fileman_impl::next() {
+    if (1+ihistory_ < history_.size()) {
+        bool p_avail = prev_avail();
+        ++ihistory_;
+        if (ihistory_ < history_.size()) { navi_->chdir(history_[ihistory_]); }
+        if (!next_avail()) { next_action_.disable(); }
+        if (!p_avail && prev_avail()) { prev_action_.enable(); }
+    }
+}
+
+void Fileman_impl::prev() {
+    if (ihistory_ > 0) {
+        bool n_avail = next_avail();
+        --ihistory_;
+        if (ihistory_ < history_.size()) { navi_->chdir(history_[ihistory_]); }
+        if (!prev_avail()) { prev_action_.disable(); }
+        if (!n_avail && next_avail()) { next_action_.enable(); }
+    }
+}
+
+void Fileman_impl::updir() {
+    ustring p = path_dirname(navi_->dir());
+    if (p != dir()) { chdir(p); }
+}
+
+} // namespace tau
+
+//END
