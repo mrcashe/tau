@@ -124,7 +124,9 @@ chk_which 'tr' 'tr' 'MANDATORY'
 chk_which 'cmp' 'cmp' 'MANDATORY'
 chk_which 'basename' 'basename' 'MANDATORY'
 chk_which 'dirname' 'dirname' 'MANDATORY'
+chk_which 'stdbuf' 'stdbuf' 'MANDATORY'
 chk_which 'tar' 'tar' 'MANDATORY'
+chk_which 'xz' 'xz' 'MANDATORY'
 
 verfile="$topdir/VERSION"
 
@@ -473,6 +475,9 @@ rm -f $tmp
 [ ! -e Makefile ] && $link "$topdir/Makefile" Makefile
 mkdir -vp $builddir
 [ ! -e "$builddir/Makefile" ] && $link "$supdir/build.mk" "$builddir/Makefile"
+
+# Flush conf/conf.mk
+stdbuf -oL printf '\n' >>$conf_mk
 
 if [ -z "$(ls $builddir/*.mk 2>/dev/null)" ]; then
     $which_make en-host-so

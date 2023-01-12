@@ -33,7 +33,7 @@ namespace tau {
 
 class Popup_impl: public Window_impl {
     Point   upos_;
-    Gravity    gravity_ = GRAVITY_TOP_LEFT;
+    Gravity gravity_ = GRAVITY_TOP_LEFT;
 
 protected:
 

@@ -108,7 +108,7 @@ void Context_xcb::set_stipple(uint32_t stipple) {
 void Context_xcb::set_tile_stipple_origin(const Point & origin) {
     xstipple_ = static_cast<uint32_t>(origin.x());
     ystipple_ = static_cast<uint32_t>(origin.y());
-    flags_ |= (XCB_GC_TILE_STIPPLE_ORIGIN_X|XCB_GC_TILE_STIPPLE_ORIGIN_X);
+    flags_ |= (XCB_GC_TILE_STIPPLE_ORIGIN_X|XCB_GC_TILE_STIPPLE_ORIGIN_Y);
 }
 
 void Context_xcb::set_subwindow_mode(bool on) {

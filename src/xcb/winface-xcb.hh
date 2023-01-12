@@ -149,14 +149,14 @@ private:
     void on_hints();
 
     Display_xcb_ptr     dp_;
-    Window_impl *       self_;
-    Toplevel_impl *     tpl_;
-    Popup_impl *        popup_;
+    Window_impl *       self_ = nullptr;
+    Toplevel_impl *     tpl_ = nullptr;
+    Popup_impl *        popup_ = nullptr;
 
-    xcb_window_t        wid_;
-    xcb_window_t        pwid_;
+    xcb_window_t        wid_ = XCB_NONE;
+    xcb_window_t        pwid_ = XCB_NONE;
     Cursor_xcb_ptr      icursor_;
-    xcb_connection_t *  cx_;
+    xcb_connection_t *  cx_ = nullptr;
     bool                hide_taskbar_hint_ = false;
     xcb_render_picture_t xpicture_ = XCB_NONE;
     unsigned            wm_state_ = 0;

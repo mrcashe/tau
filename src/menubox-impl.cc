@@ -382,9 +382,10 @@ void Menubox_impl::update_separators() {
         }
 
         trng = table_->span();
-        bool fsep = true;
 
         if (trng.xmax > trng.xmin && trng.ymax > trng.ymin) {
+            bool fsep = true;
+
             for (int yy = trng.ymin; yy < trng.ymax; ++yy) {
                 auto v = table_->children_within_range(trng.xmin, yy, trng.xmax, yy+1);
 
@@ -405,7 +406,8 @@ void Menubox_impl::update_separators() {
                 }
             }
 
-            fsep = true;
+            fsep = false;
+
             for (int yy = trng.ymax-1; yy >= trng.ymin; --yy) {
                 auto v = table_->children_within_range(trng.xmin, yy, trng.xmax, trng.ymin+1);
 

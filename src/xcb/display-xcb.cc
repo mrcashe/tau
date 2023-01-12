@@ -732,7 +732,7 @@ void Display_xcb::init_xkb() {
     }
 
     int32_t kbd_id = xkb_x11_get_core_keyboard_device_id(cx_);
-    if (-1 == result) {
+    if (-1 == kbd_id) {
         throw graphics_error("Display_xcb: failed to obtain core keyboard device");
     }
 
@@ -878,15 +878,13 @@ xcb_visualid_t Display_xcb::visualid() const {
 
 xcb_render_pictformat_t Display_xcb::pictformat(unsigned depth) {
     // First, try to find format in the depth->format map.
-    auto iter = depth_formats_.find(depth);
-    if (depth_formats_.end() != iter) { return iter->second; }
+    auto i = depth_formats_.find(depth);
+    if (depth_formats_.end() != i) { return i->second; }
 
     // Else try to find it among all available formats.
-    for (auto iter: pict_formats_) {
-        const Pict_format & pf = iter.second;
-
-        if (depth == pf.depth) {
-            return iter.first;
+    for (auto j: pict_formats_) {
+        if (depth == j.second.depth) {
+            return j.first;
         }
     }
 
@@ -1198,11 +1196,12 @@ void Display_xcb::handle_kbd(bool press, xcb_key_press_event_t * event) {
     uint32_t xkeycode = 0;
     const xkb_keysym_t * syms;
     if (0 != xkb_state_key_get_syms(xkbstate_, key, &syms)) { xkeycode = *syms; }
-    uint32_t kc = 0;
     uint32_t uni = xkb_state_key_get_utf32(xkbstate_, key);
     Window_impl * wii = modal_window_ ? modal_window_ : focused_;
 
     if (wii) {
+        uint32_t kc = 0;
+
         if (uni < 0x000020 || uni == 0x007f || uni > 0x10ffff) {
             auto iter = kc_translate_.find(xkeycode);
             if (iter != kc_translate_.end()) { kc = iter->second; }

@@ -45,7 +45,7 @@ void Pix_store::resize(const Size & sz) {
 
     if (depth_ < 8) {
         nwords = width >> 5;
-        stride_ = 0x1f & width ? 1 : 0;
+        stride_ = (0x1f & width) ? 1 : 0;
         stride_ += nwords;
         stride_ *= 4;
         nbytes = stride_*depth_*sz.height();
@@ -53,7 +53,7 @@ void Pix_store::resize(const Size & sz) {
 
     else if (8 == depth_) {
         nwords = width >> 2;
-        stride_ = 0x03 & width ? 1 : 0;
+        stride_ = (0x03 & width) ? 1 : 0;
         stride_ += nwords;
         stride_ *= 4;
         nbytes = stride_*sz.height();

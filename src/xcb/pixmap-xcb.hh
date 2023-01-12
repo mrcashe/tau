@@ -41,7 +41,7 @@ struct Pix_store {
     std::size_t          stride_ = 0;           // bytes per line.
     std::vector<uint8_t> raw_;                  // raw data.
 
-    Pix_store(unsigned depth);
+    explicit Pix_store(unsigned depth);
     Pix_store(unsigned depth, const Size & sz);
 
     void resize(const Size & sz);
@@ -60,7 +60,7 @@ struct Pix_store {
 class Pixmap_xcb: public Pixmap_impl {
 public:
 
-    Pixmap_xcb(unsigned depth, const Size & sz=Size());
+    explicit Pixmap_xcb(unsigned depth, const Size & sz=Size());
    ~Pixmap_xcb();
 
     // Overrides pure Pixmap_impl.

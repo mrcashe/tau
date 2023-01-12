@@ -32,11 +32,11 @@ namespace tau {
 
 Popup_impl::Popup_impl(Winface_ptr winface, const Point & upos, Window_ptr wpp, Gravity gravity):
     Window_impl(),
+    upos_(upos),
     gravity_(gravity)
 {
     hidden_ = true;
     winface_ = winface;
-    upos_ = upos;
     wpp_ = wpp;
     signal_visible_.connect(fun(this, &Popup_impl::on_show));
     signal_requisition_changed_.connect(fun(this, &Popup_impl::adjust));

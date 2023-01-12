@@ -50,9 +50,9 @@ tau::Orientation or_from_tab_pos(tau::Tab_pos tab_pos) {
 namespace tau {
 
 Notebook_impl::Notebook_impl(Tab_pos tab_pos):
-    Box_impl(or_from_tab_pos(tab_pos))
+    Box_impl(or_from_tab_pos(tab_pos)),
+    card_(std::make_shared<Card_impl>())
 {
-    card_ = std::make_shared<Card_impl>();
     roller_ = std::make_shared<Roller_impl>(horizontal() ? OR_DOWN : OR_RIGHT);
     roller_->set_step(32);
     abs_ = std::make_shared<Absolute_impl>();

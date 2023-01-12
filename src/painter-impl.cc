@@ -1224,8 +1224,8 @@ void Painter_impl::raster_sweep(Raster & ras, bool horz) {
                 p.count -= y_height;
 
                 if (0 == p.count) {
-                    auto iter = std::find(wt.begin(), wt.end(), n);
-                    if (iter != wt.end()) { wt.erase(iter); }
+                    auto j = std::find(wt.begin(), wt.end(), n);
+                    if (j != wt.end()) { wt.erase(j); }
                     if (p.ascend) { dl.push_back(p.iself); }
                     else { dr.push_back(p.iself); }
                 }
@@ -1286,15 +1286,15 @@ void Painter_impl::raster_sweep(Raster & ras, bool horz) {
 
             for (int n: std::vector<int>(dl)) {
                 if (0 == ras.pros[n].height) {
-                    auto iter = std::find(dl.begin(), dl.end(), n);
-                    if (iter != dl.end()) dl.erase(iter);
+                    auto j = std::find(dl.begin(), dl.end(), n);
+                    if (j != dl.end()) dl.erase(j);
                 }
             }
 
             for (int n: std::vector<int>(dr)) {
                 if (0 == ras.pros[n].height) {
-                    auto iter = std::find(dr.begin(), dr.end(), n);
-                    if (iter != dr.end()) dr.erase(iter);
+                    auto j = std::find(dr.begin(), dr.end(), n);
+                    if (j != dr.end()) dr.erase(j);
                 }
             }
         }

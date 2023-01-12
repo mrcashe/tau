@@ -111,6 +111,7 @@ void Loop_impl::run() {
         if (!signal_run_.empty() && dts >= 2000) {
             ts = now+2000;
             dts = ts-now;
+            run = true;
         }
 
         int tw = dts/1000;
