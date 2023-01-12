@@ -40,11 +40,8 @@ namespace tau {
 class Fileman: public Widget {
 public:
 
-    /// Default constructor.
-    Fileman(Fileman_mode fs_type);
-
-    /// Constructor with initial path.
-    Fileman(Fileman_mode fs_type, const ustring & path);
+    /// Constructor with mode and path.
+    Fileman(Fileman_mode fm_mode, const ustring & path=ustring());
 
     /// Get current directory.
     ustring dir() const;

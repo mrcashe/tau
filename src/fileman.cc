@@ -31,11 +31,6 @@ namespace tau {
 
 #define FILEMAN_IMPL (std::static_pointer_cast<Fileman_impl>(impl))
 
-Fileman::Fileman(Fileman_mode fs_type):
-    Widget(Fileman_impl::create(fs_type))
-{
-}
-
 Fileman::Fileman(Fileman_mode fs_type, const ustring & path):
     Widget(Fileman_impl::create(fs_type, path))
 {

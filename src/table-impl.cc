@@ -1089,7 +1089,7 @@ void Table_impl::get_row_margin(int yy, unsigned & top, unsigned & bottom) const
 
 bool Table_impl::on_backpaint(Painter pr, const Rect & inval) {
     Point spos = scroll_position();
-    Color c = style().color("background-select");
+    Color c = style().color("select/background");
 
     for (Table::Span & m: marks_) {
         Rect rsel = range_bounds(m);
@@ -1754,7 +1754,7 @@ void Table_impl::select(int xmin, int ymin, unsigned xspan, unsigned yspan) {
     sel_.ymin = ymin;
     sel_.xmax = xmax;
     sel_.ymax = ymax;
-    Color c = style().color("background-select");
+    Color c = style().color("select/background");
     invalidate(range_bounds(sel_));
 
     for (auto wp: children_within_range(xmin, ymin, xmax, ymax)) {
@@ -1823,7 +1823,7 @@ void Table_impl::mark(int xmin, int ymin, unsigned width, unsigned height) {
     m.ymax = ymax;
     marks_.push_back(m);
 
-    Color c = style().color("background-select");
+    Color c = style().color("select/background");
     c.darker(0.1);
     invalidate(range_bounds(m));
 
@@ -1915,6 +1915,8 @@ bool Table_impl::on_take_focus() {
     return grab_focus();
 }
 
+// Overriden by List_impl.
+// Overriden by List_text_impl.
 void Table_impl::clear() {
     unmark_all();
     unselect();

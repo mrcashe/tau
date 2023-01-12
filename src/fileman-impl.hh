@@ -37,13 +37,11 @@ namespace tau {
 class Fileman_impl: public Twins_impl {
 protected:
 
-    Fileman_impl(Fileman_mode fs_type);
-    Fileman_impl(Fileman_mode fs_type, const ustring & path);
+    Fileman_impl(Fileman_mode fs_type, const ustring & path=ustring());
 
 public:
 
-    static Fileman_ptr create(Fileman_mode fs_type);
-    static Fileman_ptr create(Fileman_mode fs_type, const ustring & path);
+    static Fileman_ptr create(Fileman_mode fs_type, const ustring & path=ustring());
 
     ustring dir() const;
     void chdir(const ustring & dirpath);
@@ -103,12 +101,11 @@ protected:
     Table_ptr               table_;
     List_ptr                places_list_;           // Places list.
     Cycle_ptr               filters_;
-    bool                    places_visible_ = true; // Quick panel shown by default.
+    bool                    places_visible_ = true; // Places visible by default.
     bool                    dir_creation_allowed_;  // Directory creation allowed.
     bool                    silent_overwrite_allowed_ = false; // Allow overwrite without a prompt.
 
     signal<void()>          signal_apply_;
-    signal<void(ustring)>   signal_places_chdir_;
 
 protected:
 
@@ -123,32 +120,27 @@ private:
     std::vector<ustring>    selection_;             // Currently selected paths.
     Navigator_ptr           navi_;
     Entry_ptr               entry_;
-    Table_ptr               tools_;
     History                 history_;
     std::size_t             ihistory_ = 0;
 
-    Button_ptr              apply_button_;
     Button_ptr              up_button_;
-    Button_ptr              prev_button_;
-    Button_ptr              next_button_;
-    Button_ptr              reload_button_;
-    Button_ptr              mkdir_button_;
     Button_ptr              conf_button_;
     Button_ptr              mkdir_ok_button_;
 
+    Action                  configure_action_ { KC_NONE, KM_NONE, "Configure", "configure", "Configure file open widget", fun(this, &Fileman_impl::on_configure) };
     Action                  apply_action_ { KC_NONE, KM_NONE, "Apply", "dialog-ok", fun(this, &Fileman_impl::on_apply) };
     Action                  cancel_action_ { "Escape Cancel", "Cancel", "dialog-cancel", fun(this, &Fileman_impl::on_cancel) };
     Action                  next_action_ { KC_RIGHT, KM_ALT, "Next Folder", "go-next:go-right", "Go to next folder", fun(this, &Fileman_impl::next) };
     Action                  prev_action_ { KC_LEFT, KM_ALT, "Previous Folder", "go-previous:go-left", "Go to previous folder", fun(this, &Fileman_impl::prev) };
     Action                  updir_action_ { KC_UP, KM_ALT, "Up Folder", "go-up", "Go to parent folder", fun(this, &Fileman_impl::updir) };
     Action                  refresh_action_ { "F5", "Refresh", "view-refresh", ustring("Reload current folder") };
+    Action                  mkdir_action_ { "F7", "Create Directory", "folder-new:folder", "Create a new folder", fun(this, &Fileman_impl::on_mkdir) };
+    Toggle_action           hidden_action_ { "<Alt>.", "Show Hidden Files", "show-hidden", "Show Hidden Files", fun(this, &Fileman_impl::on_show_hidden) };
 
 private:
 
-    void init();
     void init_places();
     void entry_from_selection();
-    void show_mkdir_button();
     void mkdir(const ustring & path);
     void apply();
     bool next_avail() const;
@@ -174,6 +166,7 @@ private:
     void on_mkdir_apply(Entry_impl * entry);
     void on_mkdir_activate(const ustring & dirname, Entry_impl * entry);
     void on_mkdir_changed(const ustring & dirname);
+    void on_show_hidden(bool show);
 };
 
 } // namespace tau

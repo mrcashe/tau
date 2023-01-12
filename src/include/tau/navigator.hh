@@ -29,6 +29,7 @@
 
 /// @file navigator.hh The %Navigator (filesystem navigation widget) class.
 
+#include <tau/ustring.hh>
 #include <tau/widget.hh>
 
 namespace tau {
@@ -38,11 +39,8 @@ namespace tau {
 class Navigator: public Widget {
 public:
 
-    /// Default constructor.
-    Navigator();
-
-    /// Constructor with initial path.
-    Navigator(const ustring & path);
+    /// Constructor with path.
+    Navigator(const ustring & path=ustring());
 
     /// Change directory.
     void chdir(const ustring & path);

@@ -621,6 +621,7 @@ bool Toggle_action::get() const {
 void Toggle_action::set(bool state) {
     if (!disabled() && state_ != state) {
         state_ = state;
+        signal_toggle_(state_);
     }
 }
 

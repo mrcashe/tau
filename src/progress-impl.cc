@@ -42,8 +42,8 @@ Progress_impl::Progress_impl(bool vertical):
     area_->signal_parent().connect(fun(this, &Progress_impl::on_area_hierarchy_changed));
     insert(area_);
 
-    area_->style().get("color-progress-bar").signal_changed().connect(fun(this, &Progress_impl::paint_now));
-    area_->style().get("color-progress-text").signal_changed().connect(fun(this, &Progress_impl::paint_now));
+    area_->style().get("progress/background").signal_changed().connect(fun(this, &Progress_impl::paint_now));
+    area_->style().get("progress/foreground").signal_changed().connect(fun(this, &Progress_impl::paint_now));
     area_->style().get("background").signal_changed().connect(fun(this, &Progress_impl::paint_now));
 }
 
@@ -157,7 +157,7 @@ void Progress_impl::redraw(Painter pr) {
                 x1 = 0, y1 = 0, x2 = dx2, y2 = asize.height();
             }
 
-            Color cbar = area_->style().get("color-progress-bar").get();
+            Color cbar = area_->style().get("progress/background").get();
             pr.rectangle(x1, y1, x2, y2);
             pr.set_brush(cbar);
             pr.fill();
@@ -173,7 +173,7 @@ void Progress_impl::redraw(Painter pr) {
                 }
 
                 pr.move_to(x, y);
-                Color ctext = area_->style().get("color-progress-text").get();
+                Color ctext = area_->style().get("progress/foreground").get();
                 pr.text(msg_, ctext);
                 pr.stroke();
             }

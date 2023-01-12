@@ -33,7 +33,7 @@ include conf/conf.mk
 
 export hh_src = $(srcdir)/include
 export hh_option = -I$(hh_src)
-export hh_impl_options = $(hh_option) -I$(topdir)/src -I$(confdir)/src
+export hh_impl_options = $(hh_option) -I$(srcdir) -I$(confdir)
 
 RECURSIVE_TARGETS = all-recursive install-recursive uninstall-recursive clean-recursive
 .PHONY: $(RECURSIVE_TARGETS) configure post-configure rm xz test-links
@@ -50,7 +50,7 @@ configure:
 	@./configure || exit 1
 
 rm:
-	@rm -vrf $(builddir) $(bindir) $(topdir)/conf
+	@rm -vrf $(builddir) $(bindir) $(confdir)
 
 post-configure: $(builddir)/Makefile
 
@@ -59,7 +59,7 @@ $(builddir)/Makefile: $(builddir)
 
 $(builddir):
 	@mkdir -vp $@
-	@[ -z $(wildcard "$(builddir)/*") ] && $(MAKE) en-host-so $(conf_targets)
+	@[ -z $(wildcard "$(builddir)/*") ] && $(MAKE) $(conf_targets)
 
 test-links:
 	@if [ ! -d $$builddir/test ]; then \

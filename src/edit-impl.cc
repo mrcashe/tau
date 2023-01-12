@@ -60,7 +60,7 @@ void Edit_impl::init() {
     connect_buffer();
     allow_edit();
 
-    style_.redirect("background-whitespace", "background");
+    style_.redirect("whitespace/background", "background");
     signal_key_down_.connect(fun(this, &Edit_impl::on_key_down));
     signal_display().connect(fun(this, &Edit_impl::on_display));
 

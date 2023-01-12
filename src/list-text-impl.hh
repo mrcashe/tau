@@ -53,7 +53,8 @@ public:
     ustring at(int row) const;
 
     // Overrides List_impl.
-    void clear_list() override;
+    // Overrides Table_impl.
+    void clear() override;
 
     Align text_align() const {
         return align_;

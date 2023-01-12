@@ -133,7 +133,7 @@ bool List::empty() const {
 }
 
 void List::clear() {
-    LIST_IMPL->clear_list();
+    LIST_IMPL->clear();
 }
 
 void List::unselect() {

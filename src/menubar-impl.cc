@@ -73,7 +73,7 @@ void Menubar_impl::child_menu_right() {
 
 void Menubar_impl::mark_item(Menu_item_ptr ip, bool select) {
     if (select) {
-        ip->style().get("background").set(style().get("background-select").get());
+        ip->style().get("background").set(style().get("select/background").get());
     }
 
     else {

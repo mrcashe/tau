@@ -291,6 +291,14 @@ void Font_style::set_face(const ustring & face) {
     set(font_set_face(spec(), face));
 }
 
+Font_style::operator ustring() const {
+    return spec();
+}
+
+void Font_style::operator=(const ustring & s) {
+    set(s);
+}
+
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
 
@@ -300,6 +308,15 @@ Color Color_style::get() const {
 
 void Color_style::set(const Color & color) {
     si_.set(color.html());
+}
+
+Color_style::operator Color() const {
+    return get();
+}
+
+Color_style & Color_style::operator=(const Color & color) {
+    set(color);
+    return *this;
 }
 
 // ----------------------------------------------------------------------------

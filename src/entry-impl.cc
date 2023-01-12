@@ -62,7 +62,7 @@ void Entry_impl::init(Align text_align) {
     insert(box_);
     if (BORDER_NONE != border_left_style()) { box_->hint_margin(2); }
 
-    box_->style().redirect("background-whitespace", "background");
+    box_->style().redirect("whitespace/background", "background");
     box_->focus_next_action().disable();
     box_->focus_previous_action().disable();
 

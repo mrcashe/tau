@@ -42,7 +42,7 @@ List_impl::List_impl():
     Table_impl(),
     table_(std::make_shared<Table_impl>())
 {
-    table_->style().redirect("background-whitespace", "background");
+    table_->style().redirect("whitespace/background", "background");
     table_->signal_mouse_down().connect(fun(this, &List_impl::on_table_mouse_down));
     table_->signal_mouse_double_click().connect(fun(this, &List_impl::on_table_mouse_double_click));
     table_->signal_size_changed().connect(fun(this, &List_impl::scroll_to_selection));
@@ -98,7 +98,7 @@ int List_impl::prepend_row(Widget_ptr wp, Align align, bool shrink) {
     table_->set_column_margin(0, 2, 2);
     table_->set_row_margin(trunk_min_, 1, 1);
     table_->align(wp.get(), align, ALIGN_CENTER);
-    branches_[trunk_min_] = Branch { 0, 0 };
+    selectables_[trunk_min_] = Selectable { 0, 0 };
     if (INT_MIN == selected_row() && has_focus()) { select_row(trunk_min_); }
     adjust();
     return trunk_min_;
@@ -129,24 +129,24 @@ int List_impl::insert_row(Widget_ptr wp, int position, Align align, bool shrink)
 
     ++trunk_max_;
 
-    if (!branches_.empty()) {
-        int first = branches_.begin()->first, last = branches_.rbegin()->first;
+    if (!selectables_.empty()) {
+        int first = selectables_.begin()->first, last = selectables_.rbegin()->first;
 
         if (position >= first && position <= last) {
             for (int y = last; y >= position; --y) {
-                auto iter = branches_.find(y);
+                auto iter = selectables_.find(y);
 
-                if (iter != branches_.end()) {
-                    Branch bb(iter->second);
-                    branches_.erase(y);
-                    branches_[y+1] = bb;
+                if (iter != selectables_.end()) {
+                    Selectable bb(iter->second);
+                    selectables_.erase(y);
+                    selectables_[y+1] = bb;
                     signal_row_moved_(y, y+1);
                 }
             }
         }
     }
 
-    branches_[position] = Branch { 0, 0 };
+    selectables_[position] = Selectable { 0, 0 };
     if (INT_MIN == selected_row() && has_focus()) { select_row(position); }
     adjust();
     return position;
@@ -166,7 +166,7 @@ int List_impl::append_row(Widget_ptr wp, Align align, bool shrink) {
     table_->set_row_margin(trunk_max_, 1, 1);
     table_->align(wp.get(), align, ALIGN_CENTER);
     int br = trunk_max_++;
-    branches_[br] = Branch { 0, 0 };
+    selectables_[br] = Selectable { 0, 0 };
     if (INT_MIN == selected_row() && has_focus()) { select_row(br); }
     adjust();
     return br;
@@ -259,7 +259,7 @@ int List_impl::append(Widget_ptr wp, Align align) {
 
 int List_impl::prepend(int row, Widget_ptr wp, Align align, bool shrink) {
     try {
-        Branch & br = branches_.at(row);
+        Selectable & br = selectables_.at(row);
         int tpos = --br.min;
         table_->put(wp, tpos, row, 1, 1, shrink, true);
         table_->set_column_margin(tpos, 2, 2);
@@ -285,7 +285,7 @@ int List_impl::prepend(int row, Widget_ptr wp, Align align) {
 
 int List_impl::insert(int row, Widget_ptr wp, int index, Align align, bool shrink) {
     try {
-        Branch & br = branches_.at(row);
+        Selectable & br = selectables_.at(row);
 
         if (index < 0) {
             br.min = index;
@@ -322,7 +322,7 @@ int List_impl::insert(int row, Widget_ptr wp, int index, Align align) {
 
 int List_impl::append(int row, Widget_ptr wp, Align align, bool shrink) {
     try {
-        Branch & br = branches_.at(row);
+        Selectable & br = selectables_.at(row);
         int index = ++br.max;
         table_->put(wp, br.max, row, 1, 1, shrink, true);
         table_->set_column_margin(br.max, 2, 2);
@@ -347,27 +347,27 @@ int List_impl::append(int row, Widget_ptr wp, Align align) {
 }
 
 void List_impl::remove(int yy) {
-    auto i = branches_.find(yy);
+    auto i = selectables_.find(yy);
     table_->remove_rows(yy, 1);
 
-    if (branches_.end() != i) {
+    if (selectables_.end() != i) {
         signal_row_removed_(yy);
-        int last = branches_.rbegin()->first;
+        int last = selectables_.rbegin()->first;
 
         // Move branches up.
         if (yy < last) {
             for (int y = yy+1; y <= last; ++y) {
-                auto iter = branches_.find(y);
+                auto iter = selectables_.find(y);
 
-                if (iter != branches_.end()) {
-                    Branch b = iter->second;
-                    branches_[y-1] = b;
+                if (iter != selectables_.end()) {
+                    Selectable b = iter->second;
+                    selectables_[y-1] = b;
                     signal_row_moved_(y, y-1);
                 }
             }
         }
 
-        branches_.erase(last);
+        selectables_.erase(last);
     }
 
     else {
@@ -378,7 +378,7 @@ void List_impl::remove(int yy) {
 }
 
 int  List_impl::page_down_row() {
-    if (branches_.empty()) { return INT_MIN; }
+    if (selectables_.empty()) { return INT_MIN; }
 
     Table::Span rng = table_->span();
     Table::Span sel = table_->selection();
@@ -389,19 +389,19 @@ int  List_impl::page_down_row() {
             Size lsize = scroller_->logical_size(), max = lsize-scroller_->size();
 
             if (max.height()) {
-                if (branches_.rbegin()->first != sel.ymin) {
+                if (selectables_.rbegin()->first != sel.ymin) {
                     int yt = rsel.top()+va.height()-rsel.height()-rsel.height();
-                    auto iter = std::find_if(branches_.begin(), branches_.end(),
-                                             [sel](const std::pair<const int, Branch> & p) { return p.first == sel.ymin; });
+                    auto iter = std::find_if(selectables_.begin(), selectables_.end(),
+                                             [sel](const std::pair<const int, Selectable> & p) { return p.first == sel.ymin; });
 
                     Rect rbr;
 
-                    for (; iter != branches_.end(); ++iter) {
+                    for (; iter != selectables_.end(); ++iter) {
                         rbr = table_->bounds(rng.xmin, iter->first, rng.xmax-rng.xmin, 1);
                         if (rbr.top() >= yt) break;
                     }
 
-                    if (iter != branches_.end()) {
+                    if (iter != selectables_.end()) {
                         return iter->first;
                     }
                 }
@@ -409,11 +409,11 @@ int  List_impl::page_down_row() {
         }
     }
 
-    return branches_.rbegin()->first;
+    return selectables_.rbegin()->first;
 }
 
 void List_impl::page_down() {
-    if (branches_.empty()) { return; }
+    if (selectables_.empty()) { return; }
 
     Table::Span rng = table_->span();
     Table::Span sel = table_->selection();
@@ -424,18 +424,18 @@ void List_impl::page_down() {
             Size lsize = scroller_->logical_size(), max = lsize-scroller_->size();
 
             if (max.height()) {
-                if (branches_.rbegin()->first != sel.ymin) {
+                if (selectables_.rbegin()->first != sel.ymin) {
                     int yt = rsel.top()+va.height()-rsel.height()-rsel.height();
-                    auto iter = std::find_if(branches_.begin(), branches_.end(),
-                                                [sel](const std::pair<const int, Branch> & p) { return p.first == sel.ymin; });
+                    auto iter = std::find_if(selectables_.begin(), selectables_.end(),
+                                                [sel](const std::pair<const int, Selectable> & p) { return p.first == sel.ymin; });
 
                     Rect rbr;
-                    for (; iter != branches_.end(); ++iter) {
+                    for (; iter != selectables_.end(); ++iter) {
                         rbr = table_->bounds(rng.xmin, iter->first, rng.xmax-rng.xmin, 1);
                         if (rbr.top() >= yt) break;
                     }
 
-                    if (iter != branches_.end()) {
+                    if (iter != selectables_.end()) {
                         int y;
 
                         if (rsel.bottom() >= va.bottom()) { y = rbr.bottom()-va.height(); }
@@ -456,7 +456,7 @@ void List_impl::page_down() {
 }
 
 int  List_impl::page_up_row() {
-    if (branches_.empty()) { return INT_MIN; }
+    if (selectables_.empty()) { return INT_MIN; }
 
     Table::Span rng = table_->span();
     Table::Span sel = table_->selection();
@@ -467,18 +467,18 @@ int  List_impl::page_up_row() {
             Size lsize = scroller_->logical_size(), max = lsize-scroller_->size();
 
             if (max.height()) {
-                if (branches_.begin()->first != sel.ymin) {
+                if (selectables_.begin()->first != sel.ymin) {
                     int yt = rsel.top()-va.height()+rsel.height()+rsel.height();
-                    auto iter = std::find_if(branches_.rbegin(), branches_.rend(),
-                                                [sel](const std::pair<const int, Branch> & p) { return p.first == sel.ymin; });
+                    auto iter = std::find_if(selectables_.rbegin(), selectables_.rend(),
+                                                [sel](const std::pair<const int, Selectable> & p) { return p.first == sel.ymin; });
 
                     Rect rbr;
-                    for (; iter != branches_.rend(); ++iter) {
+                    for (; iter != selectables_.rend(); ++iter) {
                         rbr = table_->bounds(rng.xmin, iter->first, rng.xmax-rng.xmin, 1);
                         if (rbr.top() <= yt) break;
                     }
 
-                    if (iter != branches_.rend()) {
+                    if (iter != selectables_.rend()) {
                         return iter->first;
                     }
                 }
@@ -486,11 +486,11 @@ int  List_impl::page_up_row() {
         }
     }
 
-    return branches_.begin()->first;
+    return selectables_.begin()->first;
 }
 
 void List_impl::page_up() {
-    if (branches_.empty()) { return; }
+    if (selectables_.empty()) { return; }
 
     Table::Span rng = table_->span();
     Table::Span sel = table_->selection();
@@ -501,18 +501,18 @@ void List_impl::page_up() {
             Size lsize = scroller_->logical_size(), max = lsize-scroller_->size();
 
             if (max.height()) {
-                if (branches_.begin()->first != sel.ymin) {
+                if (selectables_.begin()->first != sel.ymin) {
                     int yt = rsel.top()-va.height()+rsel.height()+rsel.height();
-                    auto iter = std::find_if(branches_.rbegin(), branches_.rend(),
-                                                [sel](const std::pair<const int, Branch> & p) { return p.first == sel.ymin; });
+                    auto iter = std::find_if(selectables_.rbegin(), selectables_.rend(),
+                                                [sel](const std::pair<const int, Selectable> & p) { return p.first == sel.ymin; });
 
                     Rect rbr;
-                    for (; iter != branches_.rend(); ++iter) {
+                    for (; iter != selectables_.rend(); ++iter) {
                         rbr = table_->bounds(rng.xmin, iter->first, rng.xmax-rng.xmin, 1);
                         if (rbr.top() <= yt) break;
                     }
 
-                    if (iter != branches_.rend()) {
+                    if (iter != selectables_.rend()) {
                         int y;
 
                         if (rsel.bottom() >= va.bottom()) { y = rbr.bottom()-va.height(); }
@@ -536,11 +536,11 @@ int List_impl::next_row() {
     Table::Span sel = table_->selection();
 
     if (sel.xmax > sel.xmin && sel.ymax > sel.ymin) {
-        if (branches_.size() > 1) {
-            auto iter = branches_.find(sel.ymin);
+        if (selectables_.size() > 1) {
+            auto iter = selectables_.find(sel.ymin);
 
-            if (branches_.end() != iter) {
-                if (++iter != branches_.end()) {
+            if (selectables_.end() != iter) {
+                if (++iter != selectables_.end()) {
                     return iter->first;
                 }
             }
@@ -548,8 +548,8 @@ int List_impl::next_row() {
     }
 
     else {
-        if (!branches_.empty()) {
-            return branches_.begin()->first;
+        if (!selectables_.empty()) {
+            return selectables_.begin()->first;
         }
     }
 
@@ -560,12 +560,12 @@ int List_impl::prev_row() {
     Table::Span sel = table_->selection();
 
     if (sel.xmax > sel.xmin && sel.ymax > sel.ymin) {
-        if (branches_.size() > 1) {
-            auto iter = std::find_if(branches_.rbegin(), branches_.rend(),
-                                     [sel](const std::pair<const int, Branch> & p) { return p.first == sel.ymin; });
+        if (selectables_.size() > 1) {
+            auto iter = std::find_if(selectables_.rbegin(), selectables_.rend(),
+                                     [sel](const std::pair<const int, Selectable> & p) { return p.first == sel.ymin; });
 
-            if (branches_.rend() != iter) {
-                if (++iter != branches_.rend()) {
+            if (selectables_.rend() != iter) {
+                if (++iter != selectables_.rend()) {
                     return iter->first;
                 }
             }
@@ -573,8 +573,8 @@ int List_impl::prev_row() {
     }
 
     else {
-        if (!branches_.empty()) {
-            return branches_.begin()->first;
+        if (!selectables_.empty()) {
+            return selectables_.begin()->first;
         }
     }
 
@@ -582,23 +582,23 @@ int List_impl::prev_row() {
 }
 
 int List_impl::select_first() {
-    if (!branches_.empty()) {
-        return select_row(branches_.begin()->first);
+    if (!selectables_.empty()) {
+        return select_row(selectables_.begin()->first);
     }
 
     return INT_MIN;
 }
 
 int List_impl::select_last() {
-    if (!branches_.empty()) {
-        return select_row(branches_.rbegin()->first);
+    if (!selectables_.empty()) {
+        return select_row(selectables_.rbegin()->first);
     }
 
     return INT_MIN;
 }
 
 int List_impl::select_row(int br) {
-    if (branches_.end() != branches_.find(br)) {
+    if (selectables_.end() != selectables_.find(br)) {
         Table::Span sel = table_->selection();
         if (sel.ymax > sel.ymin && br == sel.ymin) { return br; }
         table_->unmark_row(br);
@@ -648,13 +648,15 @@ void List_impl::activate_current() {
 }
 
 bool List_impl::empty() const {
-    return branches_.empty();
+    return selectables_.empty();
 }
 
-void List_impl::clear_list() {
+// Overrides Table_impl.
+// Overriden by List_text_impl.
+void List_impl::clear() {
     table_->clear();
     trunk_min_ = trunk_max_ = 0;
-    branches_.clear();
+    selectables_.clear();
 }
 
 void List_impl::allow_multiple_select() {
@@ -835,11 +837,11 @@ void List_impl::on_shift_page_down_key() {
 }
 
 void List_impl::on_shift_home_key() {
-    if (!branches_.empty()) {
+    if (!selectables_.empty()) {
         int sel = selected_row();
 
         if (INT_MIN != sel) {
-            int first = branches_.begin()->first;
+            int first = selectables_.begin()->first;
             select_row(first);
 
             if (first < sel) {
@@ -860,11 +862,11 @@ void List_impl::on_shift_home_key() {
 }
 
 void List_impl::on_shift_end_key() {
-    if (!branches_.empty()) {
+    if (!selectables_.empty()) {
         int sel = selected_row();
 
         if (INT_MIN != sel) {
-            int last = branches_.rbegin()->first;
+            int last = selectables_.rbegin()->first;
             select_row(last);
 
             if (last > sel) {

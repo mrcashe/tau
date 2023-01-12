@@ -279,7 +279,7 @@ bool Window_impl::on_tooltip_mouse_wheel(int d, int mm, const Point & pt) {
 
 Window_ptr Window_impl::open_tooltip(Widget_impl * caller, Widget_ptr tooltip, const Point & pt, Gravity gravity, unsigned time_ms) {
     tooltip_ = display()->create_popup(display(), this, pt, gravity);
-    tooltip_->style().redirect("background-tooltip", "background");
+    tooltip_->style().redirect("tooltip/background", "background");
     tooltip_->signal_close().connect(fun(this, &Window_impl::on_tooltip_close));
     tooltip_->signal_mouse_motion().connect(fun(this, &Window_impl::on_tooltip_mouse_motion));
     tooltip_->signal_mouse_down().connect(fun(this, &Window_impl::on_tooltip_mouse_down), true);

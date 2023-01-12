@@ -113,7 +113,8 @@ public:
     }
 
     // Overriden by List_text_impl.
-    virtual void clear_list();
+    // Overrides Table_impl.
+    virtual void clear() override;
 
     void align(Widget_ptr wp, Align xalign, Align yalign);
 
@@ -147,13 +148,13 @@ public:
 
 protected:
 
-    struct Branch {
+    struct Selectable {
         int             min;
         int             max;
     };
 
-    // .first is for branch index & table index.
-    using Branches = std::map<int, Branch>;
+    // .first is for row index & table index.
+    using Selectables = std::map<int, Selectable>;
 
     // Header container.
     struct Header {
@@ -168,7 +169,7 @@ protected:
     };
 
     using Headers = std::list<Header>;  // Table headers.
-    using Frees = std::list<int>;       // Free (non-branch) rows.
+    using Frees = std::list<int>;       // Freely allocated rows.
 
     bool                multiple_select_allowed_ = false;
     Scroller_ptr        scroller_;
@@ -178,7 +179,7 @@ protected:
     Table_ptr           table_;
     Absolute_ptr        hdrbox_;
     Headers             headers_;
-    Branches            branches_;
+    Selectables         selectables_;
     Frees               frees_;
     int                 trunk_min_ = 0;
     int                 trunk_max_ = 0;

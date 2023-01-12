@@ -36,9 +36,9 @@ Menu_impl::Menu_impl(Orientation orient):
     Roller_impl(orient)
 {
     freeze();
-    style_.redirect("background-menu", "background");
-    style_.redirect("background-menu", "background-button");
-    style_.redirect("foreground-menu", "foreground");
+    style_.redirect("menu/background", "background");
+    style_.redirect("menu/background", "button/background");
+    style_.redirect("menu/foreground", "foreground");
     signal_focus_in().connect(fun(this, &Menu_impl::on_focus_in));
     connect_action(enter_action_);
     connect_accel(escape_accel_);

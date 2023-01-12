@@ -93,7 +93,10 @@ public:
     std::vector<Widget_impl *> children_within_range(int xmin, int ymin, int xmax, int ymax);
     void remove(Widget_impl * wp);
     void remove(int xmin, int ymin, int xmax, int ymax);
-    void clear();
+
+    // Overriden by List_impl.
+    // Overriden by List_text_impl.
+    virtual void clear();
 
     void respan(Widget_impl * wp, int x, int y, unsigned xspan, unsigned yspan);
     void respan(Widget_impl * wp, int x, int y, unsigned xspan, unsigned yspan, bool xsh, bool ysh);

@@ -214,7 +214,7 @@ void Fontsel_impl::on_face_activated(int row, const ustring & str) {
 void Fontsel_impl::on_family_selected(int row, const ustring & str) {
     family_ = str;
     ustring face = faces_->selection();
-    faces_->clear_list();
+    faces_->clear();
     auto v = Font::list_faces(str);
     std::sort(v.begin(), v.end());
     for (auto & s: v) { faces_->append(s); }

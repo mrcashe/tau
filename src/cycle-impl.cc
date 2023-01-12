@@ -49,7 +49,7 @@ Cycle_impl::Cycle_impl(Border_style bs):
 
     itable_ = std::make_shared<Table_impl>();
     itable_->set_column_spacing(1);
-    itable_->style().redirect("background-whitespace", "background");
+    itable_->style().redirect("whitespace/background", "background");
     otable_->put(itable_, 0, 0, 1, 2, false, true);
     otable_->align(itable_.get(), ALIGN_CENTER, ALIGN_FILL);
 
@@ -131,7 +131,7 @@ bool Cycle_impl::on_escape() {
 }
 
 void Cycle_impl::on_focus_in() {
-    set_border_color(style().get("background-select").get());
+    set_border_color(style().get("select/background").get());
     Frame_impl::set_border_style(BORDER_SOLID);
 }
 

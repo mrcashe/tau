@@ -109,14 +109,10 @@ public:
     void set(const ustring & spec);
 
     /// Get font specification string.
-    operator ustring() const {
-        return spec();
-    }
+    operator ustring() const;
 
     /// Set font specification.
-    void operator=(const ustring & s) {
-        set(s);
-    }
+    void operator=(const ustring & s);
 
     /// Get font size in points.
     double size() const;
@@ -172,15 +168,10 @@ public:
     void set(const Color & color);
 
     /// Get color value.
-    operator Color() const {
-        return get();
-    }
+    operator Color() const;
 
     /// Set new color value.
-    Color_style & operator=(const Color & color) {
-        set(color);
-        return *this;
-    }
+    Color_style & operator=(const Color & color);
 
 private:
 

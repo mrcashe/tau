@@ -69,13 +69,13 @@ Notebook_impl::Notebook_impl(Tab_pos tab_pos):
     signal_size_changed().connect(fun(this, &Notebook_impl::update_tabs));
     signal_size_changed().connect(fun(this, &Notebook_impl::update_roller));
     signal_take_focus().connect(fun(card_, &Card_impl::take_focus));
-    frame_->style().get("background-button").signal_changed().connect(fun(this, &Notebook_impl::on_frame_background_changed));
+    frame_->style().get("button/background").signal_changed().connect(fun(this, &Notebook_impl::on_frame_background_changed));
     roller_->signal_mouse_wheel().connect(fun(this, &Notebook_impl::on_mouse_wheel), true);
     abs_->signal_size_changed().connect(fun(this, &Notebook_impl::update_roller));
 }
 
 Color Notebook_impl::sel_color() {
-    Color c = frame_->style().color("background-button");
+    Color c = frame_->style().color("button/background");
     c.darker(0.18);
     return c;
 }
@@ -394,7 +394,7 @@ void Notebook_impl::update_current() {
 
     for (unsigned i = 0; i < pages_.size(); ++i) {
         Page & pg = pages_[i];
-        Color c = style().color("background-button");
+        Color c = style().color("button/background");
 
         if (pg.wp->hidden()) {
             pg.frame->style().color("background") = c;

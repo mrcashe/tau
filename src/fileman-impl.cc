@@ -47,24 +47,12 @@
 
 namespace tau {
 
-Fileman_impl::Fileman_impl(Fileman_mode fm_mode):
-    Twins_impl(OR_WEST, 0.75),
-    fm_mode_(fm_mode),
-    navi_(std::make_shared<Navigator_impl>())
-{
-    init();
-}
-
 Fileman_impl::Fileman_impl(Fileman_mode fm_mode, const ustring & path):
     Twins_impl(OR_WEST, 0.75),
     fm_mode_(fm_mode),
     navi_(std::make_shared<Navigator_impl>(path))
 {
-    init();
-}
-
-void Fileman_impl::init() {
-    dir_creation_allowed_ = (FILEMAN_SAVE == fm_mode_);
+    dir_creation_allowed_ = (FILEMAN_OPEN != fm_mode_);
 
     table_ = std::make_shared<Table_impl>();
     table_->hint_margin(3, 3, 0, 0);
@@ -80,7 +68,6 @@ void Fileman_impl::init() {
     roller->insert(pathbox_);
 
     // Navigator inside of frame.
-    signal_places_chdir_.connect(fun(this, &Fileman_impl::chdir));
     navi_->signal_dir_changed().connect(fun(this, &Fileman_impl::on_dir_changed));
     navi_->signal_file_select().connect(fun(this, &Fileman_impl::on_file_select));
     navi_->signal_file_unselect().connect(fun(this, &Fileman_impl::on_file_unselect));
@@ -96,7 +83,7 @@ void Fileman_impl::init() {
     table_->put(tp, 0, 1, 1, 1, true, true);
     table_->align(tp.get(), ALIGN_END, ALIGN_CENTER);
     entry_ = std::make_shared<Entry_impl>();
-    table_->put(entry_, 1, 1, 1, 1, false, true);
+    table_->put(entry_, 1, 1, FILEMAN_BROWSE == fm_mode_ ? 2 : 1, 1, false, true);
     entry_->signal_activate().connect(fun(this, &Fileman_impl::on_entry_activate));
     entry_->signal_changed().connect(fun(this, &Fileman_impl::on_entry_changed));
     entry_->signal_mouse_down().connect(fun(this, &Fileman_impl::on_entry_mouse_down));
@@ -107,40 +94,52 @@ void Fileman_impl::init() {
     table_->put(tp, 0, 2, 1, 1, true, true);
     table_->align(tp.get(), ALIGN_END, ALIGN_CENTER);
     filters_ = std::make_shared<Cycle_impl>();
-    table_->put(filters_, 1, 2, 1, 1, false, true);
+    table_->put(filters_, 1, 2, FILEMAN_BROWSE == fm_mode_ ? 2 : 1, 1, false, true);
     add_filter("*", "All Files");
 
     // Buttons "Open"/"Save" & "Cancel".
     if (FILEMAN_BROWSE != fm_mode_) {
         apply_action_.set_label(FILEMAN_SAVE == fm_mode_ ? "Save" : "Load");
-        apply_button_ = std::make_shared<Button_impl>(apply_action_, true);
-        table_->put(apply_button_, 2, 1, 1, 1, true, true);
-        table_->align(apply_button_.get(), ALIGN_FILL, ALIGN_CENTER);
+        Button_ptr button = std::make_shared<Button_impl>(apply_action_, true);
+        table_->put(button, 2, 1, 1, 1, true, true);
+        table_->align(button.get(), ALIGN_FILL, ALIGN_CENTER);
+
+        button = std::make_shared<Button_impl>(cancel_action_, true);
+        table_->put(button, 2, 2, 1, 1, true, true);
+        table_->align(button.get(), ALIGN_FILL, ALIGN_CENTER);
     }
 
-    Button_ptr button = std::make_shared<Button_impl>(cancel_action_, true);
-    table_->put(button, 2, 2, 1, 1, true, true);
-    table_->align(button.get(), ALIGN_FILL, ALIGN_CENTER);
+    auto tools = std::make_shared<Box_impl>(OR_DOWN, 4);
+    tools->hint_margin(2, 2, 0, 0);
+    table_->put(tools, 3, 0, 1, 1, true, false);
 
-    // Make tool container here and fill it in on_parent().
-    tools_ = std::make_shared<Table_impl>();
-    tools_->set_row_spacing(4);
-    tools_->hint_margin(2, 2, 0, 0);
-    tools_->align_columns(ALIGN_FILL);
-    table_->put(tools_, 3, 0, 1, 1, true, false);
+    up_button_ = std::make_shared<Button_impl>(updir_action_, false);
+    tools->append(up_button_, true);
+    tools->append(std::make_shared<Separator_impl>(), true);
+    tools->append(std::make_shared<Button_impl>(prev_action_, false), true);
+    tools->append(std::make_shared<Button_impl>(next_action_, false), true);
+    tools->append(std::make_shared<Separator_impl>(), true);
+    tools->append(std::make_shared<Button_impl>(refresh_action_, false), true);
+    tools->append(std::make_shared<Toggle_impl>(hidden_action_, false), true);
+    tools->append(std::make_shared<Button_impl>(mkdir_action_, false), true);
+    tools->append(std::make_shared<Separator_impl>(), true);
+    tools->append(std::make_shared<Button_impl>(configure_action_, false), true);
 
     prev_action_.disable();
     next_action_.disable();
     apply_action_.disable();
-
+    if (!dir_creation_allowed_) { mkdir_action_.disable(); mkdir_action_.hide(); }
     refresh_action_.connect(fun(navi_, &Navigator_impl::reload));
 
+    connect_action(configure_action_);
     connect_action(cancel_action_);
     connect_action(next_action_);
     connect_action(prev_action_);
     connect_action(updir_action_);
     connect_action(apply_action_);
     connect_action(refresh_action_);
+    connect_action(mkdir_action_);
+    connect_action(hidden_action_);
 
     signal_display_.connect(fun(this, &Fileman_impl::on_display));
     signal_take_focus_.connect(fun(navi_, &Widget_impl::take_focus), true);
@@ -154,31 +153,6 @@ void Fileman_impl::on_display() {
             loop->signal_mount().connect(fun(this, &Fileman_impl::on_mount));
         }
     }
-
-    up_button_ = std::make_shared<Button_impl>(updir_action_, false);
-    tools_->put(up_button_, 0, 0, 1, 1, true, true);
-    tools_->put(std::make_shared<Separator_impl>(), 0, 1, 1, 1, false, true);
-
-    prev_button_ = std::make_shared<Button_impl>(prev_action_, false);
-    tools_->put(prev_button_, 0, 2, 1, 1, true, true);
-
-    next_button_ = std::make_shared<Button_impl>(next_action_, false);
-    tools_->put(next_button_, 0, 3, 1, 1, true, true);
-    tools_->put(std::make_shared<Separator_impl>(), 0, 4, 1, 1, false, true);
-
-    reload_button_ = std::make_shared<Button_impl>(refresh_action_, false);
-    tools_->put(reload_button_, 0, 5, 1, 1, true, true);
-
-    if (FILEMAN_SAVE == fm_mode_) { show_mkdir_button(); }
-
-    Separator_ptr sep = std::make_shared<Separator_impl>();
-    sep->hint_margin(0, 0, 2, 2);
-    tools_->put(sep, 0, 7, 1, 1, false, true);
-
-    conf_button_ = std::make_shared<Button_impl>(std::make_shared<Icon_impl>("configure", MEDIUM_ICON));
-    conf_button_->set_tooltip("Configure file open widget");
-    conf_button_->signal_click().connect(fun(this, &Fileman_impl::on_configure));
-    tools_->put(conf_button_, 0, 8, 1, 1, true, true);
 }
 
 ustring Fileman_impl::dir() const {
@@ -285,7 +259,7 @@ void Fileman_impl::on_dir_changed(const ustring & path) {
             pathbox_->prepend(button, true);
             q = path_dirname(p);
             if (q == p) { break; }
-            pathbox_->prepend(std::make_shared<Text_impl>(">"), true);
+            pathbox_->prepend(std::make_shared<Text_impl>(ustring(1, path_slash_)), true);
             p = q;
         }
     }
@@ -533,20 +507,12 @@ void Fileman_impl::on_mkdir_changed(const ustring & s) {
     }
 }
 
-void Fileman_impl::show_mkdir_button() {
-    if (!mkdir_button_) {
-        mkdir_button_ = std::make_shared<Button_impl>(std::make_shared<Icon_impl>("folder-new:folder", MEDIUM_ICON));
-        mkdir_button_->set_tooltip("Create a new folder");
-        mkdir_button_->signal_click().connect(fun(this, &Fileman_impl::on_mkdir));
-        tools_->put(mkdir_button_, 0, 6, 1, 1, true, true);
-    }
-}
-
 void Fileman_impl::allow_dir_creation() {
     if (!dir_creation_allowed_) {
         if (FILEMAN_SAVE == fm_mode_) {
-            dir_creation_allowed_ = false;
-            show_mkdir_button();
+            dir_creation_allowed_ = true;
+            mkdir_action_.enable();
+            mkdir_action_.show();
         }
     }
 }
@@ -554,8 +520,8 @@ void Fileman_impl::allow_dir_creation() {
 void Fileman_impl::disallow_dir_creation() {
     if (dir_creation_allowed_) {
         dir_creation_allowed_ = false;
-        tools_->remove(mkdir_button_.get());
-        mkdir_button_.reset();
+        mkdir_action_.hide();
+        mkdir_action_.disable();
     }
 }
 
@@ -622,10 +588,12 @@ bool Fileman_impl::sorted_backward() const {
 
 void Fileman_impl::show_hidden_files() {
     navi_->show_hidden_files();
+    hidden_action_.set(true);
 }
 
 void Fileman_impl::hide_hidden_files() {
     navi_->hide_hidden_files();
+    hidden_action_.set(false);
 }
 
 bool Fileman_impl::hidden_files_visible() const {
@@ -725,8 +693,8 @@ void Fileman_impl::on_configure() {
     menu->append_separator();
 
     Check_menu_ptr show_hidden = std::make_shared<Check_menu_impl>("Show Hidden Files", CHECK_VSTYLE, hidden_files_visible());
-    show_hidden->signal_check().connect(fun(this, &Fileman_impl::show_hidden_files));
-    show_hidden->signal_uncheck().connect(fun(this, &Fileman_impl::hide_hidden_files));
+    show_hidden->signal_check().connect(tau::bind(fun(this, &Fileman_impl::on_show_hidden), true));
+    show_hidden->signal_uncheck().connect(tau::bind(fun(this, &Fileman_impl::on_show_hidden), false));
     menu->append_widget(show_hidden);
 
     Check_menu_ptr show_qpanel = std::make_shared<Check_menu_impl>("Show Places", CHECK_VSTYLE, places_visible());
@@ -777,6 +745,11 @@ void Fileman_impl::prev() {
 void Fileman_impl::updir() {
     ustring p = path_dirname(navi_->dir());
     if (p != dir()) { chdir(p); }
+}
+
+void Fileman_impl::on_show_hidden(bool show) {
+    if (show) { show_hidden_files(); }
+    else { hide_hidden_files(); }
 }
 
 } // namespace tau

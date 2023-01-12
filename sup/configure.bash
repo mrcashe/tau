@@ -443,7 +443,7 @@ echo "export share_prefix = $share_prefix" >>$conf_mk
 echo "export pkg_required = $pkg_required" >>$conf_mk
 echo "export link = $link" >>$conf_mk
 
-conf_targets=''
+conf_targets='en-host-so en-host-test-so'
 [ 'YES' == "$enable_static" ] && conf_targets+=' en-a'
 [ 'YES' == "$enable_test" ] && conf_targets+=' en-test'
 echo "conf_targets = $conf_targets" >>$conf_mk

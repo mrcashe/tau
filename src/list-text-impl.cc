@@ -207,8 +207,9 @@ void List_text_impl::remove_text(const ustring & str) {
 }
 
 // Overrides List_impl.
-void List_text_impl::clear_list() {
-    List_impl::clear_list();
+// Overrides Table_impl.
+void List_text_impl::clear() {
+    List_impl::clear();
     for (const Holder & hol: holders_) { signal_text_removed_(hol.row, hol.str); }
     holders_.clear();
     selected_.clear();

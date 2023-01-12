@@ -39,12 +39,7 @@ namespace tau {
 class Fileman_freebsd: public Fileman_impl {
 public:
 
-    explicit Fileman_freebsd(Fileman_mode fm_mode):
-        Fileman_impl(fm_mode)
-    {
-    }
-
-    Fileman_freebsd(Fileman_mode fm_mode, const ustring & path):
+    Fileman_freebsd(Fileman_mode fm_mode, const ustring & path=ustring()):
         Fileman_impl(fm_mode, path)
     {
     }
@@ -58,7 +53,7 @@ protected:
 
     void fill_places() override {
         if (places_list_) {
-            places_list_->clear_list();
+            places_list_->clear();
 
             Text_ptr tp = std::make_shared<Text_impl>("Root Folder", ALIGN_START, ALIGN_CENTER);
             tp->signal_select().connect(tau::bind(fun(signal_places_chdir_), "/"));
@@ -96,11 +91,6 @@ protected:
         }
     }
 };
-
-// static
-Fileman_ptr Fileman_impl::create(Fileman_mode fm_mode) {
-    return std::make_shared<Fileman_freebsd>(fm_mode);
-}
 
 // static
 Fileman_ptr Fileman_impl::create(Fileman_mode fm_mode, const ustring & path) {

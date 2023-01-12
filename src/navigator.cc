@@ -31,11 +31,6 @@ namespace tau {
 
 #define NAVIGATOR_IMPL (std::static_pointer_cast<Navigator_impl>(impl))
 
-Navigator::Navigator():
-    Widget(std::make_shared<Navigator_impl>())
-{
-}
-
 Navigator::Navigator(const ustring & path):
     Widget(std::make_shared<Navigator_impl>(path))
 {

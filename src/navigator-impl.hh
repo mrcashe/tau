@@ -36,8 +36,7 @@ namespace tau {
 class Navigator_impl: public Bin_impl {
 public:
 
-    Navigator_impl();
-    explicit Navigator_impl(const ustring & path);
+    Navigator_impl(const ustring & path=ustring());
    ~Navigator_impl();
 
     ustring dir() const;
@@ -160,14 +159,9 @@ private:
     signal<void(ustring)>       signal_file_unselect_;
     signal<void(ustring)>       signal_file_activate_;
     signal<void(ustring)>       signal_dir_changed_;
-    signal<void()>              signal_next_enable_;
-    signal<void()>              signal_next_disable_;
-    signal<void()>              signal_prev_enable_;
-    signal<void()>              signal_prev_disable_;
 
 private:
 
-    void init();
     void new_dir(const ustring & path);
     void show_record(Rec & rec);
     void read_dir(Holder * hol);

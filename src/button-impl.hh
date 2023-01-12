@@ -56,27 +56,6 @@ public:
 
 protected:
 
-    void init();
-    void init_action(Action_base & action, int icon_size, bool use_label);
-
-    void on_mouse_enter(const Point & pt);
-    bool on_mouse_down(int mbt, int mm, const Point & position);
-    bool on_mouse_up(int mbt, int mm, const Point & position);
-    void on_action_label_changed(const ustring & label);
-    void on_action_tooltip_changed(const ustring & tooltip);
-
-    void press();
-    void redraw();
-
-    virtual void on_release() {}
-    virtual void on_press() {}
-
-private:
-
-    void on_mouse_leave();
-
-protected:
-
     Table_ptr   table_;
     Widget_ptr  image_;
     Widget_ptr  label_;
@@ -86,6 +65,33 @@ protected:
     bool        fix_press_ = false;
     bool        relief_visible_ = true;
     connection  timer_cx_;
+
+protected:
+
+    void init();
+    void init_action(Action_base & action, int icon_size, bool use_label);
+
+    void on_mouse_enter(const Point & pt);
+    bool on_mouse_down(int mbt, int mm, const Point & position);
+    bool on_mouse_up(int mbt, int mm, const Point & position);
+
+    void press();
+    void redraw();
+
+    virtual void on_release() {}
+    virtual void on_press() {}
+
+private:
+
+    ustring tooltip_;
+
+private:
+
+    void on_mouse_leave();
+    void on_action_label_changed(const ustring & label);
+    void on_action_tooltip_changed(const ustring & tooltip, Action_base & action);
+    void on_action_accel_changed(const Accel & accel, Action_base & action);
+    void set_action_tooltip(Action_base & action);
 };
 
 class Button_impl: public Button_base_impl {
@@ -163,6 +169,10 @@ private:
 
     bool state_ = false;
     signal<void(bool)>  signal_toggle_;
+
+private:
+
+    void on_action_toggle(bool state);
 };
 
 } // namespace tau

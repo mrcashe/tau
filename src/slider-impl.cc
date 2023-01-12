@@ -95,8 +95,8 @@ void Slider_impl::init() {
 
     start_->signal_click().connect(fun(this, &Slider_impl::on_start_click));
     end_->signal_click().connect(fun(this, &Slider_impl::on_end_click));
-    style().get("foreground-slider").signal_changed().connect(fun(this, &Slider_impl::paint_now));
-    area_->style().redirect("background-slider", "background");
+    style().get("slider/foreground").signal_changed().connect(fun(this, &Slider_impl::paint_now));
+    area_->style().redirect("slider/background", "background");
     signal_size_changed().connect(fun(this, &Slider_impl::on_size_changed));
     signal_orientation_changed().connect(fun(this, &Slider_impl::update_arrows));
 
@@ -381,7 +381,7 @@ void Slider_impl::draw_slider(Painter pr, bool erase_bkgnd) {
         }
 
         if (w > 0 && h > 0) {
-            Color c = area_->style().get("foreground-slider").get();
+            Color c = area_->style().get("slider/foreground").get();
             if (press_) { c.darker(0.1); }
             else if (mouse_on_slider_) { c.lighter(0.1); }
 

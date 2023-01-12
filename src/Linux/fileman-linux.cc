@@ -38,12 +38,7 @@ namespace tau {
 class Fileman_linux: public Fileman_impl {
 public:
 
-    explicit Fileman_linux(Fileman_mode fm_mode):
-        Fileman_impl(fm_mode)
-    {
-    }
-
-    Fileman_linux(Fileman_mode fm_mode, const ustring & path):
+    Fileman_linux(Fileman_mode fm_mode, const ustring & path=ustring()):
         Fileman_impl(fm_mode, path)
     {
     }
@@ -53,34 +48,28 @@ private:
     std::vector<ustring> removables_;
     int                  removables_row_ = -1;
 
-private:
-
-    void quick_chdir(const ustring & path) {
-        signal_places_chdir_(path);
-    }
-
 protected:
 
     void fill_places() override {
         if (places_list_) {
-            places_list_->clear_list();
+            places_list_->clear();
             removables_row_ = -1;
 
             Text_ptr tp = std::make_shared<Text_impl>("Root Folder", ALIGN_START);
-            tp->signal_select().connect(tau::bind(fun(this, &Fileman_linux::quick_chdir), "/"));
-            int br = places_list_->append_row(tp, true);
+            tp->signal_select().connect(tau::bind(fun(this, &Fileman_linux::chdir), "/"));
+            int row = places_list_->append_row(tp, true);
 
             Icon_ptr ico = std::make_shared<Icon_impl>("drive-harddisk", SMALL_ICON);
-            ico->signal_select().connect(tau::bind(fun(this, &Fileman_linux::quick_chdir), "/"));
-            places_list_->insert(br, ico, -1, true);
+            ico->signal_select().connect(tau::bind(fun(this, &Fileman_linux::chdir), "/"));
+            places_list_->insert(row, ico, -1, true);
 
             tp = std::make_shared<Text_impl>("Home Folder", ALIGN_START);
-            tp->signal_select().connect(tau::bind(fun(this, &Fileman_linux::quick_chdir), path_user_home_dir()));
-            br = places_list_->append_row(tp, true);
+            tp->signal_select().connect(tau::bind(fun(this, &Fileman_linux::chdir), path_user_home_dir()));
+            row = places_list_->append_row(tp, true);
 
             ico = std::make_shared<Icon_impl>("go-home:folder", SMALL_ICON);
-            ico->signal_select().connect(tau::bind(fun(this, &Fileman_linux::quick_chdir), path_user_home_dir()));
-            places_list_->insert(br, ico, -1, true);
+            ico->signal_select().connect(tau::bind(fun(this, &Fileman_linux::chdir), path_user_home_dir()));
+            places_list_->insert(row, ico, -1, true);
 
             removables_ = list_removable_drives();
 
@@ -91,22 +80,17 @@ protected:
 
                 for (const ustring & mpoint: removables_) {
                     tp = std::make_shared<Text_impl>(path_notdir(mpoint));
-                    tp->signal_select().connect(tau::bind(fun(this, &Fileman_linux::quick_chdir), mpoint));
-                    br = places_list_->append_row(tp, true);
+                    tp->signal_select().connect(tau::bind(fun(this, &Fileman_linux::chdir), mpoint));
+                    row = places_list_->append_row(tp, true);
 
                     ico = std::make_shared<Icon_impl>("drive-removable-media:drive-harddisk", SMALL_ICON);
-                    ico->signal_select().connect(tau::bind(fun(this, &Fileman_linux::quick_chdir), mpoint));
-                    places_list_->insert(br, ico, -1, true);
+                    ico->signal_select().connect(tau::bind(fun(this, &Fileman_linux::chdir), mpoint));
+                    places_list_->insert(row, ico, -1, true);
                 }
             }
         }
     }
 };
-
-// static
-Fileman_ptr Fileman_impl::create(Fileman_mode fm_mode) {
-    return std::make_shared<Fileman_linux>(fm_mode);
-}
 
 // static
 Fileman_ptr Fileman_impl::create(Fileman_mode fm_mode, const ustring & path) {

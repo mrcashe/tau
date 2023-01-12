@@ -25,6 +25,7 @@
 // ----------------------------------------------------------------------------
 
 #include <tau/painter.hh>
+#include <box-impl.hh>
 #include <button-impl.hh>
 #include <icon-impl.hh>
 #include <text-impl.hh>
@@ -95,7 +96,7 @@ void Button_base_impl::init() {
     set_border(1);
     set_border_style(BORDER_OUTSET);
 
-    style_.redirect("background-button", "background");
+    style_.redirect("button/background", "background");
     style_.get("background").signal_changed().connect(fun(this, &Button_base_impl::redraw));
     style_.get("foreground").signal_changed().connect(fun(this, &Button_base_impl::redraw));
 
@@ -118,14 +119,17 @@ void Button_base_impl::init_action(Action_base & action, int icon_size, bool use
     action.signal_show().connect(fun(this, &Button_base_impl::appear));
     action.signal_hide().connect(fun(this, &Button_base_impl::disappear));
     action.signal_label_changed().connect(fun(this, &Button_base_impl::on_action_label_changed));
-    action.signal_tooltip_changed().connect(fun(this, &Button_base_impl::on_action_tooltip_changed));
+    action.signal_tooltip_changed().connect(tau::bind(fun(this, &Button_base_impl::on_action_tooltip_changed), std::ref(action)));
+    action.signal_accel_added().connect(tau::bind(fun(this, &Button_base_impl::on_action_accel_changed), std::ref(action)));
+    action.signal_accel_removed().connect(tau::bind(fun(this, &Button_base_impl::on_action_accel_changed), std::ref(action)));
     action.signal_icon_changed().connect(tau::bind(fun(this, &Button_base_impl::set_icon), icon_size));
 
     if (!action.label().empty() && use_label) { set_label(action.label()); }
     if (!action.icon_name().empty()) { set_icon(action.icon_name(), icon_size); }
     if (action.hidden()) { disappear(); }
     if (action.disabled()) { freeze(); }
-    if (action.has_tooltip()) { set_tooltip(action.tooltip()); }
+    tooltip_ = action.tooltip();
+    set_action_tooltip(action);
 }
 
 void Button_base_impl::set_label(const ustring & s) {
@@ -151,11 +155,41 @@ void Button_base_impl::set_icon(const ustring & icon_name, int icon_size) {
 }
 
 void Button_base_impl::on_action_label_changed(const ustring & label) {
-    set_label(label);
+    if (label_) {
+        set_label(label);
+    }
 }
 
-void Button_base_impl::on_action_tooltip_changed(const ustring & tooltip) {
-    set_tooltip(tooltip);
+void Button_base_impl::set_action_tooltip(Action_base & action) {
+    auto & accels = action.accels();
+
+    if (!accels.empty()) {
+        auto box = std::make_shared<Box_impl>(OR_EAST, 8);
+        if (!tooltip_.empty()) { box->append(std::make_shared<Text_impl>(tooltip_), true); }
+        auto tp = std::make_shared<Text_impl>(accels.front().label());
+        tp->style().redirect("accel/foreground", "foreground");
+        box->append(tp, true);
+        box->hint_margin(2);
+        box->style().font("font").enlarge(-2);
+        set_tooltip(box);
+    }
+
+    else if (!tooltip_.empty()) {
+        set_tooltip(tooltip_);
+    }
+
+    else {
+        unset_tooltip();
+    }
+}
+
+void Button_base_impl::on_action_accel_changed(const Accel & accel, Action_base & action) {
+    set_action_tooltip(action);
+}
+
+void Button_base_impl::on_action_tooltip_changed(const ustring & tooltip, Action_base & action) {
+    tooltip_ = tooltip;
+    set_action_tooltip(action);
 }
 
 void Button_base_impl::on_mouse_enter(const Point & pt) {
@@ -228,7 +262,7 @@ void Button_base_impl::redraw() {
         c = style().color("background").get();
 
         if (hover() && enabled() && !pressed_) {
-            set_border_color(style().get("background-select").get());
+            set_border_color(style().get("select/background").get());
             set_border_style(BORDER_SOLID);
         }
 
@@ -447,12 +481,14 @@ Toggle_impl::Toggle_impl(Toggle_action & action, bool use_label):
     Button_base_impl(action, use_label)
 {
     signal_toggle_.connect(fun(action, &Toggle_action::set));
+    action.connect(fun(this, &Toggle_impl::on_action_toggle));
 }
 
 Toggle_impl::Toggle_impl(Toggle_action & action, int icon_size, bool use_label):
     Button_base_impl(action, icon_size, use_label)
 {
     signal_toggle_.connect(fun(action, &Toggle_action::set));
+    action.connect(fun(this, &Toggle_impl::on_action_toggle));
 }
 
 void Toggle_impl::toggle() {
@@ -474,6 +510,11 @@ void Toggle_impl::on_release() {
     state_ = pressed_;
     redraw();
     signal_toggle_(state_);
+}
+
+void Toggle_impl::on_action_toggle(bool state) {
+    state_ = pressed_ = state;
+    redraw();
 }
 
 } // namespace tau

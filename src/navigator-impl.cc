@@ -39,29 +39,10 @@
 
 namespace tau {
 
-Navigator_impl::Navigator_impl():
-    Bin_impl()
-{
-    init();
-}
-
 Navigator_impl::Navigator_impl(const ustring & path):
-    Bin_impl()
+    Bin_impl(),
+    user_path_(path)
 {
-    init();
-    user_path_ = path;
-}
-
-Navigator_impl::~Navigator_impl() {
-    for (auto * hol: hcache_) {
-        if (hol == holder_) { holder_ = nullptr; }
-        delete hol;
-    }
-
-    if (holder_) { delete holder_; }
-}
-
-void Navigator_impl::init() {
     list_ = std::make_shared<List_impl>();
     list_->set_column_spacing(3);
     list_->show_header(0, "Name");
@@ -79,6 +60,15 @@ void Navigator_impl::init() {
     signal_display().connect(fun(this, &Navigator_impl::show_current_dir));
     signal_unparent().connect(fun(this, &Navigator_impl::on_unparent));
     paint_cx_ = signal_paint().connect(fun(this, &Navigator_impl::on_paint));
+}
+
+Navigator_impl::~Navigator_impl() {
+    for (auto * hol: hcache_) {
+        if (hol == holder_) { holder_ = nullptr; }
+        delete hol;
+    }
+
+    if (holder_) { delete holder_; }
 }
 
 int Navigator_impl::find_row(const ustring & name) {
@@ -192,7 +182,7 @@ void Navigator_impl::show_record(Rec & rec) {
 void Navigator_impl::show_current_dir() {
     if (list_ && !list_->running()) {
         set_cursor("wait:watch");
-        list_->clear_list();
+        list_->clear();
         // unsigned nn = 0;
 
         if (holder_) {
@@ -602,7 +592,7 @@ void Navigator_impl::on_file_monitor_timer(const ustring & dirname) {
 }
 
 void Navigator_impl::on_unparent() {
-    //if (list_) { list_->clear_list(); clear(); list_.reset(); }
+    //if (list_) { list_->clear(); clear(); list_.reset(); }
 }
 
 void Navigator_impl::sort_by(const ustring & col) {

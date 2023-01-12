@@ -97,7 +97,7 @@ bool List_text::empty() const {
 }
 
 void List_text::clear() {
-    LIST_TEXT_IMPL->clear_list();
+    LIST_TEXT_IMPL->clear();
 }
 
 void List_text::unselect() {

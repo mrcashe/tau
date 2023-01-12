@@ -530,7 +530,7 @@ bool Counter_impl::on_validate(const ustring & s) {
 
 void Counter_impl::on_focus_in() {
     if (BORDER_NONE != user_style_) {
-        set_border_color(style_.color("background-select"));
+        set_border_color(style_.color("select/background"));
         Frame_impl::set_border_style(BORDER_SOLID);
     }
 }

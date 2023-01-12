@@ -117,7 +117,7 @@ public:
 
             box.append(ymax_);
             ymax_.set_tooltip("Sets maximal window height, in pixels");
-            ymax_.style().get("background-whitespace").set("BlanchedAlmond");
+            ymax_.style().get("whitespace/background").set("BlanchedAlmond");
             ymax_.append("px", 2, 2);
             ymax_.prepend("h:", 2, 2);
             ymax_.set_value(max_size_hint().height());
@@ -126,7 +126,7 @@ public:
 
             box.append(xmax_);
             xmax_.set_tooltip("Sets maximal window width, in pixels");
-            xmax_.style().get("background-whitespace").set("BlanchedAlmond");
+            xmax_.style().get("whitespace/background").set("BlanchedAlmond");
             xmax_.append("px", 2, 2);
             xmax_.prepend("w:", 2, 2);
             xmax_.set_value(max_size_hint().width());
@@ -148,7 +148,7 @@ public:
 
             box.append(ymin_);
             ymin_.set_tooltip("Sets minimal window height, in pixels");
-            ymin_.style().get("background-whitespace").set("BlanchedAlmond");
+            ymin_.style().get("whitespace/background").set("BlanchedAlmond");
             ymin_.append("px", 2, 2);
             ymin_.prepend("h:", 2, 2);
             ymin_.set_value(min_size_hint().height());
@@ -157,7 +157,7 @@ public:
 
             box.append(xmin_);
             xmin_.set_tooltip("Sets minimal window width, in pixels");
-            xmin_.style().get("background-whitespace").set("BlanchedAlmond");
+            xmin_.style().get("whitespace/background").set("BlanchedAlmond");
             xmin_.append("px", 2, 2);
             xmin_.prepend("w:", 2, 2);
             xmin_.set_value(min_size_hint().width());

@@ -1232,7 +1232,7 @@ private:
                 }
             }
 
-            tau::Fileman * fman = new tau::Fileman(tau::FILEMAN_BROWSE, path.empty() ? tau::path_user_home_dir() : path);
+            tau::Fileman * fman = new tau::Fileman(tau::FILEMAN_SAVE, path.empty() ? tau::path_user_home_dir() : path);
             load_fileman(*fman);
             fman->signal_apply().connect(tau::bind(fun(this, &Main::on_saver_apply), fman));
             fman->cancel_action().connect(tau::bind(fun(this, &Main::save_fileman), std::cref(*fman)));

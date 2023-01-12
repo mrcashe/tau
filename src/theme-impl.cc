@@ -265,17 +265,18 @@ const Action_def action_defs_[] = {
 const struct { const char * name, * value; } items_[] = {
     { "font",                   ""              },
     { "foreground",             "DarkSlateGray" },
-    { "foreground-menu",        "Indigo"        },
-    { "foreground-slider",      "SteelBlue"     },
-    { "color-progress-bar",     "DeepSkyBlue"   },
-    { "color-progress-text",    "Blue"          },
+    { "menu/foreground",        "Indigo"        },
+    { "slider/foreground",      "SteelBlue"     },
+    { "progress/foreground",    "Blue"          },
+    { "accel/foreground",       "Magenta"       },
+    { "progress/background",    "DeepSkyBlue"   },
     { "background",             "LightGray"     },
-    { "background-whitespace",  "Snow"          },
-    { "background-menu",        "Silver"        },
-    { "background-select",      "DeepSkyBlue"   },
-    { "background-tooltip",     "Aquamarine"    },
-    { "background-button",      "Gainsboro"     },
-    { "background-slider",      "DarkGray"      },
+    { "whitespace/background",  "Snow"          },
+    { "menu/background",        "Silver"        },
+    { "select/background",      "DeepSkyBlue"   },
+    { "tooltip/background",     "Aquamarine"    },
+    { "button/background",      "Gainsboro"     },
+    { "slider/background",      "DarkGray"      },
     { nullptr,                  nullptr         }
 };
 

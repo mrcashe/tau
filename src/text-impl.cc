@@ -1027,7 +1027,7 @@ void Text_impl::paint_line(const Line & line, std::size_t ln, std::size_t pos, P
     Color bg = style().color("background");
 
     if (sel_ && esel_ && (ln > sel_.row() || (ln == sel_.row() && scol >= sel_.col())) && ln <= esel_.row()) {
-        bg = style().color("background-select");
+        bg = style().color("select/background");
     }
 
     std::size_t col0 = 0;
@@ -1055,12 +1055,12 @@ void Text_impl::paint_line(const Line & line, std::size_t ln, std::size_t pos, P
                     }
 
                     else if (sel_.row() == ln && col == sel_.col()) {
-                        bg = style_.color("background-select");
+                        bg = style_.color("select/background");
                         if (esel_.row() == ln && col < esel_.col()) { col2 = std::min(col1, esel_.col()); }
                     }
 
                     else if (esel_.row() == ln && col < esel_.col()) {
-                        bg = style_.color("background-select");
+                        bg = style_.color("select/background");
                         col2 = std::min(col1, esel_.col());
                     }
 
