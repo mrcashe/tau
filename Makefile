@@ -25,7 +25,7 @@
 # -----------------------------------------------------------------------------
 
 all: all-recursive
-install: all install-recursive install-doc
+install: install-recursive install-doc
 uninstall: uninstall-recursive uninstall-doc
 clean: clean-recursive clean-doc
 
@@ -35,24 +35,31 @@ export hh_src = $(srcdir)/include
 export hh_option = -I$(hh_src)
 export hh_impl_options = $(hh_option) -I$(topdir)/src -I$(confdir)/src
 
-SUBDIRS = $(builddir)
 RECURSIVE_TARGETS = all-recursive install-recursive uninstall-recursive clean-recursive
+.PHONY: $(RECURSIVE_TARGETS) configure post-configure rm xz test-links
 
-.PHONY: $(RECURSIVE_TARGETS) configure rm dist test-links
-
-$(RECURSIVE_TARGETS):
+$(RECURSIVE_TARGETS): $(builddir)/Makefile
 	@target=`echo $@ | sed s/-recursive//`;\
-	list='$(SUBDIRS)'; \
-	for subdir in $$list; do $(MAKE) -C $$subdir $$target || exit 1; done
+	$(MAKE) -C $$builddir $$target || exit 1
 
 conf/conf.mk:
 	@./configure || exit 1
+	@$(MAKE) post-configure
 
 configure:
 	@./configure || exit 1
 
 rm:
 	@rm -vrf $(builddir) $(bindir) $(topdir)/conf
+
+post-configure: $(builddir)/Makefile
+
+$(builddir)/Makefile: $(builddir)
+	@$(link) "$(supdir)/build.mk" $@
+
+$(builddir):
+	@mkdir -vp $@
+	@[ -z $(wildcard "$(builddir)/*") ] && $(MAKE) en-host-so $(conf_targets)
 
 test-links:
 	@if [ ! -d $$builddir/test ]; then \
@@ -69,12 +76,12 @@ xz:
 	    tau/share tau/doc tau/src tau/sup \
 	    `find tau -maxdepth 1 ! -type d`
 
-.PHONY: en-host su-host rm-host
+.PHONY: en-host su-host rm-host en-a en-so en-test su-a su-so su-test rm-a rm-so rm-test
+
 en-host: en-host-a en-host-so en-host-test
 su-host: su-host-a su-host-so su-host-test
 rm-host: rm-host-a rm-host-so rm-host-test
 
-.PHONY: en-a en-so en-test su-a su-so su-test rm-a rm-so rm-test
 en-a: 	 en-host-a en-mxe-a
 en-so:	 en-host-so
 en-test: en-host-test en-mxe-test

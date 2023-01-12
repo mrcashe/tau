@@ -25,11 +25,12 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # -----------------------------------------------------------------------------
 
-arg0="$(basename $0)"
+arg0='configure.bash'
 red_color=''
 green_color=''
 yellow_color=''
 no_color=''
+CHK_FILE=''
 
 # Check program existance using 'which' command.
 # Here is:
@@ -64,12 +65,37 @@ chk_which() {
     fi
 }
 
+# Check file existance.
+#   $1 is path to the file.
+#   $2 is 'MANDATORY' for strict dependency and everything else for optional dependency.
+chk_file() {
+    printf "$arg0: checking for $(basename $1)... "
+
+    if test -e $1; then
+        printf "$green_color$1$no_color\n"
+    elif [ 'MANDATORY' == $2 ]; then
+        printf "$red_color NOT FOUND\n"
+        echo "$arg0: existance of '$1' is mandatory, configure failed, exitting with status 1" 1>&2
+        printf $no_color
+        exit 1
+    else
+        printf "$yellow_color NOT FOUND\n"
+        echo "$arg0: existance of '$1' is optional, corresponding feature will be disabled"
+        printf $no_color
+        CHK_FILE='YES'
+    fi
+}
+
+chk_which 'basename' 'basename' 'MANDATORY'
+arg0="$(basename $0)"
+chk_which 'dirname' 'dirname' 'MANDATORY'
+chk_which 'realpath' 'realpath' 'MANDATORY'
 topdir="$(realpath $(dirname $(dirname $0)))"
-echo $topdir
-cwdir=$(pwd)
+chk_which 'uname' 'uname' 'MANDATORY'
 plat=$(uname)
+cwdir=$(pwd)
 PREFIX=''
-link="ln -vsf"
+link='cp -vf'
 pkg_required=''
 headers_required=''
 
@@ -122,9 +148,6 @@ chk_which 'cat' 'cat' 'MANDATORY'
 chk_which 'envsubst' 'envsubst' 'MANDATORY'
 chk_which 'tr' 'tr' 'MANDATORY'
 chk_which 'cmp' 'cmp' 'MANDATORY'
-chk_which 'basename' 'basename' 'MANDATORY'
-chk_which 'dirname' 'dirname' 'MANDATORY'
-chk_which 'stdbuf' 'stdbuf' 'MANDATORY'
 chk_which 'tar' 'tar' 'MANDATORY'
 chk_which 'xz' 'xz' 'MANDATORY'
 
@@ -324,7 +347,7 @@ if [ 'YES' != "$disable_mxe" ]; then
     echo -n "$arg0: checking for optional M cross environment existance..."
 
     if test -z $mxe_prefix; then
-        mxe_prefix=$(which $mxe_target-g++ 2>/dev/null)
+        mxe_prefix=$(which "$mxe_target-g++" 2>/dev/null)
 
         if test -z "$mxe_prefix"; then
             printf "$yellow_color NOT FOUND\n"
@@ -350,34 +373,37 @@ if [ 'YES' != "$disable_mxe" ]; then
             printf "$arg0: mxe_target=$green_color$mxe_target$no_color\n"
         fi
     fi
+else
+    printf "$yellow_color$arg0: MXE building disabled by the user$no_color\n"
+fi
+
+if test -n "$mxe_prefix"; then
+    CHK_FILE='NO'
+
+    # Checking for MXE tools existance
+    echo ""
+    echo "$arg0: checking for MXE tools existance..."
+    chk_file "$mxe_prefix/bin/$mxe_target-g++" 'OPTIONAL'
+    chk_file "$mxe_prefix/bin/$mxe_target-ar" 'OPTIONAL'
+    chk_file "$mxe_prefix/bin/$mxe_target-strip" 'OPTIONAL'
 
     # Checking for MXE libraries existance
     echo ""
     echo "$arg0: checking for MXE libraries existance..."
     mxe_syslibs='libpng.a libz.a libgdi32.a libmsimg32.a libpthread.a libintl.a libiconv.a libole32.a libshlwapi.a'
-    mxe_libs_failed='no'
 
-    for lib in $mxe_syslibs; do
-        printf "  - $lib: "
-        paths=$(find $mxe_prefix/$mxe_target/lib -name "$lib" 2>/dev/null)
+    if [ 'YES' != "$CHK_FILE" ]; then
+        for lib in $mxe_syslibs; do
+            printf "  - "; chk_file "$mxe_prefix/$mxe_target/lib/$lib" 'OPTIONAL'
+        done
+    fi
 
-        if test -z $paths; then
-            printf "$yellow_color NOT FOUND\n"
-            printf "$arg0: library file $lib not found, MXE building will be disabled$no_color\n"
-            mxe_libs_failed='yes'
-            break
-        else
-            printf "$green_color OK$no_color\n"
-        fi
-    done
-
-    if [ "$mxe_libs_failed" == "yes" ]; then
+    if [ 'YES' == "$CHK_FILE" ]; then
         mxe_prefix=''
         mxe_target=''
         mxe_syslibs=''
+        printf "$yellow_color$arg0: building for MXE will not be performed$no_color\n"
     fi
-else
-    printf "$yellow_color$arg0: MXE building disabled by the user$no_color\n"
 fi
 
 # ---------------------------------------------------------------------------
@@ -416,6 +442,11 @@ echo "export pc_prefix = $pc_prefix" >>$conf_mk
 echo "export share_prefix = $share_prefix" >>$conf_mk
 echo "export pkg_required = $pkg_required" >>$conf_mk
 echo "export link = $link" >>$conf_mk
+
+conf_targets=''
+[ 'YES' == "$enable_static" ] && conf_targets+=' en-a'
+[ 'YES' == "$enable_test" ] && conf_targets+=' en-test'
+echo "conf_targets = $conf_targets" >>$conf_mk
 
 if test -n $mxe_prefix; then
     echo "export mxe_prefix = $mxe_prefix" >>$conf_mk
@@ -467,20 +498,5 @@ echo "//END">>$tmp
 confcc="$confdir/conf.cc"
 cmp $tmp $confcc >/dev/null 2>&1 || cp -vf $tmp $confcc
 rm -f $tmp
-
-# ---------------------------------------------------------------------------
-# Create build directory if does not exists and Makefiles.
-# ---------------------------------------------------------------------------
-
 [ ! -e Makefile ] && $link "$topdir/Makefile" Makefile
-mkdir -vp $builddir
-[ ! -e "$builddir/Makefile" ] && $link "$supdir/build.mk" "$builddir/Makefile"
-
-# Flush conf/conf.mk
-stdbuf -oL printf '\n' >>$conf_mk
-
-if [ -z "$(ls $builddir/*.mk 2>/dev/null)" ]; then
-    $which_make en-host-so
-    [ 'YES' == "$enable_static" ] && $which_make en-a
-    [ 'YES' == "$enable_test" ] && $which_make en-test
-fi
+exit 0

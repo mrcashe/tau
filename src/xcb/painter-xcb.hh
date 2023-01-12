@@ -36,7 +36,7 @@ namespace tau {
 class Painter_xcb: public Painter_impl {
 public:
 
-    Painter_xcb(Winface_xcb * wf);
+    explicit Painter_xcb(Winface_xcb * wf);
 
 protected:
 

@@ -695,7 +695,7 @@ private:
         if (tau::MBT_LEFT == mbt) {
             auto & action = pg.edit.insert_action();
             action.toggle();
-            if (action.toggled()) { pg.replace_label.show(); }
+            if (action.get()) { pg.replace_label.show(); }
             else { pg.insert_label.show(); }
             return true;
         }

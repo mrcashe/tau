@@ -609,18 +609,18 @@ Toggle_action::Toggle_action(Master_action & master_action, slot<void(bool)> slo
 
 void Toggle_action::toggle() {
     if (!disabled()) {
-        toggled_ = !toggled_;
-        signal_toggle_(toggled_);
+        state_ = !state_;
+        signal_toggle_(state_);
     }
 }
 
-bool Toggle_action::toggled() const {
-    return toggled_;
+bool Toggle_action::get() const {
+    return state_;
 }
 
-void Toggle_action::set(bool toggled) {
-    if (!disabled() && toggled_ != toggled) {
-        toggled_ = toggled;
+void Toggle_action::set(bool state) {
+    if (!disabled() && state_ != state) {
+        state_ = state;
     }
 }
 
@@ -631,10 +631,10 @@ connection Toggle_action::connect(slot<void(bool)> slot_toggle, bool prepend) {
 // Overrides pure Action_base.
 bool Toggle_action::on_accel() {
     if (!disabled()) {
-        toggled_ = !toggled_;
+        state_ = !state_;
 
         if (!signal_toggle_.empty()) {
-            signal_toggle_(toggled_);
+            signal_toggle_(state_);
             return true;
         }
     }

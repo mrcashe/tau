@@ -54,7 +54,7 @@ Pixmap_ptr Pixmap_impl::load_bmp_from_memory(const char * raw, std::size_t bytes
     std::size_t hdr_size = u32(raw);
 
     int iwidth, iheight;
-    std::size_t bpp, comp = 0, n_colors = 0;
+    std::size_t bpp, comp, n_colors = 0;
     Vector ppi(72, 72);
 
     if (12 == hdr_size) {
@@ -120,7 +120,7 @@ Pixmap_ptr Pixmap_impl::load_bmp_from_memory(const char * raw, std::size_t bytes
 
                 for (int x = 0; x < iwidth; ++x) {
                     unsigned sh = 7-(7 & x), offset = x >> 3;
-                    uint8_t index = p[offset] & (1 << sh) ? 1 : 0;
+                    uint8_t index = (p[offset] & (1 << sh)) ? 1 : 0;
                     int yp = iheight >= 0 ? height-y-1 : y;
                     Color c;
                     if (m && (m[offset] & (1 << sh))) { c = Color("Black", 0.0); }
@@ -142,7 +142,7 @@ Pixmap_ptr Pixmap_impl::load_bmp_from_memory(const char * raw, std::size_t bytes
                 for (int x = 0; x < iwidth; ++x) {
                     const char * p = bits+(stride*y)+x/2;
                     unsigned sh = 7-(7 & x), mask_offset = x >> 3;
-                    unsigned index = 1 & x ? *p & 0x0f : *p >> 4;
+                    unsigned index = (1 & x) ? (*p & 0x0f) : (*p >> 4);
                     Color c;
                     if (m && (m[mask_offset] & (1 << sh))) { c = Color("Black", 0.0); }
                     else { c = index < n_colors ? Color::from_rgb24(colors[index]) : Color::from_gray8(index); }

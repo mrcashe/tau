@@ -456,13 +456,13 @@ Toggle_impl::Toggle_impl(Toggle_action & action, int icon_size, bool use_label):
 }
 
 void Toggle_impl::toggle() {
-    if (toggled_) {
-        toggled_ = pressed_ = false;
+    if (state_) {
+        state_ = pressed_ = false;
         signal_toggle_(false);
     }
 
     else {
-        toggled_ = pressed_ = true;
+        state_ = pressed_ = true;
         signal_toggle_(true);
     }
 
@@ -470,10 +470,10 @@ void Toggle_impl::toggle() {
 }
 
 void Toggle_impl::on_release() {
-    pressed_ = !toggled_;
-    toggled_ = pressed_;
+    pressed_ = !state_;
+    state_ = pressed_;
     redraw();
-    signal_toggle_(toggled_);
+    signal_toggle_(state_);
 }
 
 } // namespace tau

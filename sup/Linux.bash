@@ -26,7 +26,8 @@
 # -----------------------------------------------------------------------------
 
 PREFIX='/usr/local'
-pkg_required+='libpng xkbcommon-x11 xcb xcb-icccm xcb-renderutil xcb-screensaver xcb-sync xcb-cursor xcb-xfixes'
+link='ln -vsf'
+pkg_required+='libpng xkbcommon-x11 xcb xcb-cursor xcb-icccm xcb-renderutil xcb-screensaver xcb-sync xcb-xfixes'
 headers_required+='inotify.h libintl.h'
 
 if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then

@@ -149,7 +149,7 @@ public:
     explicit Toggle_impl(Toggle_action & action, bool use_label=true);
     Toggle_impl(Toggle_action & action, int icon_size, bool use_label=true);
 
-    bool toggled() const { return toggled_; }
+    bool toggled() const { return state_; }
     void toggle();
 
     signal<void(bool)> & signal_toggle() { return signal_toggle_; }
@@ -161,7 +161,7 @@ protected:
 
 private:
 
-    bool toggled_ = false;
+    bool state_ = false;
     signal<void(bool)>  signal_toggle_;
 };
 

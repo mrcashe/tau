@@ -541,10 +541,10 @@ public:
     void toggle();
 
     /// Test if toggled.
-    bool toggled() const;
+    bool get() const;
 
     /// Set state.
-    void set(bool toggled);
+    void set(bool state);
 
     /// Connect slot.
     connection connect(slot<void(bool)> slot_toggle, bool prepend=false);
@@ -556,7 +556,7 @@ protected:
 
 private:
 
-    bool                toggled_ = false;
+    bool                state_ = false;
     signal<void(bool)>  signal_toggle_;
 };
 

@@ -177,7 +177,7 @@ Toggle_menu_impl::Toggle_menu_impl(Toggle_action & toggle_action, Check_style ch
     action_.connect(fun(this, &Toggle_menu_impl::on_action_toggle));
     action_.signal_destroy().connect(fun(this, &Toggle_menu_impl::on_action_destroy));
 
-    if (action_.toggled()) { check_->toggle(); }
+    if (action_.get()) { check_->toggle(); }
     check_cx_ = check_->signal_check().connect(fun(this, &Toggle_menu_impl::on_toggle));
     uncheck_cx_ = check_->signal_uncheck().connect(fun(this, &Toggle_menu_impl::on_toggle));
 
