@@ -223,6 +223,9 @@ The **Build Tree** consists of several subdirectories:
 -   *build/* where object and library files collected during build process.
 -   *bin/* is a place where demonstration and test binary executables (a result of build process) will be located.
 
+The Build Tree is fully independent of Source Tree and may be located at any place within filesystem.
+The Source Tree doesn't modified during Configure, Build or Install processed.
+
 ## Configure
 
 Despite the fact that the library does not use the **GNU Autotools**,
@@ -246,6 +249,29 @@ and will start building process immediately.
 You can also use configure options, the brief list is:
 -   *--prefix*=***PREFIX*** the install prefix where built files will be copied.
 -   *--enable-static* enable static library building.
+
+One more feature of `configure` script is it can be called from any place but not only
+from project's root directory. Suppose, you downloaded source into *~/build/tau/* directory
+and do not want to build there. You can make another directory, say *~/build/tau-build/*,
+`cd` to it and enter:
+
+~~~
+[~]$ ../tau/configure
+~~~
+
+...and build process will happen within *~/build/tau-build/* directory. Same way, you may
+specify an absolute path to the `configure` script:
+
+~~~
+[~]$ /home/user/build/tau/configure
+~~~
+
+...and the result will be the same. This way you can build library with unlimited count of
+different configurations. You even can write protect the source tree:
+
+~~~
+[~]$ chmod 0500 ~/build/tau
+~~~
 
 ## Make
 
@@ -287,6 +313,11 @@ such as ***PATH***, ***LD_LIBRARY_PATH*** and ***PKG_CONFIG_PATH***.
 
 If you do not planning to use built libraries, you may not install the package,
 all binaries are capable to run from the *./bin/* subdirectory.
+> If you didn't run `make install` and using separate build directory, the
+> fallback icon theme will not be accessible by test applications so you will
+> see the black boxes on the buttons instead of icons. To resolve this, you
+> can create symbolic link to the *./share/* subdirectory within Source Tree manually:
+> `ln -s /path/to/tau/share share`.
 
 ## Using Built Libraries
 
