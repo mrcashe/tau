@@ -123,7 +123,8 @@ Fileman_impl::Fileman_impl(Fileman_mode fm_mode, const ustring & path):
     tools->append(std::make_shared<Toggle_impl>(hidden_action_, false), true);
     tools->append(std::make_shared<Button_impl>(mkdir_action_, false), true);
     tools->append(std::make_shared<Separator_impl>(), true);
-    tools->append(std::make_shared<Button_impl>(configure_action_, false), true);
+    conf_button_ = std::make_shared<Button_impl>(configure_action_, false);
+    tools->append(conf_button_, true);
 
     prev_action_.disable();
     next_action_.disable();

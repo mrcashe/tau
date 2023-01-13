@@ -38,7 +38,10 @@ These are platforms for which file generation is possible
     MXE uses [**MinGW-w64**](https://www.mingw-w64.org) toolchain. Supported MXE
     targets at the moment are:
     +   i686-w64-mingw32.static (32 bit)
-
+    +   x86_64-w64-mingw32.static (64 bit)
+    +   i686-w64-mingw32.shared (32 bit)
+    +   x86_64-w64-mingw32.shared (64 bit)
+    
 ### Generating output
 
 -   Static library for the host system *(optional)*.
@@ -90,6 +93,7 @@ Note that, the building system does not support native **FreeBSD**
 - dirname
 - envsubst
 - find
+- grep
 - ln
 - ls
 - mkdir
@@ -274,6 +278,19 @@ different configurations. You even can write protect the source tree:
 ~~~
 
 ## Make
+
+The standard make targets are provided:
+
+-   **all** means usual action: to build everything that enabled;
+-   **clean** also has obvious meaning: remove all built object and library files;
+-   **install** install enabled components using defined install ***PREFIX**;
+-   **uninstall** uninstall previously installed package using defined install ***PREFIX**.
+
+And one more non-standard is:
+
+-   **rm** remove all Build Tree completely, the `configure` call needed to resume build process.
+
+> The complete list of all available targets will be published in Doxygen documentation.
 
 To build the library, run `gmake` without arguments or run `gmake all`. The building
 process will start, the generated files will be placed into *./build/* subdirectory

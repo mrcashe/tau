@@ -154,7 +154,7 @@ std::vector<ustring> enum_dc_fonts(HDC hdc) {
     LOGFONTW lf;
     memset(&lf, 0, sizeof(lf));
     std::vector<ustring> sv;
-    EnumFontFamiliesExW(hdc, &lf, efunc, DWORD(&sv), 0);
+    EnumFontFamiliesExW(hdc, &lf, efunc, LPARAM(&sv), 0);
     return sv;
 }
 

@@ -225,6 +225,7 @@ chk_which 'mktemp' 'mktemp' 'MANDATORY'
 chk_which 'find' 'find' 'MANDATORY'
 chk_which 'tr' 'tr' 'MANDATORY'
 chk_which 'cmp' 'cmp' 'MANDATORY'
+chk_which 'grep' 'grep' 'MANDATORY'
 chk_which 'tar' 'tar' 'OPTIONAL'
 chk_which 'xz' 'xz' 'OPTIONAL'
 
@@ -373,9 +374,14 @@ if test -n "$mxe_prefix"; then
     # Checking for MXE libraries existance
     echo ""
     echo "$arg0: checking for MXE libraries existance..."
-    mxe_syslibs='libpng.a libz.a libgdi32.a libmsimg32.a libpthread.a libintl.a libiconv.a libole32.a libshlwapi.a'
-
+    
     if [ 'YES' != "$CHK_FILE" ]; then
+        mxe_syslibs='libgdi32.a libmsimg32.a libole32.a libshlwapi.a'
+        mxe_sysbase='libpng libz libpthread'
+        mxe_libtype='.a'
+        [ -n "$(echo -n $mxe_target | grep shared)" ] && mxe_libtype='.dll.a'
+        for sb in $mxe_sysbase; do mxe_syslibs+=" $sb$mxe_libtype"; done
+    
         for lib in $mxe_syslibs; do
             printf "  - "; chk_file "$mxe_prefix/$mxe_target/lib/$lib" 'OPTIONAL'
         done
@@ -396,6 +402,7 @@ fi
 echo ""
 echo "$arg0: configuration OK, writing files..."
 mkdir -vp $confdir
+bin_prefix="$PREFIX/bin"
 lib_prefix="$PREFIX/lib"
 pc_prefix="$lib_prefix/pkgconfig"
 hh_prefix="$PREFIX/include/tau-$Major_.$Minor_"
@@ -419,6 +426,7 @@ echo "export Minor_ = $Minor_" >>$conf_mk
 echo "export Micro_ = $Major_" >>$conf_mk
 echo "export PREFIX = $PREFIX" >>$conf_mk
 echo "export CXXFLAGS = $CXXFLAGS" >>$conf_mk
+echo "export bin_prefix = $bin_prefix" >>$conf_mk
 echo "export lib_prefix = $lib_prefix" >>$conf_mk
 echo "export hh_prefix = $hh_prefix" >>$conf_mk
 echo "export pc_prefix = $pc_prefix" >>$conf_mk
@@ -426,7 +434,7 @@ echo "export share_prefix = $share_prefix" >>$conf_mk
 echo "export pkg_required = $pkg_required" >>$conf_mk
 echo "export link = $link" >>$conf_mk
 
-conf_targets='en-host-so en-host-test-so'
+conf_targets='en-so en-test'
 [ 'YES' == "$enable_static" ] && conf_targets+=' en-a'
 [ 'YES' == "$enable_test" ] && conf_targets+=' en-test'
 echo "conf_targets = $conf_targets" >>$conf_mk

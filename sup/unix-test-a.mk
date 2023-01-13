@@ -33,8 +33,25 @@ CXXFLAGS += -O0 -g -Wall -pthread $(hh_option) $(unix_sys_headers)
 VPATH = $(srcdir)/test
 
 all: $(unix_test_a_builddir) $(bindir) $(binaries)
-install:
+
+install: $(bin_prefix) $(binaries)
+	@for f in $(sources); do \
+	if [ -h $$bin_prefix/$$f ]; then \
+		echo "** Skip install of $$bin_prefix/$$f: destination is a symlink"; \
+	    else \
+		cp -vfp $$bindir/$$f $$bin_prefix/$$f; \
+		strip --strip-unneeded $$bin_prefix/$$f; \
+	    fi; \
+	done
+	
 uninstall:
+	@for f in $(sources); do \
+	    if [ -h $$bin_prefix/$$f ]; then \
+		echo "** Skip removal of $$bin_prefix/$$f: file is a symlink"; \
+	    else \
+		rm -vf $$bin_prefix/$$f; \
+	    fi; \
+	done		
 
 $(bindir)/%: %.cc $(unix_a)
 	$(CXX) $(CXXFLAGS) -o $@ $< -MD -MF $(unix_test_a_builddir)/$(notdir $@).dep $(unix_a) $(unix_sys_shared)
@@ -42,6 +59,9 @@ $(bindir)/%: %.cc $(unix_a)
 $(bindir):
 	@mkdir -vp $@
 
+$(bin_prefix):
+	@mkdir -vp $@
+	
 $(unix_test_a_builddir):
 	@mkdir -vp $@
 

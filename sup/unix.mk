@@ -75,7 +75,7 @@ su-host-a: su-xcb-a su-host-test-a
 	@rm -vf $(builddir)/$(unix_a_mk)
 
 rm-host-a: rm-xcb-a rm-host-test-a
-	@[ -e $(builddir)/$(unix_a_mk) ] && $(MAKE) -C $(builddir) -f $(unix_a_mk) rm
+	@if [ -e $(builddir)/$(unix_a_mk) ]; then $(MAKE) -C $(builddir) -f $(unix_a_mk) rm; fi
 	@rm -vf $(builddir)/$(unix_a_mk)
 
 en-host-so: en-xcb-so
@@ -113,13 +113,8 @@ rm-host-test-so:
 	@rm -vf $(builddir)/$(unix_test_so_mk)
 
 en-host-test:
-	@if [ -e $(builddir)/$(unix_a_mk) ]; then \
-	    $(MAKE) en-host-test-a; \
-	elif [ -e $(builddir)/$(unix_so_mk) ]; then \
-	    $(MAKE) en-host-test-so; \
-	else \
-	    $(MAKE) en-host-a en-host-test-a; \
-	fi
+	@if [ -e $(builddir)/$(unix_a_mk) ]; then $(MAKE) en-host-test-a; \
+	else $(MAKE) en-host-test-so; fi
 
 su-host-test: su-host-test-a su-host-test-so
 rm-host-test: rm-host-test-a rm-host-test-so

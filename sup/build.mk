@@ -49,15 +49,17 @@ clean-hh:
 	@if [ -d $(hh_prefix) ]; then \
 	    cwd=`pwd`; \
 	    hhs='$(notdir $(wildcard $(hh_src)/tau/*.hh))'; \
-	    cd $(hh_prefix)/tau; \
-	    for file in $$hhs; do rm -vf $$file; done; \
+	    if [ -d "$(hh_prefix)/tau" ]; then \
+		cd $(hh_prefix)/tau; \
+		for file in $$hhs; do rm -vf $$file; done; \
+	    fi; \
 	    hhs='$(notdir $(wildcard $(hh_src)/*.hh))'; \
 	    cd $(hh_prefix); \
 	    for file in $$hhs; do rm -vf $$file; done; \
 	    cd $$cwd; \
 	fi; \
-	if [ -z `ls $(hh_prefix)/tau 2>/dev/null` ]; then rm -vrf $(hh_prefix)/tau; fi; \
-	if [ -z `ls $(hh_prefix) 2>/dev/null` ]; then rm -vrf $(hh_prefix); fi
+	if [ -z "$(shell ls $(hh_prefix)/tau/* 2>/dev/null)" ]; then rm -vrf $(hh_prefix)/tau; fi; \
+	if [ -z "$(shell ls $(hh_prefix)/* 2>/dev/null)" ]; then rm -vrf $(hh_prefix); fi
 
 install-share:
 	@mkdir -vp $(share_prefix)

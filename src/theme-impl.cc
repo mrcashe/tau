@@ -24,6 +24,7 @@
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ----------------------------------------------------------------------------
 
+#include <tau/apiver.hh>
 #include <tau/exception.hh>
 #include <tau/fileinfo.hh>
 #include <tau/font.hh>
@@ -293,7 +294,9 @@ void Theme_impl::boot() {
     auto tid = std::this_thread::get_id();
     update_this_thread();
 
-    ustring prefix = path_prefix_dir(), share = path_build(prefix, "share", program_name());
+    ustring prefix = path_prefix_dir(), 
+        share = path_build(prefix, "share", program_name()), 
+        lib_share = path_build(prefix, "share", str_format("tau-", Major_, '.', Minor_));
 
     add_cursor_dir(path_build(prefix, "cursors"));
     add_pixmap_dir(path_build(prefix, "pixmaps"));
@@ -307,6 +310,10 @@ void Theme_impl::boot() {
     add_pixmap_dir(path_build(share, "pixmaps"));
     add_icon_dir(path_build(share, "icons"));
 
+    add_cursor_dir(path_build(lib_share, "cursors"));
+    add_pixmap_dir(path_build(lib_share, "pixmaps"));
+    add_icon_dir(path_build(lib_share, "icons"));
+    
     auto i = threads_.find(tid);
     if (i == threads_.end()) { throw internal_error("Theme_impl::init_actions(): unable to setup thread"); }
     Thread & thr = i->second;

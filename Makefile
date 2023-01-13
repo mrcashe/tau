@@ -83,15 +83,15 @@ su-host: su-host-a su-host-so su-host-test
 rm-host: rm-host-a rm-host-so rm-host-test
 
 en-a: 	 en-host-a en-mxe-a
-en-so:	 en-host-so
+en-so:	 en-host-so en-mxe-so
 en-test: en-host-test en-mxe-test
 
 su-a:	 su-host-a su-mxe-a
-su-so:	 su-host-so
+su-so:	 su-host-so su-mxe-so
 su-test: su-host-test su-mxe-test
 
 rm-a:	 rm-host-a rm-mxe-a
-rm-so:	 rm-host-so
+rm-so:	 rm-host-so rm-mxe-so
 rm-test: rm-host-test rm-mxe-test
 
 #END
