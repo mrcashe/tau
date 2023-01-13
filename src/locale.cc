@@ -27,7 +27,6 @@
 #include <tau/encoding.hh>
 #include <tau/exception.hh>
 #include <tau/sys.hh>
-#include <libintl.h>
 #include <locale-impl.hh>
 #include <iostream>
 
@@ -914,24 +913,6 @@ bool locale_is_utf8(const std::string & locale) {
 
 bool locale_is_utf8() {
     return locale_is_utf8(locale_spec());
-}
-
-void bind_text_domain(const ustring & domain) {
-    Locale loc;
-    std::string lang = loc.language().code2();
-    ustring path = path_build(path_prefix_dir(), "share", "locale");
-
-    if (file_is_dir(path)) {
-        for (auto & s: path_list(path)) {
-            if (str_has_prefix(s, lang)) {
-                bindtextdomain(loc.encode(domain).c_str(), loc.encode_filename(path).c_str());
-                return;
-            }
-        }
-    }
-
-    path = path_build(path_prefix_dir(), "po");
-    bindtextdomain(loc.encode(domain).c_str(), loc.encode_filename(path).c_str());
 }
 
 } // namespace tau

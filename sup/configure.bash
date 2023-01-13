@@ -25,7 +25,7 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # -----------------------------------------------------------------------------
 
-arg0='configure.bash'
+arg0='configure'
 red_color=''
 green_color=''
 yellow_color=''
@@ -86,55 +86,127 @@ chk_file() {
     fi
 }
 
-chk_which 'basename' 'basename' 'MANDATORY'
-arg0="$(basename $0)"
-chk_which 'dirname' 'dirname' 'MANDATORY'
-chk_which 'realpath' 'realpath' 'MANDATORY'
-topdir="$(realpath $(dirname $(dirname $0)))"
-chk_which 'uname' 'uname' 'MANDATORY'
-plat=$(uname)
-cwdir=$(pwd)
-PREFIX=''
-link='cp -vf'
-pkg_required=''
-headers_required=''
+# Outputs usage.
+usage() {
+    echo "Usage: configure [options...]"
+    echo "Options are:"
+    echo "  --help, -h              show this help"
+    echo "  --prefix=<PREFIX>       set install prefix"
+    echo "  --mxe-prefix=<PREFIX>   set MXE prefix"
+    echo "  --mxe-target=<TARGET>   set MXE target"
+    echo "  --disable-mxe           disable MXE building"
+    echo "  --disable-doc           disable documentation generation"
+    echo "  --enable-static         enable static library building"
+    echo "  --enable-test           enable test suite building"
+}
 
+# Start here.
+which which >/dev/null 2>&1
+
+if [ $? -ne 0 ]; then
+    echo "$arg0: FATAL: 'which' not found, configure failed, exitting with status 1" 1>&2
+    exit 1
+fi
+
+cwdir=$(pwd)
 builddir="$cwdir/build"
-doxydir="$builddir/doxygen"
 bindir="$cwdir/bin"
 confdir="$cwdir/conf"
-supdir="$topdir/sup"
-srcdir="$topdir/src"
-shdir="$topdir/share"
+chk_which 'basename' 'basename' 'MANDATORY'
+arg0="$(basename $0)"
+chk_which 'cat' 'cat' 'MANDATORY'
+chk_which 'envsubst' 'envsubst' 'MANDATORY'
+argv="$cwdir/configure.argv"
+opts=$@
 
-CXXFLAGS="-std=c++14"
+if [ -e $argv ]; then
+    opts="$(cat $argv | envsubst) $opts"
+    echo "$arg0: found $(basename $argv) file, using its content"
+fi
 
+PREFIX=''
+CXXFLAGS='-std=c++14'
 disable_doc='NO'
 disable_mxe='NO'
 enable_static='NO'
 enable_test='NO'
-
 mxe_prefix=''
 mxe_target='i686-w64-mingw32.static'
 
+chk_which 'sed' 'sed' 'MANDATORY'
+
+for opt in $opts; do
+    case "$opt" in
+        --help | -h)
+            usage
+            exit 0
+        ;;
+
+        --prefix=*)
+            pfx=$(echo -n $opt |sed s+--prefix=++)
+            [ -n "$pfx" ] && PREFIX=$pfx
+        ;;
+
+        --mxe-prefix=*)
+            pfx=$(echo -n $opt |sed s+--mxe-prefix=++)
+            [ -n "$pfx" ] && mxe_prefix=$pfx
+        ;;
+
+        --mxe-target=*)
+            target=$(echo -n $opt |sed s/--mxe-target=//)
+            [ -n "$target" ] && mxe_target=$target
+        ;;
+
+        --disable-doc)
+            disable_doc='YES'
+        ;;
+
+        --disable-mxe)
+            disable_mxe='YES'
+        ;;
+
+        --enable-static)
+            enable_static='YES'
+        ;;
+
+        --enable-test)
+            enable_test='YES'
+        ;;
+
+        *)
+            usage >&2
+            echo "$arg0: unrecognized parameter '$opt', exiting with status 1" 1>&2
+            exit 1
+        ;;
+    esac
+done
+
+chk_which 'dirname' 'dirname' 'MANDATORY'
+chk_which 'realpath' 'realpath' 'MANDATORY'
+topdir="$(realpath $(dirname $(dirname $0)))"
+doxydir="$builddir/doxygen"
+supdir="$topdir/sup"
+srcdir="$topdir/src"
+shdir="$topdir/share"
+chk_which 'uname' 'uname' 'MANDATORY'
+plat=$(uname)
+
 echo "$arg0: configuring platform $plat..."
-which which >/dev/null 2>&1
-
-if [ $? -ne 0 ]; then
-    echo "$arg0: 'which' not found, configure failed, exitting with status 1" 1>&2
-    exit 1
-fi
-
 chk_which 'bash' 'bash' 'MANDATORY'
 chk_which 'rm' 'rm' 'MANDATORY'
 rm -vf $confdir/*
+
+link='cp -vf'
+pkg_required=''
+headers_required=''
 plat_script="$supdir/$plat.bash"
 
 if [ -x $plat_script ]; then
     echo "$arg0: found platform configation script '$plat_script', exec it..."
     . $plat_script
 else
-    echo "$arg0: warning: platform script '$plat_script' not found, configure process may fail"
+    echo "$arg0: FATAL: platform script '$plat_script' not found, exit with status 1" 1>&2
+    exit 1
 fi
 
 chk_which 'cp' 'cp' 'MANDATORY'
@@ -142,14 +214,11 @@ chk_which 'ln' 'ln' 'MANDATORY'
 chk_which 'ls' 'ls' 'MANDATORY'
 chk_which 'mkdir' 'mkdir' 'MANDATORY'
 chk_which 'mktemp' 'mktemp' 'MANDATORY'
-chk_which 'sed' 'sed' 'MANDATORY'
 chk_which 'find' 'find' 'MANDATORY'
-chk_which 'cat' 'cat' 'MANDATORY'
-chk_which 'envsubst' 'envsubst' 'MANDATORY'
 chk_which 'tr' 'tr' 'MANDATORY'
 chk_which 'cmp' 'cmp' 'MANDATORY'
-chk_which 'tar' 'tar' 'MANDATORY'
-chk_which 'xz' 'xz' 'MANDATORY'
+chk_which 'tar' 'tar' 'OPTIONAL'
+chk_which 'xz' 'xz' 'OPTIONAL'
 
 verfile="$topdir/VERSION"
 
@@ -171,101 +240,6 @@ Micro_=${ver[2]}
 version="$Major_.$Minor_.$Micro_"
 echo "$arg0: API version is '$version'"
 
-opts=$@
-argv="$cwdir/configure.argv"
-
-if [ -e $argv ]; then
-    opts="$(cat $argv | envsubst) $opts"
-    echo "$arg0: found $(basename $argv) file, using its content"
-fi
-
-usage() {
-    echo "Usage: configure [options...]"
-    echo "Options are:"
-    echo "  --help, -h              show this help"
-    echo "  --prefix=<PREFIX>       set install prefix"
-    echo "  --mxe-prefix=<PREFIX>   set MXE prefix"
-    echo "  --mxe-target=<TARGET>   set MXE target"
-    echo "  --disable-mxe           disable MXE building"
-    echo "  --disable-doc           disable documentation generation"
-    echo "  --enable-static         enable static library building"
-    echo "  --enable-test           enable test suite building"
-}
-
-for opt in $opts; do
-    case "$opt" in
-        --help | -h)
-            usage && exit 0
-        ;;
-
-        --prefix=*)
-            pfx=$(echo -n $opt |sed s+--prefix=++)
-
-            if test -z "$pfx"; then
-                echo "$arg0: got an empty prefix, use default one, which is '$PREFIX'"
-            else
-                PREFIX=$pfx
-                echo "$arg0: prefix set to '$PREFIX'"
-            fi
-        ;;
-
-        --mxe-prefix=*)
-            pfx=$(echo -n $opt |sed s+--mxe-prefix=++)
-
-            if test -z "$pfx"; then
-                echo -n "$arg0: ignore empty MXE prefix"
-
-                if test -z "$mxe_prefix"; then
-                    echo ", will autodetect MXE cross plat environment existance"
-                else
-                    echo ", will use current value, which is $mxe_prefix"
-                fi
-
-            else
-                mxe_prefix=$pfx
-                echo "$arg0: MXE prefix set to '$mxe_prefix'"
-            fi
-        ;;
-
-        --mxe-target=*)
-            target=$(echo -n $opt |sed s/--mxe-target=//)
-
-            if test -z "$target"; then
-                echo "$arg0: ignore empty MXE target, will use current value, which is $mxe_target"
-            else
-                mxe_target=$target
-                echo "$arg0: MXE target set to '$mxe_target'"
-            fi
-        ;;
-
-        --disable-doc)
-            echo "$arg0: documentation generation disabled by the user"
-            disable_doc='YES'
-        ;;
-
-        --disable-mxe)
-            echo "$arg0: MXE building disabled by the user"
-            disable_mxe='YES'
-        ;;
-
-        --enable-static)
-            echo "$arg0: static library building enabled"
-            enable_static='YES'
-        ;;
-
-        --enable-test)
-            echo "$arg0: test suite building enabled"
-            enable_test='YES'
-        ;;
-
-        *)
-            echo "$arg0: unrecognized parameter '$opt', exiting with status of 1" 1>&2
-            usage 1>&2
-            exit 1
-        ;;
-    esac
-done
-
 echo "$arg0: install prefix is '$PREFIX'"
 
 # ---------------------------------------------------------------------------
@@ -274,6 +248,7 @@ echo "$arg0: install prefix is '$PREFIX'"
 
 chk_which 'cxx' 'c++ g++ clang++' 'MANDATORY'
 chk_which 'ar' 'ar' 'MANDATORY'
+chk_which 'strip' 'strip' 'MANDATORY'
 chk_which 'pkgconfig' 'pkg-config' 'MANDATORY'
 chk_which 'make' 'gmake' 'MANDATORY'
 
@@ -301,6 +276,19 @@ done
 rm -f $tmp
 
 # ---------------------------------------------------------------------------
+# Doxygen (optional) checking.
+# ---------------------------------------------------------------------------
+
+echo ''
+which_doxygen=''
+
+if [ 'YES' != "$disable_doc" ]; then
+    chk_which 'doxygen' 'doxygen' 'OPTIONAL'
+else
+    printf "$yellow_color$arg0: documentation generation disabled by user$no_color\n"
+fi
+
+# ---------------------------------------------------------------------------
 # Headers searching.
 # ---------------------------------------------------------------------------
 
@@ -322,19 +310,6 @@ for h in $headers_required; do
     echo "    header file '$h' found within the following directories:"
     for d in $paths; do echo "      - $d"; done
 done
-
-# ---------------------------------------------------------------------------
-# Doxygen (optional) checking.
-# ---------------------------------------------------------------------------
-
-echo ''
-which_doxygen=''
-
-if [ 'YES' != "$disable_doc" ]; then
-    chk_which 'doxygen' 'doxygen' 'OPTIONAL'
-else
-    printf "$yellow_color$arg0: documentation generation disabled by user$no_color\n"
-fi
 
 # ---------------------------------------------------------------------------
 # MXE (optional) checking.
@@ -471,7 +446,7 @@ else
     echo "s+PROJECT_NUMBER *=.*+PROJECT_NUMBER = $version+" >>$tmp
     echo "s+OUTPUT_DIRECTORY *=.*+OUTPUT_DIRECTORY = $doxydir+" >>$tmp
     echo "s+EXAMPLE_PATH *=.*+EXAMPLE_PATH = $topdir+" >>$tmp
-    echo "s+INPUT *=.*+INPUT = $srcdir/include $srcdir/doxygen+" >>$tmp
+    echo "s+INPUT *=.*+INPUT = $srcdir/include $srcdir/include/tau $srcdir/doxygen+" >>$tmp
     echo "s+IMAGE_PATH *=.*+IMAGE_PATH = $shdir/pixmaps $shdir/icons/actions/12 $shdir/icons/actions/22 $shdir/icons/devices/22 $shdir/icons/places/22+" >>$tmp
     sed -f "$tmp" "$topdir/doc/Doxyfile" >"$confdir/Doxyfile"
     rm -f $tmp

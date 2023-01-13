@@ -118,15 +118,15 @@ public:
     double size() const;
 
     /// Set font size.
-    /// @param pt size in points.
+    /// @param pts font size in points.
     void resize(double pts);
 
     /// Enlarge font size.
-    /// @param pt size in points.
+    /// @param pts font size in points.
     void enlarge(double pts);
 
     /// Grow font size.
-    /// @param pt size in points.
+    /// @param pts font size in points.
     void grow(double pts);
 
     /// Add face modificator to the font.

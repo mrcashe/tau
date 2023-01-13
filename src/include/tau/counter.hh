@@ -46,15 +46,18 @@ public:
     Counter(double value=0.0, double max_value=0.0, double min_value=0.0);
 
     /// Constructor with border style and values.
+    /// @param bs the border style, see #Border_style enum
     /// @param value assigned value
     /// @param max_value maximal value
     /// @param min_value minimal value
     Counter(Border_style bs, double value=0.0, double max_value=0.0, double min_value=0.0);
 
     /// Set border style.
+    /// @param bs the border style, see #Border_style enum
     void set_border_style(Border_style bs);
 
     /// Get border style.
+    /// @return the border style, see #Border_style enum
     Border_style border_style() const;
 
     /// Allow value edition.

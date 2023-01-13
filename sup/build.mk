@@ -67,7 +67,7 @@ uninstall-share:
 	@rm -vrf $(share_prefix)
 
 install-pc: $(pc_prefix)
-	if [ -e $(unix_a_dest) -o -e $(unix_so_dest) ]; then \
+	@if [ -e $(unix_a_dest) -o -e $(unix_so_dest) ]; then \
 	    echo "prefix=$(PREFIX)" >$(unix_pc); \
 	    echo "exec_prefix=$(PREFIX)" >>$(unix_pc); \
 	    echo "lib_prefix=$(PREFIX)/lib">>$(unix_pc); \

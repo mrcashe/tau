@@ -24,7 +24,7 @@
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ----------------------------------------------------------------------------
 
-/// @file twins.hh The Twin container class.
+/// @file twins.hh The Twins container class.
 
 #ifndef TAU_TWINS_HH
 #define TAU_TWINS_HH

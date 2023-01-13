@@ -37,10 +37,6 @@
 
 namespace tau {
 
-/// Wrapping function for bindtextdomain(3) which capable to find
-/// text domain in several locations.
-void bind_text_domain(const ustring & domain);
-
 class Locale_data;
 class Territory_data;
 
