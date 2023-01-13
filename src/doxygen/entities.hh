@@ -25,7 +25,7 @@
 // ----------------------------------------------------------------------------
 
 /// @namespace tau TAU library namespace
-/// All libtau symbols are placed in tau namespace.
+/// All tau symbols are placed in tau namespace.
 
 /// @defgroup enum_group Enums
 /// Enums used by library

@@ -24,8 +24,7 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # -----------------------------------------------------------------------------
 
-share_prefix = $(PREFIX)/share/tau-$(Major_).$(Minor_)
-doc_prefix = $(share_prefix)/doxygen
+doc_prefix = $(share_prefix)
 
 .PHONY: doc install-doc uninstall-doc clean-doc
 

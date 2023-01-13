@@ -101,6 +101,21 @@ usage() {
 }
 
 # Start here.
+
+opts=$@
+
+for opt in $opts; do
+    case "$opt" in
+        --help | -h)
+        usage
+        exit 0
+    ;;
+
+    *)
+    ;;
+    esac
+done
+
 which which >/dev/null 2>&1
 
 if [ $? -ne 0 ]; then
@@ -117,7 +132,6 @@ arg0="$(basename $0)"
 chk_which 'cat' 'cat' 'MANDATORY'
 chk_which 'envsubst' 'envsubst' 'MANDATORY'
 argv="$cwdir/configure.argv"
-opts=$@
 
 if [ -e $argv ]; then
     opts="$(cat $argv | envsubst) $opts"
@@ -134,14 +148,36 @@ mxe_prefix=''
 mxe_target='i686-w64-mingw32.static'
 
 chk_which 'sed' 'sed' 'MANDATORY'
+chk_which 'dirname' 'dirname' 'MANDATORY'
+chk_which 'realpath' 'realpath' 'MANDATORY'
+topdir="$(realpath $(dirname $(dirname $0)))"
+doxydir="$builddir/doxygen"
+supdir="$topdir/sup"
+srcdir="$topdir/src"
+shdir="$topdir/share"
+chk_which 'uname' 'uname' 'MANDATORY'
+plat=$(uname)
+
+echo "$arg0: configuring platform $plat..."
+chk_which 'bash' 'bash' 'MANDATORY'
+chk_which 'rm' 'rm' 'MANDATORY'
+rm -vf $confdir/*
+
+link='cp -vf'
+pkg_required=''
+headers_required=''
+plat_script="$supdir/$plat.bash"
+
+if [ -x $plat_script ]; then
+    echo "$arg0: found platform configation script '$plat_script', exec it..."
+    . $plat_script
+else
+    echo "$arg0: FATAL: platform script '$plat_script' not found, exit with status 1" 1>&2
+    exit 1
+fi
 
 for opt in $opts; do
     case "$opt" in
-        --help | -h)
-            usage
-            exit 0
-        ;;
-
         --prefix=*)
             pfx=$(echo -n $opt |sed s+--prefix=++)
             [ -n "$pfx" ] && PREFIX=$pfx
@@ -180,34 +216,6 @@ for opt in $opts; do
         ;;
     esac
 done
-
-chk_which 'dirname' 'dirname' 'MANDATORY'
-chk_which 'realpath' 'realpath' 'MANDATORY'
-topdir="$(realpath $(dirname $(dirname $0)))"
-doxydir="$builddir/doxygen"
-supdir="$topdir/sup"
-srcdir="$topdir/src"
-shdir="$topdir/share"
-chk_which 'uname' 'uname' 'MANDATORY'
-plat=$(uname)
-
-echo "$arg0: configuring platform $plat..."
-chk_which 'bash' 'bash' 'MANDATORY'
-chk_which 'rm' 'rm' 'MANDATORY'
-rm -vf $confdir/*
-
-link='cp -vf'
-pkg_required=''
-headers_required=''
-plat_script="$supdir/$plat.bash"
-
-if [ -x $plat_script ]; then
-    echo "$arg0: found platform configation script '$plat_script', exec it..."
-    . $plat_script
-else
-    echo "$arg0: FATAL: platform script '$plat_script' not found, exit with status 1" 1>&2
-    exit 1
-fi
 
 chk_which 'cp' 'cp' 'MANDATORY'
 chk_which 'ln' 'ln' 'MANDATORY'
@@ -446,7 +454,7 @@ else
     echo "s+PROJECT_NUMBER *=.*+PROJECT_NUMBER = $version+" >>$tmp
     echo "s+OUTPUT_DIRECTORY *=.*+OUTPUT_DIRECTORY = $doxydir+" >>$tmp
     echo "s+EXAMPLE_PATH *=.*+EXAMPLE_PATH = $topdir+" >>$tmp
-    echo "s+INPUT *=.*+INPUT = $srcdir/include $srcdir/include/tau $srcdir/doxygen+" >>$tmp
+    echo "s+INPUT *=.*+INPUT = $topdir/README.md $srcdir/include $srcdir/include/tau $srcdir/doxygen+" >>$tmp
     echo "s+IMAGE_PATH *=.*+IMAGE_PATH = $shdir/pixmaps $shdir/icons/actions/12 $shdir/icons/actions/22 $shdir/icons/devices/22 $shdir/icons/places/22+" >>$tmp
     sed -f "$tmp" "$topdir/doc/Doxyfile" >"$confdir/Doxyfile"
     rm -f $tmp

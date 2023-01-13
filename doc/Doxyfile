@@ -32,7 +32,7 @@ DOXYFILE_ENCODING      = UTF-8
 # title of most generated pages and in a few other places.
 # The default value is: My Project.
 
-PROJECT_NAME           = libtau
+PROJECT_NAME           = tau
 
 # The PROJECT_NUMBER tag can be used to enter a project or revision number. This
 # could be handy for archiving the generated documentation or if some version
@@ -327,7 +327,7 @@ SIP_SUPPORT            = NO
 # should set this option to NO.
 # The default value is: YES.
 
-IDL_PROPERTY_SUPPORT   = YES
+IDL_PROPERTY_SUPPORT   = NO
 
 # If member grouping is used in the documentation and the DISTRIBUTE_GROUP_DOC
 # tag is set to YES then doxygen will reuse the documentation of the first
@@ -591,7 +591,7 @@ STRICT_PROTO_MATCHING  = NO
 # list. This list is created by putting \todo commands in the documentation.
 # The default value is: YES.
 
-GENERATE_TODOLIST      = NO
+GENERATE_TODOLIST      = YES
 
 # The GENERATE_TESTLIST tag can be used to enable (YES) or disable (NO) the test
 # list. This list is created by putting \test commands in the documentation.
@@ -641,7 +641,7 @@ SHOW_USED_FILES        = YES
 # (if specified).
 # The default value is: YES.
 
-SHOW_FILES             = YES
+SHOW_FILES             = NO
 
 # Set the SHOW_NAMESPACES tag to NO to disable the generation of the Namespaces
 # page. This will remove the Namespaces entry from the Quick Index and from the
@@ -772,7 +772,7 @@ INPUT_ENCODING         = UTF-8
 # *.md, *.mm, *.dox, *.py, *.f90, *.f, *.for, *.tcl, *.vhd, *.vhdl, *.ucf,
 # *.qsf, *.as and *.js.
 
-FILE_PATTERNS          = *.hh
+FILE_PATTERNS          = *.hh *.md
 
 # The RECURSIVE tag can be used to specify whether or not subdirectories should
 # be searched for input files as well.

@@ -1,4 +1,4 @@
-# TAU Library
+# TAU Library (README)
 
 **tau** is an open source cross-platform library for creating
 graphical user interfaces (GUI) in C++ programming language
@@ -15,7 +15,10 @@ graphical user interfaces (GUI) in C++ programming language
 -   Cross-platform file and directory management functions and classes
 -   Path and URI management functions
 -   Classes and functions for UTF-8 encoding management
--   Built-in signal/slot support for event handling
+-   Built-in pixmap (bitmap) managing classes and functions provides import from 
+    BMP, ICO, ANI, XPM, CUR, Xcursor graphics formats
+-   Import from PNG graphics format done with using of libpng library
+-   Built-in signal/slot support for event handling (derived from libsigc++-2.0)
 -   The building system is [**GNU Make**](https://www.gnu.org/software/make/).
 
 ### Host platforms
@@ -31,7 +34,7 @@ These are platforms for which file generation is possible
 
 -   Linux
 -   FreeBSD
--   Windows (using M cross-platform environment ([**MXE**](https://mxe.cc)).
+-   Windows (using M cross-platform environment ([**MXE**](https://mxe.cc))).
     MXE uses [**MinGW-w64**](https://www.mingw-w64.org) toolchain. Supported MXE
     targets at the moment are:
     +   i686-w64-mingw32.static (32 bit)
@@ -39,10 +42,9 @@ These are platforms for which file generation is possible
 ### Generating output
 
 -   Static library for the host system *(optional)*.
--   Shared library for the host system **(default)**,
-    but generation can be switched off.
+-   Shared library for the host system **(default)**, but generation can be switched off.
 -   *.pc* files for pkg-config(1) utility.
--   Demonstration executable files linked against any of generated
+-   Demonstration executable binary files linked against any of generated
     shared or static library.
 -   Static library for supported MXE targets *(optional)*.
 -   C++ header files *(optional)*.
@@ -182,7 +184,7 @@ package is missing.
 > of the **Glibc** library, there should be no problems with its availability,
 > however, the installation of the Linux Kernel headers may be required.
 
-## Download
+### Download
 Download can be done from the [**GitHub**](https://github.com/) repository using
 *git* command. Therefore, **git** should be installed on your system.
 
@@ -191,8 +193,12 @@ Choose directory where to clone remote directory and type in the console:
 [~]$ git clone https://github.com/mrcashe/tau.git
 ~~~
 
-As a result, the directory named '**tau**' will appear. The typical layout of
-downloaded directory looks similar to:
+As a result, the directory named '**tau**' will appear. 
+
+#### Source Tree
+
+The typical layout of downloaded directory looks similar to:
+
 ~~~
 doc/
 share/
@@ -206,20 +212,29 @@ README.md
 VERSION
 ~~~
 
+This is so-called **Source Tree**.
 The most important files for you are *Makefile* and *configure*.
+
+#### Build Tree
+
+The **Build Tree** consists of several subdirectories:
+
+-   *conf/* is a result of configuration process and holds control data for build process.
+-   *build/* where object and library files collected during build process.
+-   *bin/* is a place where demonstration and test binary executables (a result of build process) will be located.
 
 ## Configure
 
 Despite the fact that the library does not use the **GNU Autotools**,
 the **configure** script is provided. In contrast to *automake's* generated
-files, this file is hand-made.
+scripts, this script is hand-made.
 
-At this point, you can run configure script with default arguments:
+At this point, you can run `configure` script with default arguments:
 ~~~
 [~]$ ./configure
 ~~~
 
-As a result, the subdirectory named *./conf* must be created and filled with files.
+As a result, the subdirectory named *./conf* must be created and filled within files.
 Alternatively, you can run `make` (or `gmake`) without any arguments:
 ~~~
 [~]$ gmake
@@ -268,12 +283,12 @@ such as ***PATH***, ***LD_LIBRARY_PATH*** and ***PKG_CONFIG_PATH***.
 > Its name is 'tau' and if you choose */usr/local* or */usr* as ***PREFIX***
 > directory, that theme may be shown by other programs.
 
-## Do not Install
+## Using without Install
 
-If you do not planning to use generated libraries, you may not install the package,
+If you do not planning to use built libraries, you may not install the package,
 all binaries are capable to run from the *./bin/* subdirectory.
 
-## Using Generated Libraries
+## Using Built Libraries
 
 To have access to the generated *.pc* file(s), you should run `gmake install`.
 The manual intervention may be required to update ldconfig(8) database. Run
@@ -304,8 +319,3 @@ CXXFLAGS += $(shell pkg-config --cflags $(tau_pc))
 tau_static = $(shell pkg-config --variable=a $(tau_pc))
 ~~~
 
----
-
-### ...TO BE CONTINUED...
-
-(I hope...)
