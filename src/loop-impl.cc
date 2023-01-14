@@ -77,14 +77,6 @@ signal<void()> & Loop_impl::signal_alarm(int timeout_ms, bool periodical) {
     return tp->signal_alarm;
 }
 
-void Loop_impl::set_idle_timeout(unsigned timeout_ms) {
-    uidle_ = 1000LU*std::max(16U, std::min(500U, timeout_ms));
-}
-
-unsigned Loop_impl::idle_timeout() const {
-    return uidle_/1000;
-}
-
 void Loop_impl::run() {
     if (runlevel_ < 0) { throw user_error("Loop_impl::run(): attempt to rerun dead loop"); }
     int runlevel = ++runlevel_;

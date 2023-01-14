@@ -101,7 +101,7 @@ protected:
 
         Cur() = default;
 
-        explicit Cur(Pixmap_ptr p, const Point & hs=Point(), unsigned d=0):
+        Cur(Pixmap_ptr p, const Point & hs=Point(), unsigned d=0):
             pix(p),
             hotspot(hs),
             delay(d)

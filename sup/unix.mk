@@ -68,7 +68,7 @@ rm-xcb-so:
 
 .PHONY: en-host-a su-host-a rm-host-a en-host-so su-host-so rm-host-so
 
-en-host-a: en-xcb-a
+en-host-a: $(builddir) en-xcb-a
 	@$(link) $(supdir)/unix-a.mk $(builddir)/$(unix_a_mk)
 
 su-host-a: su-xcb-a su-host-test-a
@@ -78,7 +78,7 @@ rm-host-a: rm-xcb-a rm-host-test-a
 	@if [ -e $(builddir)/$(unix_a_mk) ]; then $(MAKE) -C $(builddir) -f $(unix_a_mk) rm; fi
 	@rm -vf $(builddir)/$(unix_a_mk)
 
-en-host-so: en-xcb-so
+en-host-so: $(builddir) en-xcb-so
 	@$(link) $(supdir)/unix-so.mk $(builddir)/$(unix_so_mk)
 
 su-host-so: su-xcb-so su-host-test-so
@@ -92,7 +92,7 @@ rm-host-so: rm-xcb-so rm-host-test-so
 .PHONY: en-host-test-a su-host-test-a rm-host-test-a
 .PHONY: en-host-test-so su-host-test-so rm-host-test-so
 
-en-host-test-a: test-links rm-host-test-so en-host-a
+en-host-test-a: rm-host-test-so test-links en-host-a
 	@$(link) $(supdir)/unix-test-a.mk $(builddir)/$(unix_test_a_mk)
 
 su-host-test-a:
@@ -102,7 +102,7 @@ rm-host-test-a:
 	@if [ -e $(builddir)/$(unix_test_a_mk) ]; then $(MAKE) -C $(builddir) -f $(unix_test_a_mk) rm; fi
 	@rm -vf $(builddir)/$(unix_test_a_mk)
 
-en-host-test-so: test-links rm-host-test-a en-host-so
+en-host-test-so: rm-host-test-a test-links en-host-so
 	@$(link) $(supdir)/unix-test-so.mk $(builddir)/$(unix_test_so_mk)
 
 su-host-test-so:

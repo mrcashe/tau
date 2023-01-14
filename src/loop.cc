@@ -54,14 +54,6 @@ bool Loop::alive() const {
     return impl->alive();
 }
 
-void Loop::set_idle_timeout(unsigned timeout_ms) {
-    impl->set_idle_timeout(timeout_ms);
-}
-
-unsigned Loop::idle_timeout() const {
-    return impl->idle_timeout();
-}
-
 Event Loop::create_event() {
     return Event_impl::wrap(impl->create_event());
 }

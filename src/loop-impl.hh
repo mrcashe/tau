@@ -49,8 +49,6 @@ public:
     void quit();
     bool running() const { return 0 != runlevel_; }
     bool alive() const { return runlevel_ >= 0; }
-    void set_idle_timeout(unsigned timeout_ms);
-    unsigned idle_timeout() const;
     void start_timer(Timer_ptr tp);
     void stop_timer(Timer_impl * tpi);
     virtual File_monitor_ptr create_file_monitor(const ustring & path, int event_mask) = 0;

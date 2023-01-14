@@ -30,9 +30,9 @@ mxe_soname = libtau-$(Major_).$(Minor_)-$(mxe_target)-mxe.dll
 mxe_sodir = $(builddir)/lib
 mxe_so = $(mxe_sodir)/$(mxe_soname)
 mxe_so_builddir = $(mxe_target)-mxe-so
-mxe_libroot = $(mxe_prefix)/$(mxe_target)/lib
 mxe_so_dest = $(lib_prefix)/$(mxe_soname)
 mxe_pc = $(pc_prefix)/tau-$(Major_).$(Minor_)-$(mxe_target)-mxe.pc
+mxe_libroot = $(mxe_prefix)/$(mxe_target)/lib
 syslibs = $(addprefix $(mxe_libroot)/,$(mxe_syslibs))
 
 MXE_CXX = $(mxe_prefix)/bin/$(mxe_target)-g++
@@ -50,7 +50,6 @@ uninstall: uninstall-pc uninstall-so
 
 $(mxe_so): $(objects)
 	$(MXE_CXX) -shared -o $@ $(mxe_so_builddir)/*.o $(syslibs)
-
 
 clean:
 	@rm -vf $(mxe_so_builddir)/*.o $(mxe_so_builddir)/*.dep $(mxe_so)

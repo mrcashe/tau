@@ -60,14 +60,6 @@ public:
     /// Test if running.
     bool running() const;
 
-    /// Set idle timeout.
-    /// @param timeout_ms the timeout in milliseconds.
-    void set_idle_timeout(unsigned timeout_ms);
-
-    /// Get idle timeout.
-    /// @return the timeout in milliseconds.
-    unsigned idle_timeout() const;
-
     /// Create event.
     Event create_event();
 

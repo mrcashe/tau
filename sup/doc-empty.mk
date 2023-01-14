@@ -26,10 +26,11 @@
 
 .PHONY: doc install-doc uninstall-doc clean-doc
 
+all:
+install:
+uninstall:
+clean:
 doc:
-
-install-doc:
-
-uninstall-doc:
-
-clean-doc:
+en-doc:
+rm-doc:
+su-doc:

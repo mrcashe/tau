@@ -32,7 +32,7 @@ mxe_test_so_sid = 20
 .PHONY: en-mxe-a su-mxe-a rm-mxe-a en-mxe-so su-mxe-so rm-mxe-so
 
 en-mxe-a: $(builddir)
-	@ln -vsf $(supdir)/mxe-a.mk $(builddir)/$(mxe_a_sid)-$(mxe_target)-mxe-a.mk
+	@$(link) -vsf $(supdir)/mxe-a.mk $(builddir)/$(mxe_a_sid)-$(mxe_target)-mxe-a.mk
 
 su-mxe-a: 
 	@rm -vf $(builddir)/$(mxe_a_sid)-$(mxe_target)-mxe-a.mk
@@ -42,7 +42,7 @@ rm-mxe-a: rm-mxe-test
 	rm -vf $(builddir)/$(mxe_a_sid)-$(mxe_target)-mxe-a.mk
 
 en-mxe-so: $(builddir)
-	@ln -vsf $(supdir)/mxe-so.mk $(builddir)/$(mxe_so_sid)-$(mxe_target)-mxe-so.mk
+	@$(link) -vsf $(supdir)/mxe-so.mk $(builddir)/$(mxe_so_sid)-$(mxe_target)-mxe-so.mk
 
 su-mxe-so: 
 	@rm -vf $(builddir)/$(mxe_so_sid)-$(mxe_target)-mxe-so.mk
@@ -55,9 +55,8 @@ rm-mxe-so:
 .PHONY: en-mxe-test-a su-mxe-test-a rm-mxe-test-a
 .PHONY: en-mxe-test-so su-mxe-test-so rm-mxe-test-so
 
-
-en-mxe-test-a: $(builddir) rm-mxe-test-so test-links en-mxe-a
-	@ln -vsf $(supdir)/mxe-test-a.mk $(builddir)/$(mxe_test_a_sid)-$(mxe_target)-mxe-test-a.mk
+en-mxe-test-a: rm-mxe-test-so test-links en-mxe-a
+	@$(link) -vsf $(supdir)/mxe-test-a.mk $(builddir)/$(mxe_test_a_sid)-$(mxe_target)-mxe-test-a.mk
 
 su-mxe-test-a:
 	@rm -vf $(builddir)/$(mxe_test_a_sid)-$(mxe_target)-mxe-test-a.mk
@@ -66,8 +65,8 @@ rm-mxe-test-a:
 	@if [ -e $(builddir)/$(mxe_test_a_sid)-$(mxe_target)-mxe-test-a.mk ]; then $(MAKE) MAKEFILE=$(mxe_test_a_sid)-$(mxe_target)-mxe-test.mk -C $(builddir) -f $(mxe_test_sid)-$(mxe_target)-mxe-test-a.mk rm; fi; \
 	rm -vf $(builddir)/$(mxe_test_a_sid)-$(mxe_target)-mxe-test-a.mk
 
-en-mxe-test-so: $(builddir) rm-mxe-test-a test-links en-mxe-so
-	@ln -vsf $(supdir)/mxe-test-so.mk $(builddir)/$(mxe_test_so_sid)-$(mxe_target)-mxe-test-so.mk
+en-mxe-test-so: rm-mxe-test-a test-links en-mxe-so
+	@$(link) -vsf $(supdir)/mxe-test-so.mk $(builddir)/$(mxe_test_so_sid)-$(mxe_target)-mxe-test-so.mk
 	
 su-mxe-test-so:
 	@rm -vf $(builddir)/$(mxe_test_so_sid)-$(mxe_target)-mxe-test-so.mk

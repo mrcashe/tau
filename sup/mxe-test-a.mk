@@ -38,7 +38,7 @@ all_sources = $(basename $(notdir $(wildcard $(srcdir)/test/*.cc)))
 all_binaries = $(addprefix $(bindir)/$(mxe_target)-, $(addsuffix .exe, $(all_sources)))
 sources = $(basename $(notdir $(wildcard $(builddir)/test/*.cc)))
 binaries = $(addprefix $(bindir)/$(mxe_target)-, $(addsuffix .exe, $(sources)))
-CXXFLAGS += -O0 $(hh_option)
+CXXFLAGS += -O0 $(hh_option) -mwindows
 syslibs = $(addprefix $(mxe_libroot)/,$(mxe_syslibs))
 
 all: $(mxe_test_a_builddir) $(bindir) $(binaries)

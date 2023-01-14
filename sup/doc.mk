@@ -25,17 +25,28 @@
 # -----------------------------------------------------------------------------
 
 doc_prefix = $(share_prefix)
+mk = $(builddir)/78-doc.mk
 
-.PHONY: doc install-doc uninstall-doc clean-doc
+.PHONY: doc
 
 doc:
-	@doxygen "$(confdir)/Doxyfile"
+	@if [ -e "$(mk)" ]; then doxygen "$(confdir)/Doxyfile"; fi
 
-install-doc:
+all:
+
+install:
 	@if [ -d "$(doxydir)" ]; then cp -vpRf "$(doxydir)" "$(doc_prefix)"; fi
 
-uninstall-doc:
+uninistall:
 	@rm -vrf "$(doc_prefix)"
 
-clean-doc:
+clean:
 	@rm -vrf "$(doxydir)"
+
+en-doc: $(builddir)
+	@$(link) "$(supdir)/doc.mk" "$(mk)"
+
+rm-doc: clean
+	@rm -vf "$(mk)"
+
+su-doc: rm-doc

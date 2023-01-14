@@ -90,14 +90,15 @@ chk_file() {
 usage() {
     echo "Usage: configure [options...]"
     echo "Options are:"
-    echo "  --help, -h              show this help"
-    echo "  --prefix=<PREFIX>       set install prefix"
-    echo "  --mxe-prefix=<PREFIX>   set MXE prefix"
-    echo "  --mxe-target=<TARGET>   set MXE target"
-    echo "  --disable-mxe           disable MXE building"
-    echo "  --disable-doc           disable documentation generation"
-    echo "  --enable-static         enable static library building"
-    echo "  --enable-test           enable test suite building"
+    echo "  --help, -h               show this help"
+    echo "  --prefix=<PREFIX>        set install prefix"
+    echo "  --conf-targets=<TARGETS> set post-configure targets"
+    echo "  --mxe-prefix=<PREFIX>    set MXE prefix"
+    echo "  --mxe-target=<TARGET>    set MXE target"
+    echo "  --disable-mxe            disable MXE building"
+    echo "  --disable-doc            disable documentation generation"
+    echo "  --enable-static          enable static library building"
+    echo "  --enable-test            enable test suite building"
 }
 
 # Start here.
@@ -146,6 +147,7 @@ enable_static='NO'
 enable_test='NO'
 mxe_prefix=''
 mxe_target='i686-w64-mingw32.static'
+conf_targets=''
 
 chk_which 'sed' 'sed' 'MANDATORY'
 chk_which 'dirname' 'dirname' 'MANDATORY'
@@ -193,6 +195,11 @@ for opt in $opts; do
             [ -n "$target" ] && mxe_target=$target
         ;;
 
+        --conf-targets=*)
+            targets=$(echo -n $opt |sed s/--conf-targets=//)
+            [ -n "$targets" ] && conf_targets+=" $targets"
+        ;;
+        
         --disable-doc)
             disable_doc='YES'
         ;;
@@ -434,9 +441,9 @@ echo "export share_prefix = $share_prefix" >>$conf_mk
 echo "export pkg_required = $pkg_required" >>$conf_mk
 echo "export link = $link" >>$conf_mk
 
-conf_targets='en-so en-test'
 [ 'YES' == "$enable_static" ] && conf_targets+=' en-a'
 [ 'YES' == "$enable_test" ] && conf_targets+=' en-test'
+[ -z "$conf_targets" ] && conf_targets='en-host-test-so'
 echo "conf_targets = $conf_targets" >>$conf_mk
 
 if test -n $mxe_prefix; then

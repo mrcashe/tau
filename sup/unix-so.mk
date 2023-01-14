@@ -39,8 +39,6 @@ install: $(lib_prefix)
 	@if [ -f $(unix_so) ]; then \
 	    cp -f -vp $(unix_so) $(unix_so_dest); \
 	    $(unix_STRIP) --strip-unneeded $(unix_so_dest); \
-	    (cd $(lib_prefix) && ln -vsf $(unix_soname) $(unix_sobase).$(Major_).$(Minor_)); \
-	    (cd $(lib_prefix) && ln -vsf $(unix_soname) $(unix_sobase).$(Major_)); \
 	    (cd $(lib_prefix) && ln -vsf $(unix_soname) $(unix_sobase)); \
 	fi
 

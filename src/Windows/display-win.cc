@@ -351,9 +351,7 @@ Toplevel_ptr Display_win::create_toplevel(Display_ptr dp, const Rect & ubounds) 
         x = sz.width() >> 1, y = sz.height() >> 1;
     }
 
-    HWND hwnd = CreateWindowExW(0, class_name, NULL, WS_OVERLAPPEDWINDOW|WS_CLIPCHILDREN,
-                                x, y, width, height, NULL, NULL, hinstance_, NULL);
-
+    HWND hwnd = CreateWindowExW(0, class_name, NULL, WS_OVERLAPPEDWINDOW|WS_CLIPCHILDREN, x, y, width, height, NULL, NULL, hinstance_, NULL);
     if (!hwnd) { throw sys_error("Display_win: CreateWindowExW() failed"); }
     { Lock lock(smx_); wndproc_map_[hwnd] = this; }
 
@@ -457,8 +455,8 @@ Popup_ptr Display_win::create_popup(Display_ptr dp, Widget_impl * wi, const Poin
         Lock lk(smx_); popup_class_atom_ = atom;
     }
 
-    HWND hwnd = CreateWindowExW(WS_EX_NOPARENTNOTIFY|WS_CLIPSIBLINGS, class_name, NULL, WS_CHILD,
-                                upos.x(), upos.y(), 10, 10, WINFACE_WIN(wpp)->handle(), NULL, hinstance_, NULL);
+    // WS_CLIPSIBLINGS doesn't work on Win7!
+    HWND hwnd = CreateWindowExW(WS_EX_NOPARENTNOTIFY, class_name, NULL, WS_CHILD, upos.x(), upos.y(), 10, 10, WINFACE_WIN(wpp)->handle(), NULL, hinstance_, NULL);
     if (!hwnd) { throw sys_error("Display_win: CreateWindowExW() failed"); }
     { Lock lock(smx_); wndproc_map_[hwnd] = this; }
     auto wf = std::make_shared<Winface_win>(wdp, hwnd);

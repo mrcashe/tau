@@ -24,10 +24,10 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # -----------------------------------------------------------------------------
 
-all: all-recursive
-install: install-recursive install-doc
-uninstall: uninstall-recursive uninstall-doc
-clean: clean-recursive clean-doc
+all: all-build
+install: all install-build
+uninstall: uninstall-build
+clean: clean-build
 
 include conf/conf.mk
 
@@ -35,39 +35,38 @@ export hh_src = $(srcdir)/include
 export hh_option = -I$(hh_src)
 export hh_impl_options = $(hh_option) -I$(srcdir) -I$(confdir)
 
-RECURSIVE_TARGETS = all-recursive install-recursive uninstall-recursive clean-recursive
-.PHONY: $(RECURSIVE_TARGETS) configure post-configure rm xz test-links
+BUILD_TARGETS = all-build install-build uninstall-build clean-build
+.PHONY: $(BUILD_TARGETS) rm xz test-links lj
 
-$(RECURSIVE_TARGETS): $(builddir)/Makefile
-	@target=`echo $@ | sed s/-recursive//`;\
-	$(MAKE) -C $$builddir $$target || exit 1
+$(BUILD_TARGETS): $(builddir) lj
+	@target=`echo $@ | sed s/-build//`;\
+	$(MAKE) $(shell cat "$(confdir)/lj" 2>/dev/null) -C $$builddir $$target || exit 1
 
 conf/conf.mk:
-	@./configure || exit 1
-	@$(MAKE) post-configure
-
-configure:
 	@./configure || exit 1
 
 rm:
 	@rm -vrf $(builddir) $(bindir) $(confdir)
 
-post-configure: $(builddir)/Makefile
-
-$(builddir)/Makefile: $(builddir)
-	@$(link) "$(supdir)/build.mk" $@
+lj:
+	@rm -f "$(confdir)/lj"; \
+	for mk in $(wildcard $(builddir)/*.mk); do \
+	    a=`echo $$mk | grep -- -a.mk$$`; \
+	    if [ -n "$$a" ]; then printf -- '-j 1' > "$(confdir)/lj"; fi; \
+	done
 
 $(builddir):
 	@mkdir -vp $@
-	@[ -z $(wildcard "$(builddir)/*") ] && $(MAKE) $(conf_targets)
+	@$(link) "$(supdir)/build.mk" $@/Makefile
+	@[ -z $(wildcard "$@/*.mk") ] && $(MAKE) $(conf_targets)
 
-test-links:
-	@if [ ! -d $$builddir/test ]; then \
-	mkdir -vp "$$builddir/test"; \
-	for f in $(wildcard $(srcdir)/test/*.cc); do \
-	    cc=`basename $$f`; \
-	    $$link "$$srcdir/test/$$cc" "$$builddir/test/$$cc"; \
-	done; \
+test-links: $(builddir)
+	@if [ ! -d $(builddir)/test ]; then \
+	    mkdir -vp "$(builddir)/test"; \
+	    for f in $(wildcard $(srcdir)/test/*.cc); do \
+		cc=`basename $$f`; \
+		$(link) "$(srcdir)/test/$$cc" "$(builddir)/test/$$cc"; \
+	    done; \
 	fi
 
 xz:

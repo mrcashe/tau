@@ -37,7 +37,7 @@ all_sources = $(basename $(notdir $(wildcard $(srcdir)/test/*.cc)))
 all_binaries = $(addprefix $(bindir)/$(mxe_target)-, $(addsuffix .exe, $(all_sources)))
 sources = $(basename $(notdir $(wildcard $(builddir)/test/*.cc)))
 binaries = $(addprefix $(bindir)/$(mxe_target)-, $(addsuffix .exe, $(sources)))
-CXXFLAGS += -O2 $(hh_option)
+CXXFLAGS += -O2 $(hh_option) -mwindows
 
 all: $(mxe_test_so_builddir) $(bindir) $(binaries)
 
