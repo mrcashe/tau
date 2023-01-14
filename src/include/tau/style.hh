@@ -201,9 +201,6 @@ public:
     /// Unset parent style.
     void unparent();
 
-    /// Find item by name.
-    Style_item * find(const std::string & name);
-
     /// Assign or reassign a value to the item.
     Style_item & set(const std::string & name, const ustring & value=ustring());
 

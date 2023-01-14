@@ -33,7 +33,7 @@ include conf/conf.mk
 
 export hh_src = $(srcdir)/include
 export hh_option = -I$(hh_src)
-export hh_impl_options = $(hh_option) -I$(srcdir) -I$(confdir)
+export hh_impl_options = $(hh_option) -I$(srcdir)
 
 BUILD_TARGETS = all-build install-build uninstall-build clean-build
 .PHONY: $(BUILD_TARGETS) rm xz test-links lj

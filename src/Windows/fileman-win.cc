@@ -57,11 +57,11 @@ protected:
                 Text_ptr tp = std::make_shared<Text_impl>("My Documents", ALIGN_START);
                 tp->signal_select().connect(tau::bind(fun(this, &Fileman_impl::chdir), path));
                 tp->set_tooltip(path);
-                int br = places_list_->append_row(tp, true);
+                int row = places_list_->append_row(tp, true);
 
                 Icon_ptr ico = std::make_shared<Icon_impl>("folder", SMALL_ICON);
                 ico->signal_select().connect(tau::bind(fun(this, &Fileman_impl::chdir), path));
-                places_list_->insert(br, ico, -1, true);
+                places_list_->insert(row, ico, -1, true);
             }
 
             std::list<ustring> removables, cdroms, remotes, drives;
@@ -74,13 +74,13 @@ protected:
 
                 for (std::size_t i = 0; i < nbytes; ++i) {
                     if ('\0' != buf[i]) {
-                        UINT drive_type = GetDriveType(buf+i);
+                        UINT dtype = GetDriveType(buf+i);
 
-                        if (DRIVE_UNKNOWN != drive_type && DRIVE_NO_ROOT_DIR != drive_type) {
+                        if (DRIVE_UNKNOWN != dtype && DRIVE_NO_ROOT_DIR != dtype) {
                             ustring name = loc.encode_filename(buf+i);
-                            if (DRIVE_REMOVABLE == drive_type) { removables.push_back(name); }
-                            else if (DRIVE_CDROM == drive_type) { cdroms.push_back(name); }
-                            else if (DRIVE_REMOTE == drive_type) { remotes.push_back(name); }
+                            if (DRIVE_REMOVABLE == dtype) { removables.push_back(name); }
+                            else if (DRIVE_CDROM == dtype) { cdroms.push_back(name); }
+                            else if (DRIVE_REMOTE == dtype) { remotes.push_back(name); }
                             else { drives.push_back(name); }
                         }
                     }
@@ -97,11 +97,11 @@ protected:
                 for (const ustring & s: drives) {
                     tp = std::make_shared<Text_impl>(s, ALIGN_START);
                     tp->signal_select().connect(tau::bind(fun(this, &Fileman_impl::chdir), s));
-                    int br = places_list_->append_row(tp, true);
+                    int row = places_list_->append_row(tp, true);
 
                     Icon_ptr ico = std::make_shared<Icon_impl>("drive-harddisk", SMALL_ICON);
                     ico->signal_select().connect(tau::bind(fun(this, &Fileman_impl::chdir), s));
-                    places_list_->insert(br, ico, -1, true);
+                    places_list_->insert(row, ico, -1, true);
                 }
             }
 
@@ -113,11 +113,11 @@ protected:
                 for (const ustring & s: cdroms) {
                     tp = std::make_shared<Text_impl>(s, ALIGN_START);
                     tp->signal_select().connect(tau::bind(fun(this, &Fileman_impl::chdir), s));
-                    int br = places_list_->append_row(tp, true);
+                    int row = places_list_->append_row(tp, true);
 
                     Icon_ptr ico = std::make_shared<Icon_impl>("drive-optical:drive-harddisk", SMALL_ICON);
                     ico->signal_select().connect(tau::bind(fun(this, &Fileman_impl::chdir), s));
-                    places_list_->insert(br, ico, -1, true);
+                    places_list_->insert(row, ico, -1, true);
                 }
             }
 
@@ -129,11 +129,11 @@ protected:
                 for (const ustring & s: remotes) {
                     tp = std::make_shared<Text_impl>(s, ALIGN_START);
                     tp->signal_select().connect(tau::bind(fun(this, &Fileman_impl::chdir), s));
-                    int br = places_list_->append_row(tp, true);
+                    int row = places_list_->append_row(tp, true);
 
                     Icon_ptr ico = std::make_shared<Icon_impl>("folder-remote:folder", SMALL_ICON);
                     ico->signal_select().connect(tau::bind(fun(this, &Fileman_impl::chdir), s));
-                    places_list_->insert(br, ico, -1, true);
+                    places_list_->insert(row, ico, -1, true);
                 }
             }
 
@@ -145,11 +145,11 @@ protected:
                 for (const ustring & s: removables) {
                     tp = std::make_shared<Text_impl>(s, ALIGN_START);
                     tp->signal_select().connect(tau::bind(fun(this, &Fileman_impl::chdir), s));
-                    int br = places_list_->append_row(tp, true);
+                    int row = places_list_->append_row(tp, true);
 
                     Icon_ptr ico = std::make_shared<Icon_impl>("drive-removable-media:drive-harddisk", SMALL_ICON);
                     ico->signal_select().connect(tau::bind(fun(this, &Fileman_impl::chdir), s));
-                    places_list_->insert(br, ico, -1, true);
+                    places_list_->insert(row, ico, -1, true);
                 }
             }
         }

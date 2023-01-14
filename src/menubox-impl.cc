@@ -281,7 +281,6 @@ void Menubox_impl::put_widget(Widget_ptr wp, int row) {
         table_->set_row_margin(row, 2, 2);
     }
 
-    widgets_.push_back(wp);
     update_separators();
 }
 
@@ -332,18 +331,15 @@ void Menubox_impl::insert_widget_after(Widget_ptr wp, Widget_cptr other) {
     }
 }
 
-// Overrides pure Menu_impl.
-void Menubox_impl::remove_widget(Widget_ptr wp) {
-    auto i = std::find(widgets_.begin(), widgets_.end(), wp);
-    if (i != widgets_.end()) { widgets_.erase(i); }
+// Overrides Box_impl.
+void Menubox_impl::remove(Widget_impl * wp) {
     remove_item(wp);
-    Table::Span rng = table_->span(wp.get());
+    Table::Span rng = table_->span(wp);
     if (rng.ymax > rng.ymin) { table_->remove_rows(rng.ymin, 1); }
 }
 
-// Overrides pure Menu_impl.
-void Menubox_impl::clear_widgets() {
-    widgets_.clear();
+// Overrides Box_impl.
+void Menubox_impl::clear() {
     items_.clear();
     table_->clear();
 }
@@ -352,7 +348,7 @@ void Menubox_impl::update_separators() {
     if (table_) {
         Table::Span trng = table_->span();
 
-        for (Widget_ptr wp: widgets_) {
+        for (Widget_ptr wp: table_->children()) {
             if (auto sep = std::dynamic_pointer_cast<Separator_impl>(wp)) {
                 int x, y, w, h;
                 Table::Span wrng = table_->span(sep.get());

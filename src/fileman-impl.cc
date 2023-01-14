@@ -147,7 +147,10 @@ Fileman_impl::Fileman_impl(Fileman_mode fm_mode, const ustring & path):
 }
 
 void Fileman_impl::on_display() {
-    if (places_visible_) { init_places(); fill_places(); }
+    if (places_visible_) {
+        init_places();
+        fill_places();
+    }
 
     if (auto dp = display()) {
         if (auto loop = dp->loop()) {
@@ -698,10 +701,10 @@ void Fileman_impl::on_configure() {
     show_hidden->signal_uncheck().connect(tau::bind(fun(this, &Fileman_impl::on_show_hidden), false));
     menu->append_widget(show_hidden);
 
-    Check_menu_ptr show_qpanel = std::make_shared<Check_menu_impl>("Show Places", CHECK_VSTYLE, places_visible());
-    show_qpanel->signal_check().connect(fun(this, &Fileman_impl::show_places));
-    show_qpanel->signal_uncheck().connect(fun(this, &Fileman_impl::hide_places));
-    menu->append_widget(show_qpanel);
+    Check_menu_ptr show_places = std::make_shared<Check_menu_impl>("Show Places", CHECK_VSTYLE, places_visible());
+    show_places->signal_check().connect(fun(this, &Fileman_impl::show_places));
+    show_places->signal_uncheck().connect(fun(this, &Fileman_impl::hide_places));
+    menu->append_widget(show_places);
 
     if (root()) {
         Point pos = conf_button_->to_root();

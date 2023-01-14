@@ -151,14 +151,14 @@ void Menubar_impl::insert_widget_after(Widget_ptr wp, Widget_cptr other) {
     if (auto ip = std::dynamic_pointer_cast<Menu_item_impl>(wp)) { add_item(ip); }
 }
 
-// Overrides pure Menu_impl.
-void Menubar_impl::remove_widget(Widget_ptr wp) {
+// Overrides Box_impl.
+void Menubar_impl::remove(Widget_impl * wp) {
     remove_item(wp);
-    box_->remove(wp.get());
+    box_->remove(wp);
 }
 
-// Overrides pure Menu_impl.
-void Menubar_impl::clear_widgets() {
+// Overrides Box_impl.
+void Menubar_impl::clear() {
     items_.clear();
     box_->clear();
 }

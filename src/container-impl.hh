@@ -112,6 +112,8 @@ public:
     const Widget_impl * mouse_grabber() const { return mouse_grabber_; }
     const Widget_impl * mouse_owner() const { return mouse_owner_; }
 
+    std::vector<Widget_ptr> children() { return children_; }
+
     signal<void()> & signal_arrange() { return signal_arrange_; }
 
 protected:

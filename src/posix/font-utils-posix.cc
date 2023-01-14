@@ -88,7 +88,7 @@ bool font_file_extracted(const tau::ustring & fpath) {
 }
 
 tau::Font_face_ptr find_font_face(const tau::ustring & family, const tau::ustring & facename) {
-    for (auto face: faces_) {
+    for (tau::Font_face_ptr face: faces_) {
         if (tau::str_similar(family, face->family())) {
             if (tau::str_similar(facename, face->facename())) {
                 return face;
@@ -226,7 +226,7 @@ ustring Font::normal() {
 
     if (normal_.empty()) {
         auto keys = list_font_family_keys();
-        const ustring fonts = "Noto Sans:Droid Sans:DejaVu Sans:Ubuntu:Free Sans";
+        const ustring fonts = "Droid Sans:DejaVu Serif Book:Noto Sans:Ubuntu:Free Sans";
 
         for (const ustring & s: str_explode(fonts, ':')) {
             std::string key = font_family_key(font_family_from_spec(s));
@@ -277,6 +277,7 @@ Font_face_ptr create_font_face(const ustring & spec) {
 
     auto specv = font_spec_explode(spec);
     ustring family = font_family_from_spec(specv);
+    // std::cout << "cff: " << font_face_from_spec(specv) << '\n';
     Font_face_ptr facep = create_font_face_nested(family, font_face_from_spec(specv));
     if (facep) { return facep; }
 

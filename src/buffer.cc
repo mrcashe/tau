@@ -242,7 +242,7 @@ void Buffer::save(std::ostream & os) const {
         if (impl->bom) { os.write("\xef\xbb\xbf", 3); }
 
         for (auto & row: impl->rows) {
-            ustring s = ustring::from_u32string(row.s);
+            ustring s(row.s);
             os.write(s.c_str(), s.bytes());
         }
     }
@@ -392,7 +392,7 @@ ustring Buffer::text() const {
 }
 
 ustring Buffer::text(Buffer_iter b, Buffer_iter e) const {
-    return ustring::from_u32string(impl->text(b.row(), b.col(), e.row(), e.col()));
+    return impl->text(b.row(), b.col(), e.row(), e.col());
 }
 
 std::u32string Buffer::text32() const {

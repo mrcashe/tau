@@ -124,7 +124,7 @@ void Frame_impl::clear() {
         wp->update_origin(INT_MIN, INT_MIN);
         wp->update_size(0, 0);
         update_requisition();
-        queue_arrange();
+        invalidate();
     }
 }
 

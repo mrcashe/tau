@@ -432,7 +432,7 @@ void Text_impl::set_text_align(Align xalign, Align yalign) {
     if (xalign_ != xalign || yalign_ != yalign) {
         xalign_ = xalign;
         yalign_ = yalign;
-        if (align_lines(0, lines())) { invalidate(); }
+        align_all();
     }
 }
 
@@ -467,7 +467,9 @@ bool Text_impl::align_lines(std::size_t first, std::size_t last) {
 }
 
 void Text_impl::align_all() {
-    align_lines(0, lines());
+    if (align_lines(0, lines())) {
+        invalidate();
+    }
 }
 
 void Text_impl::translate_lines(std::size_t first, std::size_t last, int dy) {
@@ -934,16 +936,16 @@ int Text_impl::x_at_col(std::size_t ri, std::size_t col) const {
     return 0;
 }
 
-std::size_t Text_impl::col_at_x(const Line & row, int x) const {
-    x -= row.ox;
+std::size_t Text_impl::col_at_x(const Line & line, int x) const {
+    x -= line.ox;
 
     if (x > 0) {
-        if (x > row.width) { return row.ncols; }
+        if (x > line.width) { return line.ncols; }
         std::size_t col = 0;
 
-        for (std::size_t n = 0; n < row.ncols; ++n) {
-            int x0 = row.poss[n];
-            int x1 = n+1 < row.ncols ? row.poss[n+1] : row.width;
+        for (std::size_t n = 0; n < line.ncols; ++n) {
+            int x0 = line.poss[n];
+            int x1 = n+1 < line.ncols ? line.poss[n+1] : line.width;
             if (x >= x0 && x < x1) { return col; }
             ++col;
         }
@@ -1082,6 +1084,8 @@ void Text_impl::paint_line(const Line & line, std::size_t ln, std::size_t pos, P
                         Color c = enabled() ? style_.color("foreground") : style_.color("background").get().inactive();
                         pr.move_to(x1, ybase);
                         pr.text(s.substr(col-col0, col2-col), c);
+                        std::cout << "&&&&& " << ustring(s.substr(col-col0, col2-col)) << " " << ecol << " " << line.ox << '\n';
+
                         pr.stroke();
                         col += col2-col;
                     }

@@ -357,6 +357,36 @@ ustring::ustring(std::string && src):
 {
 }
 
+ustring::ustring(const std::u32string & src) {
+    for (const char32_t * p = src.c_str(); *p; ++p) {
+        push_back(*p);
+    }
+}
+
+ustring::ustring(const std::u16string & ws) {
+    char16_t surr = 0;
+
+    for (const char16_t * p = ws.c_str(); *p; ++p) {
+        char16_t wc = *p;
+
+        if (char16_is_surrogate(wc)) {
+            if (0 != surr) {
+                push_back(char32_from_surrogate(surr, wc));
+                surr = 0;
+            }
+
+            else {
+                surr = wc;
+            }
+        }
+
+        else {
+            if (0 != surr) { break; }
+            else { push_back(char32_t(wc)); }
+        }
+    }
+}
+
 void ustring::swap(ustring & other) {
     str_.swap(other.str_);
     std::swap(size_, other.size_);
@@ -1002,41 +1032,6 @@ std::u32string ustring::to_u32string() const {
     }
 
     return ws;
-}
-
-// static
-ustring ustring::from_u16string(const std::u16string & ws) {
-    ustring s;
-    char16_t surr = 0;
-
-    for (const char16_t * p = ws.c_str(); *p; ++p) {
-        char16_t wc = *p;
-
-        if (char16_is_surrogate(wc)) {
-            if (0 != surr) {
-                s += char32_from_surrogate(surr, wc);
-                surr = 0;
-            }
-
-            else {
-                surr = wc;
-            }
-        }
-
-        else {
-            if (0 != surr) { break; }
-            else { s += char32_t(wc); }
-        }
-    }
-
-    return s;
-}
-
-// static
-ustring ustring::from_u32string(const std::u32string & ws) {
-    ustring s;
-    for (const char32_t * p = ws.c_str(); *p; ++p) { s += *p; }
-    return s;
 }
 
 std::istream & operator>>(std::istream & is, ustring & str) {

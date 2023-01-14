@@ -262,8 +262,8 @@ void Menu_impl::select_item(Menu_item_ptr item) {
     mark();
 }
 
-void Menu_impl::remove_item(Widget_ptr wp) {
-    auto iter = std::find(items_.begin(), items_.end(), wp);
+void Menu_impl::remove_item(Widget_impl * wp) {
+    auto iter = std::find_if(items_.begin(), items_.end(), [wp](Widget_ptr wpp) { return wp == wpp.get(); } );
     if (items_.end() != iter) { items_.erase(iter); }
 }
 

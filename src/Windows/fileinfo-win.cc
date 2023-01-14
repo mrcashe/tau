@@ -76,9 +76,23 @@ struct Fileinfo_win: public Fileinfo_impl {
 
     // Overrides pure Fileinfo_impl.
     signal<void(int, ustring)> & signal_watch(int event_mask) override {
-        if (!loop_) { loop_ = Loop_win::this_win_loop(); }
-        if (!mon_) { mon_ = loop_->create_file_monitor(uri_, event_mask); }
-        if (mon_) { mon_->signal_notify().connect(fun(signal_watch_)); }
+        if (!loop_) {
+            loop_ = Loop_win::this_win_loop();
+        }
+
+        if (!mon_) {
+            try {
+                mon_ = loop_->create_file_monitor(uri_, event_mask);
+            }
+
+            catch (...) {
+            }
+        }
+
+        if (mon_) {
+            mon_->signal_notify().connect(fun(signal_watch_));
+        }
+
         return signal_watch_;
     }
 

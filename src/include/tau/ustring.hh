@@ -136,6 +136,14 @@ public:
     /// @param src A source <tt>std::string</tt> containing text encoded as UTF-8.
     ustring(std::string && src);
 
+    /// Construct a ustring as a copy of another std::u16string.
+    /// @param src A source @c std::u16string.
+    ustring(const std::u16string & src);
+
+    /// Construct a ustring as a copy of another std::u32string.
+    /// @param src A source @c std::u32string.
+    ustring(const std::u32string & src);
+
     /// Construct a ustring as a copy of a substring.
     /// @param src %Source ustring.
     /// @param i Index of first character to copy from.
@@ -407,12 +415,6 @@ public:
 
     /// Convert to UTF-32.
     std::u32string to_u32string() const;
-
-    /// Construct from UTF-16.
-    static ustring from_u16string(const std::u16string & ws);
-
-    /// Construct from UTF-32.
-    static ustring from_u32string(const std::u32string & ws);
 
     /// @}
 

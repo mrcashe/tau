@@ -123,7 +123,7 @@ ustring Buffer_iter::peek(Buffer_iter other) const {
     ustring res;
 
     if (impl->buf && other.impl->buf == impl->buf) {
-        res = ustring::from_u32string(impl->buf->text(impl->row, impl->col, other.impl->row, other.impl->col));
+        res = ustring(impl->buf->text(impl->row, impl->col, other.impl->row, other.impl->col));
     }
 
     return res;

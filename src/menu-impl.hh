@@ -47,8 +47,6 @@ public:
     virtual void prepend_widget(Widget_ptr wp) = 0;
     virtual void insert_widget_before(Widget_ptr wp, Widget_cptr other) = 0;
     virtual void insert_widget_after(Widget_ptr wp, Widget_cptr other) = 0;
-    virtual void remove_widget(Widget_ptr wp) = 0;
-    virtual void clear_widgets() = 0;
 
     virtual void child_menu_escape() = 0;
     virtual void child_menu_left() = 0;
@@ -90,7 +88,7 @@ protected:
     virtual void mark_item(Menu_item_ptr ip, bool select) = 0;
 
     void select_item(Menu_item_ptr item);
-    void remove_item(Widget_ptr wp);
+    void remove_item(Widget_impl * wp);
     Menu_item_ptr current_item();
     Menu_item_ptr item_ptr(Menu_item_impl * item);
     Menu_item_ptr next_item();
@@ -415,11 +413,11 @@ public:
     // Overrides pure Menu_impl.
     void insert_widget_after(Widget_ptr wp, Widget_cptr other) override;
 
-    // Overrides pure Menu_impl.
-    void remove_widget(Widget_ptr wp) override;
+    // Overrides Box_impl.
+    void remove(Widget_impl * wp) override;
 
-    // Overrides pure Menu_impl.
-    void clear_widgets() override;
+    // Overrides Box_impl.
+    void clear() override;
 
     // Overrides pure Menu_impl.
     void child_menu_escape() override;
@@ -472,11 +470,11 @@ public:
     // Overrides pure Menu_impl.
     void insert_widget_after(Widget_ptr wp, Widget_cptr other) override;
 
-    // Overrides pure Menu_impl.
-    void remove_widget(Widget_ptr wp) override;
+    // Overrides Box_impl.
+    void remove(Widget_impl * wp) override;
 
-    // Overrides pure Menu_impl.
-    void clear_widgets() override;
+    // Overrides Box_impl.
+    void clear() override;
 
     // Overrides pure Menu_impl.
     void child_menu_escape() override;
@@ -500,7 +498,6 @@ private:
 
     using Widgets = std::vector<Widget_ptr>;
 
-    Widgets     widgets_;
     Table_ptr   table_;
     Action      up_action_ {"Up", fun(this, &Menubox_impl::on_up) };
     Action      down_action_ {"Down", fun(this, &Menubox_impl::on_down) };

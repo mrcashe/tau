@@ -372,6 +372,8 @@ void Box_impl::clear() {
     if (!holders_.empty()) {
         for (auto & h: holders_) { rm_child(h); }
         holders_.clear();
+        invalidate();
+        update_requisition();
     }
 }
 

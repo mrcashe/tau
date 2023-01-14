@@ -50,12 +50,18 @@ public:
     void insert_before(Widget_ptr wp, const Widget_impl * other, bool shrink=false);
     void insert_after(Widget_ptr wp, const Widget_impl * other, bool shrink=false);
 
-    void remove(Widget_impl * wp);
+    // Overriden by Menubar_impl.
+    // Overriden by Menubox_impl.
+    virtual void remove(Widget_impl * wp);
+
+    // Overriden by Menubar_impl.
+    // Overriden by Menubox_impl.
+    virtual void clear();
+
     void remove_before(const Widget_impl * wp);
     void remove_after(const Widget_impl * wp);
 
     bool empty() const;
-    void clear();
     bool shrunk(const Widget_impl * wp) const;
     void shrink(Widget_impl * wp);
     void expand(Widget_impl * wp);

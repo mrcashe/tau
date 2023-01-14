@@ -171,11 +171,11 @@ void Menu::insert_separator_after(const Widget & other, Separator_style separato
 }
 
 void Menu::remove(Widget & w) {
-    MENU_IMPL->remove_widget(w.ptr());
+    MENU_IMPL->remove(w.ptr().get());
 }
 
 void Menu::clear() {
-    MENU_IMPL->clear_widgets();
+    MENU_IMPL->clear();
 }
 
 // ----------------------------------------------------------------------------

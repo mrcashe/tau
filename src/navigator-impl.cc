@@ -107,8 +107,6 @@ void Navigator_impl::new_dir(const ustring & path) {
             if (!find_cached_holder(holder_->path)) {
                 hcache_.push_back(holder_);
             }
-
-            holder_ = nullptr;
         }
 
         holder_ = find_cached_holder(path);
@@ -125,8 +123,8 @@ void Navigator_impl::new_dir(const ustring & path) {
 
         if (holder_) {
             if (!holder_->prep) { preprocess(*holder_); }
-            show_current_dir();
             signal_dir_changed_(path);
+            show_current_dir();
         }
     }
 }
@@ -318,7 +316,6 @@ void Navigator_impl::reload() {
         ustring filename;
         if (INT_MIN != selected_row) { filename = name_from_row(selected_row); }
         read_dir(holder_);
-        //std::cout << "reload: nrecs=" << holder_->recs.size() << '\n';
         preprocess(*holder_);
         show_current_dir();
         if (!filename.empty()) { select_name(filename); }
@@ -327,17 +324,19 @@ void Navigator_impl::reload() {
 
 void Navigator_impl::chdir(const ustring & path) {
     try {
-        if (!file_is_dir(path)) {
-            ustring p = path_dirname(path);
+        ustring fpath = path_is_absolute(path) ? path : path_build(path_cwd(), path);
+
+        if (!file_is_dir(fpath)) {
+            ustring p = path_dirname(fpath);
 
             if (file_is_dir(p)) {
-                new_dir(path_real(p));
-                if (file_exists(path)) { select_name(path_notdir(path)); }
+                new_dir(p);
+                if (file_exists(fpath)) { select_name(path_notdir(fpath)); }
             }
         }
 
         else {
-            new_dir(path_real(path));
+            new_dir(fpath);
         }
     }
 

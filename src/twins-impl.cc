@@ -125,6 +125,7 @@ void Twins_impl::remove_first() {
         sep_->hide();
         update_requisition();
         queue_arrange();
+        invalidate();
     }
 }
 
@@ -134,6 +135,7 @@ void Twins_impl::remove_second() {
         sep_->hide();
         update_requisition();
         queue_arrange();
+        invalidate();
     }
 }
 

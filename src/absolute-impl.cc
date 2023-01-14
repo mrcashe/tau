@@ -81,7 +81,7 @@ void Absolute_impl::clear() {
     for (Holder & hol: holders_) { rm_child(hol); }
     holders_.clear();
     update_requisition();
-    queue_arrange();
+    invalidate();
 }
 
 bool Absolute_impl::empty() const {

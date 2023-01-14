@@ -49,11 +49,11 @@ struct Style_impl {
     Style_impl(Style_impl && other) = default;
     Style_impl & operator=(Style_impl && other) = default;
 
-    void set_parent(Style & parent) {
-        find_cx_ = signal_find_.connect(fun(parent, &Style::find));
+    void set_parent(Style_impl * parent) {
+        find_cx_ = signal_find_.connect(fun(parent, &Style_impl::find));
 
         for (auto & p: items_) {
-            if (auto pi = parent.find(p.first)) {
+            if (auto pi = parent->find(p.first)) {
                 auto ip = p.second;
                 ip->set_pvalue(pi->get());
                 ip->cx_ = pi->signal_value_changed_.connect(fun(ip, &Style_item::set_pvalue));
@@ -344,15 +344,11 @@ Style & Style::operator=(const Style & other) {
 }
 
 void Style::set_parent(Style & parent) {
-    impl->set_parent(parent);
+    impl->set_parent(parent.impl);
 }
 
 void Style::unparent() {
     impl->unparent();
-}
-
-Style_item * Style::find(const std::string & name) {
-    return impl->find(name);
 }
 
 Style_item & Style::set(const std::string & name, const ustring & value) {

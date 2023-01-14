@@ -109,8 +109,8 @@ void Card_impl::remove(Widget_impl * wi) {
 void Card_impl::clear() {
     for (auto & hol: holders_) { rm_child(hol); }
     holders_.clear();
+    invalidate();
     update_requisition();
-    queue_arrange();
 }
 
 Size Card_impl::child_requisition(const Holder & hol) {

@@ -1094,7 +1094,7 @@ private:
     void load_fileman(tau::Fileman & fman) {
         tau::Key_section & sect = state_.section("navigator");
         if (state_.get_boolean(sect, "show_hidden")) { fman.show_hidden_files(); }
-        if (!state_.get_boolean(sect, "places_visible")) { fman.hide_places(); }
+        if (!state_.get_boolean(sect, "places_visible", true)) { fman.hide_places(); }
         fman.show_info(state_.get_string(sect, "visible_info_items"), state_.list_separator());
         fman.hide_info(state_.get_string(sect, "invisible_info_items"), state_.list_separator());
         fman.sort_by(state_.get_string(sect, "sort_by", "name"));
