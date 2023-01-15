@@ -36,20 +36,20 @@ namespace tau {
 Buffer::Buffer():
     impl(std::make_shared<Buffer_impl>())
 {
-    impl->newlines = str_newlines().to_u32string();
+    impl->newlines = str_newlines();
 }
 
 Buffer::Buffer(const ustring & s):
     impl(std::make_shared<Buffer_impl>())
 {
-    impl->newlines = str_newlines().to_u32string();
+    impl->newlines = str_newlines();
     assign(s);
 }
 
 Buffer::Buffer(std::istream & is):
     impl(std::make_shared<Buffer_impl>())
 {
-    impl->newlines = str_newlines().to_u32string();
+    impl->newlines = str_newlines();
     insert(end(), is);
 }
 
@@ -69,7 +69,7 @@ void Buffer::assign(const Buffer other) {
 }
 
 Buffer_iter Buffer::replace(Buffer_iter i, const ustring & str) {
-    return replace(i, str.to_u32string());
+    return replace(i, std::u32string(str));
 }
 
 Buffer_iter Buffer::replace(Buffer_iter i, const std::u32string & str) {
@@ -127,7 +127,7 @@ Buffer_iter Buffer::insert(Buffer_iter i, char32_t uc, std::size_t count) {
 }
 
 Buffer_iter Buffer::insert(Buffer_iter i, const ustring & str) {
-    return insert(i, str.to_u32string());
+    return insert(i, std::u32string(str));
 }
 
 Buffer_iter Buffer::insert(Buffer_iter i, const std::u32string & str) {

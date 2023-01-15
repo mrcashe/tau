@@ -24,84 +24,46 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # -----------------------------------------------------------------------------
 
-target = $(shell echo $(MAKEFILE) | sed s/[0-9][0-9]-//)
-mxe_target = $(subst -mxe-so.mk,,$(target))
-mxe_soname = libtau-$(Major_).$(Minor_)-$(mxe_target)-mxe.dll
-mxe_sodir = $(builddir)/lib
-mxe_so = $(mxe_sodir)/$(mxe_soname)
-mxe_so_builddir = $(mxe_target)-mxe-so
-mxe_so_dest = $(lib_prefix)/$(mxe_soname)
-mxe_pc = $(pc_prefix)/tau-$(Major_).$(Minor_)-$(mxe_target)-mxe.pc
-mxe_libroot = $(mxe_prefix)/$(mxe_target)/lib
-syslibs = $(addprefix $(mxe_libroot)/,$(mxe_syslibs))
-
-MXE_CXX = $(mxe_prefix)/bin/$(mxe_target)-g++
-MXE_STRIP = $(mxe_prefix)/bin/$(mxe_target)-strip
-
+mxe_so_builddir = mxe-so
 src_dirs = $(srcdir) $(srcdir)/Windows $(confdir)
-VPATH = $(src_dirs)
 sources = $(foreach dir, $(src_dirs), $(wildcard $(dir)/*.cc))
 objects = $(addprefix $(mxe_so_builddir)/, $(sort $(addsuffix .o, $(basename $(notdir $(sources))))))
+syslibs = $(addprefix $(mxe_prefix)/$(mxe_target)/lib/,$(mxe_syslibs))
 CXXFLAGS += -O2 -Wall $(hh_impl_options)
+MXE_CXX = $(mxe_prefix)/bin/$(mxe_target)-g++
+MXE_STRIP = $(mxe_prefix)/bin/$(mxe_target)-strip
+VPATH = $(src_dirs)
 
 all: $(mxe_sodir) $(mxe_so_builddir) $(mxe_so)
-install: install-so install-pc
-uninstall: uninstall-pc uninstall-so
 
 $(mxe_so): $(objects)
 	$(MXE_CXX) -shared -o $@ $(mxe_so_builddir)/*.o $(syslibs)
 
 clean:
-	@rm -vf $(mxe_so_builddir)/*.o $(mxe_so_builddir)/*.dep $(mxe_so)
+	@$(rm) $(mxe_so_builddir)/*.o $(mxe_so_builddir)/*.dep $(mxe_so)
 
 rm: clean
-	@rm -vrf $(mxe_so_builddir)
+	@$(rmr) $(mxe_so_builddir)
 
 $(mxe_so_builddir)/%.o: %.cc
 	$(MXE_CXX) $(CXXFLAGS) -c -MD -MF $(basename $@).dep -o $@ $<
 
 include $(wildcard $(mxe_so_builddir)/*.dep)
 
-install-so: $(lib_prefix)
-	@cp -vfp $(mxe_so) $(mxe_so_dest)
+install: $(lib_prefix)
+	@$(cp) $(mxe_so) $(mxe_so_dest)
 	@$(MXE_STRIP) --strip-unneeded $(mxe_so_dest)
 
-install-pc: $(pc_prefix)
-	@if [ -f $(mxe_so) ]; then \
-	    echo "prefix=$(PREFIX)" >$(mxe_pc); \
-	    echo "exec_prefix=$(PREFIX)" >>$(mxe_pc); \
-	    echo "lib_prefix=$(PREFIX)/lib">>$(mxe_pc); \
-	    echo "includedir=$(hh_prefix)">>$(mxe_pc); \
-	    echo "a=$(mxe_so_dest)">>$(mxe_pc); \
-	    echo "mxe_prefix=$(mxe_prefix)">>$(mxe_pc); \
-	    echo "mxe_target=$(mxe_target)">>$(mxe_pc); \
-	    echo "mxe_libroot=$(mxe_libroot)">>$(mxe_pc); \
-	    echo "mxe_syslibs=$(mxe_syslibs)">>$(mxe_pc); \
-	    echo "Name: libtau">>$(mxe_pc); \
-	    echo "Description: C++ GUI toolkit for MinGW cross compile">>$(mxe_pc); \
-	    echo "Version: $(Major_).$(Minor_).$(Micro_)">>$(mxe_pc); \
-	    echo -n "Libs: -L$$">>$(mxe_pc); \
-	    echo "{lib_prefix}">>$(mxe_pc); \
-	    echo -n "Cflags: -I$$">>$(mxe_pc); \
-	    echo "{includedir}">>$(mxe_pc); \
-	fi
-
-uninstall-so:
-	@rm -vf $(mxe_so_dest)
-
-uninstall-pc:
-	@rm -vf $(mxe_pc)
+uninstall:
+	@$(rm) $(mxe_so_dest)
 
 $(mxe_sodir):
-	@mkdir -vp $@
+	@$(mkdir) $@
 
 $(lib_prefix):
-	@mkdir -vp $@
+	@$(mkdir) $@
 
 $(mxe_so_builddir):
-	@mkdir -vp $@
-
-$(pc_prefix):
-	@mkdir -vp $@
+	@$(mkdir) $@
 
 #END

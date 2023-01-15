@@ -50,10 +50,17 @@ rm:
 
 lj:
 	@rm -f "$(confdir)/lj"; \
-	for mk in $(wildcard $(builddir)/*.mk); do \
+	mks=`ls $(builddir)/*.mk 2>/dev/null`; \
+	for mk in $$mks; do \
 	    a=`echo $$mk | grep -- -a.mk$$`; \
 	    if [ -n "$$a" ]; then printf -- '-j 1' > "$(confdir)/lj"; fi; \
-	done
+	done; \
+	if [ -z "$$mks" ]; then \
+	    for target in $(conf_targets); do \
+		a=`echo $$target | grep -- -a$$`; \
+		if [ -n "$$a" ]; then printf -- '-j 1' > "$(confdir)/lj"; fi; \
+	    done;\
+	fi
 
 $(builddir):
 	@mkdir -vp $@

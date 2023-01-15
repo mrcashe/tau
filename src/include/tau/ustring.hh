@@ -411,10 +411,10 @@ public:
     /// @{
 
     /// Convert to UTF-16.
-    std::u16string to_u16string() const;
+    operator std::u16string() const;
 
     /// Convert to UTF-32.
-    std::u32string to_u32string() const;
+    operator std::u32string() const;
 
     /// @}
 

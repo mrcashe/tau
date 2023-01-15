@@ -37,7 +37,7 @@ all: $(unix_test_so_builddir) $(bindir) $(binaries)
 install: $(bin_prefix) $(binaries)
 	@for f in $(sources); do \
 	    if [ -h $$bin_prefix/$$f ]; then \
-		echo "** Skip install of $$bin_prefix/$$f: destination is a symlink"; \
+		echo "** unix-test-so.mk: skipping install of $$bin_prefix/$$f: destination is a symlink"; \
 	    else \
 		cp -vfp $$bindir/$$f $$bin_prefix/$$f; \
 		strip --strip-unneeded $$bin_prefix/$$f; \
@@ -47,7 +47,7 @@ install: $(bin_prefix) $(binaries)
 uninstall:
 	@for f in $(sources); do \
 	    if [ -h $$bin_prefix/$$f ]; then \
-		echo "** Skip removal of $$bin_prefix/$$f: file is a symlink"; \
+		echo "** unix-test-so.mk: skipping removal of $$bin_prefix/$$f: file is a symlink"; \
 	    else \
 		rm -vf $$bin_prefix/$$f; \
 	    fi; \

@@ -35,30 +35,30 @@ all: $(unix_adir) $(unix_a_builddir) $(objects)
 
 install: $(lib_prefix)
 	@if [ -f $(unix_a) ]; then \
-	    cp -vf $(unix_a) $(unix_a_dest); \
+	    $(cp) $(unix_a) $(unix_a_dest); \
 	    $(unix_STRIP) $(unix_a_dest); \
 	fi
 
 uninstall:
-	@rm -vf $(unix_a_dest)
+	@$(rm) $(unix_a_dest)
 
 $(unix_a_builddir)/%.o: %.cc
 	$(CXX) -o $@ $< $(CXXFLAGS) -c -MD -MF $(basename $@).dep && $(AR) rs $(unix_a) $@
 
 $(unix_adir):
-	@mkdir -vp $@
+	@$(mkdir) $@
 
 $(unix_a_builddir):
-	@mkdir -vp $@
+	@$(mkdir) $@
 
 $(lib_prefix):
-	@mkdir -vp $@
+	@$(mkdir) $@
 
 clean:
-	@rm -vf $(unix_a_builddir)/*.o $(unix_a_builddir)/*.dep $(unix_a)
+	@$(rm) $(unix_a_builddir)/*.o $(unix_a_builddir)/*.dep $(unix_a)
 
 rm: clean
-	@rm -vrf $(unix_a_builddir)
+	@$(rmr) -vrf $(unix_a_builddir)
 
 include $(wildcard $(unix_a_builddir)/*.dep)
 

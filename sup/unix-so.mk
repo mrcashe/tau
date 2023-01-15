@@ -37,22 +37,22 @@ $(unix_so): $(objects)
 
 install: $(lib_prefix)
 	@if [ -f $(unix_so) ]; then \
-	    cp -f -vp $(unix_so) $(unix_so_dest); \
+	    $(cp) $(unix_so) $(unix_so_dest); \
 	    $(unix_STRIP) --strip-unneeded $(unix_so_dest); \
 	    (cd $(lib_prefix) && ln -vsf $(unix_soname) $(unix_sobase)); \
 	fi
 
 uninstall:
-	@rm -vf $(lib_prefix)/$(unix_sobase)*
+	@$(rm) $(lib_prefix)/$(unix_sobase)*
 
 $(lib_prefix):
-	@mkdir -vp $@
+	@$(mkdir) $@
 
 $(unix_so_builddir):
-	@mkdir -vp $@
+	@$(mkdir) $@
 
 $(unix_sodir):
-	@mkdir -vp $@
+	@$(mkdir) $@
 
 $(unix_so_builddir)/%.o: %.cc
 	$(CXX) -o $@ $< -fPIC $(CXXFLAGS) -c -MD -MF $(basename $@).dep
@@ -60,9 +60,9 @@ $(unix_so_builddir)/%.o: %.cc
 include $(wildcard $(unix_so_builddir)/*.dep)
 
 clean:
-	@rm -vf $(unix_so_builddir)/*.o $(unix_so_builddir)/*.dep $(unix_so)
+	@$(rm) $(unix_so_builddir)/*.o $(unix_so_builddir)/*.dep $(unix_so)
 
 rm: clean
-	@rm -vrf $(unix_so_builddir)
+	@$(rmr) $(unix_so_builddir)
 
 #END

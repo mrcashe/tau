@@ -24,53 +24,17 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # -----------------------------------------------------------------------------
 
-mxe_soname = libtau-$(Major_).$(Minor_)-$(mxe_target)-mxe.dll
-mxe_sodir = $(bindir)
-mxe_so = $(mxe_sodir)/$(mxe_soname)
-mxe_test_so_builddir = mxe-test-so
-all_sources = $(basename $(notdir $(wildcard $(srcdir)/test/*.cc)))
-all_binaries = $(addprefix $(bindir)/, $(addsuffix .exe, $(all_sources)))
-sources = $(basename $(notdir $(wildcard $(builddir)/test/*.cc)))
-binaries = $(addprefix $(bindir)/, $(addsuffix .exe, $(sources)))
-CXXFLAGS += -O2 -I$(hh_src) -mwindows
-MXE_CXX = $(mxe_prefix)/bin/$(mxe_target)-g++
-MXE_STRIP = $(mxe_prefix)/bin/$(mxe_target)-strip
-VPATH = $(srcdir)/test
+all:
 
-all: $(mxe_test_so_builddir) $(bindir) $(binaries)
-
-# Install binaries with long name including target platform sepcification.
-install: $(bin_prefix) $(binaries)
-	@for f in $(sources); do \
-	    fname=$(mxe_target)-$$f.exe; \
-	    $(cp) "$(bindir)/$$f.exe" $(bin_prefix)/$$fname; \
-	    $(MXE_STRIP) --strip-unneeded $$bin_prefix/$$fname; \
-	done
+install:
+	@if [ -d $(doxydir) ]; then $(cpr) $(doxydir) $(doc_prefix); fi
 
 uninstall:
-	@for f in $(all_sources); do \
-	    $(rmr) $(bin_prefix)/$(mxe_target)-$$f.exe; \
-	done
-
-
-$(bindir)/%.exe: %.cc $(mxe_so)
-	$(MXE_CXX) $(CXXFLAGS) -MD -MF $(mxe_test_so_builddir)/$(basename $(notdir $@)).dep -o $@ $< $(mxe_so)
-
-$(bindir):
-	@$(mkdir) -vp $@
-
-$(bin_prefix):
-	@$(mkdir) -vp $@
-	
-$(mxe_test_so_builddir):
-	@$(mkdir) $@
+	@$(rmr) "$(doc_prefix)/html/"
 
 clean:
-	@$(rm) $(all_binaries) $(mxe_test_so_builddir)/*.dep
+	@$(rmr) "$(doxydir)"
 
-rm: clean
-	@$(rmr) $(mxe_test_so_builddir)
-
-include $(wildcard $(mxe_test_so_builddir)/*.dep)
-
-#END
+doc:
+	@if test -n $(doxygen); then (cd $(topdir) && $(doxygen) "$(confdir)/Doxyfile"); fi
+#

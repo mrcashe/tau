@@ -937,21 +937,25 @@ int Text_impl::x_at_col(std::size_t ri, std::size_t col) const {
 }
 
 std::size_t Text_impl::col_at_x(const Line & line, int x) const {
+    std::size_t col = 0;
     x -= line.ox;
 
     if (x > 0) {
-        if (x > line.width) { return line.ncols; }
-        std::size_t col = 0;
+        if (x >= line.width) {
+            col = line.ncols;
+        }
 
-        for (std::size_t n = 0; n < line.ncols; ++n) {
-            int x0 = line.poss[n];
-            int x1 = n+1 < line.ncols ? line.poss[n+1] : line.width;
-            if (x >= x0 && x < x1) { return col; }
-            ++col;
+        else {
+            for (std::size_t n = 0; n < line.ncols; ++n, ++col) {
+                int x0 = line.poss[n];
+                int x1 = n+1 < line.ncols ? line.poss[n+1] : line.width;
+                if (x >= x0 && x < x1) { break; }
+            }
         }
     }
 
-    return 0;
+    // std::cout << "col_at_x " << line.text << " " << x << " " << line.ox << " " << col << '\n';
+    return col;
 }
 
 std::size_t Text_impl::col_at_x(std::size_t ri, int x) const {
@@ -1084,8 +1088,7 @@ void Text_impl::paint_line(const Line & line, std::size_t ln, std::size_t pos, P
                         Color c = enabled() ? style_.color("foreground") : style_.color("background").get().inactive();
                         pr.move_to(x1, ybase);
                         pr.text(s.substr(col-col0, col2-col), c);
-                        std::cout << "&&&&& " << ustring(s.substr(col-col0, col2-col)) << " " << ecol << " " << line.ox << '\n';
-
+                        // std::cout << "&&&&& " << s.substr(col-col0, col2-col) << " " << ecol << " " << line.ox << '\n';
                         pr.stroke();
                         col += col2-col;
                     }

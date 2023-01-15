@@ -99,6 +99,7 @@ usage() {
     echo "  --disable-doc            disable documentation generation"
     echo "  --enable-static          enable static library building"
     echo "  --enable-test            enable test suite building"
+    echo "  --enable-devel           enable development files creation and install"
 }
 
 # Start here.
@@ -145,6 +146,7 @@ disable_doc='NO'
 disable_mxe='NO'
 enable_static='NO'
 enable_test='NO'
+enable_devel='NO'
 mxe_prefix=''
 mxe_target='i686-w64-mingw32.static'
 conf_targets=''
@@ -214,6 +216,10 @@ for opt in $opts; do
 
         --enable-test)
             enable_test='YES'
+        ;;
+
+        --enable-devel)
+            enable_devel='YES'
         ;;
 
         *)
@@ -438,12 +444,21 @@ echo "export lib_prefix = $lib_prefix" >>$conf_mk
 echo "export hh_prefix = $hh_prefix" >>$conf_mk
 echo "export pc_prefix = $pc_prefix" >>$conf_mk
 echo "export share_prefix = $share_prefix" >>$conf_mk
+echo "export doc_prefix = $PREFIX/share/doc/tau-$Major_.$Minor_" >>$conf_mk
 echo "export pkg_required = $pkg_required" >>$conf_mk
 echo "export link = $link" >>$conf_mk
+echo "export ln = $link" >>$conf_mk
+echo "export cp = cp -vfp" >>$conf_mk
+echo "export cpr = cp -vRfp" >>$conf_mk
+echo "export rm = rm -vf" >>$conf_mk
+echo "export rmr = rm -vrf" >>$conf_mk
+echo "export mkdir = mkdir -vp" >>$conf_mk
+echo "export doxygen = $which_doxygen" >>$conf_mk
 
 [ 'YES' == "$enable_static" ] && conf_targets+=' en-a'
 [ 'YES' == "$enable_test" ] && conf_targets+=' en-test'
 [ -z "$conf_targets" ] && conf_targets='en-host-test-so'
+[ 'YES' == "$enable_devel" ] && conf_targets+=' en-dev'
 echo "conf_targets = $conf_targets" >>$conf_mk
 
 if test -n $mxe_prefix; then
@@ -454,6 +469,7 @@ fi
 
 echo "" >>$conf_mk
 echo "include $supdir/$plat.mk" >>$conf_mk
+echo "include $supdir/dev.mk" >>$conf_mk
 if test -z $mxe_prefix; then echo "include $supdir/mxe-empty.mk" >>$conf_mk
 else echo "include $supdir/mxe.mk" >>$conf_mk; fi
 

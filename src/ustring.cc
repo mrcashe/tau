@@ -1010,25 +1010,25 @@ ustring::size_type ustring::copy(char * dest, size_type n, size_type i) const {
     return str_.copy(dest, bounds.n, bounds.i);
 }
 
-std::u16string ustring::to_u16string() const {
+ustring::operator std::u16string() const {
     std::u16string ws;
 
     for (const char * p = str_.c_str(); '\0' != *p; p = str8_next(p)) {
         char32_t wc = char32_from_pointer(p);
         char16_t c1, c2;
         char32_to_surrogate(wc, c1, c2);
-        ws += c1;
-        if (0 != c2) { ws += c2; }
+        ws.push_back(c1);
+        if (0 != c2) { ws.push_back(c2); }
     }
 
     return ws;
 }
 
-std::u32string ustring::to_u32string() const {
+ustring::operator std::u32string() const {
     std::u32string ws;
 
     for (const char * p = str_.c_str(); '\0' != *p; p = str8_next(p)) {
-        ws += char32_from_pointer(p);
+        ws.push_back(char32_from_pointer(p));
     }
 
     return ws;

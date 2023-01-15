@@ -24,29 +24,18 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # -----------------------------------------------------------------------------
 
-doc_prefix = $(share_prefix)
-mk = $(builddir)/78-doc.mk
+mk = "$(builddir)/79-doc.mk"
 
-.PHONY: doc
+.PHONY: doc en-doc su-doc rm-doc
 
 doc:
-	@if [ -e "$(mk)" ]; then doxygen "$(confdir)/Doxyfile"; fi
-
-all:
-
-install:
-	@if [ -d "$(doxydir)" ]; then cp -vpRf "$(doxydir)" "$(doc_prefix)"; fi
-
-uninistall:
-	@rm -vrf "$(doc_prefix)"
-
-clean:
-	@rm -vrf "$(doxydir)"
+	@if [ -e $(mk) ]; then $(MAKE) -f $(mk) -C $(builddir) doc; fi
 
 en-doc: $(builddir)
-	@$(link) "$(supdir)/doc.mk" "$(mk)"
+	@$(ln) "$(supdir)/doc-link.mk" "$(mk)"
 
-rm-doc: clean
+rm-doc:
+	@if [ -e $(mk) ]; then $(MAKE) -f $(mk) -C $(builddir) clean; fi
 	@rm -vf "$(mk)"
 
 su-doc: rm-doc
