@@ -111,17 +111,11 @@ int Notebook_impl::remove_page(int page) {
             auto & p = pages_[upage];
             abs_->remove(p.frame.get());
             card_->remove(p.wp.get());
-            pages_.erase(pages_.begin()+current);
+            pages_.erase(pages_.begin()+upage);
             signal_page_removed_(page);
             for (int n = pages_.size(); n > page; --n) { signal_page_reordered_(n, n-1); }
             if (page == current) { update_current(); }
-
-            if (pages_.empty()) {
-                abs_->hint_size(0);
-                frame_->set_border(0);
-                roller_->hint_margin(0);
-            }
-
+            update_frame_border();
             update_tabs();
             return upage;
         }
@@ -142,19 +136,19 @@ int Notebook_impl::current_page() const {
 
 void Notebook_impl::clear_pages() {
     unsigned n = pages_.size();
-    card_->clear();
-    abs_->clear();
-    abs_->hint_size(0);
-    frame_->set_border(0);
-    roller_->hint_margin(0);
     pages_.clear();
     for (; n > 0; --n) { signal_page_removed_(n-1); }
+    card_->clear();
+    abs_->clear();
+    update_frame_border();
+    update_tabs();
 }
 
 int Notebook_impl::append_page(Widget_ptr wp, Widget_ptr tp) {
     int current = current_page(), nth_page = pages_.size();
     pages_.emplace_back();
     init_page(nth_page, wp, tp);
+    if (!nth_page) { update_frame_border(); }
     update_tabs();
     signal_page_added_(nth_page);
     if (current < 0) { update_current(); signal_page_changed_(current_page()); }
@@ -171,6 +165,17 @@ int Notebook_impl::append_page(Widget_ptr wp, const ustring & title) {
     return append_page(wp, tp);
 }
 
+void Notebook_impl::prepend_page(Widget_ptr wp, Widget_ptr tp) {
+    int current = current_page();
+    pages_.emplace(pages_.begin());
+    init_page(0, wp, tp);
+    signal_page_added_(0);
+    if (current < 0) { update_frame_border(); }
+    update_tabs();
+    for (std::size_t n = pages_.size()-1; n > 0; --n) { signal_page_reordered_(n-1, n); }
+    if (current < 0) { update_current(); signal_page_changed_(current_page()); }
+}
+
 void Notebook_impl::prepend_page(Widget_ptr wp) {
     prepend_page(wp, str_format("Page ", 1+pages_.size()));
 }
@@ -181,16 +186,6 @@ void Notebook_impl::prepend_page(Widget_ptr wp, const ustring & title) {
     prepend_page(wp, tp);
 }
 
-void Notebook_impl::prepend_page(Widget_ptr wp, Widget_ptr tp) {
-    int current = current_page();
-    pages_.emplace(pages_.begin());
-    init_page(0, wp, tp);
-    signal_page_added_(0);
-    for (std::size_t n = pages_.size()-1; n > 0; --n) { signal_page_reordered_(n-1, n); }
-    update_tabs();
-    if (current < 0) { update_current(); signal_page_changed_(current_page()); }
-}
-
 int Notebook_impl::insert_page(Widget_ptr wp, int nth_page, Widget_ptr tp) {
     int current = current_page();
     if (nth_page < 0) { nth_page = 0; }
@@ -198,6 +193,7 @@ int Notebook_impl::insert_page(Widget_ptr wp, int nth_page, Widget_ptr tp) {
     pages_.emplace(pages_.begin()+nth_page);
     init_page(nth_page, wp, tp);
     for (std::size_t n = pages_.size()-1; n > std::size_t(nth_page); --n) { signal_page_reordered_(n-1, n); }
+    if (current < 0) { update_frame_border(); }
     update_tabs();
     signal_page_added_(nth_page);
     if (current < 0) { update_current(); signal_page_changed_(current_page()); }
@@ -248,7 +244,7 @@ int Notebook_impl::insert_page_before(Widget_ptr wp, Widget_ptr before_this, con
 }
 
 void Notebook_impl::update_frame_border() {
-    if (tabs_visible_) {
+    if (!empty() && tabs_visible_) {
         switch (orientation()) {
             case OR_RIGHT:
                 roller_->hint_margin_left(2);
@@ -273,8 +269,8 @@ void Notebook_impl::update_frame_border() {
     }
 
     else {
-        roller_->hint_margin_top(0);
-        frame_->set_border_top(0);
+        roller_->hint_margin(0);
+        frame_->set_border(0);
     }
 }
 
@@ -415,57 +411,67 @@ void Notebook_impl::update_current() {
 void Notebook_impl::update_tabs() {
     if (!destroy_ && ! in_arrange_) {
         in_arrange_ = true;
-        unsigned wmax = 0, hmax = 0, spc = 0;
 
-        for (auto & p: pages_) {
-            Size req = child_requisition(p.frame.get());
-            wmax = std::max(wmax, req.width());
-            hmax = std::max(hmax, req.height());
-            ++spc;
-        }
+        if (!empty() && tabs_visible_) {
+            unsigned aw = 0, ah = 0, wmax = 0, hmax = 0, spc = 0;
 
-        spc = spc > 1 ? (spc-1)*spc_ : 0;
-        unsigned aw = horizontal() ? wmax : spc , ah = horizontal() ? spc : hmax;
-
-        for (auto & p: pages_) {
-            if (homogeneous_tabs_) {
-                abs_->resize(p.frame.get(), wmax, hmax);
-                if (horizontal()) { ah += hmax; aw = std::max(aw, wmax); }
-                else { aw += wmax; ah = std::max(ah, hmax); }
+            for (auto & p: pages_) {
+                Size req = child_requisition(p.frame.get());
+                wmax = std::max(wmax, req.width());
+                hmax = std::max(hmax, req.height());
+                ++spc;
             }
 
-            else {
-                Size req = child_requisition(p.frame.get());
+            spc = spc > 1 ? (spc-1)*spc_ : 0;
+            aw = horizontal() ? wmax : spc;
+            ah = horizontal() ? spc : hmax;
 
-                if (horizontal()) {
-                    ah += req.height();
-                    abs_->resize(p.frame.get(), wmax, req.height());
+            for (auto & p: pages_) {
+                if (homogeneous_tabs_) {
+                    abs_->resize(p.frame.get(), wmax, hmax);
+                    if (horizontal()) { ah += hmax; aw = std::max(aw, wmax); }
+                    else { aw += wmax; ah = std::max(ah, hmax); }
                 }
 
                 else {
-                    aw += req.width();
-                    abs_->resize(p.frame.get(), req.width(), hmax);
+                    Size req = child_requisition(p.frame.get());
+
+                    if (horizontal()) {
+                        ah += req.height();
+                        abs_->resize(p.frame.get(), wmax, req.height());
+                    }
+
+                    else {
+                        aw += req.width();
+                        abs_->resize(p.frame.get(), req.width(), hmax);
+                    }
                 }
+            }
+
+            abs_->show();
+            abs_->hint_min_size(aw, ah);
+            int offset = 0;
+
+            for (auto & p: pages_) {
+                abs_->show();
+
+                if (horizontal()) {
+                    if (p.frame.get() != drag_) { abs_->move(p.frame.get(), 0, offset); }
+                    offset += p.frame->size().height();
+                }
+
+                else {
+                    if (p.frame.get() != drag_) { abs_->move(p.frame.get(), offset, 0); }
+                    offset += p.frame->size().width();
+                }
+
+                offset += spc_;
             }
         }
 
-        abs_->hint_min_size(aw, ah);
-        int offset = 0;
-
-        for (auto & p: pages_) {
-            abs_->show();
-
-            if (horizontal()) {
-                if (p.frame.get() != drag_) { abs_->move(p.frame.get(), 0, offset); }
-                offset += p.frame->size().height();
-            }
-
-            else {
-                if (p.frame.get() != drag_) { abs_->move(p.frame.get(), offset, 0); }
-                offset += p.frame->size().width();
-            }
-
-            offset += spc_;
+        // empty() || !tabs_visible_
+        else {
+            abs_->hide();
         }
 
         in_arrange_ = false;

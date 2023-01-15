@@ -27,13 +27,13 @@
 export unix_pkg = tau-$(Major_).$(Minor_)
 export unix_pc = $(pc_prefix)/$(unix_pkg).pc
 export unix_aname = lib$(unix_pkg).a
-export unix_adir = $(builddir)/lib
+export unix_adir = $(bindir)
 export unix_a = $(unix_adir)/$(unix_aname)
 export unix_a_dest = $(lib_prefix)/$(unix_aname)
 
 export unix_sobase = lib$(unix_pkg).so
 export unix_soname = $(unix_sobase).$(Major_).$(Minor_).$(Micro_)
-export unix_sodir = $(builddir)/lib
+export unix_sodir = $(bindir)
 export unix_so = $(unix_sodir)/$(unix_soname)
 export unix_so_dest = $(lib_prefix)/$(unix_soname)
 

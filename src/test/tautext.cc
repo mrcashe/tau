@@ -119,7 +119,7 @@ class Main: public tau::Toplevel {
     tau::Action         file_save_all_action_ { "<Ctrl>L", "Save All", "document-save-all", tau::fun(this, &Main::on_menu_file_save_all) };
     tau::Action         file_close_action_ { "<Ctrl>W", "Close", "window-close", tau::fun(this, &Main::on_menu_file_close) };
     tau::Action         file_close_all_action_ { 0, 0, "Close All", tau::fun(this, &Main::on_menu_file_close_all) };
-    tau::Action         file_close_others_action_ { "", "Close Others", tau::fun(this, &Main::on_menu_file_close_others) };
+    tau::Action         file_close_others_action_ { "", "Close Others", tau::fun(this, &Main::close_others) };
 
     tau::Master_action  edit_undo_master_action_ { "<Alt>BackSpace", "Undo", "edit-undo" };
     tau::Action         edit_undo_action_ { edit_undo_master_action_, tau::fun(this, &Main::on_menu_edit_undo) };
@@ -802,27 +802,25 @@ private:
             kf.set_integer(kf.root(), "current", current_metaid);
         }
 
-        if (!kf.empty()) {
-            try {
-                tau::ustring path = tau::path_build(tau::path_user_data_dir(), tau::program_name());
-                tau::path_mkdir(path);
-                path = tau::path_build(path, "session.ini");
-                std::ofstream os(tau::Locale().encode_filename(path));
-                kf.save(os);
-                // std::cout << "save_session() -> " << path << '\n';
-            }
+        try {
+            tau::ustring path = tau::path_build(tau::path_user_data_dir(), tau::program_name());
+            tau::path_mkdir(path);
+            path = tau::path_build(path, "session.ini");
+            std::ofstream os(tau::Locale().encode_filename(path));
+            kf.save(os);
+            // std::cout << "save_session() -> " << path << '\n';
+        }
 
-            catch (tau::exception & x) {
-                std::cerr << "** Main::save_session(): tau::exception caught: " << x.what() << std::endl;
-            }
+        catch (tau::exception & x) {
+            std::cerr << "** Main::save_session(): tau::exception caught: " << x.what() << std::endl;
+        }
 
-            catch (std::exception & x) {
-                std::cerr << "** Main::save_session(): std::exception caught: " << x.what() << std::endl;
-            }
+        catch (std::exception & x) {
+            std::cerr << "** Main::save_session(): std::exception caught: " << x.what() << std::endl;
+        }
 
-            catch (...) {
-                std::cerr << "** Main::save_session(): unknown exception caught" << std::endl;
-            }
+        catch (...) {
+            std::cerr << "** Main::save_session(): unknown exception caught" << std::endl;
         }
     }
 
@@ -986,14 +984,19 @@ private:
             }
 
             if (0 != metaid) {
-                while (notebook_.page_count() > 1) {
+                bool done;
+
+                do {
+                    done = true;
+
                     for (Page & pg: pages_) {
                         if (metaid != pg.metaid) {
                             close_page(pg);
+                            done = false;
                             break;
                         }
                     }
-                }
+                } while (!done);
             }
         }
     }
@@ -1249,10 +1252,6 @@ private:
 
     void on_menu_file_quit() {
         quit();
-    }
-
-    void on_menu_file_close_others() {
-        close_others();
     }
 
     void on_menu_file_close_all() {

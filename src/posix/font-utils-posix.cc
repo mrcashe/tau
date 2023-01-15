@@ -45,7 +45,6 @@ namespace {
 using Facemap = std::map<tau::ustring, tau::ustring>;
 
 struct Family_holder {
-    std::string         key;
     tau::ustring        family;
     Facemap             faces;
 };
@@ -55,19 +54,27 @@ struct Font_holder {
     tau::Timeval        tv;
 };
 
-using Families  = std::list<Family_holder>;
-using Faces     = std::list<tau::Font_face_ptr>;
+struct Registry {
+    tau::ustring        path;
+    tau::ustring        family;
+    tau::ustring        face;
+    tau::Font_face_ptr  faceptr;
+    tau::Font_file_ptr  ttf;
+};
+
+using Families  = std::unordered_map<std::string, Family_holder>;
 using Cache     = std::unordered_map<std::string, Font_holder>;
+using Registrar = std::unordered_map<std::string, Registry>;
 
 Mutex           mutex_;
 Families        families_;
-Faces           faces_;
 Cache           cache_;
 tau::ustring    normal_;
+Registrar       reg_;
 
 std::vector<std::string> list_font_family_keys() {
     std::vector<std::string> v;
-    for (auto & hfam: families_) { v.push_back(hfam.key); }
+    for (auto & famh: families_) { v.push_back(famh.first); }
     return v;
 }
 
@@ -75,109 +82,24 @@ std::string font_family_key(const tau::ustring & family_name) {
     return tau::str_toupper(tau::str_trim(family_name));
 }
 
-bool font_file_extracted(const tau::ustring & fpath) {
-    for (auto & hfam: families_) {
-        for (auto & p: hfam.faces) {
-            if (p.second == fpath) {
-                return true;
-            }
-        }
-    }
-
-    return false;
-}
-
-tau::Font_face_ptr find_font_face(const tau::ustring & family, const tau::ustring & facename) {
-    for (tau::Font_face_ptr face: faces_) {
-        if (tau::str_similar(family, face->family())) {
-            if (tau::str_similar(facename, face->facename())) {
-                return face;
-            }
-        }
-    }
-
-    return nullptr;
-}
-
-tau::ustring find_font_file(const tau::ustring & family, const tau::ustring & facename) {
-    std::string key = font_family_key(family);
-
-    for (auto & hfam: families_) {
-        if (key == hfam.key) {
-            for (auto & p: hfam.faces) {
-                if (tau::str_similar(facename, p.first)) {
-                    return p.second;
-                }
-            }
-        }
-    }
-
-    return tau::ustring();
-}
-
-tau::Font_file_ptr find_face_file(const tau::ustring & fpath) {
-    for (auto face: faces_) {
-        if (face->font_file()->file_path() == fpath) {
-            return face->font_file();
-        }
-    }
-
-    return nullptr;
+std::string partial_key(const tau::ustring & family, const tau::ustring & face) {
+    return tau::str_toupper(tau::str_trim(tau::str_format(family, ' ', face)));
 }
 
 tau::Font_face_ptr create_font_face_nested(const tau::ustring & family, const tau::ustring & facename) {
     Lock lock(mutex_);
-    tau::Font_face_ptr facep = find_font_face(family, facename);
+    auto i = reg_.find(partial_key(family, facename));
 
-    if (!facep) {
-        tau::ustring fpath = find_font_file(family, facename);
-
-        if (!fpath.empty()) {
-            auto ff = find_face_file(fpath);
-            if (!ff) { ff = tau::Font_file::create(fpath); }
-            facep = ff->face(ff, family, facename);
-            faces_.push_back(facep);
-            return facep;
+    if (i != reg_.end()) {
+        if (!i->second.faceptr) {
+            if (!i->second.ttf) { i->second.ttf = tau::Font_file::create(i->second.path); }
+            i->second.faceptr = i->second.ttf->face(i->second.ttf, family, facename);
         }
+
+        return i->second.faceptr;
     }
 
-    return facep;
-}
-
-void register_font_file(tau::Font_file_cptr ff) {
-    for (const tau::ustring & ffam: ff->list_families()) {
-        tau::ustring fam = tau::font_family_from_spec(ffam);
-
-        std::string key = font_family_key(fam);
-        auto i = std::find_if(families_.begin(), families_.end(), [&key](Family_holder & hol) { return hol.key == key; } );
-        Family_holder * hol;
-
-        if (i == families_.end()) {
-            Family_holder hfam;
-            hfam.key = key;
-            hfam.family = fam;
-            families_.push_back(hfam);
-            hol = &families_.back();
-        }
-
-        else {
-            hol = &(*i);
-        }
-
-        tau::ustring face = tau::font_face_from_spec(fam);
-
-        if (!tau::str_similar(face, "Regular")) {
-            if (hol->faces.end() == hol->faces.find(face)) {
-                hol->faces[face] = ff->file_path();
-            }
-        }
-
-        for (const tau::ustring & fface: ff->list_faces(ffam)) {
-            if (hol->faces.end() == hol->faces.find(fface)) {
-                hol->faces[fface] = ff->file_path();
-            }
-        }
-    }
+    return nullptr;
 }
 
 void init_font_dir(const tau::ustring & dir) {
@@ -186,9 +108,54 @@ void init_font_dir(const tau::ustring & dir) {
             if (!tau::file_is_dir(fp)) {
                 if (tau::str_has_suffix(tau::str_tolower(fp), ".ttf")) {
                     try {
-                        if (!font_file_extracted(fp)) {
+                        if (reg_.end() == std::find_if(reg_.begin(), reg_.end(), [&fp](auto & p) { return fp == p.second.path; } )) {
                             tau::Font_file_ptr ttf = tau::Font_file::create(fp);
-                            register_font_file(ttf);
+                            std::vector<tau::ustring> famv, facev;
+
+                            for (auto & fam: ttf->list_families()) {
+                                for (auto & face: ttf->list_faces(fam)) {
+                                    auto specv = tau::font_spec_explode(tau::font_spec_build(fam, face));
+                                    auto famf = tau::font_family_from_spec(specv);
+                                    auto facef = tau::font_face_from_spec(specv);
+                                    famv.push_back(famf);
+                                    facev.push_back(facef);
+
+                                    if (tau::str_similar(facef, "Oblique")) { facev.push_back("Italic"); }
+                                    if (tau::str_similar(facef, "Normal")) { facev.push_back("Regular"); }
+                                    if (tau::str_similar(facef, "Book")) { facev.push_back("Regular"); }
+                                }
+                            }
+
+                            for (auto & fam: famv) {
+                                for (auto & face: facev) {
+                                    std::string key = partial_key(fam, face);
+                                    Registry reg;
+                                    reg.path = fp;
+                                    reg.family = fam;
+                                    reg.face = face;
+                                    reg_[key] = reg;
+                                    std::cout << reg_.size() << " " << key << '\n';
+
+                                    key = font_family_key(fam);
+                                    auto i = families_.find(key);
+                                    Family_holder * hol;
+
+                                    if (i == families_.end()) {
+                                        Family_holder hfam;
+                                        hfam.family = fam;
+                                        auto p = families_.emplace(std::make_pair(key, hfam));
+                                        hol = &(p.first->second);
+                                    }
+
+                                    else {
+                                        hol = &(i->second);
+                                    }
+
+                                    if (hol->faces.end() == hol->faces.find(face)) {
+                                        hol->faces[face] = fp;
+                                    }
+                                }
+                            }
                         }
                     }
 
@@ -248,24 +215,29 @@ std::vector<ustring> Font::list_families() {
     init_fonts();
     std::vector<ustring> v;
     Lock lock(mutex_);
-    for (auto & hfam: families_) { v.push_back(hfam.family); }
+
+    for (auto & reg: reg_) {
+        if (!str_similar(reg.second.family, v)) {
+            v.push_back(reg.second.family);
+        }
+    }
+
+    //for (auto & hfam: families_) { v.push_back(hfam.family); }
     return v;
 }
 
-std::vector<ustring> Font::list_faces(const ustring & font_family) {
+std::vector<ustring> Font::list_faces(const ustring & family) {
     init_fonts();
     std::vector<ustring> v;
     Lock lock(mutex_);
 
-    for (auto & hfam: families_) {
-        if (str_similar(font_family, hfam.family)) {
-            for (auto & p: hfam.faces) {
-                if (!str_similar(p.first, v)) {
-                    v.push_back(p.first);
-                }
-            }
+    auto i = families_.find(font_family_key(family));
 
-            break;
+    if (i != families_.end()) {
+        for (auto & p: i->second.faces) {
+            if (!str_similar(p.first, v)) {
+                v.push_back(p.first);
+            }
         }
     }
 

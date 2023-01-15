@@ -50,7 +50,7 @@ void Menubar_impl::on_right() {
 }
 
 // "ESCAPE" came from the child menu.
-void Menubar_impl::child_menu_escape() {
+void Menubar_impl::child_menu_cancel() {
     reset_submenu();
     quit();
 }
@@ -71,7 +71,7 @@ void Menubar_impl::child_menu_right() {
     if (!submenu_) { grab_modal(); }
 }
 
-void Menubar_impl::mark_item(Menu_item_ptr ip, bool select) {
+void Menubar_impl::mark_item(Menu_item_impl * ip, bool select) {
     if (select) {
         ip->style().get("background").set(style().get("select/background").get());
     }
@@ -93,6 +93,7 @@ bool Menubar_impl::on_item_mouse_down(int mbt, int mm, const Point & pt, Menu_it
     if (MBT_LEFT == mbt && !(mm & (MM_CONTROL|MM_SHIFT))) {
         if (auto ip = item_ptr(item)) {
             if (current_item_ != ip) { unselect_current(); select_item(ip); }
+            end_modal();
             activate_current();
         }
 
@@ -127,27 +128,27 @@ void Menubar_impl::add_item(Menu_item_ptr ip) {
     if (!ip->disabled()) { thaw(); }
 }
 
-// Overrides pure Menu_impl.
-void Menubar_impl::append_widget(Widget_ptr wp) {
+// Overrides Box_impl.
+void Menubar_impl::append(Widget_ptr wp, bool) {
     box_->append(wp, true);
     if (auto ip = std::dynamic_pointer_cast<Menu_item_impl>(wp)) { add_item(ip); }
 }
 
-// Overrides pure Menu_impl.
-void Menubar_impl::prepend_widget(Widget_ptr wp) {
+// Overrides Box_impl.
+void Menubar_impl::prepend(Widget_ptr wp, bool) {
     box_->prepend(wp, true);
     if (auto ip = std::dynamic_pointer_cast<Menu_item_impl>(wp)) { add_item(ip); }
 }
 
-// Overrides pure Menu_impl.
-void Menubar_impl::insert_widget_before(Widget_ptr wp, Widget_cptr other) {
-    box_->insert_before(wp, other.get(), true);
+// Overrides Box_impl.
+void Menubar_impl::insert_before(Widget_ptr wp, const Widget_impl * other, bool) {
+    box_->insert_before(wp, other, true);
     if (auto ip = std::dynamic_pointer_cast<Menu_item_impl>(wp)) { add_item(ip); }
 }
 
-// Overrides pure Menu_impl.
-void Menubar_impl::insert_widget_after(Widget_ptr wp, Widget_cptr other) {
-    box_->insert_after(wp, other.get(), true);
+// Overrides Box_impl.
+void Menubar_impl::insert_after(Widget_ptr wp, const Widget_impl * other, bool) {
+    box_->insert_after(wp, other, true);
     if (auto ip = std::dynamic_pointer_cast<Menu_item_impl>(wp)) { add_item(ip); }
 }
 

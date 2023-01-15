@@ -45,10 +45,21 @@ public:
     void set_spacing(unsigned spacing);
     unsigned spacing() const { return spacing_; }
 
-    void append(Widget_ptr wp, bool shrink=false);
-    void prepend(Widget_ptr wp, bool shrink=false);
-    void insert_before(Widget_ptr wp, const Widget_impl * other, bool shrink=false);
-    void insert_after(Widget_ptr wp, const Widget_impl * other, bool shrink=false);
+    // Overriden by Menubar_impl.
+    // Overriden by Menubox_impl.
+    virtual void append(Widget_ptr wp, bool shrink=false);
+
+    // Overriden by Menubar_impl.
+    // Overriden by Menubox_impl.
+    virtual void prepend(Widget_ptr wp, bool shrink=false);
+
+    // Overriden by Menubar_impl.
+    // Overriden by Menubox_impl.
+    virtual void insert_before(Widget_ptr wp, const Widget_impl * other, bool shrink=false);
+
+    // Overriden by Menubar_impl.
+    // Overriden by Menubox_impl.
+    virtual void insert_after(Widget_ptr wp, const Widget_impl * other, bool shrink=false);
 
     // Overriden by Menubar_impl.
     // Overriden by Menubox_impl.

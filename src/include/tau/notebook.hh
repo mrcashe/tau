@@ -172,6 +172,9 @@ public:
     /// Get page count.
     std::size_t page_count() const;
 
+    /// Test if empty.
+    bool empty() const;
+
     /// Remove all children.
     void clear();
 

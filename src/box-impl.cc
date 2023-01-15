@@ -214,6 +214,7 @@ void Box_impl::arrange() {
 void Box_impl::on_child_requisition_changed(Widget_impl * wi) {
     if (!destroy_) {
         update_requisition();
+        queue_arrange();
     }
 }
 
@@ -223,6 +224,7 @@ void Box_impl::on_child_hide(Widget_impl * wi) {
         wi->update_size(0, 0);
         update_requisition();
         queue_arrange();
+        invalidate();
     }
 }
 
@@ -230,6 +232,7 @@ void Box_impl::on_child_show(Widget_impl * wi) {
     if (!destroy_) {
         update_requisition();
         queue_arrange();
+        invalidate();
     }
 }
 

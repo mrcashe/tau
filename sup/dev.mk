@@ -33,3 +33,7 @@ su-dev: su-doc
 	@$(rm) $(dev_link)
 
 rm-dev: su-dev
+
+en-devel: en-dev
+su-devel: su-dev
+rm-devel: rm-dev

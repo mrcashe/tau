@@ -24,21 +24,26 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # -----------------------------------------------------------------------------
 
-export mxe_a :=
-
-.PHONY: en-mxe-a su-mxe-a rm-mxe-a
-
 en-mxe-a:
 su-mxe-a:
 rm-mxe-a:
 
-.PHONY: en-mxe-test su-mxe-test cl-mxe-test rm-mxe-test
+en-mxe-so:
+su-mxe-so:
+rm-mxe-so:
+
+en-mxe-test-a:
+su-mxe-test-a:
+rm-mxe-test-a:
+
+en-mxe-test-so:
+su-mxe-test-so:
+rm-mxe-test-so:
+
 en-mxe-test:
 su-mxe-test:
-cl-mxe-test:
 rm-mxe-test:
 
-.PHONY:  su-mxe en-mxe rm-mxe
-en-mxe:  en-mxe-a en-mxe-test
-su-mxe:  su-mxe-a su-mxe-test
-rm-mxe:  rm-mxe-a rm-mxe-test
+en-mxe:
+su-mxe:
+rm-mxe:

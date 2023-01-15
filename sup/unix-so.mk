@@ -37,13 +37,18 @@ $(unix_so): $(objects)
 
 install: $(lib_prefix)
 	@if [ -f $(unix_so) ]; then \
-	    $(cp) $(unix_so) $(unix_so_dest); \
-	    $(unix_STRIP) --strip-unneeded $(unix_so_dest); \
+	    cp -vf $(unix_so) $(unix_so_dest); \
+	    chmod -x $(unix_so_dest); \
+	    strip --strip-unneeded $(unix_so_dest); \
 	    (cd $(lib_prefix) && ln -vsf $(unix_soname) $(unix_sobase)); \
+	    if [ $$USER = 'root' ]; then \
+		[ -x /sbin/ldconfig ] && /sbin/ldconfig $(lib_prefix); \
+	    fi; \
 	fi
 
 uninstall:
 	@$(rm) $(lib_prefix)/$(unix_sobase)*
+	@if [ $$USER = 'root' ]; then ldconfig $(lib_prefix); fi; \
 
 $(lib_prefix):
 	@$(mkdir) $@

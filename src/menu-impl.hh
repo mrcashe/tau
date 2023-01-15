@@ -43,40 +43,23 @@ public:
 
     bool has_enabled_items() const;
 
-    virtual void append_widget(Widget_ptr wp) = 0;
-    virtual void prepend_widget(Widget_ptr wp) = 0;
-    virtual void insert_widget_before(Widget_ptr wp, Widget_cptr other) = 0;
-    virtual void insert_widget_after(Widget_ptr wp, Widget_cptr other) = 0;
-
-    virtual void child_menu_escape() = 0;
+    virtual void child_menu_cancel() = 0;
     virtual void child_menu_left() = 0;
     virtual void child_menu_right() = 0;
 
     // Overriden by Menubox_impl.
     virtual void quit();
 
-    void append_separator(Separator_style separator_style=SEPARATOR_GROOVE) {
-        append_widget(std::make_shared<Separator_impl>(separator_style));
-    }
-
-    void prepend_separator(Separator_style separator_style=SEPARATOR_GROOVE) {
-        prepend_widget(std::make_shared<Separator_impl>(separator_style));
-    }
-
-    void insert_separator_before(Widget_cptr other, Separator_style separator_style=SEPARATOR_GROOVE) {
-        insert_widget_before(std::make_shared<Separator_impl>(separator_style), other);
-    }
-
-    void insert_separator_after(Widget_cptr other, Separator_style separator_style=SEPARATOR_GROOVE) {
-        insert_widget_after(std::make_shared<Separator_impl>(separator_style), other);
-    }
-
-    void child_menu_quit();
+    virtual void append_separator(Separator_style separator_style=SEPARATOR_GROOVE) = 0;
+    virtual void prepend_separator(Separator_style separator_style=SEPARATOR_GROOVE) = 0;
+    virtual void insert_separator_before(const Widget_impl * other, Separator_style separator_style=SEPARATOR_GROOVE) = 0;
+    virtual void insert_separator_after(const Widget_impl * other, Separator_style separator_style=SEPARATOR_GROOVE) = 0;
 
     Menu_impl * parent_menu() { return pmenu_; }
     const Menu_impl * parent_menu() const { return pmenu_; }
 
     Menu_impl * unset_parent_menu();
+    void close_submenu();
 
     void on_item_enable();
     void on_item_disable();
@@ -85,8 +68,9 @@ protected:
 
     Menu_impl(Orientation orient);
 
-    virtual void mark_item(Menu_item_ptr ip, bool select) = 0;
+    virtual void mark_item(Menu_item_impl * ip, bool select) = 0;
 
+    void cancel();
     void select_item(Menu_item_ptr item);
     void remove_item(Widget_impl * wp);
     Menu_item_ptr current_item();
@@ -100,8 +84,7 @@ protected:
 
     bool emit_current();
     bool open_current();
-    bool activate_current();
-    void close_submenu();
+    void activate_current();
     void reset_submenu();
     void pass_quit();
 
@@ -109,23 +92,19 @@ protected:
 
     using Items = std::list<Menu_item_ptr>;
 
-    Items           items_;
-    Orientation     submenu_or_ = OR_RIGHT;
-    Menu_impl *     pmenu_ = nullptr;
-    Menu_ptr        submenu_;
-    Menu_item_ptr   current_item_;
-    Menu_item_ptr   marked_item_;
+    Items               items_;
+    Orientation         submenu_or_ = OR_RIGHT;
+    Menu_impl *         pmenu_ = nullptr;
+    Menu_ptr            submenu_;
+    Menu_item_ptr       current_item_;
+    Menu_item_impl *    marked_item_ = nullptr;
 
 private:
 
-    Action          enter_action_ { "Enter", fun(this, &Menu_impl::on_enter) };
-    Accel           escape_accel_ { "Escape", fun(this, &Menu_impl::on_escape) };
+    Action              enter_action_ { "Enter", fun(this, &Menu_impl::activate_current) };
+    Action              cancel_action_ { "Escape", fun(this, &Menu_impl::cancel) };
 
 private:
-
-    void on_enter();
-    bool on_escape();
-    void on_focus_in();
 
     void mark();
     void unmark();
@@ -401,17 +380,17 @@ public:
 
     Menubar_impl();
 
-    // Overrides pure Menu_impl.
-    void append_widget(Widget_ptr wp) override;
+    // Overrides Box_impl.
+    void append(Widget_ptr wp, bool shrink=false) override;
 
-    // Overrides pure Menu_impl.
-    void prepend_widget(Widget_ptr wp) override;
+    // Overrides Box_impl.
+    void prepend(Widget_ptr wp, bool shrink=false) override;
 
-    // Overrides pure Menu_impl.
-    void insert_widget_before(Widget_ptr wp, Widget_cptr other) override;
+    // Overrides Box_impl.
+    void insert_before(Widget_ptr wp, const Widget_impl * other, bool shrink=false) override;
 
-    // Overrides pure Menu_impl.
-    void insert_widget_after(Widget_ptr wp, Widget_cptr other) override;
+    // Overrides Box_impl.
+    void insert_after(Widget_ptr wp, const Widget_impl * other, bool shrink=false) override;
 
     // Overrides Box_impl.
     void remove(Widget_impl * wp) override;
@@ -420,7 +399,27 @@ public:
     void clear() override;
 
     // Overrides pure Menu_impl.
-    void child_menu_escape() override;
+    void append_separator(Separator_style separator_style=SEPARATOR_GROOVE) override {
+        append(std::make_shared<Separator_impl>(separator_style));
+    }
+
+    // Overrides pure Menu_impl.
+    void prepend_separator(Separator_style separator_style=SEPARATOR_GROOVE) override {
+        prepend(std::make_shared<Separator_impl>(separator_style));
+    }
+
+    // Overrides pure Menu_impl.
+    void insert_separator_before(const Widget_impl * other, Separator_style separator_style=SEPARATOR_GROOVE) override {
+        insert_before(std::make_shared<Separator_impl>(separator_style), other);
+    }
+
+    // Overrides pure Menu_impl.
+    void insert_separator_after(const Widget_impl * other, Separator_style separator_style=SEPARATOR_GROOVE) override {
+        insert_after(std::make_shared<Separator_impl>(separator_style), other);
+    }
+
+    // Overrides pure Menu_impl.
+    void child_menu_cancel() override;
 
     // Overrides pure Menu_impl.
     void child_menu_left() override;
@@ -432,7 +431,7 @@ public:
 
 protected:
 
-    void mark_item(Menu_item_ptr ip, bool select) override;
+    void mark_item(Menu_item_impl * ip, bool select) override;
 
 private:
 
@@ -458,17 +457,17 @@ public:
 
     Menubox_impl();
 
-    // Overrides pure Menu_impl.
-    void append_widget(Widget_ptr wp) override;
+    // Overrides Box_impl.
+    void append(Widget_ptr wp, bool shrink=false) override;
 
-    // Overrides pure Menu_impl.
-    void prepend_widget(Widget_ptr wp) override;
+    // Overrides Box_impl.
+    void prepend(Widget_ptr wp, bool shrink=false) override;
 
-    // Overrides pure Menu_impl.
-    void insert_widget_before(Widget_ptr wp, Widget_cptr other) override;
+    // Overrides Box_impl.
+    void insert_before(Widget_ptr wp, const Widget_impl * other, bool shrink=false) override;
 
-    // Overrides pure Menu_impl.
-    void insert_widget_after(Widget_ptr wp, Widget_cptr other) override;
+    // Overrides Box_impl.
+    void insert_after(Widget_ptr wp, const Widget_impl * other, bool shrink=false) override;
 
     // Overrides Box_impl.
     void remove(Widget_impl * wp) override;
@@ -477,7 +476,27 @@ public:
     void clear() override;
 
     // Overrides pure Menu_impl.
-    void child_menu_escape() override;
+    void append_separator(Separator_style separator_style=SEPARATOR_GROOVE) override {
+        append(std::make_shared<Separator_impl>(separator_style));
+    }
+
+    // Overrides pure Menu_impl.
+    void prepend_separator(Separator_style separator_style=SEPARATOR_GROOVE) override {
+        prepend(std::make_shared<Separator_impl>(separator_style));
+    }
+
+    // Overrides pure Menu_impl.
+    void insert_separator_before(const Widget_impl * other, Separator_style separator_style=SEPARATOR_GROOVE) override {
+        insert_before(std::make_shared<Separator_impl>(separator_style), other);
+    }
+
+    // Overrides pure Menu_impl.
+    void insert_separator_after(const Widget_impl * other, Separator_style separator_style=SEPARATOR_GROOVE) override {
+        insert_after(std::make_shared<Separator_impl>(separator_style), other);
+    }
+
+    // Overrides pure Menu_impl.
+    void child_menu_cancel() override;
 
     // Overrides pure Menu_impl.
     void child_menu_left() override;
@@ -492,17 +511,18 @@ public:
 
 protected:
 
-    void mark_item(Menu_item_ptr ip, bool select) override;
+    void mark_item(Menu_item_impl * ip, bool select) override;
 
 private:
 
     using Widgets = std::vector<Widget_ptr>;
 
     Table_ptr   table_;
-    Action      up_action_ {"Up", fun(this, &Menubox_impl::on_up) };
-    Action      down_action_ {"Down", fun(this, &Menubox_impl::on_down) };
-    Action      left_action_ {"Left", fun(this, &Menubox_impl::on_left) };
-    Action      right_action_ {"Right", fun(this, &Menubox_impl::on_right) };
+    Gravity     gravity_ = GRAVITY_NONE;
+    Action      up_action_ { "Up", fun(this, &Menubox_impl::select_prev) };
+    Action      down_action_ { "Down", fun(this, &Menubox_impl::select_next) };
+    Action      left_action_ { "Left", fun(this, &Menubox_impl::on_left) };
+    Action      right_action_ { "Right", fun(this, &Menubox_impl::on_right) };
 
 private:
 
@@ -513,8 +533,6 @@ private:
     bool on_popup_mouse_down(int mbt, int mm, const Point & pt);
     bool on_table_mouse_down(int mbt, int mm, const Point & pt);
     void on_table_mouse_motion(int mm, const Point & pt);
-    void on_up();
-    void on_down();
     void on_left();
     void on_right();
 };

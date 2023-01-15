@@ -39,9 +39,9 @@ Menu_impl::Menu_impl(Orientation orient):
     style_.redirect("menu/background", "background");
     style_.redirect("menu/background", "button/background");
     style_.redirect("menu/foreground", "foreground");
-    signal_focus_in().connect(fun(this, &Menu_impl::on_focus_in));
+    signal_focus_in().connect(fun(this, &Menu_impl::mark));
     connect_action(enter_action_);
-    connect_accel(escape_accel_);
+    connect_action(cancel_action_);
 }
 
 Menu_item_ptr Menu_impl::current_item() {
@@ -246,14 +246,12 @@ bool Menu_impl::open_current() {
     return true;
 }
 
-bool Menu_impl::activate_current() {
-    if (!current_item_) { return false; }
-    if (open_current()) { return true; }
-    return emit_current();
-}
-
-void Menu_impl::on_enter() {
-    activate_current();
+void Menu_impl::activate_current() {
+    if (current_item_) {
+        if (!open_current()) {
+            emit_current();
+        }
+    }
 }
 
 void Menu_impl::select_item(Menu_item_ptr item) {
@@ -293,15 +291,11 @@ void Menu_impl::on_item_disable() {
     }
 }
 
-void Menu_impl::on_focus_in() {
-    mark();
-}
-
 void Menu_impl::mark() {
     unmark();
 
     if (current_item_) {
-        marked_item_ = current_item_;
+        marked_item_ = current_item_.get();
         mark_item(marked_item_, true);
     }
 }
@@ -317,32 +311,11 @@ bool Menu_impl::has_enabled_items() const {
     return std::any_of(items_.begin(), items_.end(), [](Widget_ptr wp) { return !wp->disabled(); } );
 }
 
-bool Menu_impl::on_escape() {
+void Menu_impl::cancel() {
+    auto pmenu = unset_parent_menu();
     end_modal();
-
-    if (auto pmenu = unset_parent_menu()) {
-        pmenu->child_menu_escape();
-    }
-
     quit();
-    return true;
-}
-
-void Menu_impl::child_menu_quit() {
-    if (auto pmenu = unset_parent_menu()) {
-        pmenu->child_menu_quit();
-    }
-
-    else {
-        quit();
-    }
-}
-
-void Menu_impl::reset_submenu() {
-    if (auto sm = submenu_) {
-        submenu_.reset();
-        sm->unset_parent_menu();
-    }
+    if (pmenu) { pmenu->child_menu_cancel(); }
 }
 
 // Overriden by Menubox_impl.
@@ -359,6 +332,13 @@ void Menu_impl::close_submenu() {
     }
 }
 
+void Menu_impl::reset_submenu() {
+    if (auto sm = submenu_) {
+        submenu_.reset();
+        sm->unset_parent_menu();
+    }
+}
+
 Menu_impl * Menu_impl::unset_parent_menu() {
     auto p = pmenu_;
     pmenu_ = nullptr;
@@ -366,16 +346,10 @@ Menu_impl * Menu_impl::unset_parent_menu() {
 }
 
 void Menu_impl::pass_quit() {
+    auto pmenu = unset_parent_menu();
     end_modal();
-    ungrab_mouse();
-
-    if (auto pmenu = unset_parent_menu()) {
-        pmenu->child_menu_quit();
-    }
-
-    else {
-        quit();
-    }
+    quit();
+    if (pmenu) { pmenu->pass_quit(); }
 }
 
 } // namespace tau

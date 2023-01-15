@@ -652,59 +652,59 @@ void Fileman_impl::on_configure() {
     Menubox_ptr menu = std::make_shared<Menubox_impl>();
     Menubox_ptr sort_menu = std::make_shared<Menubox_impl>();
     Submenu_ptr sort_item = std::make_shared<Submenu_impl>("Sort", sort_menu);
-    menu->append_widget(sort_item);
+    menu->append(sort_item);
 
     Check_menu_ptr sort_name = std::make_shared<Check_menu_impl>("By Name", CHECK_RSTYLE, "name" == sorted_by());
     sort_name->signal_check().connect(tau::bind(fun(this, &Fileman_impl::sort_by), "name"));
-    sort_menu->append_widget(sort_name);
+    sort_menu->append(sort_name);
 
     Check_menu_ptr sort_size = std::make_shared<Check_menu_impl>("By Size", CHECK_RSTYLE, "bytes" == sorted_by());
     sort_size->join(sort_name);
     sort_size->signal_check().connect(tau::bind(fun(this, &Fileman_impl::sort_by), "bytes"));
-    sort_menu->append_widget(sort_size);
+    sort_menu->append(sort_size);
 
     Check_menu_ptr sort_date = std::make_shared<Check_menu_impl>("By Date", CHECK_RSTYLE, "date" == sorted_by());
     sort_date->join(sort_name);
     sort_date->signal_check().connect(tau::bind(fun(this, &Fileman_impl::sort_by), "date"));
-    sort_menu->append_widget(sort_date);
+    sort_menu->append(sort_date);
 
     Check_menu_ptr sort_unsorted = std::make_shared<Check_menu_impl>("Keep Unsorted", CHECK_RSTYLE, "" == sorted_by());
     sort_unsorted->join(sort_name);
     sort_unsorted->signal_check().connect(tau::bind(fun(this, &Fileman_impl::sort_by), ""));
-    sort_menu->append_widget(sort_unsorted);
+    sort_menu->append(sort_unsorted);
 
     Menubox_ptr columns_menu = std::make_shared<Menubox_impl>();
     Submenu_ptr columns_item = std::make_shared<Submenu_impl>("Columns", columns_menu);
-    menu->append_widget(columns_item);
+    menu->append(columns_item);
 
     Check_menu_ptr columns_size = std::make_shared<Check_menu_impl>("Show File Size", CHECK_VSTYLE, info_visible("bytes"));
     columns_size->signal_check().connect(tau::bind(fun(this, &Fileman_impl::show_info), "bytes", U':'));
     columns_size->signal_uncheck().connect(tau::bind(fun(this, &Fileman_impl::hide_info), "bytes", U':'));
-    columns_menu->append_widget(columns_size);
+    columns_menu->append(columns_size);
 
     Check_menu_ptr columns_date = std::make_shared<Check_menu_impl>("Show File Date", CHECK_VSTYLE, info_visible("date"));
     columns_date->signal_check().connect(tau::bind(fun(this, &Fileman_impl::show_info), "date", U':'));
     columns_date->signal_uncheck().connect(tau::bind(fun(this, &Fileman_impl::hide_info), "date", U':'));
-    columns_menu->append_widget(columns_date);
+    columns_menu->append(columns_date);
 
     sort_menu->append_separator();
 
     Check_menu_ptr sort_back = std::make_shared<Check_menu_impl>("Sort Descent", CHECK_VSTYLE, sorted_backward());
     sort_back->signal_check().connect(fun(this, &Fileman_impl::sort_backward));
     sort_back->signal_uncheck().connect(fun(this, &Fileman_impl::sort_forward));
-    sort_menu->append_widget(sort_back);
+    sort_menu->append(sort_back);
 
     menu->append_separator();
 
     Check_menu_ptr show_hidden = std::make_shared<Check_menu_impl>("Show Hidden Files", CHECK_VSTYLE, hidden_files_visible());
     show_hidden->signal_check().connect(tau::bind(fun(this, &Fileman_impl::on_show_hidden), true));
     show_hidden->signal_uncheck().connect(tau::bind(fun(this, &Fileman_impl::on_show_hidden), false));
-    menu->append_widget(show_hidden);
+    menu->append(show_hidden);
 
     Check_menu_ptr show_places = std::make_shared<Check_menu_impl>("Show Places", CHECK_VSTYLE, places_visible());
     show_places->signal_check().connect(fun(this, &Fileman_impl::show_places));
     show_places->signal_uncheck().connect(fun(this, &Fileman_impl::hide_places));
-    menu->append_widget(show_places);
+    menu->append(show_places);
 
     if (root()) {
         Point pos = conf_button_->to_root();

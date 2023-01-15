@@ -39,7 +39,12 @@ install: $(bin_prefix) $(binaries)
 	    if [ -h $$bin_prefix/$$f ]; then \
 		echo "** unix-test-so.mk: skipping install of $$bin_prefix/$$f: destination is a symlink"; \
 	    else \
-		cp -vfp $$bindir/$$f $$bin_prefix/$$f; \
+		echo "++ unix-test-so.mk: recompiling '$$f' against just installed shared library..."; \
+		$(CXX) $(CXXFLAGS) -o $$bin_prefix/$$f $$srcdir/test/$$f.cc -L $(lib_prefix) -ltau-$(Major_).$(Minor_) $(unix_sys_shared); \
+		if [ $$? -ne 0 ]; then \
+		    echo "** unix-test-so.mk: compile failed, exitting  with status 1" 1>&2; \
+		    exit 1; \
+		fi; \
 		strip --strip-unneeded $$bin_prefix/$$f; \
 	    fi; \
 	done

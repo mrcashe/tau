@@ -104,6 +104,10 @@ int Notebook::remove_page(int page) {
     return NOTEBOOK_IMPL->remove_page(page);
 }
 
+bool Notebook::empty() const {
+    return NOTEBOOK_IMPL->empty();
+}
+
 void Notebook::clear() {
     NOTEBOOK_IMPL->clear_pages();
 }

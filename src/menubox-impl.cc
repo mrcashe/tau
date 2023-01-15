@@ -50,50 +50,56 @@ Menubox_impl::Menubox_impl():
 }
 
 void Menubox_impl::on_left() {
-    if (auto pmenu = unset_parent_menu()) {
-        end_modal();
-        pmenu->child_menu_left();
-        quit();
-    }
-}
+    bool q = true;
 
-void Menubox_impl::on_right() {
-    if (!open_current()) {
+    if (GRAVITY_RIGHT == gravity_ || GRAVITY_TOP_RIGHT == gravity_ || GRAVITY_BOTTOM_RIGHT == gravity_) {
+        q = !open_current();
+    }
+
+    if (q) {
         if (auto pmenu = unset_parent_menu()) {
-            end_modal();
-            pmenu->child_menu_right();
             quit();
+            pmenu->child_menu_left();
         }
     }
 }
 
-void Menubox_impl::on_up() {
-    select_prev();
+void Menubox_impl::on_right() {
+    bool q = true;
+
+    if (GRAVITY_LEFT == gravity_ || GRAVITY_TOP_LEFT == gravity_ || GRAVITY_BOTTOM_LEFT == gravity_) {
+        q = !open_current();
+    }
+
+    if (q) {
+        if (auto pmenu = unset_parent_menu()) {
+            quit();
+            pmenu->child_menu_right();
+        }
+    }
 }
 
-void Menubox_impl::on_down() {
-    select_next();
-}
-
-// "ESCAPE" came from the child menu.
-void Menubox_impl::child_menu_escape() {
-    reset_submenu();
+void Menubox_impl::child_menu_cancel() {
+    close_submenu();
     grab_modal();
+    if (auto wnd = window()) { wnd->grab_mouse(); }
 }
 
 void Menubox_impl::child_menu_left() {
-    reset_submenu();
+    close_submenu();
     grab_modal();
+    if (auto wnd = window()) { wnd->grab_mouse(); }
 }
 
 void Menubox_impl::child_menu_right() {
-    reset_submenu();
+    close_submenu();
     grab_modal();
+    if (auto wnd = window()) { wnd->grab_mouse(); }
 }
 
-void Menubox_impl::mark_item(Menu_item_ptr ip, bool select) {
+void Menubox_impl::mark_item(Menu_item_impl * ip, bool select) {
     if (select) {
-        Table::Span rng = table_->span(ip.get());
+        Table::Span rng = table_->span(ip);
 
         if (rng.ymax > rng.ymin) {
             table_->select_row(rng.ymin);
@@ -105,34 +111,10 @@ void Menubox_impl::mark_item(Menu_item_ptr ip, bool select) {
     }
 }
 
-// Quit menu if user press mouse button somewhere outside any menu.
-bool Menubox_impl::on_popup_mouse_down(int mbt, int mm, const Point & pt) {
-    if (auto wip = window()) {
-        if (!Rect(wip->size()).contains(pt)) {
-            end_modal();
-            wip->ungrab_mouse();
-//                 Point spt = pp->to_screen(pt);
-//
-//                 for (Menu_ptr mi = parent_menu(); mi; mi = mi->parent_menu()) {
-//                     Point worg = mi->to_screen(Point());
-//
-//                     if (Rect(worg, mi->size()).contains(spt)) {
-//                         end_modal();
-//                         mi->signal_mouse_down()(nth_button, mm, spt-worg);
-//                         return true;
-//                     }
-//                 }
-
-            child_menu_quit();
-        }
-    }
-
-    return false;
-}
-
 void Menubox_impl::popup(Window_impl * root, Widget_ptr self, const Point & origin, Gravity gravity, Menu_impl * pmenu) {
     if (root) {
         if (auto dp = root->display()) {
+            gravity_ = gravity;
             pmenu_ = pmenu;
             auto wip = dp->create_popup(dp, root, origin, gravity);
             wip->style().redirect("menu/background", "background");
@@ -146,12 +128,40 @@ void Menubox_impl::popup(Window_impl * root, Widget_ptr self, const Point & orig
     }
 }
 
+// Quit menu if user press mouse button somewhere outside any menu.
+bool Menubox_impl::on_popup_mouse_down(int mbt, int mm, const Point & pt) {
+    if (auto wip = window()) {
+        if (!Rect(wip->size()).contains(pt)) {
+            end_modal();
+            wip->ungrab_mouse();
+            Point spt = wip->to_screen(pt);
+
+            for (auto m = parent_menu(); m; m = m->parent_menu()) {
+                Point worg = m->to_screen();
+
+                if (Rect(worg, m->size()).contains(spt)) {
+                    m->close_submenu();
+                    m->grab_modal();
+                    m->signal_mouse_down()(mbt, mm, spt-worg);
+                    return true;
+                }
+            }
+
+            cancel();
+        }
+    }
+
+    return false;
+}
+
 void Menubox_impl::quit() {
     Menu_impl::quit();
     if (auto wip = window()) { wip->close(); }
 }
 
 bool Menubox_impl::on_table_mouse_down(int mbt, int mm, const Point & pt) {
+    if (auto wip = window()) { wip->grab_mouse(); }
+
     if (MBT_LEFT == mbt && !(mm & (MM_CONTROL|MM_SHIFT))) {
         for (auto ip: items_) {
             if (ip->enabled() && ip->visible()) {
@@ -291,21 +301,21 @@ void Menubox_impl::add_item(Menu_item_ptr ip) {
     if (!ip->disabled()) { thaw(); }
 }
 
-// Overrides pure Menu_impl.
-void Menubox_impl::append_widget(Widget_ptr wp) {
+// Overrides Box_impl.
+void Menubox_impl::append(Widget_ptr wp, bool) {
     Table::Span rng = table_->span();
     put_widget(wp, rng.ymax > rng.ymin ? rng.ymax : 0);
 }
 
-// Overrides pure Menu_impl.
-void Menubox_impl::prepend_widget(Widget_ptr wp) {
+// Overrides Box_impl.
+void Menubox_impl::prepend(Widget_ptr wp, bool) {
     Table::Span rng = table_->span();
     put_widget(wp, rng.ymax > rng.ymin ? rng.ymin-1 : 0);
 }
 
-// Overrides pure Menu_impl.
-void Menubox_impl::insert_widget_before(Widget_ptr wp, Widget_cptr other) {
-    Table::Span rng = table_->span(other.get());
+// Overrides Box_impl.
+void Menubox_impl::insert_before(Widget_ptr wp, const Widget_impl * other, bool) {
+    Table::Span rng = table_->span(other);
 
     if (rng.ymax > rng.ymin) {
         table_->insert_rows(rng.ymin, 1);
@@ -313,13 +323,13 @@ void Menubox_impl::insert_widget_before(Widget_ptr wp, Widget_cptr other) {
     }
 
     else {
-        prepend_widget(wp);
+        prepend(wp);
     }
 }
 
-// Overrides pure Menu_impl.
-void Menubox_impl::insert_widget_after(Widget_ptr wp, Widget_cptr other) {
-    Table::Span rng = table_->span(other.get());
+// Overrides Box_impl.
+void Menubox_impl::insert_after(Widget_ptr wp, const Widget_impl * other, bool) {
+    Table::Span rng = table_->span(other);
 
     if (rng.ymax > rng.ymin) {
         table_->insert_rows(rng.ymin+1, 1);
@@ -327,7 +337,7 @@ void Menubox_impl::insert_widget_after(Widget_ptr wp, Widget_cptr other) {
     }
 
     else {
-        append_widget(wp);
+        append(wp);
     }
 }
 

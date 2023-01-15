@@ -94,6 +94,10 @@ public:
         return pages_.size();
     }
 
+    bool empty() const {
+        return pages_.empty();
+    }
+
     void set_homogeneous_tabs();
     void unset_homogeneous_tabs();
 

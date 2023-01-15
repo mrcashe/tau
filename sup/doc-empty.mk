@@ -26,10 +26,6 @@
 
 .PHONY: doc install-doc uninstall-doc clean-doc
 
-all:
-install:
-uninstall:
-clean:
 doc:
 en-doc:
 rm-doc:

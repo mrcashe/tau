@@ -39,7 +39,7 @@ Menu::Menu(Widget_ptr wp):
 }
 
 void Menu::append(Widget & w) {
-    MENU_IMPL->append_widget(w.ptr());
+    MENU_IMPL->append(w.ptr());
 }
 
 void Menu::append(Action & action) {
@@ -72,7 +72,7 @@ void Menu::append_separator(Separator_style separator_style) {
 }
 
 void Menu::prepend(Widget & w) {
-    MENU_IMPL->prepend_widget(w.ptr());
+    MENU_IMPL->prepend(w.ptr());
 }
 
 void Menu::prepend(Action & action) {
@@ -105,7 +105,7 @@ void Menu::prepend_separator(Separator_style separator_style) {
 }
 
 void Menu::insert_before(Widget & w, const Widget & other) {
-    MENU_IMPL->insert_widget_before(w.ptr(), other.ptr());
+    MENU_IMPL->insert_before(w.ptr(), other.ptr().get());
 }
 
 void Menu::insert_before(Action & action, const Widget & other) {
@@ -134,11 +134,11 @@ void Menu::insert_before(const ustring & label, Menu & menu, const Widget & othe
 }
 
 void Menu::insert_separator_before(const Widget & other, Separator_style separator_style) {
-    MENU_IMPL->insert_separator_before(other.ptr(), separator_style);
+    MENU_IMPL->insert_separator_before(other.ptr().get(), separator_style);
 }
 
 void Menu::insert_after(Widget & w, const Widget & other) {
-    MENU_IMPL->insert_widget_after(w.ptr(), other.ptr());
+    MENU_IMPL->insert_after(w.ptr(), other.ptr().get());
 }
 
 void Menu::insert_after(Action & action, const Widget & other) {
@@ -167,7 +167,7 @@ void Menu::insert_after(const ustring & label, Menu & menu, const Widget & other
 }
 
 void Menu::insert_separator_after(const Widget & other, Separator_style separator_style) {
-    MENU_IMPL->insert_separator_after(other.ptr(), separator_style);
+    MENU_IMPL->insert_separator_after(other.ptr().get(), separator_style);
 }
 
 void Menu::remove(Widget & w) {
