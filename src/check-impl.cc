@@ -128,7 +128,7 @@ void Check_impl::uncheck() {
 
 void Check_impl::join(Check_ptr other) {
     if (this != other.get()) {
-        radio_signal_ = other->radio_signal_ptr();
+        radio_signal_ = other->radio_signal_;
         if (checked_) { radio_signal_->operator()(); }
         radio_cx_ = radio_signal_->connect(fun(this, &Check_impl::on_radio_signal));
     }
@@ -136,6 +136,14 @@ void Check_impl::join(Check_ptr other) {
 
 bool Check_impl::joined() const {
     return radio_signal_->size() > 1;
+}
+
+void Check_impl::on_radio_signal() {
+    if (checked_) {
+        checked_ = false;
+        redraw();
+        signal_uncheck_();
+    }
 }
 
 void Check_impl::set_border_width(unsigned npx) {
@@ -257,14 +265,6 @@ void Check_impl::draw_check(Painter pr) {
             pr.set_pen(Pen(f, 2));
             pr.stroke();
         }
-    }
-}
-
-void Check_impl::on_radio_signal() {
-    if (checked_) {
-        checked_ = false;
-        redraw();
-        signal_uncheck_();
     }
 }
 

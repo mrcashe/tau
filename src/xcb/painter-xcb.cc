@@ -379,7 +379,7 @@ Font_ptr Painter_xcb::select_font(const ustring & font_spec) {
                 throw graphics_error(str_format("Painter_xcb: Unable to create font face ", font_spec));
             }
 
-            state().font = std::make_shared<Font_xcb>(ffp, font_size >= 1.0 ? font_size : 10.0, dp_);
+            state().font = std::make_shared<Font_xcb>(ffp, font_spec, font_size >= 1.0 ? font_size : 10.0, dp_);
             theme->cache_font(state().font, font_spec);
         }
     }

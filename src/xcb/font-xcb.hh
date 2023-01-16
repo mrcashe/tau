@@ -36,7 +36,7 @@ namespace tau {
 class Font_xcb: public Font_posix {
 public:
 
-    Font_xcb(Font_face_ptr fface, double size_pt, Display_xcb_ptr dp);
+    Font_xcb(Font_face_ptr fface, const ustring & spec, double size_pt, Display_xcb_ptr dp);
    ~Font_xcb();
 
     void render_glyphs(const std::u32string & str, Point pt, uint8_t oper, xcb_render_picture_t src, xcb_render_picture_t dst);

@@ -322,7 +322,6 @@ void Table_impl::alloc_cols() {
     unsigned nsh = 0;
     unsigned nfree = 0;
     unsigned spc = 0;
-    unsigned min = 0;
 
     auto cb = cols_.begin(), ce = cols_.end();
 
@@ -335,14 +334,12 @@ void Table_impl::alloc_cols() {
             spc += col.left+col.right;
 
             if (col.usize) {
-                min += col.umin;
                 px = col.usize;
                 if (col.umax) { px = std::min(px, col.umax); }
                 user += px;
             }
 
             else if (col.shrank) {
-                min += std::max(col.rmin, col.umin);
                 px = col.rmax;
                 if (col.umax) { px = std::min(px, col.umax); }
                 sh += px;
@@ -350,7 +347,6 @@ void Table_impl::alloc_cols() {
             }
 
             else {
-                min += std::max(col.rmin, col.umin);
                 ++nfree;
             }
         }
@@ -358,7 +354,7 @@ void Table_impl::alloc_cols() {
 
     int x = 0;
     unsigned avail = size().width();
-    unsigned req = std::max(min, spc+user+sh);
+    unsigned req = spc+user+sh;
     avail = avail > req ? avail-req : 0;
     unsigned nextra = nfree ? nfree : nsh;
     unsigned extra = nextra ? avail/nextra : 0;
@@ -423,7 +419,6 @@ void Table_impl::alloc_rows() {
     unsigned nsh = 0;
     unsigned nfree = 0;
     unsigned spc = 0;
-    unsigned min = 0;
 
     auto rb = rows_.begin(), re = rows_.end();
 
@@ -442,7 +437,6 @@ void Table_impl::alloc_rows() {
             }
 
             else if (row.shrank) {
-                min += std::max(row.rmin, row.umin);
                 px = row.rmax;
                 if (row.umax) { px = std::min(px, row.umax); }
                 sh += px;
@@ -450,7 +444,6 @@ void Table_impl::alloc_rows() {
             }
 
             else {
-                min += std::max(row.rmin, row.umin);
                 ++nfree;
             }
         }
@@ -458,7 +451,7 @@ void Table_impl::alloc_rows() {
 
     int y = 0;
     unsigned avail = size().height();
-    unsigned req = std::max(min, spc+user+sh);
+    unsigned req = spc+user+sh;
     avail = avail > req ? avail-req : 0;
     unsigned nextra = nfree ? nfree : nsh;
     unsigned extra = nextra ? avail/nextra : 0;

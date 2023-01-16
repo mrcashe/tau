@@ -40,6 +40,9 @@ public:
     Font_face_ptr create_font_face(const ustring & spec);
     void cache_font(Font_ptr font, const ustring & spec);
     Font_ptr uncache_font(const ustring & spec, unsigned dpi);
+    std::vector<ustring> list_families();
+    std::vector<ustring> list_faces(const ustring & family);
+    ustring font_normal() { return font_normal_; }
 
 protected:
 
@@ -51,6 +54,11 @@ protected:
 
 private:
 
+    ustring     font_normal_;
+
+private:
+
+    void init_font_dir(const ustring & dir);
     void cleanup_font_cache();
 };
 

@@ -30,7 +30,7 @@
 
 namespace tau {
 
-Font_posix::Font_posix(Font_face_ptr face, double size_pt, unsigned dpi):
+Font_posix::Font_posix(Font_face_ptr face, const ustring & spec, double size_pt, unsigned dpi):
     Font_impl(),
     face_(face),
     dpi_(dpi),
@@ -43,16 +43,17 @@ Font_posix::Font_posix(Font_face_ptr face, double size_pt, unsigned dpi):
     Rect bbox = face->bounds();
     min_.set(scale_.x()*bbox.left(), scale_.y()*bbox.top());
     max_.set(scale_.x()*bbox.right(), scale_.y()*bbox.bottom());
+    spec_ = font_size_change(spec, sz_);
 }
 
 // Overrides pure Font_impl.
 ustring Font_posix::family_name() const {
-    return face_->family();
+    return font_family_from_spec(spec_);
 }
 
 // Overrides pure Font_impl.
 ustring Font_posix::face_name() const {
-    return face_->facename();
+    return font_face_from_spec(spec_);
 }
 
 // Overrides pure Font_impl.

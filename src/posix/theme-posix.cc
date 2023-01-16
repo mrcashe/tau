@@ -56,8 +56,10 @@ struct Font_holder {
 
 struct Registry {
     tau::ustring        path;
-    tau::ustring        family;
-    tau::ustring        face;
+    tau::ustring        ffamily;    // Family name returned by Font_file_impl.
+    tau::ustring        fface;      // Face name returned by Font_file_impl.
+    tau::ustring        family;     // Possibly synthesized family name.
+    tau::ustring        face;       // Possibly synthesized face name.
     tau::Font_face_ptr  faceptr;
     tau::Font_file_ptr  ttf;
 };
@@ -68,14 +70,7 @@ using Registrar = std::unordered_map<std::string, Registry>;
 
 Families        families_;
 Cache           cache_;
-tau::ustring    normal_;
 Registrar       reg_;
-
-std::vector<std::string> list_font_family_keys() {
-    std::vector<std::string> v;
-    for (auto & famh: families_) { v.push_back(famh.first); }
-    return v;
-}
 
 std::string font_family_key(const tau::ustring & family_name) {
     return tau::str_toupper(tau::str_trim(family_name));
@@ -85,81 +80,38 @@ std::string partial_key(const tau::ustring & family, const tau::ustring & face) 
     return tau::str_toupper(tau::str_trim(tau::str_format(family, ' ', face)));
 }
 
-void init_font_dir(const tau::ustring & dir) {
-    if (tau::file_is_dir(dir)) {
-        for (auto & fp: tau::path_find(dir)) {
-            if (!tau::file_is_dir(fp)) {
-                if (tau::str_has_suffix(tau::str_tolower(fp), ".ttf")) {
-                    try {
-                        if (reg_.end() == std::find_if(reg_.begin(), reg_.end(), [&fp](auto & p) { return fp == p.second.path; } )) {
-                            tau::Font_file_ptr ttf = tau::Font_file::create(fp);
-                            std::vector<tau::ustring> famv, facev;
+Registry & register_font(tau::Font_file_ptr ttf, const tau::ustring & fam, const tau::ustring & face) {
+    std::string key = partial_key(fam, face);
+    auto p = reg_.emplace(std::make_pair(key, Registry()));
+    auto & reg = p.first->second;
+    reg.path = ttf->file_path();
+    reg.ffamily = ttf->list_families().front();
+    reg.fface = ttf->list_faces(reg.ffamily).front();
+    reg.family = fam;
+    reg.face = face;
+    reg_[key] = reg;
+    // std::cout << reg_.size() << " " << key << '\n';
 
-                            for (auto & fam: ttf->list_families()) {
-                                for (auto & face: ttf->list_faces(fam)) {
-                                    auto specv = tau::font_spec_explode(tau::font_spec_build(fam, face));
-                                    auto famf = tau::font_family_from_spec(specv);
-                                    auto facef = tau::font_face_from_spec(specv);
-                                    famv.push_back(famf);
-                                    facev.push_back(facef);
+    key = font_family_key(fam);
+    auto i = families_.find(key);
+    Family_holder * hol;
 
-                                    if (tau::str_similar(facef, "Oblique")) { facev.push_back("Italic"); }
-                                    if (tau::str_similar(facef, "Normal")) { facev.push_back("Regular"); }
-                                    if (tau::str_similar(facef, "Book")) { facev.push_back("Regular"); }
-                                }
-                            }
-
-                            for (auto & fam: famv) {
-                                for (auto & face: facev) {
-                                    std::string key = partial_key(fam, face);
-                                    Registry reg;
-                                    reg.path = fp;
-                                    reg.family = fam;
-                                    reg.face = face;
-                                    reg_[key] = reg;
-                                    std::cout << reg_.size() << " " << key << '\n';
-
-                                    key = font_family_key(fam);
-                                    auto i = families_.find(key);
-                                    Family_holder * hol;
-
-                                    if (i == families_.end()) {
-                                        Family_holder hfam;
-                                        hfam.family = fam;
-                                        auto p = families_.emplace(std::make_pair(key, hfam));
-                                        hol = &(p.first->second);
-                                    }
-
-                                    else {
-                                        hol = &(i->second);
-                                    }
-
-                                    if (hol->faces.end() == std::find(hol->faces.begin(), hol->faces.end(), face)) {
-                                        hol->faces.push_back(face);
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    catch (tau::bad_font & bf) {
-                        std::cerr << "** " << bf.what() << std::endl;
-                    }
-                }
-            }
-        }
+    if (i == families_.end()) {
+        Family_holder hfam;
+        hfam.family = fam;
+        auto p = families_.emplace(std::make_pair(key, hfam));
+        hol = &(p.first->second);
     }
-}
 
-void init_fonts() {
-    Lock lock(mx_);
-
-    if (families_.empty()) {
-        init_font_dir(tau::path_build(tau::path_prefix_dir(), "fonts"));
-        init_font_dir(tau::path_build(tau::path_user_home_dir(), ".fonts"));
-        init_font_dir("/usr/share/fonts");
-        init_font_dir("/usr/local/share/fonts");
+    else {
+        hol = &(i->second);
     }
+
+    if (hol->faces.end() == std::find(hol->faces.begin(), hol->faces.end(), face)) {
+        hol->faces.push_back(face);
+    }
+
+    return reg;
 }
 
 } // anonymous namespace
@@ -198,6 +150,18 @@ void Theme_posix::boot() {
     boot_icon_themes("Tau");
     boot_cursor_themes("Oxygen Blue:Oxygen Yellow:Breeze:KDE Classic:Adwaita");
     boot_fallback_theme("Hicolor");
+
+    init_font_dir(path_build(path_prefix_dir(), "fonts"));
+    init_font_dir(path_build(path_user_home_dir(), ".fonts"));
+    init_font_dir("/usr/share/fonts");
+    init_font_dir("/usr/local/share/fonts");
+
+    for (const ustring & s: str_explode("Ubuntu:Droid Sans:DejaVu Sans:Noto Sans:Free Sans", ':')) {
+        if (auto facep = create_font_face(s)) {
+            font_normal_ = font_size_change(s, 10);
+            break;
+        }
+    }
 }
 
 // Overrides Theme_impl.
@@ -207,7 +171,6 @@ void Theme_posix::sweep() {
 }
 
 Font_face_ptr Theme_posix::create_font_face(const ustring & spec) {
-    init_fonts();
     Lock lock(mx_);
     auto v = font_spec_explode(spec);
     ustring family = font_family_from_spec(v), face = font_face_from_spec(v);
@@ -216,7 +179,7 @@ Font_face_ptr Theme_posix::create_font_face(const ustring & spec) {
     if (i != reg_.end()) {
         if (!i->second.faceptr) {
             if (!i->second.ttf) { i->second.ttf = Font_file::create(i->second.path); }
-            i->second.faceptr = i->second.ttf->face(i->second.ttf, family, face);
+            i->second.faceptr = i->second.ttf->face(i->second.ttf, i->second.ffamily, i->second.fface);
         }
 
         return i->second.faceptr;
@@ -253,33 +216,7 @@ Font_ptr Theme_posix::uncache_font(const ustring & spec, unsigned dpi) {
     return font;
 }
 
-// static
-ustring Font::normal() {
-    init_fonts();
-    Lock lock(mx_);
-
-    if (normal_.empty()) {
-        auto keys = list_font_family_keys();
-        const ustring fonts = "Droid Sans:DejaVu Serif Book:Noto Sans:Ubuntu:Free Sans";
-
-        for (const ustring & s: str_explode(fonts, ':')) {
-            std::string key = font_family_key(font_family_from_spec(s));
-
-            for (auto & k: keys) {
-                if (key == k) {
-                    normal_ = str_format(s, ' ', 10);
-                    return normal_;
-                }
-            }
-        }
-    }
-
-    return normal_;
-}
-
-// static
-std::vector<ustring> Font::list_families() {
-    init_fonts();
+std::vector<ustring> Theme_posix::list_families() {
     std::vector<ustring> v;
     Lock lock(mx_);
 
@@ -289,12 +226,10 @@ std::vector<ustring> Font::list_families() {
         }
     }
 
-    //for (auto & hfam: families_) { v.push_back(hfam.family); }
     return v;
 }
 
-std::vector<ustring> Font::list_faces(const ustring & family) {
-    init_fonts();
+std::vector<ustring> Theme_posix::list_faces(const ustring & family) {
     std::vector<ustring> v;
     Lock lock(mx_);
 
@@ -327,6 +262,38 @@ void Theme_posix::cleanup_font_cache() {
 
         else {
             fh.tv = Timeval::now();
+        }
+    }
+}
+
+void Theme_posix::init_font_dir(const ustring & dir) {
+    if (file_is_dir(dir)) {
+        for (auto & fp: path_find(dir)) {
+            if (!file_is_dir(fp)) {
+                if (str_has_suffix(str_tolower(fp), ".ttf")) {
+                    try {
+                        if (reg_.end() == std::find_if(reg_.begin(), reg_.end(), [&fp](auto & p) { return fp == p.second.path; } )) {
+                            Font_file_ptr ttf = Font_file::create(fp);
+
+                            for (auto & fam: ttf->list_families()) {
+                                for (auto & face: ttf->list_faces(fam)) {
+                                    auto specv = font_spec_explode(tau::font_spec_build(fam, face));
+                                    auto famf = font_family_from_spec(specv);
+                                    auto facef = font_face_from_spec(specv);
+                                    register_font(ttf, famf, facef);
+                                    if (str_similar(facef, "Oblique")) { register_font(ttf, famf, "Italic"); }
+                                    if (str_similar(facef, "Normal")) { register_font(ttf, famf, "Regular"); }
+                                    if (str_similar(facef, "Book")) { register_font(ttf, famf, "Regular"); }
+                                }
+                            }
+                        }
+                    }
+
+                    catch (bad_font & bf) {
+                        std::cerr << "** Theme_posix::init_font_dir(): " << bf.what() << std::endl;
+                    }
+                }
+            }
         }
     }
 }

@@ -75,7 +75,6 @@ void Text_impl::init() {
     caret_timer_.signal_alarm().connect(fun(this, &Text_impl::on_caret_timer));
 
     auto & fi = style_.get("font");
-    fi.signal_changed().reserve(6);
     fi.signal_changed().connect(fun(this, &Text_impl::update_font));
     fi.signal_changed().connect(fun(this, &Text_impl::update_requisition));
     fi.signal_changed().connect(fun(this, &Text_impl::calc_all_ellipsis));
@@ -87,7 +86,6 @@ void Text_impl::init() {
 
     signal_origin_changed_.connect(fun(this, &Text_impl::calc_all_ellipsis));
 
-    signal_size_changed_.reserve(5);
     signal_size_changed_.connect(fun(this, &Text_impl::update_va));
     signal_size_changed_.connect(fun(this, &Text_impl::calc_all_ellipsis));
     signal_size_changed_.connect(fun(this, &Text_impl::align_all));
@@ -96,14 +94,12 @@ void Text_impl::init() {
 
     signal_scroll_changed_.connect(fun(this, &Text_impl::update_va));
 
-    signal_visible_.reserve(3);
     signal_visible_.connect(fun(this, &Text_impl::update_va));
     signal_visible_.connect(fun(this, &Text_impl::calc_all_ellipsis));
     signal_visible_.connect(fun(this, &Text_impl::align_all));
 
     signal_invisible_.connect(fun(this, &Text_impl::update_va));
 
-    signal_display_.reserve(5);
     signal_display_.connect(fun(this, &Text_impl::update_painter));
     signal_display_.connect(fun(this, &Text_impl::update_font));
     signal_display_.connect(fun(this, &Text_impl::update_requisition));
@@ -113,7 +109,6 @@ void Text_impl::init() {
     signal_focus_in_.connect(fun(this, &Text_impl::on_focus_in));
     signal_focus_out_.connect(fun(this, &Text_impl::hide_caret));
 
-    signal_caret_motion_.reserve(2);
     signal_caret_motion_.connect(fun(this, &Text_impl::refresh_caret));
     signal_caret_motion_.connect(fun(this, &Text_impl::scroll_to_caret));
 

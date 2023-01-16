@@ -37,7 +37,7 @@ namespace tau {
 class Font_posix: public Font_impl {
 public:
 
-    Font_posix(Font_face_ptr fface, double size_pt, unsigned dpi);
+    Font_posix(Font_face_ptr fface, const ustring & spec, double size_pt, unsigned dpi);
 
     // Overrides pure Font_impl.
     ustring family_name() const override;
@@ -96,6 +96,7 @@ protected:
     using Glyph_map = std::map<char32_t, Glyph_ptr>;
 
     Font_face_ptr       face_;
+    ustring             spec_;
     Glyph_map           gmap_;
     Vector              scale_;
     Vector              min_;

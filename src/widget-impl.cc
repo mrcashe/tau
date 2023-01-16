@@ -63,13 +63,11 @@ Widget_impl::Widget_impl():
     signal_mouse_enter_.connect(fun(this, &Widget_impl::on_mouse_enter));
     signal_mouse_leave_.connect(fun(this, &Widget_impl::on_mouse_leave));
 
-    signal_visible_.reserve(4);
     signal_visible_.connect(fun(this, &Widget_impl::update_pdata));
     signal_visible_.connect(fun(pdata_cx_, &connection::unblock));
     signal_visible_.connect(fun(size_notify_cx_, &connection::unblock));
     signal_visible_.connect(tau::bind(fun(this, &Widget_impl::invalidate), Rect()));
 
-    signal_invisible_.reserve(4);
     signal_invisible_.connect(fun(this, &Widget_impl::update_pdata));
     signal_invisible_.connect(fun(pdata_cx_, &connection::block));
     signal_invisible_.connect(fun(size_notify_cx_, &connection::block));

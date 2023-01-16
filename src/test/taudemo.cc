@@ -30,11 +30,37 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <map>
 #include <mutex>
 #include <thread>
 
+namespace {
+
 tau::Key_file kf_;
 std::vector<std::thread> threads_;
+tau::ustring conf_path_;
+
+void save_state() {
+    try {
+        tau::path_mkdir(tau::path_dirname(conf_path_));
+        std::ofstream os(tau::Locale().encode_filename(conf_path_).c_str());
+        kf_.save(os);
+    }
+
+    catch (tau::exception & x) {
+        std::cerr << "** taudemo: save_state(): tau::exception thrown: " << x.what() << std::endl;
+    }
+
+    catch (std::exception & x) {
+        std::cerr << "** taudemo: save_state(): std::exception thrown: " << x.what() << std::endl;
+    }
+
+    catch (...) {
+        std::cerr << "** taudemo: save_state(): unknown exception thrown: " << std::endl;
+    }
+}
+
+} // anonymous namespace
 
 void run();
 
@@ -45,29 +71,14 @@ class Main: public tau::Toplevel {
     tau::Notebook       notebook_ { tau::TAB_RIGHT };
 
     tau::Action         escape_action_ { "Escape", tau::fun(this, &Main::close) };
-    tau::Action         next_page_action_ { "<Alt>Down", tau::fun(this, &Main::on_next_page) };
+    tau::Action         next_page_action_ { "<Alt>Down", tau::fun(this, &Main::new_threadext_page) };
     tau::Action         prev_page_action_ { "<Alt>Up", tau::fun(this, &Main::on_prev_page) };
-    tau::Action         n_action_ { "F12", tau::fun(this, &Main::on_n) };
+    tau::Action         n_action_ { "F12", tau::fun(this, &Main::new_thread) };
 
     tau::Counter        ymax_ { 0, 1599, 0 };
     tau::Counter        xmax_ { 0, 1599, 0 };
     tau::Counter        ymin_ { 0,  999, 0 };
     tau::Counter        xmin_ { 0,  999, 0 };
-
-    struct Page {
-        tau::ustring    title;
-        int             def;
-        int             page;
-    };
-
-    std::vector<Page>   pages_ {
-        { "Controls",   0, 0,},
-        { "List",       1, 1 },
-        { "Cursors",    2, 2 },
-        { "Colors",     3, 3 },
-        { "Twins",      4, 4 },
-        { "Colorsel",   5, 5 }
-    };
 
     std::size_t                 prev_row_ = 0;
     tau::Progress               progress_;
@@ -75,266 +86,37 @@ class Main: public tau::Toplevel {
     std::vector<tau::ustring>   color_names_;
 
     struct Color_widgets {
-        tau::Text *   name;
-        tau::Widget * w;
-        tau::Text *   value;
+        tau::Text    name { tau::ALIGN_START };
+        tau::Widget  w;
+        tau::Text    value;
     };
 
     std::vector<Color_widgets> color_widgets_;
 
-public:
-
-    Main(tau::Key_file & kf, const tau::Rect & bounds):
-        Toplevel(bounds)
-    {
-        {
-            auto v = kf_.get_integers(kf_.section("main"), "min_size");
-            if (v.size() > 1) { hint_min_size(v[0], v[1]); }
-        }
-
-        {
-            auto v = kf_.get_integers(kf_.section("main"), "max_size");
-            if (v.size() > 1) { hint_max_size(v[0], v[1]); }
-        }
-
-        tau::Box box0(tau::OR_SOUTH);
-        insert(box0);
-        notebook_.hint_margin(8);
-        box0.append(notebook_);
-
-        tau::Box ctlbox(tau::OR_WEST, 4);
-        ctlbox.hint_margin(2, 2, 8, 2);
-        box0.append(ctlbox, true);
-
-        {
-            tau::Frame frm(tau::BORDER_INSET);
-            frm.hint_margin(2);
-            ctlbox.append(frm, true);
-
-            tau::Box box(tau::OR_LEFT, 4);
-            box.hint_margin(2);
-            frm.insert(box);
-
-            box.append(ymax_);
-            ymax_.set_tooltip("Sets maximal window height, in pixels");
-            ymax_.style().get("whitespace/background").set("BlanchedAlmond");
-            ymax_.append("px", 2, 2);
-            ymax_.prepend("h:", 2, 2);
-            ymax_.set_value(max_size_hint().height());
-            ymax_.set_step_value(10);
-            ymax_.signal_value_changed().connect(tau::fun(this, &Main::on_minmax_changed));
-
-            box.append(xmax_);
-            xmax_.set_tooltip("Sets maximal window width, in pixels");
-            xmax_.style().get("whitespace/background").set("BlanchedAlmond");
-            xmax_.append("px", 2, 2);
-            xmax_.prepend("w:", 2, 2);
-            xmax_.set_value(max_size_hint().width());
-            xmax_.set_step_value(10);
-            xmax_.signal_value_changed().connect(tau::fun(this, &Main::on_minmax_changed));
-
-            tau::Text label("Max:", tau::ALIGN_END);
-            box.append(label, true);
-        }
-
-        {
-            tau::Frame frm(tau::BORDER_INSET);
-            frm.hint_margin(2);
-            ctlbox.append(frm, true);
-
-            tau::Box box(tau::OR_LEFT, 4);
-            box.hint_margin(2);
-            frm.insert(box);
-
-            box.append(ymin_);
-            ymin_.set_tooltip("Sets minimal window height, in pixels");
-            ymin_.style().get("whitespace/background").set("BlanchedAlmond");
-            ymin_.append("px", 2, 2);
-            ymin_.prepend("h:", 2, 2);
-            ymin_.set_value(min_size_hint().height());
-            ymin_.set_step_value(10);
-            ymin_.signal_value_changed().connect(tau::fun(this, &Main::on_minmax_changed));
-
-            box.append(xmin_);
-            xmin_.set_tooltip("Sets minimal window width, in pixels");
-            xmin_.style().get("whitespace/background").set("BlanchedAlmond");
-            xmin_.append("px", 2, 2);
-            xmin_.prepend("w:", 2, 2);
-            xmin_.set_value(min_size_hint().width());
-            xmin_.set_step_value(10);
-            xmin_.signal_value_changed().connect(tau::fun(this, &Main::on_minmax_changed));
-
-            tau::Text label("Min:", tau::ALIGN_END);
-            box.append(label, true);
-        }
-
-        connect_action(escape_action_);
-        connect_action(next_page_action_);
-        connect_action(prev_page_action_);
-        connect_action(n_action_);
-
-        signal_position_changed().connect(tau::fun(this, &Main::on_geometry_changed));
-        signal_size_changed().connect(tau::fun(this, &Main::on_geometry_changed));
-
-        timer_ = tau::Timer(tau::fun(this, &Main::on_timer), 100, true);
-        color_names_ = tau::Color::list_names();
-        color_widgets_.resize(color_names_.size());
-
-        set_icon("tau-48");
-
-        init_controls_page(0);
-        init_list_page(1);
-        init_cursors_page(2);
-        init_colors_page(3);
-        init_twins_page(4);
-        init_colorsel_page(5);
-
-        tau::Key_section & sect = kf_.section("pages");
-
-        for (auto & p: pages_) {
-            unsigned pg = kf_.get_integer(sect, p.title, -1);
-
-            if (pg >= 0 && pg < pages_.size()) {
-                auto & p1 = pages_[pg];
-                std::swap(p.page, p1.page);
-                notebook_.reorder_page(p.page, pg);
-            }
-        }
-
-        notebook_.signal_page_changed().connect(fun(this, &Main::on_page_changed));
-        notebook_.signal_page_reordered().connect(fun(this, &Main::on_page_reordered));
-
-        tau::ustring ctitle = kf_.get_string(sect, "current");
-        int cpage = 1;
-
-        for (auto & p: pages_) {
-            if (p.title == ctitle) {
-                cpage = p.page;
-                //break;
-            }
-        }
-
-        notebook_.show_page(cpage);
-        notebook_.take_focus();
-    }
-
-   ~Main() {
-       for (auto & cw: color_widgets_) { delete cw.name; delete cw.w; delete cw.value; }
-    }
-
-private:
-
-    void on_n() {
-        threads_.emplace_back(std::thread(run));
-    }
-
-    void on_page_reordered(int old_page, int new_page) {
-        int done = 0;
-        tau::Key_section & sect = kf_.section("pages");
-        //std::cout << "reordered " << old_page << " " << new_page << '\n';
-
-        for (auto & p: pages_) {
-            if (p.page == old_page) {
-                p.page = new_page;
-                if (p.page != p.def) { kf_.set_integer(sect, p.title, new_page); }
-                else { kf_.remove_key(sect, p.title); }
-                ++done;
-            }
-
-            else if (p.page == new_page) {
-                p.page = old_page;
-                kf_.set_integer(kf_.section("pages"), p.title, old_page);
-                if (p.page != p.def) { kf_.set_integer(sect, p.title, new_page); }
-                else { kf_.remove_key(sect, p.title); }
-                ++done;
-            }
-
-            if (2 == done) { break; }
-        }
-    }
-
-    void on_page_changed(int n) {
-        for (auto & p: pages_) {
-            if (p.page == n) {
-                //std::cout << "changed " << n << " " << p.title << '\n';
-                kf_.set_string(kf_.section("pages"), "current", p.title);
-                break;
-            }
-        }
-    }
-
-    void set_row_color(std::size_t row, const tau::ustring & cname) {
-        tau::Color c(cname);
-        color_widgets_[row].name->assign(cname);
-        color_widgets_[row].w->style().get("background").set(cname);
-        color_widgets_[row].value->assign(c.html());
-    }
-
-    void on_minmax_changed(double) {
-        unsigned xmin = xmin_.value(), ymin = ymin_.value(), xmax = xmax_.value(), ymax = ymax_.value();
-
-        if (xmin >= 200 && ymin >= 200) {
-            hint_min_size(xmin, ymin);
-            std::vector<long long> v = { xmin, ymin };
-            kf_.set_integers(kf_.section("main"), "min_size", v);
-        }
-
-        else {
-            kf_.remove_key(kf_.section("main"), "min_size");
-        }
-
-        if (xmax >= 300 && ymax >= 300) {
-            hint_max_size(xmax, ymax);
-            std::vector<long long> v = { xmax, ymax };
-            kf_.set_integers(kf_.section("main"), "max_size", v);
-        }
-
-        else {
-            kf_.remove_key(kf_.section("main"), "max_size");
-        }
-    }
-
-    void on_timer() {
-        static int div = 0;
-
-        if (progress_.visible() && 0 == div) {
-            double value = progress_.value();
-            value += 1.25;
-            if (value > progress_.max_value()) { value = 0.0; }
-            progress_.set_value(value);
-        }
-
-        std::size_t row = (double(rand())/RAND_MAX)*color_widgets_.size();
-        set_row_color(row, color_names_[prev_row_]);
-        prev_row_ = row;
-        if (++div == 8) { div = 0; }
-    }
-
-    void init_list_page(int pg) {
+    int init_list_page(int pg) {
         tau::List list;
 
         for (int i = 0; i < 64; ++i) {
             tau::Text t(tau::str_format("Row ", i));
-            int br = list.append_row(t);
+            int row = list.append_row(t);
 
             for (int j = -1; j < 3; ++j) {
                 tau::Text tt(tau::str_format("Row ", i, ':', j));
-                list.insert(br, tt, j);
+                list.insert(row, tt, j);
             }
         }
 
-        notebook_.append_page(list, pages_[pg].title);
-        list.grab_focus();
+        return notebook_.append_page(list, pages_[pg].title);
     }
 
-    void init_twins_page(int pg) {
+    int init_twins_page(int pg) {
         tau::Text label(pages_[pg].title);
         label.set_tooltip("This page shows\nthe Twins container example");
         tau::Frame frame(pages_[pg].title, tau::BORDER_SOLID, 1, 8);
         frame.hint_margin(5);
         frame.set_border_color(tau::Color("DeepSkyBlue"));
         frame.style().get("background").set("Lavender");
-        notebook_.append_page(frame, label);
+        int page = notebook_.append_page(frame, label);
 
         tau::Table table;
         table.set_column_spacing(5);
@@ -386,18 +168,18 @@ private:
             twins.insert_first(first);
             twins.insert_second(second);
         }
+
+        return page;
     }
 
-    void init_controls_page(int pg) {
+    int init_controls_page(int pg) {
         tau::Table table;
         table.signal_take_focus().connect(tau::fun(std::function<bool()>([]() { return true; } )), true);
         table.set_column_spacing(5);
         table.set_row_spacing(5);
         table.hint_margin(4);
         table.align_column(7, tau::ALIGN_CENTER);
-        notebook_.append_page(table, pages_[pg].title);
-
-        int row = 0;
+        int row = 0, page = notebook_.append_page(table, pages_[pg].title);
 
         {
             tau::Text label("tau::Button", tau::ALIGN_START);
@@ -490,9 +272,13 @@ private:
             progress_.set_border_style(tau::BORDER_SOLID);
             table.put(progress_, 1, row, 7, 1, false, true);
         }
+
+        return page;
     }
 
-    void init_colors_page(int pg) {
+    int init_colors_page(int pg) {
+        color_names_ = tau::Color::list_names();
+        color_widgets_.resize(color_names_.size());
         tau::Table table;
         table.set_column_spacing(6);
         table.set_row_spacing(5);
@@ -503,29 +289,26 @@ private:
         tau::Box box(tau::OR_RIGHT, 2);
         tau::Text label(pages_[pg].title);
         label.set_tooltip("This page shows\nnamed colors");
-        notebook_.append_page(box, label);
+        int page = notebook_.append_page(box, label);
         box.append(scroller);
         box.append(slider, true);
         std::size_t row = 0;
 
         for (auto & cname: color_names_) {
-            color_widgets_[row].name = new tau::Text(tau::ALIGN_START);
-            color_widgets_[row].w = new tau::Widget;
-            color_widgets_[row].w->hint_min_size(16, 0);
-            color_widgets_[row].value = new tau::Text;
-
-            table.put(*color_widgets_[row].name, 0, row, 1, 1, true, true);
-            table.put(*color_widgets_[row].w, 1, row, 1, 1);
-            table.put(*color_widgets_[row].value, 2, row);
-
+            color_widgets_[row].w.hint_min_size(16, 0);
+            table.put(color_widgets_[row].name, 0, row, 1, 1, true, true);
+            table.put(color_widgets_[row].w, 1, row, 1, 1);
+            table.put(color_widgets_[row].value, 2, row);
             set_row_color(row, cname);
             ++row;
         }
+
+        return page;
     }
 
-    void init_cursors_page(int pg) {
+    int init_cursors_page(int pg) {
         tau::Table xtable;
-        notebook_.append_page(xtable, pages_[pg].title);
+        int page = notebook_.append_page(xtable, pages_[pg].title);
 
         tau::Table table;
         table.set_column_spacing(5);
@@ -580,15 +363,232 @@ private:
                 }
             }
         }
+
+        return page;
     }
 
-    void init_colorsel_page(int pg) {
+    int init_colorsel_page(int pg) {
         tau::Colorsel colorsel(tau::Color("Blue"));
         colorsel.hint_margin(4);
-        notebook_.append_page(colorsel, pages_[pg].title);
+        return notebook_.append_page(colorsel, pages_[pg].title);
     }
 
-    void on_next_page() {
+    struct Page {
+        tau::ustring        title;
+        int                 page;
+        tau::slot<int(int)> x;
+    };
+
+    std::vector<Page>   pages_ {
+        { "Controls",   0, tau::fun(this, &Main::init_controls_page) },
+        { "List",       1, tau::fun(this, &Main::init_list_page) },
+        { "Cursors",    2, tau::fun(this, &Main::init_cursors_page) },
+        { "Colors",     3, tau::fun(this, &Main::init_colors_page) },
+        { "Twins",      4, tau::fun(this, &Main::init_twins_page) },
+        { "Colorsel",   5, tau::fun(this, &Main::init_colorsel_page) }
+    };
+
+public:
+
+    Main(const tau::Rect & bounds):
+        Toplevel(bounds)
+    {
+        {
+            auto v = kf_.get_integers(kf_.section("main"), "min_size");
+            if (v.size() > 1) { hint_min_size(v[0], v[1]); }
+        }
+
+        {
+            auto v = kf_.get_integers(kf_.section("main"), "max_size");
+            if (v.size() > 1) { hint_max_size(v[0], v[1]); }
+        }
+
+        tau::Box box0(tau::OR_SOUTH);
+        insert(box0);
+        notebook_.hint_margin(8);
+        box0.append(notebook_);
+
+        tau::Box ctlbox(tau::OR_WEST, 4);
+        ctlbox.hint_margin(2, 2, 8, 2);
+        box0.append(ctlbox, true);
+
+        {
+            tau::Frame frm(tau::BORDER_INSET);
+            frm.hint_margin(2);
+            ctlbox.append(frm, true);
+
+            tau::Box box(tau::OR_LEFT, 4);
+            box.hint_margin(2);
+            frm.insert(box);
+
+            box.append(ymax_);
+            ymax_.set_tooltip("Sets maximal window height, in pixels");
+            ymax_.style().get("whitespace/background").set("BlanchedAlmond");
+            ymax_.append("px", 2, 2);
+            ymax_.prepend("h:", 2, 2);
+            ymax_.set_value(max_size_hint().height());
+            ymax_.set_step_value(10);
+            ymax_.signal_value_changed().connect(tau::fun(this, &Main::on_minmax_changed));
+
+            box.append(xmax_);
+            xmax_.set_tooltip("Sets maximal window width, in pixels");
+            xmax_.style().get("whitespace/background").set("BlanchedAlmond");
+            xmax_.append("px", 2, 2);
+            xmax_.prepend("w:", 2, 2);
+            xmax_.set_value(max_size_hint().width());
+            xmax_.set_step_value(10);
+            xmax_.signal_value_changed().connect(tau::fun(this, &Main::on_minmax_changed));
+
+            tau::Text label("Max:", tau::ALIGN_END);
+            box.append(label, true);
+        }
+
+        {
+            tau::Frame frm(tau::BORDER_INSET);
+            frm.hint_margin(2);
+            ctlbox.append(frm, true);
+
+            tau::Box box(tau::OR_LEFT, 4);
+            box.hint_margin(2);
+            frm.insert(box);
+
+            box.append(ymin_);
+            ymin_.set_tooltip("Sets minimal window height, in pixels");
+            ymin_.style().get("whitespace/background").set("BlanchedAlmond");
+            ymin_.append("px", 2, 2);
+            ymin_.prepend("h:", 2, 2);
+            ymin_.set_value(min_size_hint().height());
+            ymin_.set_step_value(10);
+            ymin_.signal_value_changed().connect(tau::fun(this, &Main::on_minmax_changed));
+
+            box.append(xmin_);
+            xmin_.set_tooltip("Sets minimal window width, in pixels");
+            xmin_.style().get("whitespace/background").set("BlanchedAlmond");
+            xmin_.append("px", 2, 2);
+            xmin_.prepend("w:", 2, 2);
+            xmin_.set_value(min_size_hint().width());
+            xmin_.set_step_value(10);
+            xmin_.signal_value_changed().connect(tau::fun(this, &Main::on_minmax_changed));
+
+            tau::Text label("Min:", tau::ALIGN_END);
+            box.append(label, true);
+        }
+
+        connect_action(escape_action_);
+        connect_action(next_page_action_);
+        connect_action(prev_page_action_);
+        connect_action(n_action_);
+
+        signal_position_changed().connect(tau::fun(this, &Main::on_geometry_changed));
+        signal_size_changed().connect(tau::fun(this, &Main::on_geometry_changed));
+
+        timer_ = tau::Timer(tau::fun(this, &Main::on_timer), 100, true);
+
+        set_icon("tau-48");
+        tau::Key_section & sect = kf_.section("pages");
+        std::map<int, int> m;
+
+        for (auto & pg: pages_) {
+            m[kf_.get_integer(sect, pg.title, pg.page)] = pg.page;
+        }
+
+        for (auto & mp: m) {
+            int i = mp.second;
+            pages_[i].page = pages_[i].x(i);
+        }
+
+        notebook_.signal_page_changed().connect(fun(this, &Main::on_page_changed));
+        notebook_.signal_page_reordered().connect(fun(this, &Main::on_page_reordered));
+
+        tau::ustring ctitle = kf_.get_string(sect, "current");
+        int cpage = 1;
+
+        for (auto & p: pages_) {
+            if (p.title == ctitle) {
+                cpage = p.page;
+            }
+        }
+
+        notebook_.show_page(cpage);
+        notebook_.take_focus();
+    }
+
+private:
+
+    void new_thread() {
+        threads_.emplace_back(std::thread(run));
+    }
+
+    void save_pages() {
+        tau::Key_section & sect = kf_.section("pages");
+
+        for (auto & pg: pages_) {
+            kf_.set_integer(sect, pg.title, pg.page);
+            if (pg.page == notebook_.current_page()) { kf_.set_string(sect, "current", pg.title); }
+        }
+    }
+
+    void on_page_reordered(int old_page, int new_page) {
+        for (auto & pg: pages_) {
+            if (pg.page == old_page) { pg.page = new_page; }
+            else if (pg.page == new_page) { pg.page = old_page; }
+        }
+
+        save_pages();
+    }
+
+    void on_page_changed(int n) {
+        save_pages();
+    }
+
+    void set_row_color(std::size_t row, const tau::ustring & cname) {
+        tau::Color c(cname);
+        color_widgets_[row].name.assign(cname);
+        color_widgets_[row].w.style().get("background").set(cname);
+        color_widgets_[row].value.assign(c.html());
+    }
+
+    void on_minmax_changed(double) {
+        unsigned xmin = xmin_.value(), ymin = ymin_.value(), xmax = xmax_.value(), ymax = ymax_.value();
+
+        if (xmin >= 200 && ymin >= 200) {
+            hint_min_size(xmin, ymin);
+            std::vector<long long> v = { xmin, ymin };
+            kf_.set_integers(kf_.section("main"), "min_size", v);
+        }
+
+        else {
+            kf_.remove_key(kf_.section("main"), "min_size");
+        }
+
+        if (xmax >= 300 && ymax >= 300) {
+            hint_max_size(xmax, ymax);
+            std::vector<long long> v = { xmax, ymax };
+            kf_.set_integers(kf_.section("main"), "max_size", v);
+        }
+
+        else {
+            kf_.remove_key(kf_.section("main"), "max_size");
+        }
+    }
+
+    void on_timer() {
+        static int div = 0;
+
+        if (progress_.visible() && 0 == div) {
+            double value = progress_.value();
+            value += 1.25;
+            if (value > progress_.max_value()) { value = 0.0; }
+            progress_.set_value(value);
+        }
+
+        std::size_t row = (double(rand())/RAND_MAX)*color_widgets_.size();
+        set_row_color(row, color_names_[prev_row_]);
+        prev_row_ = row;
+        if (++div == 8) { div = 0; }
+    }
+
+    void new_threadext_page() {
         notebook_.show_next();
     }
 
@@ -607,8 +607,7 @@ void run() {
         auto v = kf_.get_integers(kf_.section("main"), "geometry");
         tau::Rect bounds;
         if (v.size() > 3) { bounds.set(tau::Point(v[0], v[1]), tau::Size(v[2], v[3])); }
-
-        Main wnd(kf_, bounds);
+        Main wnd(bounds);
         wnd.set_title("TAU Demo");
         tau::Loop().run();
     }
@@ -616,27 +615,26 @@ void run() {
     catch (tau::exception & x) {
         std::cerr << "** taudemo: run(): tau::exception thrown: " << x.what() << std::endl;
     }
+
+    catch (std::exception & x) {
+        std::cerr << "** taudemo: run(): std::exception thrown: " << x.what() << std::endl;
+    }
+
+    catch (...) {
+        std::cerr << "** taudemo: run(): unknown exception thrown: " << std::endl;
+    }
 }
 
 int main(int argc, char * argv[]) {
-    tau::ustring conf_path = tau::path_build(tau::path_user_config_dir(), tau::program_name(), "state.ini");
-    std::ifstream is(conf_path.c_str());
+    conf_path_ = tau::path_build(tau::path_user_config_dir(), tau::program_name(), "state.ini");
+    std::ifstream is(tau::Locale().encode_filename(conf_path_).c_str());
     kf_.load(is);
-
+    tau::Timer timer(tau::fun(save_state));
+    kf_.signal_changed().connect(tau::bind(tau::fun(timer, &tau::Timer::restart), 6789, false));
     //threads_.emplace_back(std::thread(run));
     run();
     for (auto & thr: threads_) { thr.join(); }
-
-    try {
-        path_mkdir(path_dirname(conf_path));
-        std::ofstream os(conf_path.c_str());
-        kf_.save(os);
-    }
-
-    catch (tau::exception & x) {
-        std::cerr << "** taudemo: main(): tau::exception thrown: " << x.what() << std::endl;
-    }
-
+    save_state();
     return 0;
 }
 

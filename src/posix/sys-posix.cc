@@ -26,11 +26,13 @@
 
 #include <tau/exception.hh>
 #include <tau/fileinfo.hh>
+#include <tau/font.hh>
 #include <tau/locale.hh>
 #include <tau/timeval.hh>
 #include <tau/sys.hh>
 #include <tau/string.hh>
 #include <locale-impl.hh>
+#include "theme-posix.hh"
 #include <sys/stat.h>
 #include <dirent.h>
 #include <fnmatch.h>
@@ -342,6 +344,21 @@ void file_unlink(const ustring & path) {
 
 void msleep(unsigned time_ms) {
     usleep(1000*time_ms);
+}
+
+// static
+std::vector<ustring> Font::list_families() {
+    return Theme_posix::root_posix()->list_families();
+}
+
+// static
+std::vector<ustring> Font::list_faces(const ustring & family) {
+    return Theme_posix::root_posix()->list_faces(family);
+}
+
+// static
+ustring Font::normal() {
+    return Theme_posix::root_posix()->font_normal();
 }
 
 } // namespace tau

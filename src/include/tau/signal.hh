@@ -34,7 +34,6 @@
 #include <list>
 #include <memory>
 #include <tuple>
-#include <vector>
 #include <iostream>
 
 namespace tau {
@@ -638,7 +637,7 @@ public:
 
 private:
 
-    std::vector<slot_type> slots_;
+    std::list<slot_type> slots_;
 
 public:
 
@@ -685,12 +684,6 @@ public:
         return slots_.size();
     }
 
-    /// Reserve space used for slots.
-    /// The resulting size calculated relatively to the current slot count.
-    void reserve(std::size_t n) {
-        slots_.reserve(n+size());
-    }
-
     /// Connect slot using %slot's copy constructor.
     /// @param slot the %slot to be connected.
     /// @param prepend pass @b true to push front %slot and @b false to push back.
@@ -702,7 +695,7 @@ public:
         }
 
         else {
-            slots_.emplace(slots_.begin(), slot);
+            slots_.emplace_front(slot);
             return link(slots_.front());
         }
     }
@@ -718,18 +711,18 @@ public:
         }
 
         else {
-            slots_.emplace(slots_.begin(), std::move(slot));
+            slots_.emplace_front(std::move(slot));
             return link(slots_.front());
         }
     }
 
     /// Emit the %signal.
     R operator()(Args... args) {
-        std::size_t n = slots_.size(), nn = n;
+        std::size_t n = slots_.size();
 
         if (0 != n) {
-            slot_type tmp[n], * d = tmp;
-            for (const slot_type * s = slots_.data(); nn; --nn, ++s) { *(d++) = slot_type(*s, nullptr); }
+            slot_type tmp[n], *d = tmp;
+            for (const slot_type & s: slots_) { *(d++) = slot_type(s, nullptr); }
             return emitter_type(tmp, n)(args...);
         }
 
@@ -737,16 +730,8 @@ public:
     }
 
     /// @private
-    void erase(slot_base * slot) override {
-        std::size_t n = slots_.size(), i = 0;
-
-        for (const slot_type * s = slots_.data(); n; --n, ++s, ++i) {
-            if (s == slot) {
-                slots_.erase(slots_.begin()+i);
-                return;
-            }
-
-        }
+    void erase(slot_base * s) override {
+        slots_.remove(*static_cast<slot_type *>(s));
     }
 };
 

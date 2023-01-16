@@ -33,8 +33,8 @@
 
 namespace tau {
 
-Font_xcb::Font_xcb(Font_face_ptr fface, double size_pt, Display_xcb_ptr dp):
-    Font_posix(fface, size_pt, dp->dpi()),
+Font_xcb::Font_xcb(Font_face_ptr fface, const ustring & spec, double size_pt, Display_xcb_ptr dp):
+    Font_posix(fface, spec, size_pt, dp->dpi()),
     dp_(dp),
     cx_(dp->conn())
 {

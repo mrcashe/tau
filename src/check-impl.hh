@@ -40,29 +40,18 @@ public:
     using Radio_signal_ptr = std::shared_ptr<Radio_signal>;
 
     Check_impl(bool checked=false);
-    explicit Check_impl(Check_style cs, bool checked=false);
-    explicit Check_impl(Border_style bs, bool checked=false);
+    Check_impl(Check_style cs, bool checked=false);
+    Check_impl(Border_style bs, bool checked=false);
     Check_impl(Check_style cs, Border_style bs, bool checked=false);
 
     void set_check_style(Check_style cs);
-
-    Check_style check_style() const {
-        return check_style_;
-    }
-
+    Check_style check_style() const { return check_style_; }
     void check();
     void uncheck();
     void toggle();
     void join(Check_ptr other);
     bool joined() const;
-
-    bool checked() const {
-        return checked_;
-    }
-
-    Radio_signal_ptr radio_signal_ptr() {
-        return radio_signal_;
-    }
+    bool checked() const { return checked_; }
 
     // Overrides Frame_impl.
     void set_border_style(Border_style bs) override {
@@ -70,23 +59,12 @@ public:
         Frame_impl::set_border_style(bs);
     }
 
-    Border_style border_style() const {
-        return user_border_style_;
-    }
-
+    Border_style border_style() const { return user_border_style_; }
     void set_border_width(unsigned npx);
+    unsigned border_width() const { return user_border_width_; }
 
-    unsigned border_width() const {
-        return user_border_width_;
-    }
-
-    signal<void()> & signal_check() {
-        return signal_check_;
-    }
-
-    signal<void()> & signal_uncheck() {
-        return signal_uncheck_;
-    }
+    signal<void()> & signal_check() { return signal_check_; }
+    signal<void()> & signal_uncheck() { return signal_uncheck_; }
 
 private:
 

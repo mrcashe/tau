@@ -71,7 +71,7 @@ Font_ptr Pixmap_painter_xcb::select_font(const ustring & font_spec) {
 
         Vector dpi(72, 72);
         if (pixmap_) { dpi = pixmap_->ppi(); }
-        state().font = std::make_shared<Font_posix>(ffp, font_size >= 1.0 ? font_size : 10.0, std::max(dpi.x(), dpi.y()));
+        state().font = std::make_shared<Font_posix>(ffp, font_spec, font_size >= 1.0 ? font_size : 10.0, std::max(dpi.x(), dpi.y()));
     }
 
     return state().font;
