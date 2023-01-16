@@ -37,6 +37,10 @@ public:
 
     static Theme_posix_ptr root_posix();
 
+    Font_face_ptr create_font_face(const ustring & spec);
+    void cache_font(Font_ptr font, const ustring & spec);
+    Font_ptr uncache_font(const ustring & spec, unsigned dpi);
+
 protected:
 
     // Overrides Theme_impl.
@@ -44,6 +48,10 @@ protected:
 
     // Overrides Theme_impl.
     void sweep() override;
+
+private:
+
+    void cleanup_font_cache();
 };
 
 } // namespace tau

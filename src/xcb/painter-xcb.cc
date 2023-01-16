@@ -27,7 +27,7 @@
 #include <tau/exception.hh>
 #include <brush-impl.hh>
 #include <pen-impl.hh>
-#include <posix/font-utils-posix.hh>
+#include <posix/theme-posix.hh>
 #include "font-xcb.hh"
 #include "painter-xcb.hh"
 #include "pixmap-xcb.hh"
@@ -358,7 +358,9 @@ void Painter_xcb::set_font(Font_ptr font) {
 // Overrides pure Painter.
 Font_ptr Painter_xcb::select_font(const ustring & font_spec) {
     if (state().font_spec != font_spec) {
-        if (Font_ptr font = uncache_font(font_spec, dp_->dpi())) {
+        auto theme = Theme_posix::root_posix();
+
+        if (Font_ptr font = theme->uncache_font(font_spec, dp_->dpi())) {
             state().font = font;
             state().font_spec = font_spec;
         }
@@ -366,11 +368,11 @@ Font_ptr Painter_xcb::select_font(const ustring & font_spec) {
         else {
             double font_size = font_size_from_spec(font_spec);
             state().font_spec = font_spec;
-            Font_face_ptr ffp = create_font_face(font_spec);
+            Font_face_ptr ffp = theme->create_font_face(font_spec);
 
             if (!ffp) {
                 state().font_spec = Font::normal();
-                ffp = create_font_face(state().font_spec);
+                ffp = theme->create_font_face(state().font_spec);
             }
 
             if (!ffp) {
@@ -378,7 +380,7 @@ Font_ptr Painter_xcb::select_font(const ustring & font_spec) {
             }
 
             state().font = std::make_shared<Font_xcb>(ffp, font_size >= 1.0 ? font_size : 10.0, dp_);
-            cache_font(state().font, font_spec);
+            theme->cache_font(state().font, font_spec);
         }
     }
 

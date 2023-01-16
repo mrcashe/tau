@@ -28,7 +28,7 @@
 #include <tau/string.hh>
 #include <brush-impl.hh>
 #include <pixmap-impl.hh>
-#include <posix/font-utils-posix.hh>
+#include <posix/theme-posix.hh>
 #include "pixmap-painter-xcb.hh"
 #include "font-xcb.hh"
 
@@ -57,11 +57,12 @@ Font_ptr Pixmap_painter_xcb::select_font(const ustring & font_spec) {
     if (state().font_spec != font_spec) {
         double font_size = font_size_from_spec(font_spec);
         state().font_spec = font_spec;
-        Font_face_ptr ffp = create_font_face(font_spec);
+        auto theme = Theme_posix::root_posix();
+        Font_face_ptr ffp = theme->create_font_face(font_spec);
 
         if (!ffp) {
             state().font_spec = Font::normal();
-            ffp = create_font_face(state().font_spec);
+            ffp = theme->create_font_face(state().font_spec);
         }
 
         if (!ffp) {
