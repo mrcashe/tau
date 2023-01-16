@@ -42,11 +42,11 @@ using Lock = std::lock_guard<Mutex>;
 
 namespace {
 
-using Facemap = std::map<tau::ustring, tau::ustring>;
+using Faces = std::list<tau::ustring>;
 
 struct Family_holder {
     tau::ustring        family;
-    Facemap             faces;
+    Faces               faces;
 };
 
 struct Font_holder {
@@ -84,22 +84,6 @@ std::string font_family_key(const tau::ustring & family_name) {
 
 std::string partial_key(const tau::ustring & family, const tau::ustring & face) {
     return tau::str_toupper(tau::str_trim(tau::str_format(family, ' ', face)));
-}
-
-tau::Font_face_ptr create_font_face_nested(const tau::ustring & family, const tau::ustring & facename) {
-    Lock lock(mutex_);
-    auto i = reg_.find(partial_key(family, facename));
-
-    if (i != reg_.end()) {
-        if (!i->second.faceptr) {
-            if (!i->second.ttf) { i->second.ttf = tau::Font_file::create(i->second.path); }
-            i->second.faceptr = i->second.ttf->face(i->second.ttf, family, facename);
-        }
-
-        return i->second.faceptr;
-    }
-
-    return nullptr;
 }
 
 void init_font_dir(const tau::ustring & dir) {
@@ -151,8 +135,8 @@ void init_font_dir(const tau::ustring & dir) {
                                         hol = &(i->second);
                                     }
 
-                                    if (hol->faces.end() == hol->faces.find(face)) {
-                                        hol->faces[face] = fp;
+                                    if (hol->faces.end() == std::find(hol->faces.begin(), hol->faces.end(), face)) {
+                                        hol->faces.push_back(face);
                                     }
                                 }
                             }
@@ -234,9 +218,9 @@ std::vector<ustring> Font::list_faces(const ustring & family) {
     auto i = families_.find(font_family_key(family));
 
     if (i != families_.end()) {
-        for (auto & p: i->second.faces) {
-            if (!str_similar(p.first, v)) {
-                v.push_back(p.first);
+        for (auto & s: i->second.faces) {
+            if (!str_similar(s, v)) {
+                v.push_back(s);
             }
         }
     }
@@ -246,44 +230,18 @@ std::vector<ustring> Font::list_faces(const ustring & family) {
 
 Font_face_ptr create_font_face(const ustring & spec) {
     init_fonts();
+    Lock lock(mutex_);
+    auto v = font_spec_explode(spec);
+    ustring family = font_family_from_spec(v), face = font_face_from_spec(v);
+    auto i = reg_.find(partial_key(family, face));
 
-    auto specv = font_spec_explode(spec);
-    ustring family = font_family_from_spec(specv);
-    // std::cout << "cff: " << font_face_from_spec(specv) << '\n';
-    Font_face_ptr facep = create_font_face_nested(family, font_face_from_spec(specv));
-    if (facep) { return facep; }
-
-    // Not found, trying to append face specification to family.
-
-    auto famv = str_explode(family, ' ');
-
-    if (!famv.empty()) {
-        auto facev = str_explode(font_face_from_spec(specv), ' ');
-        std::vector<ustring> fv;
-
-        for (unsigned n = 0; n < facev.size(); ++n) {
-            fv.push_back(facev[n]);
-            facep = create_font_face_nested(famv[0]+" "+str_implode(fv, ' '), "Regular");
-            if (facep) { return facep; }
-        }
-    }
-
-    // Not found, trying to replace "Italic" face by "Oblique".
-
-    auto i = specv.begin();
-
-    while (i != specv.end()) {
-        if (str_similar(*i, "Italic")) {
-            break;
+    if (i != reg_.end()) {
+        if (!i->second.faceptr) {
+            if (!i->second.ttf) { i->second.ttf = Font_file::create(i->second.path); }
+            i->second.faceptr = i->second.ttf->face(i->second.ttf, family, face);
         }
 
-        ++i;
-    }
-
-    if (i != specv.end()) {
-        *i = "Oblique";
-        facep = create_font_face_nested(family, font_face_from_spec(specv));
-        if (facep) { return facep; }
+        return i->second.faceptr;
     }
 
     return nullptr;

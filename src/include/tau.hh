@@ -29,7 +29,6 @@
 #include <tau/absolute.hh>
 #include <tau/accel.hh>
 #include <tau/action.hh>
-#include <tau/apiver.hh>
 #include <tau/base64.hh>
 #include <tau/box.hh>
 #include <tau/brush.hh>

@@ -497,7 +497,7 @@ fi
 
 tmp=$(mktemp)
 cp "$supdir/LICENSE.cct" $tmp
-echo "#include <tau/apiver.hh>">>$tmp
+echo "#include <tau/sys.hh>">>$tmp
 echo "">>$tmp
 echo "namespace tau {">>$tmp
 echo "">>$tmp

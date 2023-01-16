@@ -34,6 +34,18 @@
 
 namespace tau {
 
+/// Major component of API version.
+/// @ingroup sys_group
+extern const int Major_;
+
+/// Minor component of API version.
+/// @ingroup sys_group
+extern const int Minor_;
+
+/// Micro component of API version.
+/// @ingroup sys_group
+extern const int Micro_;
+
 /// @ingroup path_group
 /// Build path from two components.
 ustring path_build(const ustring & s1, const ustring & s2);

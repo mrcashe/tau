@@ -24,7 +24,6 @@
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ----------------------------------------------------------------------------
 
-#include <tau/apiver.hh>
 #include <tau/exception.hh>
 #include <tau/fileinfo.hh>
 #include <tau/font.hh>
