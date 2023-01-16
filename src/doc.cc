@@ -27,173 +27,184 @@
 #include <tau/buffer.hh>
 #include <tau/doc.hh>
 #include <doc-impl.hh>
+#include <cstring>
 
 namespace tau {
 
-Element::Element(Element_data * edata):
-    pdata(edata)
+Element::Element(Element_ptr eptr):
+    impl(eptr)
 {
 }
 
-Element::~Element() {
-    delete pdata;
+Element::operator bool() const {
+    return nullptr != impl;
+}
+
+void Element::reset() {
+    impl.reset();
+}
+
+Element_ptr Element::ptr() {
+    return impl;
+}
+
+Element_cptr Element::ptr() const {
+    return impl;
 }
 
 bool Element::has_attributes() const {
-    return !pdata->attrs.empty();
+    return impl && !impl->attrs.empty();
 }
 
 bool Element::has_attribute(const ustring & attr_name) const {
-    return std::any_of(pdata->attrs.begin(), pdata->attrs.end(), [&attr_name](const std::pair<ustring, ustring> & p) { return attr_name == p.first; } );
+    return impl && std::any_of(impl->attrs.begin(), impl->attrs.end(), [&attr_name](const std::pair<ustring, ustring> & p) { return attr_name == p.first; } );
 }
 
 ustring Element::attribute(const ustring & attr_name) const {
-    auto i = std::find_if(pdata->attrs.begin(), pdata->attrs.end(), [&attr_name](const std::pair<ustring, ustring> & p) { return attr_name == p.first; } );
-    return i != pdata->attrs.end() ? i->second : ustring();
+    return impl ? impl->attribute(attr_name) : ustring();
 }
 
 void Element::set_attribute(const ustring & attr_name, const ustring & attr_value) {
-    auto i = std::find_if(pdata->attrs.begin(), pdata->attrs.end(), [&attr_name](const std::pair<ustring, ustring> & p) { return attr_name == p.first; } );
-
-    if (i != pdata->attrs.end()) {
-        i->first = attr_name;
-        i->second = attr_value;
-        return;
+    if (impl) {
+        impl->set_attribute(attr_name, attr_value);
     }
-
-    pdata->attrs.emplace_back(std::make_pair(attr_name, attr_value));
 }
 
 void Element::remove_attribute(const ustring & attr_name) {
-    for (auto i = pdata->attrs.begin(); i != pdata->attrs.end(); ++i) {
-        if (i->first == attr_name) {
-            pdata->attrs.erase(i);
-            return;
-        }
+    if (impl) {
+        impl->remove_attribute(attr_name);
     }
 }
 
-std::vector<ustring> Element::list_attributes() const {
+std::vector<ustring> Element::attributes() const {
     std::vector<ustring> v;
 
-    for (auto & attr: pdata->attrs) {
-        v.push_back(attr.first);
+    if (impl) {
+        for (auto & attr: impl->attrs) {
+            v.push_back(attr.first);
+        }
     }
 
     return v;
 }
 
 void Element::clear_attributes() {
-    pdata->attrs.clear();
+    if (impl) {
+        impl->attrs.clear();
+    }
 }
 
-Text_element::Text_element():
-    Element(new Text_element_data)
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+
+Text_element::Text_element(Text_element_ptr eptr):
+    Element(eptr)
 {
 }
 
 ustring Text_element::text() const {
-    return TEXT_DATA->text;
+    return TEXT_IMPL->str;
 }
 
-void Text_element::assign(const ustring & text) {
-    TEXT_DATA->text = text;
+void Text_element::assign(const ustring & str) {
+    TEXT_IMPL->str = str;
 }
 
-Data_element::Data_element():
-    Element(new Data_element_data)
+void Text_element::assign(const std::u32string & str) {
+    TEXT_IMPL->str = str;
+}
+
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+
+Data_element::Data_element(Data_element_ptr eptr):
+    Element(eptr)
 {
 }
 
-const std::vector<char32_t> & Data_element::data() const {
-    return DATA_DATA->chars;
+const uint8_t * Data_element::data() const {
+    return DATA_IMPL->data.data();
 }
 
-void Data_element::assign(const ustring & str) {
-    DATA_DATA->chars.resize(str.size());
-    std::size_t i = 0;
-    for (char32_t uc: str) { DATA_DATA->chars[i++] = uc; }
+std::size_t Data_element::bytes() const {
+    return DATA_IMPL->data.size();
 }
 
-void Data_element::assign(const std::vector<char32_t> & chars) {
-    DATA_DATA->chars = chars;
+void Data_element::assign(const uint8_t * pdata, std::size_t nbytes) {
+    DATA_IMPL->data.resize(nbytes);
+    std::memcpy(DATA_IMPL->data.data(), pdata, nbytes);
 }
 
-Inst_element::Inst_element():
-    Element(new Inst_element_data)
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+
+Inst_element::Inst_element(Inst_element_ptr eptr):
+    Element(eptr)
 {
 }
 
 ustring Inst_element::name() const {
-    return INST_DATA->name;
+    return INST_IMPL->name;
 }
 
-Decl_element::Decl_element():
-    Element(new Decl_element_data)
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+
+Decl_element::Decl_element(Decl_element_ptr eptr):
+    Element(eptr)
 {
 }
 
 ustring Decl_element::encoding() const {
-    return DECL_DATA->encoding;
+    return DECL_IMPL->encoding;
 }
 
 unsigned Decl_element::version_major() const {
-    return DECL_DATA->version_major;
+    return DECL_IMPL->version_major;
 }
 
 unsigned Decl_element::version_minor() const {
-    return DECL_DATA->version_minor;
+    return DECL_IMPL->version_minor;
 }
 
 bool Decl_element::standalone() const {
-    return DECL_DATA->standalone;
+    return DECL_IMPL->standalone;
 }
 
-Node_element::Node_element(const ustring & name):
-    Element(new Node_element_data)
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+
+Node_element::Node_element(Node_element_ptr eptr):
+    Element(eptr)
 {
-    NODE_DATA->name = name;
-}
-
-Node_element::Node_element(Element_data * ndata):
-    Element(ndata)
-{
-}
-
-Node_element::~Node_element() {
 }
 
 ustring Node_element::name() const {
-    return NODE_DATA->name;
+    return NODE_IMPL->name;
 }
 
-Node_element_ptr Node_element::append_node(const ustring & name) {
-    auto node = Node_element_ptr(new Node_element(name));
-    NODE_DATA->elems.push_back(node);
-    return node;
+Node_element Node_element::append_node(const ustring & name) {
+    return NODE_IMPL->append_node(name);
 }
 
-Text_element_ptr Node_element::append_text(const ustring & text) {
-    auto elem = Text_element_ptr(new Text_element);
-    auto edata = static_cast<Text_element_data *>(elem->pdata);
-    edata->text = text;
-    NODE_DATA->elems.push_back(elem);
-    return elem;
+Text_element Node_element::append_text(const ustring & str) {
+    return NODE_IMPL->append_text(str);
 }
 
-std::list<Element_ptr> Node_element::elements() {
-    std::list<Element_ptr> v;
-    v = NODE_DATA->elems;
+std::vector<Element> Node_element::elements() {
+    std::vector<Element> v;
+    v.reserve(NODE_IMPL->elems.size());
+    for (auto eptr: NODE_IMPL->elems) { v.push_back(eptr); }
     return v;
 }
 
-std::vector<Node_element_ptr> Node_element::nodes(const ustring & name) {
-    std::vector<Node_element_ptr> v;
+std::vector<Node_element> Node_element::nodes(const ustring & name) {
+    std::vector<Node_element> v;
 
-    for (auto ep: NODE_DATA->elems) {
-        if (auto np = std::dynamic_pointer_cast<Node_element>(ep)) {
-            if (name.empty() || name == np->name()) {
-                v.push_back(np);
+    for (auto eptr: NODE_IMPL->elems) {
+        if (auto nptr = std::dynamic_pointer_cast<Node_element_impl>(eptr)) {
+            if (name.empty() || name == nptr->name) {
+                v.push_back(Node_element(nptr));
             }
         }
     }
@@ -202,85 +213,121 @@ std::vector<Node_element_ptr> Node_element::nodes(const ustring & name) {
 }
 
 bool Node_element::empty() const {
-    return NODE_DATA->elems.empty();
+    return NODE_IMPL->elems.empty();
 }
 
 void Node_element::clear() {
-    NODE_DATA->elems.clear();
+    NODE_IMPL->elems.clear();
 }
 
-Doctype::Doctype() {}
-Doctype::~Doctype() {}
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+
+Doctype::Doctype(Doctype_ptr dptr):
+    impl(dptr)
+{
+}
 
 ustring Doctype::name() const {
-    return name_v();
+    return impl ? impl->name_ : ustring();
 }
 
 bool Doctype::is_public() const {
-    return is_public_v();
+    return impl && impl->public_;
 }
 
 ustring Doctype::location() const {
-    return location_v();
+    return impl ? impl->location_ : ustring();
 }
 
 ustring Doctype::owner() const {
-    return owner_v();
+    return impl ? impl->owner_ : ustring();
 }
 
 ustring Doctype::description() const {
-    return description_v();
+    return impl ? impl->description_ : ustring();
 }
 
 ustring Doctype::lang() const {
-    return lang_v();
+    return impl ? impl->lang_ : ustring();
 }
 
-Doc::Doc() {}
-Doc::~Doc() {}
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
-void Doc::load(Buffer buf) {
-    load_v(buf);
+Doc::Doc(Doc_ptr dptr):
+    impl(dptr)
+{
 }
 
-Decl_element_ptr Doc::decl() {
-    return decl_v();
+Doc::operator bool() const {
+    return nullptr != impl;
 }
 
-Doctype_ptr Doc::doctype() {
-    return doctype_v();
+void Doc::reset() {
+    impl.reset();
 }
 
-Node_element_ptr Doc::root() {
-    return root_v();
+Decl_element Doc::decl() {
+    return impl ? impl->decl() : Decl_element();
 }
 
-Node_element_ptr Doc::create_root(const ustring & root_name) {
-    return create_root_v(root_name);
+Doctype Doc::doctype() {
+    return impl ? impl->doctype() : Doctype();
 }
 
-std::list<Inst_element_ptr> Doc::instrs() {
-    return instrs_v();
+Node_element Doc::root() {
+    return impl ? impl->root() : Node_element();
+}
+
+Node_element Doc::create_root(const ustring & root_name) {
+    return impl ? create_root(root_name) : Node_element();
+}
+
+std::vector<Inst_element> Doc::instructions() {
+    std::vector<Inst_element> v;
+
+    if (impl) {
+        for (auto i: impl->instructions()) {
+            v.push_back(i);
+        }
+    }
+
+    return v;
 }
 
 void Doc::set_entity(const ustring & name, const ustring & value) {
-    set_entity_v(name, value);
+    if (impl) { set_entity(name, value); }
 }
 
 void Doc::remove_entity(const ustring & name) {
-    remove_entity_v(name);
+    if (impl) { impl->remove_entity(name); }
 }
 
 ustring Doc::entity(const ustring & name) const {
-    return entity_v(name);
+    return impl ? impl->entity(name) : ustring();
 }
 
 bool Doc::has_entity(const ustring & name) const {
-    return has_entity_v(name);
+    return impl && impl->has_entity(name);
 }
 
-void Doc::save(Buffer buf, unsigned indent_size) const {
-    return save_v(buf, indent_size);
+void Doc::save(Buffer buf, int indent_size) const {
+    if (impl) { impl->save(buf, indent_size); }
+}
+
+void Doc::save_to_file(const ustring & path, int indent_size) const {
+    if (impl) { impl->save_to_file(path, indent_size); }
+}
+
+// static
+Doc Doc::create_xml(bool standalone, const ustring & encoding, int major, int minor) {
+    return Doc(Doc_impl::create_xml(standalone, encoding, major, minor));
+}
+
+// static
+Doc Doc::load_from_file(const ustring & path) {
+    return Doc(Doc_impl::load_from_file(path));
 }
 
 } // namespace tau

@@ -113,7 +113,7 @@ protected:
     void del();
     void del_char();
     void del_selection();
-    void del_range(Buffer_iter b, Buffer_iter e);
+    void del_range(Buffer_citer b, Buffer_citer e);
 
 private:
 
@@ -128,9 +128,9 @@ private:
     void on_insert(bool replace);
     void on_display();
     void on_paste_text(const ustring & s);
-    void on_edit_insert(Buffer_iter b, Buffer_iter e);
-    void on_edit_replace(Buffer_iter b, Buffer_iter e, const std::u32string & replaced);
-    void on_edit_erase(Buffer_iter b, Buffer_iter e, const std::u32string & erased);
+    void on_edit_insert(Buffer_citer b, Buffer_citer e);
+    void on_edit_replace(Buffer_citer b, Buffer_citer e, const std::u32string & replaced);
+    void on_edit_erase(Buffer_citer b, Buffer_citer e, const std::u32string & erased);
 };
 
 } // namespace tau

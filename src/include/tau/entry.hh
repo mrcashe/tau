@@ -88,7 +88,7 @@ public:
     void select_all();
 
     /// Select text.
-    void select(Buffer_iter b, Buffer_iter e);
+    void select(Buffer_citer b, Buffer_citer e);
 
     /// Test if has selection.
     bool has_selection() const;
@@ -97,13 +97,13 @@ public:
     void unselect();
 
     /// Set caret position.
-    void move_to(const Buffer_iter & pos);
+    void move_to(const Buffer_citer & pos);
 
     /// Set caret position.
     void move_to(std::size_t row, std::size_t col);
 
     /// Get caret position.
-    Buffer_iter caret() const;
+    Buffer_citer caret() const;
 
     /// Append widget after cycling widget.
     /// @throw user_error if widget already inserted into another container.

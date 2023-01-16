@@ -41,6 +41,9 @@ public:
     /// Default constructor.
     Absolute();
 
+    /// Constructor with implementation pointer.
+    Absolute(Widget_ptr wp);
+
     /// Put widget at the specified position and give them specified size.
     /// @param w widget to be put.
     /// @param pos position where widget will be placed.
@@ -115,10 +118,6 @@ public:
 
     /// Test if empty.
     bool empty() const;
-
-protected:
-
-    Absolute(Widget_ptr wp);
 };
 
 } // namespace tau

@@ -100,11 +100,11 @@ Fileman_impl::Fileman_impl(Fileman_mode fm_mode, const ustring & path):
     // Buttons "Open"/"Save" & "Cancel".
     if (FILEMAN_BROWSE != fm_mode_) {
         apply_action_.set_label(FILEMAN_SAVE == fm_mode_ ? "Save" : "Load");
-        Button_ptr button = std::make_shared<Button_impl>(apply_action_, true);
+        Button_ptr button = std::make_shared<Button_impl>(apply_action_);
         table_->put(button, 2, 1, 1, 1, true, true);
         table_->align(button.get(), ALIGN_FILL, ALIGN_CENTER);
 
-        button = std::make_shared<Button_impl>(cancel_action_, true);
+        button = std::make_shared<Button_impl>(cancel_action_);
         table_->put(button, 2, 2, 1, 1, true, true);
         table_->align(button.get(), ALIGN_FILL, ALIGN_CENTER);
     }
@@ -113,17 +113,17 @@ Fileman_impl::Fileman_impl(Fileman_mode fm_mode, const ustring & path):
     tools->hint_margin(2, 2, 0, 0);
     table_->put(tools, 3, 0, 1, 1, true, false);
 
-    up_button_ = std::make_shared<Button_impl>(updir_action_, false);
+    up_button_ = std::make_shared<Button_impl>(updir_action_, ACTION_NO_LABEL);
     tools->append(up_button_, true);
     tools->append(std::make_shared<Separator_impl>(), true);
-    tools->append(std::make_shared<Button_impl>(prev_action_, false), true);
-    tools->append(std::make_shared<Button_impl>(next_action_, false), true);
+    tools->append(std::make_shared<Button_impl>(prev_action_, ACTION_NO_LABEL), true);
+    tools->append(std::make_shared<Button_impl>(next_action_, ACTION_NO_LABEL), true);
     tools->append(std::make_shared<Separator_impl>(), true);
-    tools->append(std::make_shared<Button_impl>(refresh_action_, false), true);
-    tools->append(std::make_shared<Toggle_impl>(hidden_action_, false), true);
-    tools->append(std::make_shared<Button_impl>(mkdir_action_, false), true);
+    tools->append(std::make_shared<Button_impl>(refresh_action_, ACTION_NO_LABEL), true);
+    tools->append(std::make_shared<Toggle_impl>(hidden_action_, ACTION_NO_LABEL), true);
+    tools->append(std::make_shared<Button_impl>(mkdir_action_, ACTION_NO_LABEL), true);
     tools->append(std::make_shared<Separator_impl>(), true);
-    conf_button_ = std::make_shared<Button_impl>(configure_action_, false);
+    conf_button_ = std::make_shared<Button_impl>(configure_action_, ACTION_NO_LABEL);
     tools->append(conf_button_, true);
 
     prev_action_.disable();
@@ -223,7 +223,7 @@ void Fileman_impl::on_file_select(const ustring & filename) {
     else { apply_action_.enable(); }
 
     entry_from_selection();
-    entry_->move_to(entry_->buffer().end());
+    entry_->move_to(entry_->buffer().cend());
 }
 
 void Fileman_impl::on_file_unselect(const ustring & filename) {
@@ -419,7 +419,7 @@ void Fileman_impl::on_entry_activate(const ustring & s) {
 bool Fileman_impl::on_entry_mouse_down(int mbt, int mm, const Point & pt) {
     if (MBT_LEFT == mbt) {
         if (!entry_->empty()) {
-            entry_->move_to(entry_->buffer().end());
+            entry_->move_to(entry_->buffer().cend());
             entry_->select_all();
         }
 

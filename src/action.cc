@@ -189,6 +189,10 @@ void Master_action::clear_accels() {
     accels_.clear();
 }
 
+bool Master_action::has_tooltip() const {
+    return !tooltip_.empty();
+}
+
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
 
@@ -334,6 +338,10 @@ void Action_base::set_icon_name(const ustring & icon_name) {
         icon_name_ = icon_name;
         signal_icon_changed_(icon_name_);
     }
+}
+
+bool Action_base::has_tooltip() const {
+    return !tooltip_.empty();
 }
 
 void Action_base::set_tooltip(const ustring & tooltip) {

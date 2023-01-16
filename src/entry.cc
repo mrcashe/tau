@@ -99,7 +99,7 @@ void Entry::select_all() {
     ENTRY_IMPL->select_all();
 }
 
-void Entry::select(Buffer_iter b, Buffer_iter e) {
+void Entry::select(Buffer_citer b, Buffer_citer e) {
     ENTRY_IMPL->select(b, e);
 }
 
@@ -111,7 +111,7 @@ void Entry::unselect() {
     ENTRY_IMPL->unselect();
 }
 
-void Entry::move_to(const Buffer_iter & pos) {
+void Entry::move_to(const Buffer_citer & pos) {
     ENTRY_IMPL->move_to(pos);
 }
 
@@ -119,7 +119,7 @@ void Entry::move_to(std::size_t row, std::size_t col) {
     ENTRY_IMPL->move_to(row, col);
 }
 
-Buffer_iter Entry::caret() const {
+Buffer_citer Entry::caret() const {
     return ENTRY_IMPL->caret();
 }
 

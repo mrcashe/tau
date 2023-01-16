@@ -629,12 +629,12 @@ private:
     void on_view_ctr() {
         if (ctr_visible_) {
             ctr_visible_ = false;
-            if (ctr_button_.toggled()) { ctr_button_.toggle(); }
+            if (ctr_button_.get()) { ctr_button_.toggle(); }
         }
 
         else {
             ctr_visible_ = true;
-            if (!ctr_button_.toggled()) { ctr_button_.toggle(); }
+            if (!ctr_button_.get()) { ctr_button_.toggle(); }
         }
 
         kf_.set_boolean(kf_.section("view"), "contour", ctr_visible_);
@@ -644,12 +644,12 @@ private:
     void on_view_pix() {
         if (pix_visible_) {
             pix_visible_ = false;
-            if (pix_button_.toggled()) { pix_button_.toggle(); }
+            if (pix_button_.get()) { pix_button_.toggle(); }
         }
 
         else {
             pix_visible_ = true;
-            if (!pix_button_.toggled()) { pix_button_.toggle(); }
+            if (!pix_button_.get()) { pix_button_.toggle(); }
         }
 
         kf_.set_boolean(kf_.section("view"), "pixmap", pix_visible_);

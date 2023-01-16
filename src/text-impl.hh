@@ -62,7 +62,7 @@ public:
 
     bool has_selection() const;
     ustring selection() const;
-    void select(Buffer_iter b, Buffer_iter e);
+    void select(Buffer_citer b, Buffer_citer e);
     void select_all();
     void unselect();
 
@@ -71,10 +71,10 @@ public:
     Size text_size(const ustring & s);
     Size text_size(const std::u32string & s);
 
-    void move_to(const Buffer_iter pos);
+    void move_to(const Buffer_citer pos);
     void move_to(std::size_t row, std::size_t col);
-    Buffer_iter caret() const;
-    Buffer_iter iter(std::size_t row, std::size_t col) const;
+    Buffer_citer caret() const;
+    Buffer_citer iter(std::size_t row, std::size_t col) const;
     std::size_t lines() const;
 
     void enable_caret();
@@ -131,9 +131,9 @@ public:
 protected:
 
     Buffer              buffer_;
-    Buffer_iter         caret_;                 // Current caret position.
-    Buffer_iter         sel_;                   // Selection start.
-    Buffer_iter         esel_;                  // Selection end.
+    Buffer_citer         caret_;                 // Current caret position.
+    Buffer_citer         sel_;                   // Selection start.
+    Buffer_citer         esel_;                  // Selection end.
 
     bool                insert_ = true;
     bool                select_allowed_ = false;
@@ -176,7 +176,7 @@ protected:
 
     void show_caret();
     void hide_caret();
-    void move_caret(Buffer_iter i);
+    void move_caret(Buffer_citer i);
     void move_caret(std::size_t row, std::size_t col);
     void scroll_to_caret();
     void hint_x();
@@ -248,8 +248,8 @@ private:
     using Lines = std::vector<Line>;
 
     Lines               lines_;
-    Buffer_iter         msel_;                  // Mouse selection start.
-    Buffer_iter         emsel_;                 // Mouse selection last.
+    Buffer_citer         msel_;                  // Mouse selection start.
+    Buffer_citer         emsel_;                 // Mouse selection last.
     bool                caret_visible_ = false;
     bool                caret_exposed_ = false;
 
@@ -289,7 +289,7 @@ private:
     void wipe_caret();
     void refresh_caret();
 
-    Buffer_iter iter_from_point(const Point & pt);
+    Buffer_citer iter_from_point(const Point & pt);
     int x_at_col(const Line & row, std::size_t col) const;
     std::size_t col_at_x(const Line & row, int x) const;
     std::size_t hinted_pos(std::size_t ri);
@@ -303,7 +303,7 @@ private:
     void align_all();
     void load_lines(std::size_t first, std::size_t last);
     void translate_lines(std::size_t first, std::size_t last, int dy);
-    void insert_range(Buffer_iter b, Buffer_iter e);
+    void insert_range(Buffer_citer b, Buffer_citer e);
     void paint_line(const Line & line, std::size_t ln, std::size_t pos, Painter pr);
     void paint_ellipsized(const Line & line, Painter pr);
     void redraw(const Rect & r, Painter pr=Painter());
@@ -314,9 +314,9 @@ private:
     void update_caret();
     void update_painter();
     void update_font();
-    void update_range(Buffer_iter begin, Buffer_iter end);
+    void update_range(Buffer_citer begin, Buffer_citer end);
     void update_requisition();
-    void update_selection(Buffer_iter i, Buffer_iter j);
+    void update_selection(Buffer_citer i, Buffer_citer j);
     void update_va();
 
     bool on_paint(Painter pr, const Rect & inval);
@@ -327,13 +327,13 @@ private:
     void on_caret_timer();
     bool on_take_focus();
 
-    void on_buffer_insert(Buffer_iter b, Buffer_iter e);
-    void on_buffer_replace(Buffer_iter b, Buffer_iter e, const std::u32string & replaced);
-    void on_buffer_erase(Buffer_iter b, Buffer_iter e, const std::u32string & erased);
+    void on_buffer_insert(Buffer_citer b, Buffer_citer e);
+    void on_buffer_replace(Buffer_citer b, Buffer_citer e, const std::u32string & replaced);
+    void on_buffer_erase(Buffer_citer b, Buffer_citer e, const std::u32string & erased);
 
-    void on_buffer_insert_move(Buffer_iter b, Buffer_iter e);
-    void on_buffer_replace_move(Buffer_iter b, Buffer_iter e, const std::u32string & replaced);
-    void on_buffer_erase_move(Buffer_iter b, Buffer_iter e, const std::u32string & erased);
+    void on_buffer_insert_move(Buffer_citer b, Buffer_citer e);
+    void on_buffer_replace_move(Buffer_citer b, Buffer_citer e, const std::u32string & replaced);
+    void on_buffer_erase_move(Buffer_citer b, Buffer_citer e, const std::u32string & erased);
 };
 
 } // namespace tau

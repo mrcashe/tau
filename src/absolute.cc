@@ -37,7 +37,7 @@ Absolute::Absolute():
 }
 
 Absolute::Absolute(Widget_ptr wp):
-    Container(wp)
+    Container(std::dynamic_pointer_cast<Absolute_impl>(wp))
 {
 }
 

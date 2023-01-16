@@ -134,7 +134,7 @@ void Edit_impl::enter() {
 
 void Edit_impl::del_char() {
     if (edit_allowed_) {
-        Buffer_iter e(caret_);
+        Buffer_citer e(caret_);
         if (e.eol()) { e.move_forward_line(); }
         else { ++e; }
         del_range(caret_, e);
@@ -155,7 +155,7 @@ void Edit_impl::backspace() {
         }
 
         else {
-            Buffer_iter i(caret_);
+            Buffer_citer i(caret_);
             move_left();
             if (caret_ < i) { del_char(); }
         }
@@ -177,7 +177,7 @@ void Edit_impl::enter_text(const ustring & str) {
     }
 }
 
-void Edit_impl::del_range(Buffer_iter b, Buffer_iter e) {
+void Edit_impl::del_range(Buffer_citer b, Buffer_citer e) {
     if (edit_allowed_ && !buffer_.locked() && b && e && b != e) {
         if (e < b) { std::swap(b, e); }
         unselect();
@@ -256,15 +256,15 @@ void Edit_impl::undo() {
             edit_erase_cx_.block();
 
             if (UNDO_ERASE == u.type) {
-                buffer_.insert(buffer_.iter(u.row1, u.col1), u.str1);
+                buffer_.insert(buffer_.citer(u.row1, u.col1), u.str1);
             }
 
             else if (UNDO_INSERT == u.type) {
-                buffer_.erase(buffer_.iter(u.row1, u.col1), buffer_.iter(u.row2, u.col2));
+                buffer_.erase(buffer_.citer(u.row1, u.col1), buffer_.citer(u.row2, u.col2));
             }
 
             else if (UNDO_REPLACE == u.type) {
-                buffer_.replace(buffer_.iter(u.row1, u.col1), u.str1);
+                buffer_.replace(buffer_.citer(u.row1, u.col1), u.str1);
             }
 
             edit_insert_cx_.unblock();
@@ -284,7 +284,7 @@ void Edit_impl::redo() {
             edit_erase_cx_.block();
 
             if (UNDO_ERASE == u.type) {
-                Buffer_iter b = buffer_.iter(u.row1, u.col1), e = buffer_.iter(u.row2, u.col2);
+                Buffer_citer b = buffer_.citer(u.row1, u.col1), e = buffer_.citer(u.row2, u.col2);
 
                 if (buffer_.length(b, e) != u.str1.size()) {
                     e = b;
@@ -299,11 +299,11 @@ void Edit_impl::redo() {
             }
 
             else if (UNDO_INSERT == u.type) {
-                buffer_.insert(buffer_.iter(u.row1, u.col1), u.str1);
+                buffer_.insert(buffer_.citer(u.row1, u.col1), u.str1);
             }
 
             else if (UNDO_REPLACE == u.type) {
-                buffer_.replace(buffer_.iter(u.row1, u.col1), u.str2);
+                buffer_.replace(buffer_.citer(u.row1, u.col1), u.str2);
             }
 
             edit_insert_cx_.unblock();
@@ -318,7 +318,7 @@ void Edit_impl::split_undo() {
     split_undo_ = true;
 }
 
-void Edit_impl::on_edit_insert(Buffer_iter b, Buffer_iter e) {
+void Edit_impl::on_edit_insert(Buffer_citer b, Buffer_citer e) {
     std::u32string str = buffer_.text32(b, e);
 
     if (!str.empty()) {
@@ -346,7 +346,7 @@ void Edit_impl::on_edit_insert(Buffer_iter b, Buffer_iter e) {
     }
 }
 
-void Edit_impl::on_edit_replace(Buffer_iter b, Buffer_iter e, const std::u32string & replaced) {
+void Edit_impl::on_edit_replace(Buffer_citer b, Buffer_citer e, const std::u32string & replaced) {
     std::u32string str = buffer_.text32(b, e);
 
     if (!str.empty()) {
@@ -376,7 +376,7 @@ void Edit_impl::on_edit_replace(Buffer_iter b, Buffer_iter e, const std::u32stri
     }
 }
 
-void Edit_impl::on_edit_erase(Buffer_iter b, Buffer_iter e, const std::u32string & erased) {
+void Edit_impl::on_edit_erase(Buffer_citer b, Buffer_citer e, const std::u32string & erased) {
     cutoff_redo();
 
     if (!split_undo_ && !undo_.empty() && UNDO_ERASE == undo_.back().type) {

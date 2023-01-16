@@ -41,46 +41,55 @@ namespace tau {
 class Element {
 public:
 
-    virtual ~Element();
+    /// Creates a pure element.
+    Element() = default;
 
+    /// Copy constructor.
+    Element(const Element & other) = default;
+
+    /// Copy operator.
+    Element & operator=(const Element & other) = default;
+
+    /// Constructor with an opaque implementation object.
+    Element(Element_ptr eptr);
+
+    /// Test if pure.
+    operator bool() const;
+
+    /// Reset implementation pointer.
+    void reset();
+
+    /// Get implementation object.
+    Element_ptr ptr();
+
+    /// Get implementation object.
+    Element_cptr ptr() const;
+
+    /// Test for attributes existance.
     bool has_attributes() const;
-    std::vector<ustring> list_attributes() const;
+
+    /// List attributes.
+    std::vector<ustring> attributes() const;
+
+    /// Test if certain attribute exists.
     bool has_attribute(const ustring & attr_name) const;
+
+    /// Get attribute by name.
     ustring attribute(const ustring & attr_name) const;
+
+    /// Set attribute value.
     void set_attribute(const ustring & attr_name, const ustring & attr_value);
+
+    /// Remove attribute.
     void remove_attribute(const ustring & attr_name);
+
+    /// Remove all attributes.
     void clear_attributes();
 
 protected:
 
     /// @private
-    Element(Element_data * edata);
-
-    /// %Element is non-copyable class.
-    Element(const Element & other) = delete;
-
-    /// %Element is non-copyable class.
-    Element & operator=(const Element & other) = delete;
-
-    /// @private
-    Element_data * pdata;
-};
-
-/// A document element that contains text.
-/// @ingroup text_group
-class Text_element: public Element {
-public:
-
-    /// Get containing text.
-    ustring text() const;
-
-    /// Assign new value.
-    void assign(const ustring & text);
-
-private:
-
-    friend Node_element;
-    Text_element();
+    Element_ptr impl;
 };
 
 /// A document element that contains character data.
@@ -88,38 +97,31 @@ private:
 class Data_element: public Element {
 public:
 
+    /// Create a pure data element.
+    Data_element() = default;
+
+    /// Create data element from the implementation pointer.
+    Data_element(Data_element_ptr eptr);
+
     /// Get containing data.
-    const std::vector<char32_t> & data() const;
+    const uint8_t * data() const;
 
-    /// Assign new value.
-    void assign(const ustring & text);
+    /// Get size in bytes.
+    std::size_t bytes() const;
 
-    /// Assign new value.
-    void assign(const std::vector<char32_t> & chars);
-
-private:
-
-    friend Node_element;
-    Data_element();
-};
-
-/// A document element that contains processing instruction.
-/// @ingroup text_group
-class Inst_element: public Element {
-public:
-
-    ustring name() const;
-
-private:
-
-    friend Doc;
-    friend class Doc_impl;
-    Inst_element();
+    /// Assign new data.
+    void assign(const uint8_t * pdata, std::size_t nbytes);
 };
 
 /// Document declaration element.
 class Decl_element: public Element {
 public:
+
+    /// Create a pure declaration.
+    Decl_element() = default;
+
+    /// Create declaration element from the implementation pointer.
+    Decl_element(Decl_element_ptr eptr);
 
     /// Get encoding.
     ustring encoding() const;
@@ -132,13 +134,21 @@ public:
 
     /// Test if standalone.
     bool standalone() const;
+};
 
-private:
+/// A document element that contains processing instruction.
+/// @ingroup text_group
+class Inst_element: public Element {
+public:
 
-    friend Doc;
-    friend class Doc_impl;
-    Decl_element();
+    /// Create a pure instruction.
+    Inst_element() = default;
 
+    /// Create instruction element from the implementation object.
+    Inst_element(Inst_element_ptr eptr);
+
+    /// Get name.
+    ustring name() const;
 };
 
 /// A document element that can own other elements.
@@ -146,43 +156,56 @@ private:
 class Node_element: public Element {
 public:
 
-   ~Node_element();
+    /// Create a pure node.
+    Node_element() = default;
+
+    /// Create node element from the implementation object.
+    Node_element(Node_element_ptr eptr);
 
     /// Get node name.
     ustring name() const;
 
     /// Append node.
-    Node_element_ptr append_node(const ustring & name);
+    Node_element append_node(const ustring & name);
 
     /// Append text element.
-    Text_element_ptr append_text(const ustring & text);
+    Text_element append_text(const ustring & text);
 
     /// Append data element.
-    Data_element_ptr append_data(const ustring & text);
+    Data_element append_data(const ustring & text);
 
     /// List owned elements.
-    std::list<Element_ptr> elements();
+    std::vector<Element> elements();
 
     /// List nodes with given name.
-    std::vector<Node_element_ptr> nodes(const ustring & name);
+    std::vector<Node_element> nodes(const ustring & name);
 
     /// Test if empty.
     bool empty() const;
 
     /// Remove all elements.
     void clear();
+};
 
-protected:
+/// A document element that contains text.
+/// @ingroup text_group
+class Text_element: public Element {
+public:
 
-    /// @private
-    friend class Doc_impl;
+    /// Create a pure text element.
+    Text_element() = default;
 
-    /// @private
-    Node_element(const ustring & name);
+    /// Create text element from the implementation object.
+    Text_element(Text_element_ptr eptr);
 
-    /// @private
-    Node_element(Element_data * ndata);
+    /// Get containing text.
+    ustring text() const;
 
+    /// Assign new value.
+    void assign(const ustring & text);
+
+    /// Assign new value.
+    void assign(const std::u32string & text);
 };
 
 /// Document type.
@@ -190,7 +213,23 @@ protected:
 class Doctype {
 public:
 
-    virtual ~Doctype();
+    /// Creates a pure document type.
+    Doctype() = default;
+
+    /// Copy constructor.
+    Doctype(const Doctype & other) = default;
+
+    /// Copy operator.
+    Doctype & operator=(const Doctype & other) = default;
+
+    /// Create document type from the implementation pointer.
+    Doctype(Doctype_ptr dptr);
+
+    /// Test if pure.
+    operator bool() const;
+
+    /// Reset implementation pointer.
+    void reset();
 
     /// Get root element name.
     ustring name() const;
@@ -210,31 +249,9 @@ public:
     /// Get public DTD language.
     ustring lang() const;
 
-protected:
+private:
 
-    /// @private
-    friend class Doc_impl;
-
-    /// @private
-    Doctype();
-
-    /// @private
-    virtual ustring name_v() const = 0;
-
-    /// @private
-    virtual bool is_public_v() const = 0;
-
-    /// @private
-    virtual ustring location_v() const = 0;
-
-    /// @private
-    virtual ustring owner_v() const = 0;
-
-    /// @private
-    virtual ustring description_v() const = 0;
-
-    /// @private
-    virtual ustring lang_v() const = 0;
+    Doctype_ptr impl;
 };
 
 /// Document.
@@ -242,13 +259,26 @@ protected:
 class Doc {
 public:
 
-    virtual ~Doc();
+    /// Create a pure document, without implementation.
+    Doc() = default;
 
-    /// Create an empty document.
-    static Doc_ptr create();
+    /// Copy cosntructor.
+    Doc(const Doc & other) = default;
+
+    /// Copy operator.
+    Doc & operator=(const Doc & other) = default;
+
+    /// Test if pure.
+    operator bool() const;
+
+    /// Reset implementation pointer.
+    void reset();
 
     /// Create an XML document with corresponding declaration.
-    static Doc_ptr create_xml(bool standalone, const ustring & encoding=ustring("UTF-8"), unsigned version_major=1, unsigned version_minor=0);
+    static Doc create_xml(bool standalone, const ustring & encoding=ustring("UTF-8"), int version_major=1, int version_minor=0);
+
+    /// Load document from file.
+    static Doc load_from_file(const ustring & path);
 
     /// Load from buffer.
     void load(Buffer buf);
@@ -257,24 +287,30 @@ public:
     /// Append document content to the buffer.
     /// @param buf the buffer.
     /// @param indent_size number of spaces to be added for node indentation.
-    void save(Buffer buf, unsigned indent_size=0) const;
+    void save(Buffer buf, int indent_size=0) const;
+
+    /// Save to file.
+    /// Save document content to the file.
+    /// @param path path to file.
+    /// @param indent_size number of spaces to be added for node indentation.
+    void save_to_file(const ustring & path, int indent_size=0) const;
 
     /// Get document declaration element.
-    Decl_element_ptr decl();
+    Decl_element decl();
 
     /// Get document type object.
-    Doctype_ptr doctype();
+    Doctype doctype();
 
     /// Get root element.
-    Node_element_ptr root();
+    Node_element root();
 
     /// Create root element.
     /// @param root_name the name to be given for root element.
     /// @throw bad_doc when root element already exist or root_name is invalid.
-    Node_element_ptr create_root(const ustring & root_name);
+    Node_element create_root(const ustring & root_name);
 
     /// List processing instructions.
-    std::list<Inst_element_ptr> instrs();
+    std::vector<Inst_element> instructions();
 
     /// Set entity value.
     void set_entity(const ustring & name, const ustring & value);
@@ -288,43 +324,10 @@ public:
     /// Determine if entity defined.
     bool has_entity(const ustring & name) const;
 
-protected:
+private:
 
-    /// @private
-    Doc();
-
-    /// @private
-    virtual void load_v(Buffer buf) = 0;
-
-    /// @private
-    virtual Decl_element_ptr decl_v() = 0;
-
-    /// @private
-    virtual Doctype_ptr doctype_v() = 0;
-
-    /// @private
-    virtual Node_element_ptr root_v() = 0;
-
-    /// @private
-    virtual Node_element_ptr create_root_v(const ustring & root_name) = 0;
-
-    /// @private
-    virtual std::list<Inst_element_ptr> instrs_v() = 0;
-
-    /// @private
-    virtual void set_entity_v(const ustring & name, const ustring & value) = 0;
-
-    /// @private
-    virtual void remove_entity_v(const ustring & name) = 0;
-
-    /// @private
-    virtual ustring entity_v(const ustring & name) const = 0;
-
-    /// @private
-    virtual bool has_entity_v(const ustring & name) const = 0;
-
-    /// @private
-    virtual void save_v(Buffer buf, unsigned indent_size) const = 0;
+    Doc_ptr impl;
+    Doc(Doc_ptr dptr);
 };
 
 } // namespace tau

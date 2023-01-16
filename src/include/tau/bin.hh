@@ -42,6 +42,9 @@ public:
     /// Default constructor.
     Bin();
 
+    /// Constructor with implementation pointer.
+    Bin(Widget_ptr wp);
+
     /// Set owning widget.
     /// @throw user_error if widget already inserted into another container.
     void insert(Widget & w);
@@ -49,10 +52,10 @@ public:
     /// Unset owning widget.
     void clear();
 
-protected:
+    /// Test if empty.
+    bool empty() const;
 
-    /// @private
-    Bin(Widget_ptr wp);
+protected:
 
     /// @private
     Bin(std::nullptr_t);

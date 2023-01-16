@@ -117,7 +117,7 @@ ustring Text::selection() const {
     return TEXT_IMPL->selection();
 }
 
-void Text::select(Buffer_iter b, Buffer_iter e) {
+void Text::select(Buffer_citer b, Buffer_citer e) {
     TEXT_IMPL->select(b, e);
 }
 
@@ -157,7 +157,7 @@ Wrap_mode Text::wrap_mode() const {
     return TEXT_IMPL->wrap_mode();
 }
 
-void Text::move_to(const Buffer_iter pos) {
+void Text::move_to(const Buffer_citer pos) {
     TEXT_IMPL->move_to(pos);
 }
 
@@ -165,11 +165,11 @@ void Text::move_to(std::size_t ln, std::size_t pos) {
     TEXT_IMPL->move_to(ln, pos);
 }
 
-Buffer_iter Text::caret() const {
+Buffer_citer Text::caret() const {
     return TEXT_IMPL->caret();
 }
 
-Buffer_iter Text::iter(std::size_t row, std::size_t col) const {
+Buffer_citer Text::iter(std::size_t row, std::size_t col) const {
     return TEXT_IMPL->iter(row, col);
 }
 

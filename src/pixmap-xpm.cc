@@ -48,8 +48,8 @@ static Pixmap_ptr load_xpm_from_buffer(Buffer buf) {
     std::size_t pindex = 0;             // pixel addition index.
     bool has_alpha = false;             // alpha channel found.
 
-    for (Buffer_iter cur = buf.begin(); cur != buf.end(); cur.move_forward_line()) {
-        Buffer_iter end(cur);
+    for (Buffer_citer cur = buf.cbegin(); cur != buf.cend(); cur.move_forward_line()) {
+        Buffer_citer end(cur);
         end.move_to_eol();
         ustring s = buf.text(cur, end);
 

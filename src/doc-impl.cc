@@ -330,49 +330,6 @@ void Doctype_impl::set_public(const ustring & name, const ustring & loc) {
     }
 }
 
-Doc_impl::Doc_impl():
-    Doc()
-{
-}
-
-// Overrides pure Doc.
-Decl_element_ptr Doc_impl::decl_v() {
-    return decl_;
-}
-
-// Overrides pure Doc.
-Doctype_ptr Doc_impl::doctype_v() {
-    return doctype_;
-}
-
-// Overrides pure Doc.
-Node_element_ptr Doc_impl::root_v() {
-    return root_;
-}
-
-// Overrides pure Doc.
-std::list<Inst_element_ptr> Doc_impl::instrs_v() {
-    return instrs_;
-}
-
-// static
-Doc_ptr Doc::create() {
-    return std::make_shared<Doc_impl>();
-}
-
-// static
-Doc_ptr Doc::create_xml(bool standalone, const ustring & encoding, unsigned version_major, unsigned version_minor) {
-    auto doc = std::make_shared<Doc_impl>();
-    auto decl = Decl_element_ptr(new Decl_element);
-    auto decl_data = static_cast<Decl_element_data *>(decl->pdata);
-    decl_data->standalone = standalone;
-    decl_data->encoding = encoding;
-    decl_data->version_major = version_major;
-    decl_data->version_minor = version_minor;
-    doc->assign_decl(decl);
-    return doc;
-}
-
 // static
 bool Doc_impl::xml_element_name_valid(const ustring & name) {
     if (name.empty()) {
@@ -395,19 +352,16 @@ bool Doc_impl::xml_attr_name_valid(const ustring & name) {
     return true;
 }
 
-// Overrides pure Doc.
-void Doc_impl::set_entity_v(const ustring & name, const ustring & value) {
+void Doc_impl::set_entity(const ustring & name, const ustring & value) {
     entities_[name] = value;
 }
 
-// Overrides pure Doc.
-void Doc_impl::remove_entity_v(const ustring & name) {
+void Doc_impl::remove_entity(const ustring & name) {
     auto i = entities_.find(name);
     if (i != entities_.end()) { entities_.erase(i); }
 }
 
-// Overrides pure Doc.
-ustring Doc_impl::entity_v(const ustring & name) const {
+ustring Doc_impl::entity(const ustring & name) const {
     auto i = entities_.find(name);
     if (i != entities_.end()) { return i->second; }
     auto j = ent_.find(name);
@@ -415,8 +369,7 @@ ustring Doc_impl::entity_v(const ustring & name) const {
     return ustring();
 }
 
-// Overrides pure Doc.
-bool Doc_impl::has_entity_v(const ustring & name) const {
+bool Doc_impl::has_entity(const ustring & name) const {
     auto i = entities_.find(name);
     if (i != entities_.end()) { return true; }
     auto j = ent_.find(name);
@@ -472,7 +425,7 @@ void Doc_impl::expand_entities(ustring & s) {
 
         // Named entity.
         else {
-            ustring evalue = entity_v(s.substr(begin+1, end-begin-1));
+            ustring evalue = entity(s.substr(begin+1, end-begin-1));
 
             if (!evalue.empty()) {
                 s.replace(begin, end-begin+1, evalue);
@@ -487,18 +440,17 @@ void Doc_impl::expand_entities(ustring & s) {
     }
 }
 
-// Overrides pure Doc.
-void Doc_impl::load_v(Buffer buffer) {
+void Doc_impl::load(Buffer buffer) {
     std::list<Node_element_ptr> nodes;
-    Buffer_iter c;
+    Buffer_citer c;
 
-    for (c = buffer.begin(); c != buffer.end(); ) {
+    for (c = buffer.cbegin(); c != buffer.cend(); ) {
         if (nodes.empty()) { c.skip_whitespace(); }
 
         if (!c.eof()) {
             if ('<' != *c) {
                 if (nodes.empty()) { throw bad_doc(str_format(1+c.row(), ':', 1+c.col(), ": XML syntax error")); }
-                Buffer_iter b(c), d(c);
+                Buffer_citer b(c), d(c);
                 c.find('<');
                 d.skip_whitespace();
 
@@ -514,7 +466,7 @@ void Doc_impl::load_v(Buffer buffer) {
 
                 if ('?' == *c) {
                     ++c;
-                    Buffer_iter e(c), b(c), d(c);
+                    Buffer_citer e(c), b(c), d(c);
                     if (!c.find("?>")) { throw bad_doc(str_format(1+b.row(), ':', 1+b.col(), ": unterminated XML processing instruction")); }
                     while (!char32_isblank(*d) && d < c) { ++d; }
                     if (b == d) { throw bad_doc(str_format(1+b.row(), ':', 1+b.col(), ": XML processing instruction syntax error")); }
@@ -543,62 +495,58 @@ void Doc_impl::load_v(Buffer buffer) {
 
                     if ("xml" == iname) {
                         if (root_) { throw bad_doc(str_format(1+e.row(), ':', 1+e.col(), ": XML declaration must preceed root element")); }
-                        decl_ = Decl_element_ptr(new Decl_element);
-                        auto decl_data = static_cast<Decl_element_data *>(decl_->pdata);
+                        decl_ = std::make_shared<Decl_element_impl>();
 
                         for (auto & p: attrs) {
                             if ("encoding" == p.first) {
-                                decl_data->encoding = p.second;
+                                decl_->encoding = p.second;
                             }
 
                             else if ("version" == p.first) {
                                 auto v = str_explode(p.second, '.');
-                                if (!v.empty()) { decl_data->version_major = std::stoi(v[0]); }
-                                if (v.size() > 1) { decl_data->version_minor = std::stoi(v[1]); }
+                                if (!v.empty()) { decl_->version_major = std::stoi(v[0]); }
+                                if (v.size() > 1) { decl_->version_minor = std::stoi(v[1]); }
                             }
 
                             else if ("standalone" == p.first) {
-                                decl_data->standalone = ("yes" == p.second);
+                                decl_->standalone = ("yes" == p.second);
                             }
                         }
                     }
 
                     else {
-                        auto instr = Inst_element_ptr(new Inst_element);
-                        auto instr_data = static_cast<Inst_element_data *>(instr->pdata);
-                        instr_data->name = iname;
+                        auto instr = std::make_shared<Inst_element_impl>(iname);
                         for (auto & p: attrs) { instr->set_attribute(p.first, p.second); }
 
                         if (nodes.empty()) {
-                            instrs_.push_back(instr);
+                            inst_.push_back(instr);
                         }
 
                         else {
-                            Node_element_data * ndata = static_cast<Node_element_data *>(nodes.back()->pdata);
-                            ndata->elems.push_back(instr);
+                            nodes.back()->elems.push_back(instr);
                         }
                     }
 
                     c += 2;
                 }
 
-                else if (c.text_cmp_adv("!--")) {
-                    Buffer_iter b(c);
+                else if (c.equals("!--", true)) {
+                    Buffer_citer b(c);
                     if (!c.find("-->")) { throw bad_doc(str_format(1+b.row(), ':', 1+b.col(), ": unterminated comment")); }
                     c += 3;
                 }
 
-                else if (c.text_cmp_adv("![CDATA[")) {
+                else if (c.equals("![CDATA[", true)) {
                     if (nodes.empty()) { throw bad_doc(str_format(1+c.row(), ':', 1+c.col(), ": CDATA outside of node")); }
-                    const Buffer_iter b(c);
+                    const Buffer_citer b(c);
                     if (!c.find("]]>")) { throw bad_doc(str_format(1+b.row(), ':', 1+b.col(), ": unterminated CDATA section")); }
                     nodes.back()->append_text(b.peek(c));
                     c += 3;
                 }
 
-                else if (c.text_cmp_adv("!DOCTYPE")) {
+                else if (c.equals("!DOCTYPE", true)) {
                     c.skip_whitespace();
-                    Buffer_iter b(c);
+                    Buffer_citer b(c);
 
                     // Root element must be here.
                     const ustring delimiters = "['\">";
@@ -612,7 +560,7 @@ void Doc_impl::load_v(Buffer buffer) {
                     b = c;
 
                     // Private DTD.
-                    if (c.text_cmp_adv("SYSTEM")) {
+                    if (c.equals("SYSTEM", true)) {
                         // DTD location required (quoted string).
                         c.skip_whitespace();
                         char32_t wc = *c++;
@@ -623,7 +571,7 @@ void Doc_impl::load_v(Buffer buffer) {
                     }
 
                     // Public DTD.
-                    else if (c.text_cmp_adv("PUBLIC")) {
+                    else if (c.equals("PUBLIC", true)) {
                         // DTD name required (quoted string).
                         c.skip_whitespace();
                         char32_t wc = *c++;
@@ -647,7 +595,7 @@ void Doc_impl::load_v(Buffer buffer) {
                         while (!done) {
                             if (!c.find_first_of("<]\"'")) { throw bad_doc(str_format(1+b.row(), ':', 1+b.col(), ": unterminated DOCTYPE section")); }
 
-                            if (c.text_cmp_adv("<!--")) {
+                            if (c.equals("<!--", true)) {
                                 if (!c.find("-->")) { throw bad_doc(str_format(1+b.row(), ':', 1+b.col(), ": unterminated comment")); }
                                 c.skip_whitespace();
                             }
@@ -657,7 +605,7 @@ void Doc_impl::load_v(Buffer buffer) {
                             }
 
                             if ('\'' == *c || '"' == *c) {
-                                Buffer_iter d(c);
+                                Buffer_citer d(c);
                                 if (!c.find(*c++)) { throw bad_doc(str_format(1+d.row(), ':', 1+d.col(), ": missing closing quote in DOCTYPE section")); }
                                 ++c;
                                 if (!c.find_first_of("<]\"'")) { throw bad_doc(str_format(1+b.row(), ':', 1+b.col(), ": unterminated DOCTYPE section")); }
@@ -677,7 +625,7 @@ void Doc_impl::load_v(Buffer buffer) {
 
                 // Element definition, get here with c set after '<' character.
                 else {
-                    Buffer_iter b(c);
+                    Buffer_citer b(c);
                     c.skip_whitespace();
 
                     // Check if it is leading slash present and skip it.
@@ -693,7 +641,7 @@ void Doc_impl::load_v(Buffer buffer) {
                         Node_element_ptr node;
 
                         if (nodes.empty()) {
-                            node = Node_element_ptr(new Node_element(name));
+                            node = std::make_shared<Node_element_impl>(name);
                             if (!root_) { root_ = node; }
                         }
 
@@ -705,7 +653,7 @@ void Doc_impl::load_v(Buffer buffer) {
 
                         while (!attrs_done) {
                             c.skip_whitespace();
-                            Buffer_iter d(c);
+                            Buffer_citer d(c);
                             if (!c.find_first_of("=/>")) { throw bad_doc(str_format(1+b.row(), ':', 1+b.col(), ": unterminated XML ELEMENT ", name, " definition")); }
                             if ('=' != *c) { attrs_done = true; continue; }
                             ustring attr_name = d.peek(c++);
@@ -730,7 +678,7 @@ void Doc_impl::load_v(Buffer buffer) {
 
                     else {
                         if (nodes.empty()) { throw bad_doc(str_format(1+b.row(), ':', 1+b.col(), ": misplaced XML ELEMENT '", name, "' closure")); }
-                        if (name != nodes.back()->name()) { throw bad_doc(str_format(1+b.row(), ':', 1+b.col(), ": misplaced XML ELEMENT '", name, "' closure")); }
+                        if (name != nodes.back()->name) { throw bad_doc(str_format(1+b.row(), ':', 1+b.col(), ": misplaced XML ELEMENT '", name, "' closure")); }
                         nodes.pop_back();
                     }
 
@@ -747,39 +695,34 @@ void Doc_impl::load_v(Buffer buffer) {
     }
 }
 
-void Doc_impl::save_element(Element_ptr elem, Buffer buf, unsigned indent, unsigned indent_size) const {
-    if (auto node = std::dynamic_pointer_cast<Node_element>(elem)) {
-        buf.insert(buf.end(), U' ', indent);
-        buf.insert(buf.end(), ustring("<")+node->name());
+void Doc_impl::save_element(Element_ptr elem, Buffer buf, int indent, int indent_size) const {
+    if (auto node = std::dynamic_pointer_cast<Node_element_impl>(elem)) {
+        buf.insert(buf.cend(), U' ', indent);
+        buf.insert(buf.cend(), ustring("<")+node->name);
 
-        if (node->has_attributes()) {
-            for (const ustring & attr_name: node->list_attributes()) {
-                buf.insert(buf.end(), ustring(" ")+attr_name+"=\""+node->attribute(attr_name)+"\"");
-            }
+        for (auto & p: node->attrs) {
+            buf.insert(buf.cend(), ustring(" ")+p.first+"=\""+p.second+"\"");
         }
 
-        auto v = node->elements();
-
-        if (v.empty()) {
-            buf.insert(buf.end(), "/>\n");
+        if (node->elems.empty()) {
+            buf.insert(buf.cend(), "/>\n");
         }
 
         else {
-            if (1 == v.size()) {
-                if (auto txt = std::dynamic_pointer_cast<Text_element>(v.front())) {
-                    ustring text = txt->text();
+            if (1 == node->elems.size()) {
+                if (auto txt = std::dynamic_pointer_cast<Text_element_impl>(node->elems.front())) {
 
-                    if (1 == count_lines(text)) {
-                        buf.insert(buf.end(), ustring(">")+text+"</"+node->name()+">\n");
+                    if (1 == count_lines(txt->str)) {
+                        buf.insert(buf.cend(), ustring(">")+txt->str+"</"+node->name+">\n");
                         return;
                     }
                 }
             }
 
-            buf.insert(buf.end(), ">\n");
-            for (auto e: v) { save_element(e, buf, indent+indent_size, indent_size); }
-            buf.insert(buf.end(), U' ', indent);
-            buf.insert(buf.end(), ustring("</")+node->name()+">\n");
+            buf.insert(buf.cend(), ">\n");
+            for (auto e: node->elems) { save_element(e, buf, indent+indent_size, indent_size); }
+            buf.insert(buf.cend(), U' ', indent);
+            buf.insert(buf.cend(), ustring("</")+node->name+">\n");
         }
     }
 
@@ -787,34 +730,57 @@ void Doc_impl::save_element(Element_ptr elem, Buffer buf, unsigned indent, unsig
         auto v = str_explode(txt->text());
 
         if (!v.empty()) {
-            buf.insert(buf.end(), U' ', indent);
-            buf.insert(buf.end(), v[0]);
-            if (v.size() > 1) { buf.insert(buf.end(), U'\n'); }
+            buf.insert(buf.cend(), U' ', indent);
+            buf.insert(buf.cend(), v[0]);
+            if (v.size() > 1) { buf.insert(buf.cend(), U'\n'); }
 
             for (std::size_t i = 1; i < v.size(); ++i) {
-                buf.insert(buf.end(), U' ', indent);
-                buf.insert(buf.end(), v[i]+"\n");
+                buf.insert(buf.cend(), U' ', indent);
+                buf.insert(buf.cend(), v[i]+"\n");
             }
         }
     }
 }
 
-// Overrides pure Doc.
-void Doc_impl::save_v(Buffer buf, unsigned indent_size) const {
+void Doc_impl::save(Buffer buf, int indent_size) const {
     if (decl_) {
-        buf.insert(buf.end(), str_format("<?xml version=\"", decl_->version_major(), '.', decl_->version_minor(), "\" "));
-        if (!decl_->encoding().empty()) { buf.insert(buf.end(), ustring("encoding=\"")+decl_->encoding()+"\" "); }
-        buf.insert(buf.end(), ustring("standalone=\"")+(decl_->standalone() ? "yes" : "no")+"\"?>\n\n");
+        buf.insert(buf.cend(), str_format("<?xml version=\"", decl_->version_major, '.', decl_->version_minor, "\" "));
+        if (!decl_->encoding.empty()) { buf.insert(buf.cend(), ustring("encoding=\"")+decl_->encoding+"\" "); }
+        buf.insert(buf.cend(), ustring("standalone=\"")+(decl_->standalone ? "yes" : "no")+"\"?>\n\n");
     }
 
     save_element(root_, buf, 0, indent_size);
 }
 
-// Overrides pure Doc.
-Node_element_ptr Doc_impl::create_root_v(const ustring & root_name) {
+void Doc_impl::save_to_file(const ustring & path, int indent_size) const {
+    Buffer buf;
+    save(buf, indent_size);
+    buf.save_to_file(path);
+}
+
+Node_element_ptr Doc_impl::create_root(const ustring & root_name) {
     if (root_) { throw bad_doc("Document already has root element"); }
-    root_ = Node_element_ptr(new Node_element(root_name));
+    root_ = std::make_shared<Node_element_impl>(root_name);
     return root_;
+}
+
+// static
+Doc_ptr Doc_impl::create_xml(bool standalone, const ustring & encoding, int major, int minor) {
+    auto doc = std::make_shared<Doc_impl>();
+    doc->decl_ = std::make_shared<Decl_element_impl>();
+    doc->decl_->standalone = standalone;
+    doc->decl_->encoding = encoding;
+    doc->decl_->version_major = major;
+    doc->decl_->version_minor = minor;
+    return doc;
+}
+
+// static
+Doc_ptr Doc_impl::load_from_file(const ustring & path) {
+    Buffer buf = Buffer::load_from_file(path);
+    auto doc = std::make_shared<Doc_impl>();
+    doc->load(buf);
+    return doc;
 }
 
 } // namespace tau

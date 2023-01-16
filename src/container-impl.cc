@@ -542,12 +542,18 @@ void Container_impl::on_child_visibility_changed(Widget_impl * wi) {
 void Container_impl::sync_arrange() {
     if (visible()) {
         arrange_timer_.stop();
-        signal_arrange_();
+
+        if (qarrange_) {
+            qarrange_ = false;
+            signal_arrange_();
+        }
+
         for (auto ci: containers_) { ci->sync_arrange(); }
     }
 }
 
 void Container_impl::queue_arrange() {
+    qarrange_ = true;
     arrange_timer_.start(31);
 }
 

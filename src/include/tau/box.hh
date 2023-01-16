@@ -58,6 +58,9 @@ public:
     /// @param spacing the amount of space being allocated between widgets.
     Box(Orientation orient, unsigned spacing=0);
 
+    /// Constructor with implementation pointer.
+    Box(Widget_ptr wp);
+
     /// Set spacing.
     /// @param spacing the amount of space being allocated between widgets.
     void set_spacing(unsigned spacing);
@@ -96,6 +99,12 @@ public:
     /// Remove single widget placed after specified widget.
     void remove_after(const Widget & w);
 
+    /// Remove first widget.
+    void remove_front();
+
+    /// Remove last widget.
+    void remove_back();
+
     /// Remove all widgets.
     void clear();
 
@@ -116,6 +125,9 @@ public:
 
     /// Expand all widgets.
     void expand_all();
+
+    /// Get orientation.
+    Orientation orientation() const;
 
     /// Change orientation.
     void set_orientation(Orientation orient);

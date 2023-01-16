@@ -46,33 +46,40 @@ Buffer::Buffer(const ustring & s):
     assign(s);
 }
 
+Buffer::Buffer(const std::u32string & s):
+    impl(std::make_shared<Buffer_impl>())
+{
+    impl->newlines = str_newlines();
+    assign(s);
+}
+
 Buffer::Buffer(std::istream & is):
     impl(std::make_shared<Buffer_impl>())
 {
     impl->newlines = str_newlines();
-    insert(end(), is);
+    insert(cend(), is);
 }
 
 void Buffer::assign(const ustring & str) {
     clear();
-    insert(end(), str);
+    insert(cend(), str);
 }
 
 void Buffer::assign(const std::u32string & str) {
     clear();
-    insert(end(), str);
+    insert(cend(), str);
 }
 
 void Buffer::assign(const Buffer other) {
     clear();
-    insert(end(), other.text());
+    insert(cend(), other.text());
 }
 
-Buffer_iter Buffer::replace(Buffer_iter i, const ustring & str) {
+Buffer_citer Buffer::replace(Buffer_citer i, const ustring & str) {
     return replace(i, std::u32string(str));
 }
 
-Buffer_iter Buffer::replace(Buffer_iter i, const std::u32string & str) {
+Buffer_citer Buffer::replace(Buffer_citer i, const std::u32string & str) {
     if (locked()) {
         return i;
     }
@@ -101,7 +108,7 @@ Buffer_iter Buffer::replace(Buffer_iter i, const std::u32string & str) {
                 std::u32string replaced_text = d.substr(i.col(), n_repl);
                 d.replace(i.col(), n_repl, str, n, n_repl);
                 std::size_t col = i.col()+n_repl;
-                impl->signal_replace(i, iter(i.row(), col), replaced_text);
+                impl->signal_replace(i, citer(i.row(), col), replaced_text);
                 i.move_to_col(col);
             }
 
@@ -122,15 +129,15 @@ Buffer_iter Buffer::replace(Buffer_iter i, const std::u32string & str) {
     return i;
 }
 
-Buffer_iter Buffer::insert(Buffer_iter i, char32_t uc, std::size_t count) {
+Buffer_citer Buffer::insert(Buffer_citer i, char32_t uc, std::size_t count) {
     return 0 != count ? insert(i, std::u32string(count, uc)) : i;
 }
 
-Buffer_iter Buffer::insert(Buffer_iter i, const ustring & str) {
+Buffer_citer Buffer::insert(Buffer_citer i, const ustring & str) {
     return insert(i, std::u32string(str));
 }
 
-Buffer_iter Buffer::insert(Buffer_iter i, const std::u32string & str) {
+Buffer_citer Buffer::insert(Buffer_citer i, const std::u32string & str) {
     if (locked()) {
         return i;
     }
@@ -194,13 +201,13 @@ Buffer_iter Buffer::insert(Buffer_iter i, const std::u32string & str) {
         }
     }
 
-    Buffer_iter e(iter(row, col));
+    Buffer_citer e(citer(row, col));
     signal_insert()(i, e);
     return e;
 }
 
-Buffer_iter Buffer::erase(Buffer_iter b, Buffer_iter e) {
-    Buffer_iter ret(b);
+Buffer_citer Buffer::erase(Buffer_citer b, Buffer_citer e) {
+    Buffer_citer ret(b);
 
     if (!locked() && !empty()) {
         if (e < b) { std::swap(b, e); }
@@ -228,7 +235,7 @@ Buffer_iter Buffer::erase(Buffer_iter b, Buffer_iter e) {
                 }
 
                 if (1 == impl->rows.size() && 0 == impl->rows[0].s.size()) { impl->rows.clear(); }
-                ret = iter(row2, col2);
+                ret = citer(row2, col2);
                 impl->signal_erase(b, ret, erased_text);
             }
         }
@@ -322,7 +329,7 @@ std::size_t Buffer::size() const {
     return impl->size();
 }
 
-std::size_t Buffer::length(Buffer_iter b, Buffer_iter e) const {
+std::size_t Buffer::length(Buffer_citer b, Buffer_citer e) const {
     return impl->length(b.row(), b.col(), e.row(), e.col());
 }
 
@@ -345,23 +352,15 @@ void Buffer::change_encoding(const Encoding & enc) {
     }
 }
 
-Buffer_iter Buffer::iter(std::size_t row, std::size_t col) {
-    return Buffer_iter(Buffer_iter_impl::create(impl, row, col));
+Buffer_citer Buffer::citer(std::size_t row, std::size_t col) const {
+    return Buffer_citer(Buffer_citer_impl::create(impl, row, col));
 }
 
-const Buffer_iter Buffer::iter(std::size_t row, std::size_t col) const {
-    return Buffer_iter(Buffer_iter_impl::create(impl, row, col));
+Buffer_citer Buffer::cbegin() const {
+    return citer(0, 0);
 }
 
-Buffer_iter Buffer::begin() {
-    return iter(0, 0);
-}
-
-const Buffer_iter Buffer::begin() const {
-    return iter(0, 0);
-}
-
-Buffer_iter Buffer::end() {
+Buffer_citer Buffer::cend() const {
     std::size_t row = 0, col = 0;
 
     if (0 != lines()) {
@@ -369,41 +368,30 @@ Buffer_iter Buffer::end() {
         col = impl->length(row);
     }
 
-    return iter(row, col);
-}
-
-const Buffer_iter Buffer::end() const {
-    std::size_t row = 0, col = 0;
-
-    if (0 != lines()) {
-        row = lines()-1;
-        col = impl->length(row);
-    }
-
-    return iter(row, col);
+    return citer(row, col);
 }
 
 void Buffer::clear() {
-    erase(begin(), end());
+    erase(cbegin(), cend());
 }
 
 ustring Buffer::text() const {
-    return text(begin(), end());
+    return text(cbegin(), cend());
 }
 
-ustring Buffer::text(Buffer_iter b, Buffer_iter e) const {
+ustring Buffer::text(Buffer_citer b, Buffer_citer e) const {
     return impl->text(b.row(), b.col(), e.row(), e.col());
 }
 
 std::u32string Buffer::text32() const {
-    return text32(begin(), end());
+    return text32(cbegin(), cend());
 }
 
-std::u32string Buffer::text32(Buffer_iter b, Buffer_iter e) const {
+std::u32string Buffer::text32(Buffer_citer b, Buffer_citer e) const {
     return impl->text(b.row(), b.col(), e.row(), e.col());
 }
 
-Buffer_iter Buffer::insert(Buffer_iter iter, std::istream & is) {
+Buffer_citer Buffer::insert(Buffer_citer iter, std::istream & is) {
     if (!locked()) {
         char buffer[2048];
         std::size_t fpos = 0;
@@ -625,7 +613,7 @@ Buffer Buffer::load_from_file(const ustring & path) {
     std::ifstream is(Locale().encode(path), std::ios::binary);
     if (!is.good()) { throw sys_error(path); }
     Buffer buffer;
-    buffer.insert(buffer.end(), is);
+    buffer.insert(buffer.cend(), is);
     return buffer;
 }
 
@@ -665,15 +653,15 @@ bool Buffer::bom_enabled() const {
     return impl->bom;
 }
 
-signal<void(Buffer_iter, Buffer_iter, std::u32string)> & Buffer::signal_erase() {
+signal<void(Buffer_citer, Buffer_citer, std::u32string)> & Buffer::signal_erase() {
     return impl->signal_erase;
 }
 
-signal<void(Buffer_iter, Buffer_iter)> & Buffer::signal_insert() {
+signal<void(Buffer_citer, Buffer_citer)> & Buffer::signal_insert() {
     return impl->signal_insert;
 }
 
-signal<void(Buffer_iter, Buffer_iter, std::u32string)> & Buffer::signal_replace() {
+signal<void(Buffer_citer, Buffer_citer, std::u32string)> & Buffer::signal_replace() {
     return impl->signal_replace;
 }
 

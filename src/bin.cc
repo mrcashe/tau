@@ -36,8 +36,8 @@ Bin::Bin():
 {
 }
 
-Bin::Bin(Widget_ptr wip):
-    Container(wip)
+Bin::Bin(Widget_ptr wp):
+    Container(std::dynamic_pointer_cast<Bin_impl>(wp))
 {
 }
 
@@ -52,6 +52,10 @@ void Bin::insert(Widget & w) {
 
 void Bin::clear() {
     BIN_IMPL->clear();
+}
+
+bool Bin::empty() const {
+    return BIN_IMPL->empty();
 }
 
 } // namespace tau

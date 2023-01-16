@@ -150,7 +150,6 @@ public:
     Main(const tau::Rect & bounds=tau::Rect()):
         Toplevel(bounds)
     {
-        loop_ = tau::Loop();
         font_spec_ = state_.get_string(state_.root(), "font");
         if (font_spec_.empty()) { font_spec_ = tau::font_size_remove(style().font("font")); }
         font_size_ = state_.get_integer(state_.root(), "font-size", style().font("font").size());
@@ -231,46 +230,46 @@ public:
         box0.append(card_);
 
         {
-            tau::Button button(file_open_action_, false);
+            tau::Button button(file_open_action_, tau::ACTION_NO_LABEL);
             toolbar_.append(button, true);
         }
 
         {
-            tau::Button button(file_save_action_, false);
+            tau::Button button(file_save_action_, tau::ACTION_NO_LABEL);
             toolbar_.append(button, true);
         }
 
         {
-            tau::Button button(file_save_as_action_, false);
-            toolbar_.append(button, true);
-            tau::Separator sep;
-            toolbar_.append(sep, true);
-        }
-
-        {
-            tau::Button button(edit_undo_action_, false);
-            toolbar_.append(button, true);
-        }
-
-        {
-            tau::Button button(edit_redo_action_, false);
+            tau::Button button(file_save_as_action_, tau::ACTION_NO_LABEL);
             toolbar_.append(button, true);
             tau::Separator sep;
             toolbar_.append(sep, true);
         }
 
         {
-            tau::Button button(edit_copy_action_, false);
+            tau::Button button(edit_undo_action_, tau::ACTION_NO_LABEL);
             toolbar_.append(button, true);
         }
 
         {
-            tau::Button button(edit_cut_action_, false);
+            tau::Button button(edit_redo_action_, tau::ACTION_NO_LABEL);
+            toolbar_.append(button, true);
+            tau::Separator sep;
+            toolbar_.append(sep, true);
+        }
+
+        {
+            tau::Button button(edit_copy_action_, tau::ACTION_NO_LABEL);
             toolbar_.append(button, true);
         }
 
         {
-            tau::Button button(edit_paste_action_, false);
+            tau::Button button(edit_cut_action_, tau::ACTION_NO_LABEL);
+            toolbar_.append(button, true);
+        }
+
+        {
+            tau::Button button(edit_paste_action_, tau::ACTION_NO_LABEL);
             toolbar_.append(button, true);
         }
 
@@ -558,7 +557,7 @@ private:
     }
 
     void update_pos(Page & pg) {
-        tau::Buffer_iter i = pg.edit.caret();
+        tau::Buffer_citer i = pg.edit.caret();
 
         if (i) {
             pg.row_value.assign(tau::str_format(1+i.row()));
@@ -1101,8 +1100,7 @@ private:
             save_metadata(pg);
             pg.undo_index = pg.edit.undo_index();
             pg.edit.split_undo();
-            std::ofstream os(tau::Locale().encode_filename(pg.path));
-            pg.edit.buffer().save(os);
+            pg.edit.buffer().save_to_file(pg.path);
             pg.save_ico.hide();
         }
     }
@@ -1590,7 +1588,7 @@ int main(int argc, char * argv[]) {
         std::ifstream is(state_path_.c_str());
         state_.load(is);
         tau::Timer timer(tau::fun(save_state));
-        state_.signal_changed().connect(tau::bind(tau::fun(timer, &tau::Timer::restart), 6789, false));
+        state_.signal_changed().connect(tau::bind(tau::fun(timer, &tau::Timer::start), 7401, false));
         auto v = state_.get_integers(state_.root(), "geometry");
         tau::Rect bounds;
         if (v.size() > 3) { bounds.set(tau::Point(v[0], v[1]), tau::Size(v[2], v[3])); }

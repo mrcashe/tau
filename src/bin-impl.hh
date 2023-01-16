@@ -39,6 +39,7 @@ public:
 
     void insert(Widget_ptr wp);
     void clear();
+    bool empty() const { return nullptr == cp_; }
 
 private:
 

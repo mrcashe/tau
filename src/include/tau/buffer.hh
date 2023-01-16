@@ -37,137 +37,183 @@ namespace tau {
 
 /// Shows current position within Buffer.
 /// @ingroup text_group
-class Buffer_iter {
+class Buffer_citer {
 public:
 
     /// Default constructor.
-    Buffer_iter();
+    Buffer_citer();
 
     /// Copy constructor.
-    Buffer_iter(const Buffer_iter & other);
+    Buffer_citer(const Buffer_citer & other);
 
     /// Copy operator.
-    Buffer_iter & operator=(const Buffer_iter & other);
+    Buffer_citer & operator=(const Buffer_citer & other);
 
     /// Constructor with coordinates.
-    /// Constructs Buffer_iter with same buffer as other and different location.
-    Buffer_iter(const Buffer_iter & other, size_t row, size_t col);
+    /// Constructs Buffer_citer with same buffer as other and different location.
+    Buffer_citer(const Buffer_citer & other, std::size_t row, std::size_t col);
 
     /// Destructor.
-    ~Buffer_iter();
+   ~Buffer_citer();
 
-    /// Get current line number.
-    size_t row() const;
+    /// Get current row (line) number.
+    std::size_t row() const;
 
-    /// Get current position within the line.
-    size_t col() const;
+    /// Get current position within the row (line).
+    std::size_t col() const;
 
-    /// Assign value of other Buffer_iter buffer and position.
-    void set(const Buffer_iter & other, size_t row, size_t col);
+    /// Assign value of other Buffer_citer buffer and position.
+    void set(const Buffer_citer & other, std::size_t row, std::size_t col);
 
     /// Get pointing unicode character.
     char32_t operator*() const;
 
-    /// Get text between two iterators.
-    ustring peek(Buffer_iter other) const;
+    /// Get an UTF-8 text between two iterators.
+    ustring peek(Buffer_citer other) const;
 
-    /// Get text containing specified character count.
-    ustring peek(size_t nchars) const;
+    /// Get an UTF-8 text containing specified character count.
+    ustring peek(std::size_t nchars) const;
+
+    /// Get an UTF-32 text between two iterators.
+    std::u32string peek32(Buffer_citer other) const;
+
+    /// Get an UTF-32 text containing specified character count.
+    std::u32string peek32(std::size_t nchars) const;
 
     /// Advance pointer by one character.
-    Buffer_iter & operator++();
+    Buffer_citer & operator++();
 
     /// Advance pointer by one character.
-    Buffer_iter operator++(int);
+    Buffer_citer operator++(int);
 
     /// Reverse pointer by one character.
-    Buffer_iter & operator--();
+    Buffer_citer & operator--();
 
     /// Reverse pointer by one character.
-    Buffer_iter operator--(int);
+    Buffer_citer operator--(int);
 
     /// Move forward.
-    Buffer_iter & operator+=(size_t npos);
+    Buffer_citer & operator+=(std::size_t npos);
 
     /// Move backward.
-    Buffer_iter & operator-=(size_t npos);
+    Buffer_citer & operator-=(std::size_t npos);
 
     /// Compare two positions.
-    bool operator==(const Buffer_iter & other) const;
+    bool operator==(const Buffer_citer & other) const;
 
     /// Compare two positions.
-    bool operator!=(const Buffer_iter & other) const;
+    bool operator!=(const Buffer_citer & other) const;
 
     /// Compare two positions.
-    bool operator<(const Buffer_iter & other) const;
+    bool operator<(const Buffer_citer & other) const;
 
-    /// Determines whether Buffer_iter points to some place within the buffer or not.
+    /// Determines whether Buffer_citer points to some place within the buffer or not.
     operator bool() const;
 
-    /// Make Buffer_iter pointing to nowhere.
+    /// Make Buffer_citer pointing to nowhere.
     void reset();
 
     /// Find character forward.
     /// If specified character found within buffer, the iterator is pointing to it.
     /// Otherwise, the position is EOF.
-    /// @return true if found.
+    /// @return @b true if found.
     bool find(char32_t wc);
-
-    /// Find text forward.
-    /// If specified text found within buffer, the iterator is pointing to it.
-    /// Otherwise, the position is EOF.
-    /// @return true if found.
-    bool find(const ustring & text);
 
     /// Find character forward.
     /// If specified character found within buffer, the iterator is pointing to it.
     /// Otherwise, the position is EOF.
-    /// @return true if found.
-    bool find(char32_t wc, Buffer_iter other);
+    /// @return @b true if found.
+    bool find(char32_t wc, Buffer_citer other);
+
+    /// Find text forward.
+    /// If specified text found within buffer, the iterator is pointing to it.
+    /// Otherwise, the position is EOF.
+    /// @return @b true if found.
+    bool find(const ustring & text);
 
     /// Find text forward.
     /// The search is performed from the current position and until the place specified by the other.
     /// If specified text found within buffer, the iterator is pointing to it.
     /// Otherwise, the position is EOF.
-    /// @return true if found.
-    bool find(const ustring & text, Buffer_iter other);
+    /// @return @b true if found.
+    bool find(const ustring & text, Buffer_citer other);
+
+    /// Find text forward.
+    /// If specified text found within buffer, the iterator is pointing to it.
+    /// Otherwise, the position is EOF.
+    /// @return @b true if found.
+    bool find(const std::u32string & text);
+
+    /// Find text forward.
+    /// The search is performed from the current position and until the place specified by the other.
+    /// If specified text found within buffer, the iterator is pointing to it.
+    /// Otherwise, the position is EOF.
+    /// @return @b true if found.
+    bool find(const std::u32string & text, Buffer_citer other);
 
     /// Find characters forward.
     /// If any of specified characters found within buffer, the iterator is pointing to it.
     /// Otherwise, the position is EOF.
-    /// @return true if found.
+    /// @return @b true if found.
     bool find_first_of(const ustring & chars);
 
     /// Find characters forward.
     /// The search is performed from the current position and until the place specified by the other.
     /// If any of specified characters found within buffer, the iterator is pointing to it.
     /// Otherwise, the position is EOF.
-    /// @return true if found.
-    bool find_first_of(const ustring & chars, Buffer_iter other);
+    /// @return @b true if found.
+    bool find_first_of(const ustring & chars, Buffer_citer other);
+
+    /// Find characters forward.
+    /// If any of specified characters found within buffer, the iterator is pointing to it.
+    /// Otherwise, the position is EOF.
+    /// @return @b true if found.
+    bool find_first_of(const std::u32string & chars);
+
+    /// Find characters forward.
+    /// The search is performed from the current position and until the place specified by the other.
+    /// If any of specified characters found within buffer, the iterator is pointing to it.
+    /// Otherwise, the position is EOF.
+    /// @return @b true if found.
+    bool find_first_of(const std::u32string & chars, Buffer_citer other);
 
     /// Find characters forward.
     /// If any of specified characters not found within buffer, the iterator is pointing to it.
     /// Otherwise, the position is EOF.
-    /// @return true if found.
+    /// @return @b true if found.
     bool find_first_not_of(const ustring & chars);
 
     /// Find characters forward.
     /// The search is performed from the current position and until the place specified by the other.
     /// If any of specified characters not found within buffer, the iterator is pointing to it.
     /// Otherwise, the position is EOF.
-    /// @return true if found.
-    bool find_first_not_of(const ustring & chars, Buffer_iter other);
+    /// @return @b true if found.
+    bool find_first_not_of(const ustring & chars, Buffer_citer other);
+
+    /// Find characters forward.
+    /// If any of specified characters not found within buffer, the iterator is pointing to it.
+    /// Otherwise, the position is EOF.
+    /// @return @b true if found.
+    bool find_first_not_of(const std::u32string & chars);
+
+    /// Find characters forward.
+    /// The search is performed from the current position and until the place specified by the other.
+    /// If any of specified characters not found within buffer, the iterator is pointing to it.
+    /// Otherwise, the position is EOF.
+    /// @return @b true if found.
+    bool find_first_not_of(const std::u32string & chars, Buffer_citer other);
 
     /// Compare text at current position.
     /// Compare given text against text at current position.
-    /// @return true if both strings are equal.
-    bool text_cmp(const ustring & text);
+    /// @param advance advance position by the length of given string in case of equality.
+    /// @return @b true if both strings are equal.
+    bool equals(const ustring & text, bool advance=false);
 
     /// Compare text at current position.
     /// Compare given text against text at current position.
-    /// Advance position by the length of given string in case of equality.
-    /// @return true if both strings are equal.
-    bool text_cmp_adv(const ustring & text);
+    /// @param advance advance position by the length of given string in case of equality.
+    /// @return @b true if both strings are equal.
+    bool equals(const std::u32string & text, bool advance=false);
 
     /// Skip any blank characters within current line.
     void skip_blanks();
@@ -176,17 +222,17 @@ public:
     void skip_whitespace();
 
     /// Move to specified position.
-    void move_to(size_t row, size_t col);
+    void move_to(std::size_t row, std::size_t col);
 
     /// Move to specified column within current line.
     /// Tries to move to specified position.
     /// If that position does not exist, the position will be set to the rightmost character.
     void move_to_col(std::size_t col);
 
-    /// Move to start of current line position.
+    /// Move to start of the current line.
     void move_to_sol();
 
-    /// Move to first end-of-line character or end-of-file position.
+    /// Move to first end-of-line character or end-of-file.
     void move_to_eol();
 
     /// Move to start of next row.
@@ -215,8 +261,8 @@ public:
 private:
 
     friend class Buffer;
-    Buffer_iter(Buffer_iter_impl * p);
-    Buffer_iter_impl * impl;
+    Buffer_citer(Buffer_citer_impl * p);
+    Buffer_citer_impl * impl;
 };
 
 // ----------------------------------------------------------------------------
@@ -236,8 +282,11 @@ public:
     /// Copy operator.
     Buffer & operator=(const Buffer & other) = default;
 
-    /// Constructor with text.
+    /// Constructor with UTF-8 text.
     Buffer(const ustring & str);
+
+    /// Constructor with UTF-32 text.
+    Buffer(const std::u32string & str);
 
     /// Constructor with stream.
     Buffer(std::istream & is);
@@ -266,31 +315,31 @@ public:
     /// @param uc the character to be inserted.
     /// @param count repeat count.
     /// @return position at the end of inserted text.
-    Buffer_iter insert(Buffer_iter pos, char32_t uc, size_t count=1);
+    Buffer_citer insert(Buffer_citer pos, char32_t uc, std::size_t count=1);
 
     /// Insert text from an UTF-8 string.
     /// @return position at the end of inserted text.
-    Buffer_iter insert(Buffer_iter pos, const ustring & s);
+    Buffer_citer insert(Buffer_citer pos, const ustring & s);
 
     /// Insert text from an UTF-32 string.
     /// @return position at the end of inserted text.
-    Buffer_iter insert(Buffer_iter pos, const std::u32string & s);
+    Buffer_citer insert(Buffer_citer pos, const std::u32string & s);
 
     /// Insert text from STL stream.
     /// @return position at the end of inserted text.
-    Buffer_iter insert(Buffer_iter pos, std::istream & is);
+    Buffer_citer insert(Buffer_citer pos, std::istream & is);
 
     /// Replace text.
     /// @return position at the end of replaced text.
-    Buffer_iter replace(Buffer_iter i, const ustring & s);
+    Buffer_citer replace(Buffer_citer i, const ustring & s);
 
     /// Replace text.
     /// @return position at the end of replaced text.
-    Buffer_iter replace(Buffer_iter i, const std::u32string & s);
+    Buffer_citer replace(Buffer_citer i, const std::u32string & s);
 
     /// Erase range.
     /// @return iterator to the actual end position.
-    Buffer_iter erase(Buffer_iter begin, Buffer_iter end);
+    Buffer_citer erase(Buffer_citer begin, Buffer_citer end);
 
     /// Clears buffer.
     void clear();
@@ -299,22 +348,22 @@ public:
     ustring text() const;
 
     /// Get text between two iterators as UTF-8.
-    ustring text(Buffer_iter begin, Buffer_iter end) const;
+    ustring text(Buffer_citer begin, Buffer_citer end) const;
 
     /// Get text as UTF-32.
     std::u32string text32() const;
 
     /// Get text between two iterators as UTF-32.
-    std::u32string text32(Buffer_iter begin, Buffer_iter end) const;
+    std::u32string text32(Buffer_citer begin, Buffer_citer end) const;
 
     /// Get size in unicode characters.
-    size_t size() const;
+    std::size_t size() const;
 
     /// Get size in unicode characters in between two iterators.
-    size_t length(Buffer_iter begin, Buffer_iter end) const;
+    std::size_t length(Buffer_citer begin, Buffer_citer end) const;
 
     /// Get line count.
-    size_t lines() const;
+    std::size_t lines() const;
 
     /// Test if empty.
     bool empty() const;
@@ -348,23 +397,14 @@ public:
     /// @sa signal_bom_changed()
     bool bom_enabled() const;
 
-    /// Returns Buffer_iter pointing to specified position.
-    Buffer_iter iter(size_t row, size_t col=0);
+    /// Returns Buffer_citer pointing to specified position.
+    Buffer_citer citer(std::size_t row, std::size_t col=0) const;
 
-    /// Returns Buffer_iter pointing to specified position.
-    const Buffer_iter iter(size_t row, size_t col=0) const;
+    /// Returns Buffer_citer pointing to begin.
+    Buffer_citer cbegin() const;
 
-    /// Returns Buffer_iter pointing to begin.
-    Buffer_iter begin();
-
-    /// Returns Buffer_iter pointing to begin.
-    const Buffer_iter begin() const;
-
-    /// Returns Buffer_iter pointing to end.
-    Buffer_iter end();
-
-    /// Returns Buffer_iter pointing to end.
-    const Buffer_iter end() const;
+    /// Returns Buffer_citer pointing to end.
+    Buffer_citer cend() const;
 
     /// Lock buffer.
     /// Disables buffer modifying.
@@ -383,23 +423,23 @@ public:
     /// Signal emitted when text erased.
     /// Slot prototype:
     /// ~~~~~~~~~~~~~~~
-    /// void on_buffer_erase(Buffer_iter begin, Buffer_iter end, const std::u32string & erased_text);
+    /// void on_buffer_erase(Buffer_citer begin, Buffer_citer end, const std::u32string & erased_text);
     /// ~~~~~~~~~~~~~~~
-    signal<void(Buffer_iter, Buffer_iter, std::u32string)> & signal_erase();
+    signal<void(Buffer_citer, Buffer_citer, std::u32string)> & signal_erase();
 
     /// Signal emitted when text inserted.
     /// Slot prototype:
     /// ~~~~~~~~~~~~~~~
-    /// void on_buffer_insert(Buffer_iter begin, Buffer_iter end);
+    /// void on_buffer_insert(Buffer_citer begin, Buffer_citer end);
     /// ~~~~~~~~~~~~~~~
-    signal<void(Buffer_iter, Buffer_iter)> & signal_insert();
+    signal<void(Buffer_citer, Buffer_citer)> & signal_insert();
 
     /// Signal emitted when text replaced.
     /// Slot prototype:
     /// ~~~~~~~~~~~~~~~
-    /// void on_buffer_replace(Buffer_iter begin, Buffer_iter end, const std::u32string & replaced_text);
+    /// void on_buffer_replace(Buffer_citer begin, Buffer_citer end, const std::u32string & replaced_text);
     /// ~~~~~~~~~~~~~~~
-    signal<void(Buffer_iter, Buffer_iter, std::u32string)> & signal_replace();
+    signal<void(Buffer_citer, Buffer_citer, std::u32string)> & signal_replace();
 
     /// Signal emitted when buffer locked.
     /// Slot prototype:

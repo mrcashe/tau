@@ -53,13 +53,13 @@ public:
     const Buffer & buffer() const;
     bool empty() const;
     void clear();
-    void select(Buffer_iter b, Buffer_iter e);
+    void select(Buffer_citer b, Buffer_citer e);
     void select_all();
     bool has_selection() const { return edit_->has_selection(); }
     void unselect();
-    void move_to(const Buffer_iter & pos);
+    void move_to(const Buffer_citer & pos);
     void move_to(std::size_t row, std::size_t col);
-    Buffer_iter caret() const;
+    Buffer_citer caret() const;
     Size text_size(const ustring & s) { return edit_->text_size(s); }
     void reserve(unsigned width) { scroller_->hint_min_size(width, 0); }
     void limit(unsigned width) { scroller_->hint_max_size(width, 0); }

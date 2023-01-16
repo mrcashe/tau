@@ -144,12 +144,13 @@ private:
     using Containers = std::list<Container_impl *>;
     using Obscured = std::list<Widget_impl *>;
 
-    Children        children_;      // Children.
-    Children        woff_;          // Written off children.
-    Containers      containers_;    // Owning containers.
-    Obscured        obscured_;      // Currently obscured children.
-    Timer           arrange_timer_; // Sync arrange timer.
-    Timer           woff_timer_;    // Written off timer.
+    Children        children_;          // Children.
+    Children        woff_;              // Written off children.
+    Containers      containers_;        // Owning containers.
+    Obscured        obscured_;          // Currently obscured children.
+    Timer           arrange_timer_;     // Sync arrange timer.
+    Timer           woff_timer_;        // Written off timer.
+    bool            qarrange_ = false;  // Arrange was queued.
 
 private:
 

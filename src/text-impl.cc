@@ -204,7 +204,7 @@ bool Text_impl::on_mouse_up(int mbt, int mm, const Point & pt) {
 
 void Text_impl::on_mouse_motion(int mm, const Point & pt) {
     if (select_allowed_ && (MM_LEFT & mm) && msel_) {
-        Buffer_iter i = iter_from_point(pt);
+        Buffer_citer i = iter_from_point(pt);
 
         if (msel_ != i) {
             if (!sel_ && !esel_) {
@@ -229,7 +229,7 @@ void Text_impl::on_focus_in() {
     }
 }
 
-void Text_impl::on_buffer_replace(Buffer_iter b, Buffer_iter e, const std::u32string & replaced) {
+void Text_impl::on_buffer_replace(Buffer_citer b, Buffer_citer e, const std::u32string & replaced) {
     if (b.row() == e.row()) {
         Line & ln = lines_[b.row()];
         int h0 = ln.ascent+ln.descent;
@@ -237,14 +237,14 @@ void Text_impl::on_buffer_replace(Buffer_iter b, Buffer_iter e, const std::u32st
         int h1 = ln.ascent+ln.descent;
         if (ln.width < text_width_) { text_width_ = calc_width(0, lines_.size()); }
         e.move_to_eol();
-        if (h1 != h0) { translate_lines(b.row()+1, lines_.size(), h1-h0); e = buffer_.end(); }
+        if (h1 != h0) { translate_lines(b.row()+1, lines_.size(), h1-h0); e = buffer_.cend(); }
         update_requisition();
         align_lines(b.row(), b.row());
         update_range(b, e);
     }
 }
 
-void Text_impl::on_buffer_replace_move(Buffer_iter b, Buffer_iter e, const std::u32string & replaced) {
+void Text_impl::on_buffer_replace_move(Buffer_citer b, Buffer_citer e, const std::u32string & replaced) {
     move_caret(e);
     hint_x();
     signal_changed_();
@@ -266,7 +266,7 @@ Painter Text_impl::wipe_area(int x1, int y1, int x2, int y2, Painter pr) {
     return pr;
 }
 
-void Text_impl::on_buffer_erase(Buffer_iter b, Buffer_iter e, const std::u32string & erased) {
+void Text_impl::on_buffer_erase(Buffer_citer b, Buffer_citer e, const std::u32string & erased) {
     if (e < b) { std::swap(b, e); }
 
     if (e.row() >= lines_.size() || buffer_.empty()) {
@@ -292,7 +292,7 @@ void Text_impl::on_buffer_erase(Buffer_iter b, Buffer_iter e, const std::u32stri
 
         if (row.width < text_width_) { text_width_ = calc_width(0, lines_.size()); }
         e.move_to_eol();
-        if (h1 != h0) { translate_lines(b.row()+1, lines_.size(), h1-h0); e = buffer_.end(); }
+        if (h1 != h0) { translate_lines(b.row()+1, lines_.size(), h1-h0); e = buffer_.cend(); }
     }
 
     else {
@@ -303,7 +303,7 @@ void Text_impl::on_buffer_erase(Buffer_iter b, Buffer_iter e, const std::u32stri
         load_lines(b.row(), e.row());
         text_height_ = std::max(0, text_height_-hdel);
         if (wdel >= text_width_) { text_width_ = calc_width(0, lines()); }
-        e = buffer_.end();
+        e = buffer_.cend();
     }
 
     update_requisition();
@@ -312,23 +312,23 @@ void Text_impl::on_buffer_erase(Buffer_iter b, Buffer_iter e, const std::u32stri
     update_range(b, e);
 }
 
-void Text_impl::on_buffer_erase_move(Buffer_iter b, Buffer_iter e, const std::u32string & erased) {
+void Text_impl::on_buffer_erase_move(Buffer_citer b, Buffer_citer e, const std::u32string & erased) {
     move_caret(b);
     hint_x();
     signal_changed_();
 }
 
-void Text_impl::on_buffer_insert(Buffer_iter b, Buffer_iter e) {
+void Text_impl::on_buffer_insert(Buffer_citer b, Buffer_citer e) {
     insert_range(b, e);
 }
 
-void Text_impl::on_buffer_insert_move(Buffer_iter b, Buffer_iter e) {
+void Text_impl::on_buffer_insert_move(Buffer_citer b, Buffer_citer e) {
     move_caret(e);
     hint_x();
     signal_changed_();
 }
 
-void Text_impl::insert_range(Buffer_iter b, Buffer_iter e) {
+void Text_impl::insert_range(Buffer_citer b, Buffer_citer e) {
     if (e < b) { std::swap(b, e); }
     wipe_caret();
     std::size_t nlines = e.row()-b.row();
@@ -347,7 +347,7 @@ void Text_impl::insert_range(Buffer_iter b, Buffer_iter e) {
     text_height_ = calc_height(0, lines_.size()-1);
     align_all();
     update_requisition();
-    if (e.row() > b.row()) { e = buffer_.end(); }
+    if (e.row() > b.row()) { e = buffer_.cend(); }
     if (ALIGN_START != xalign_) { b.move_to_sol(); e.move_to_eol(); }
     update_range(b, e);
 }
@@ -391,7 +391,7 @@ void Text_impl::clear() {
     esel_.reset();
     msel_.reset();
     emsel_.reset();
-    caret_ = buffer_.begin();
+    caret_ = buffer_.cbegin();
     update_requisition();
     signal_caret_motion_();
     if (changed) { signal_changed_(); }
@@ -404,8 +404,8 @@ void Text_impl::init_buffer() {
     insert_move_cx_ = buffer_.signal_insert().connect(fun(this, &Text_impl::on_buffer_insert_move));
     replace_move_cx_ = buffer_.signal_replace().connect(fun(this, &Text_impl::on_buffer_replace_move));
     erase_move_cx_ = buffer_.signal_erase().connect(fun(this, &Text_impl::on_buffer_erase_move));
-    caret_ = buffer_.begin();
-    insert_range(buffer_.begin(), buffer_.end());
+    caret_ = buffer_.cbegin();
+    insert_range(buffer_.cbegin(), buffer_.cend());
 }
 
 void Text_impl::hint_x() {
@@ -488,7 +488,7 @@ void Text_impl::update_requisition() {
     require_size(req);
 }
 
-void Text_impl::update_selection(Buffer_iter i, Buffer_iter j) {
+void Text_impl::update_selection(Buffer_citer i, Buffer_citer j) {
     if (select_allowed_ && i && j) {
         if (!sel_ && !esel_) {
             sel_ = i;
@@ -535,7 +535,7 @@ void Text_impl::update_selection(Buffer_iter i, Buffer_iter j) {
     }
 }
 
-void Text_impl::update_range(Buffer_iter b, Buffer_iter e) {
+void Text_impl::update_range(Buffer_citer b, Buffer_citer e) {
     if (b && e && b.row() < lines_.size() && e.row() < lines_.size()) {
         if (e < b) { std::swap(b, e); }
         if (0 == e.row()) { --e; }
@@ -666,7 +666,7 @@ void Text_impl::load_lines(std::size_t ln, std::size_t last) {
         Line & line = lines_[ln];
         line.frags.clear();
         line.ncols = 0;
-        Buffer_iter b = buffer_.iter(ln, 0), e = b;
+        Buffer_citer b = buffer_.citer(ln, 0), e = b;
         e.move_to_eol();
         line.text = buffer_.text32(b, e);
 
@@ -828,7 +828,7 @@ void Text_impl::move_caret(std::size_t row, std::size_t col) {
     }
 }
 
-void Text_impl::move_caret(Buffer_iter i) {
+void Text_impl::move_caret(Buffer_citer i) {
     move_caret(i.row(), i.col());
 }
 
@@ -837,16 +837,16 @@ void Text_impl::move_to(std::size_t row, std::size_t col) {
     hint_x();
 }
 
-void Text_impl::move_to(const Buffer_iter i) {
+void Text_impl::move_to(const Buffer_citer i) {
     move_to(i.row(), i.col());
 }
 
-Buffer_iter Text_impl::caret() const {
+Buffer_citer Text_impl::caret() const {
     return caret_;
 }
 
-Buffer_iter Text_impl::iter(std::size_t row, std::size_t col) const {
-    return Buffer_iter(caret_, row, col);
+Buffer_citer Text_impl::iter(std::size_t row, std::size_t col) const {
+    return Buffer_citer(caret_, row, col);
 }
 
 void Text_impl::enable_caret() {
@@ -899,7 +899,7 @@ std::size_t Text_impl::hinted_pos(std::size_t ri) {
             if (x2 >= xhint_) {
                 std::size_t col = x2-xhint_ < xhint_-x1 ? n : n-1;
 
-                for (Buffer_iter c(caret_, ri, col); col < row.ncols; ++c, ++col) {
+                for (Buffer_citer c(caret_, ri, col); col < row.ncols; ++c, ++col) {
                     if (!char32_is_modifier(*c)) {
                         break;
                     }
@@ -995,7 +995,7 @@ void Text_impl::get_row_bounds(std::size_t ln, int & top, int & bottom) const {
     }
 }
 
-Buffer_iter Text_impl::iter_from_point(const Point & pt) {
+Buffer_citer Text_impl::iter_from_point(const Point & pt) {
     std::size_t ln = row_at_y(pt.y());
     std::size_t col = col_at_x(ln, pt.x());
     return iter(ln, col);
@@ -1016,12 +1016,12 @@ void Text_impl::paint_line(const Line & line, std::size_t ln, std::size_t pos, P
     std::size_t ecol = std::min(line.ncols, 1+col_at_x(line, va_.right())); // Ending column.
 
     // Include modifiers before starting column.
-    for (Buffer_iter i = buffer_.iter(ln, scol); scol > 0; --scol, --i) {
+    for (Buffer_citer i = buffer_.citer(ln, scol); scol > 0; --scol, --i) {
         if (!char32_is_modifier(*i)) { break; }
     }
 
     // Include modifiers after ending column.
-    for (Buffer_iter i = buffer_.iter(ln, ecol); i.col() < line.ncols; ++ecol, ++i) {
+    for (Buffer_citer i = buffer_.citer(ln, ecol); i.col() < line.ncols; ++ecol, ++i) {
         if (!char32_is_modifier(*i)) { break; }
     }
 
@@ -1185,25 +1185,25 @@ ustring Text_impl::selection() const {
     return ustring();
 }
 
-void Text_impl::select(Buffer_iter b, Buffer_iter e) {
+void Text_impl::select(Buffer_citer b, Buffer_citer e) {
     unselect();
 
     if (select_allowed_) {
-        if (buffer_.end() < b) {
-            b = buffer_.end();
+        if (buffer_.cend() < b) {
+            b = buffer_.cend();
         }
 
         if (e < b) { std::swap(b, e); }
 
-        if (buffer_.end() < e) {
-            e = buffer_.end();
+        if (buffer_.cend() < e) {
+            e = buffer_.cend();
         }
 
-        for (; b != buffer_.begin(); --b) {
+        for (; b != buffer_.cbegin(); --b) {
             if (!char32_is_modifier(*b)) { break; }
         }
 
-        for (; e != buffer_.end(); ++e) {
+        for (; e != buffer_.cend(); ++e) {
             if (!char32_is_modifier(*e)) { break; }
         }
 
@@ -1216,13 +1216,13 @@ void Text_impl::select(Buffer_iter b, Buffer_iter e) {
 
 void Text_impl::select_all() {
     if (!buffer_.empty()) {
-        select(buffer_.begin(), buffer_.end());
+        select(buffer_.cbegin(), buffer_.cend());
     }
 }
 
 void Text_impl::unselect() {
     if (sel_ && esel_) {
-        Buffer_iter b(sel_), e(esel_);
+        Buffer_citer b(sel_), e(esel_);
         sel_.reset(); esel_.reset();
         update_range(b, e);
         signal_selection_changed_();
@@ -1276,7 +1276,7 @@ Size Text_impl::text_size(const std::u32string & s) {
 
 void Text_impl::left() {
     if (caret_) {
-        Buffer_iter j = caret_;
+        Buffer_citer j = caret_;
 
         if (0 == j.col() && 0 != j.row()) {
             j.move_backward_line();
@@ -1298,14 +1298,14 @@ void Text_impl::move_left() {
 }
 
 void Text_impl::select_left() {
-    Buffer_iter i(caret_);
+    Buffer_citer i(caret_);
     left();
     update_selection(i, caret_);
 }
 
 void Text_impl::right() {
     if (caret_) {
-        Buffer_iter j = caret_;
+        Buffer_citer j = caret_;
 
         if (char32_is_newline(*j)) {
             while (!j.eof() && caret_.row() == j.row()) { ++j; }
@@ -1326,7 +1326,7 @@ void Text_impl::move_right() {
 }
 
 void Text_impl::select_right() {
-    Buffer_iter i(caret_);
+    Buffer_citer i(caret_);
     right();
     update_selection(i, caret_);
 }
@@ -1334,7 +1334,7 @@ void Text_impl::select_right() {
 void Text_impl::up() {
     if (caret_) {
         if (0 != caret_.row()) {
-            Buffer_iter i = caret_;
+            Buffer_citer i = caret_;
             std::size_t pos = 0 != xhint_ ? hinted_pos(i.row()-1) : i.col();
             i.move_to(i.row()-1, pos);
             move_caret(i);
@@ -1348,7 +1348,7 @@ void Text_impl::move_up() {
 }
 
 void Text_impl::select_up() {
-    Buffer_iter i(caret_);
+    Buffer_citer i(caret_);
     up();
     update_selection(i, caret_);
 }
@@ -1358,7 +1358,7 @@ void Text_impl::down() {
         std::size_t dest_row = caret_.row()+1;
 
         if (dest_row < lines()) {
-            Buffer_iter i = caret_;
+            Buffer_citer i = caret_;
             std::size_t pos = 0 != xhint_ ? hinted_pos(dest_row) : i.col();
             i.move_to(dest_row, pos);
             move_caret(i);
@@ -1372,7 +1372,7 @@ void Text_impl::move_down() {
 }
 
 void Text_impl::select_down() {
-    Buffer_iter i(caret_);
+    Buffer_citer i(caret_);
     down();
     update_selection(i, caret_);
 }
@@ -1380,7 +1380,7 @@ void Text_impl::select_down() {
 void Text_impl::move_word_left() {
     if (caret_) {
         unselect();
-        Buffer_iter i = caret_;
+        Buffer_citer i = caret_;
         i.move_word_left();
         move_caret(i);
         hint_x();
@@ -1389,7 +1389,7 @@ void Text_impl::move_word_left() {
 
 void Text_impl::select_word_left() {
     if (caret_) {
-        Buffer_iter i(caret_), j(caret_);
+        Buffer_citer i(caret_), j(caret_);
         j.move_word_left();
         move_caret(j);
         update_selection(i, j);
@@ -1400,7 +1400,7 @@ void Text_impl::select_word_left() {
 void Text_impl::move_word_right() {
     if (caret_) {
         unselect();
-        Buffer_iter i = caret_;
+        Buffer_citer i = caret_;
         i.move_word_right();
         move_caret(i);
         hint_x();
@@ -1409,7 +1409,7 @@ void Text_impl::move_word_right() {
 
 void Text_impl::select_word_right() {
     if (caret_) {
-        Buffer_iter i(caret_), j(caret_);
+        Buffer_citer i(caret_), j(caret_);
         j.move_word_right();
         move_caret(j);
         update_selection(i, j);
@@ -1419,7 +1419,7 @@ void Text_impl::select_word_right() {
 
 void Text_impl::home() {
     if (caret_ && caret_.col() > 0) {
-        Buffer_iter i = caret_;
+        Buffer_citer i = caret_;
         i.move_to_sol();
         i.skip_blanks();
         if (i.col() < caret_.col()) { caret_ = i; }
@@ -1435,7 +1435,7 @@ void Text_impl::move_home() {
 }
 
 void Text_impl::select_home() {
-    Buffer_iter i(caret_);
+    Buffer_citer i(caret_);
     home();
     update_selection(i, caret_);
 }
@@ -1443,7 +1443,7 @@ void Text_impl::select_home() {
 void Text_impl::move_to_eol() {
     if (caret_) {
         unselect();
-        Buffer_iter i(caret_);
+        Buffer_citer i(caret_);
         i.move_to_eol();
         move_caret(i);
         hint_x();
@@ -1452,7 +1452,7 @@ void Text_impl::move_to_eol() {
 
 void Text_impl::select_to_eol() {
     if (caret_) {
-        Buffer_iter i(caret_), j(caret_);
+        Buffer_citer i(caret_), j(caret_);
         j.move_to_eol();
         move_caret(j);
         update_selection(i, j);
@@ -1463,7 +1463,7 @@ void Text_impl::select_to_eol() {
 void Text_impl::move_to_sof() {
     if (caret_) {
         unselect();
-        Buffer_iter i(caret_);
+        Buffer_citer i(caret_);
         i.move_to(0, 0);
         move_caret(i);
         hint_x();
@@ -1472,7 +1472,7 @@ void Text_impl::move_to_sof() {
 
 void Text_impl::select_to_sof() {
     if (caret_) {
-        Buffer_iter i(caret_), j(caret_);
+        Buffer_citer i(caret_), j(caret_);
         j.move_to(0, 0);
         move_caret(j);
         update_selection(i, j);
@@ -1483,15 +1483,15 @@ void Text_impl::select_to_sof() {
 void Text_impl::move_to_eof() {
     if (caret_) {
         unselect();
-        move_caret(buffer_.end());
+        move_caret(buffer_.cend());
         hint_x();
     }
 }
 
 void Text_impl::select_to_eof() {
     if (caret_) {
-        Buffer_iter i(caret_);
-        move_caret(buffer_.end());
+        Buffer_citer i(caret_);
+        move_caret(buffer_.cend());
         update_selection(i, caret_);
         hint_x();
     }
@@ -1546,7 +1546,7 @@ void Text_impl::move_page_up() {
 }
 
 void Text_impl::select_page_up() {
-    Buffer_iter i(caret_);
+    Buffer_citer i(caret_);
     page_up();
     update_selection(i, caret_);
 }
@@ -1588,7 +1588,7 @@ void Text_impl::page_down() {
             }
 
             else {
-                Buffer_iter i(buffer_.end());
+                Buffer_citer i(buffer_.cend());
                 move_caret(i.row(), i.col());
             }
         }
@@ -1601,7 +1601,7 @@ void Text_impl::move_page_down() {
 }
 
 void Text_impl::select_page_down() {
-    Buffer_iter i(caret_);
+    Buffer_citer i(caret_);
     page_down();
     update_selection(i, caret_);
 }

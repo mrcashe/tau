@@ -123,7 +123,7 @@ public:
     ustring tooltip() const { return tooltip_; }
 
     /// Test if tooltip set.
-    bool has_tooltip() const { return !tooltip_.empty(); }
+    bool has_tooltip() const;
 
     /// Unset tooltip.
     void unset_tooltip();
@@ -142,10 +142,10 @@ public:
     /// @param key_specs is a space delimited list of key specifications.
     void remove_accels(const ustring & key_specs);
 
-    /// Remove all accels.
+    /// Remove all accelerators.
     void clear_accels();
 
-    /// List accels.
+    /// List accelerators.
     std::vector<Accel> accels() const { return accels_; }
 
     /// Signal emitted when action becomes disabled.
@@ -164,10 +164,6 @@ public:
     signal<void(const Accel & accel)> & signal_accel_added() { return signal_accel_added_; }
 
     /// Signal emitted when accelerator removed using remove_accel() method.
-    /// Slot prototype:
-    /// ~~~~~~~~~~~~~~~
-    /// void on_accel_removed(const Accel & accel);
-    /// ~~~~~~~~~~~~~~~
     signal<void(const Accel & accel)> & signal_accel_removed() { return signal_accel_removed_; }
 
     /// Signal emitted when label changed using set_label() method.
@@ -323,7 +319,7 @@ public:
     ustring tooltip() const { return tooltip_; }
 
     /// Test if tooltip set.
-    bool has_tooltip() const { return !tooltip_.empty(); }
+    bool has_tooltip() const;
 
     /// Unset tooltip.
     void unset_tooltip();
@@ -540,7 +536,7 @@ public:
     /// Toggle the action.
     void toggle();
 
-    /// Test if toggled.
+    /// Test if toggled (get state).
     bool get() const;
 
     /// Set state.

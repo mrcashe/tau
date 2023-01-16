@@ -371,6 +371,22 @@ void Box_impl::remove_before(const Widget_impl * other) {
     }
 }
 
+void Box_impl::remove_front() {
+    if (!holders_.empty()) {
+        auto i = holders_.begin();
+        rm_child(*i);
+        holders_.erase(i);
+    }
+}
+
+void Box_impl::remove_back() {
+    if (!holders_.empty()) {
+        auto i = holders_.end();
+        rm_child(*i);
+        holders_.erase(i);
+    }
+}
+
 void Box_impl::clear() {
     if (!holders_.empty()) {
         for (auto & h: holders_) { rm_child(h); }

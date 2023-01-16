@@ -41,7 +41,6 @@ public:
 
     Align align() const { return align_; }
     void set_align(Align align);
-    Orientation orientation() const { return orient_; }
     void set_spacing(unsigned spacing);
     unsigned spacing() const { return spacing_; }
 
@@ -71,6 +70,8 @@ public:
 
     void remove_before(const Widget_impl * wp);
     void remove_after(const Widget_impl * wp);
+    void remove_front();
+    void remove_back();
 
     bool empty() const;
     bool shrunk(const Widget_impl * wp) const;
@@ -80,6 +81,7 @@ public:
     void expand_all();
     bool horizontal() const;
     void set_orientation(Orientation orient);
+    Orientation orientation() const { return orient_; }
 
     Action & focus_next_action() { return next_action_; }
     Action & focus_previous_action() { return prev_action_; }

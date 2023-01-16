@@ -124,7 +124,7 @@ public:
     bool has_selection() const;
 
     /// Select text between begin and end.
-    void select(Buffer_iter begin, Buffer_iter end);
+    void select(Buffer_citer begin, Buffer_citer end);
 
     /// Select all.
     void select_all();
@@ -159,16 +159,16 @@ public:
     Wrap_mode wrap_mode() const;
 
     /// Set caret position.
-    void move_to(const Buffer_iter pos);
+    void move_to(const Buffer_citer pos);
 
     /// Set caret position.
     void move_to(std::size_t row, std::size_t col);
 
     /// Get iterator for current caret position.
-    Buffer_iter caret() const;
+    Buffer_citer caret() const;
 
     /// Get iterator with specified position.
-    Buffer_iter iter(std::size_t row, std::size_t col) const;
+    Buffer_citer iter(std::size_t row, std::size_t col) const;
 
     /// Enable caret.
     void enable_caret();

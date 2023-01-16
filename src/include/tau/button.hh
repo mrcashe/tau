@@ -50,7 +50,7 @@ public:
     void set_image(Widget & img);
 
     /// Set icon.
-    void set_icon(const ustring & icon_name, unsigned icon_size);
+    void set_icon(const ustring & icon_name, int icon_size);
 
     /// Show button relief.
     void show_relief();
@@ -60,7 +60,6 @@ public:
 
     /// Determines is relief visible.
     bool relief_visible() const;
-
 };
 
 /// Push button.
@@ -89,14 +88,12 @@ public:
     /// Constructor with Action.
     /// Suitable for tool buttons. Uses @b MEDIUM_ICON size (see #Icon_size enum).
     /// @param action the Action to be used.
-    /// @param use_label use label provided by action, if available.
-    Button(Action & action, bool use_label=true);
+    Button(Action & action, Action_items items=ACTION_ALL);
 
     /// Constructor with Action and icon size.
     /// @param action the Action to be used.
     /// @param icon_size the icon size.
-    /// @param use_label use label provided by action, if available.
-    Button(Action & action, int icon_size, bool use_label=true);
+    Button(Action & action, int icon_size, Action_items items=ACTION_ALL);
 
     /// Enable autorepeat of mouse click.
     /// Disabled by default.
@@ -149,20 +146,18 @@ public:
     /// Constructor with Action.
     /// Suitable for tool buttons. Uses @b MEDIUM_ICON size (see #Icon_size enum).
     /// @param action the Action to be used.
-    /// @param use_label use label provided by action, if available.
-    Toggle(Toggle_action & action, bool use_label=true);
+    Toggle(Toggle_action & action, Action_items items=ACTION_ALL);
 
     /// Constructor with Action and icon size.
     /// @param action the Action to be used.
     /// @param icon_size the icon size.
-    /// @param use_label use label provided by action, if available.
-    Toggle(Toggle_action & action, int icon_size, bool use_label=true);
+    Toggle(Toggle_action & action, int icon_size, Action_items items=ACTION_ALL);
 
     /// Toggle button.
     void toggle();
 
     /// Get toggle state.
-    bool toggled() const;
+    bool get() const;
 
     /// Signal emitted when button toggled.
     signal<void(bool)> & signal_toggle();

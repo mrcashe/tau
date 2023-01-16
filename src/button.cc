@@ -46,7 +46,7 @@ void Button_base::set_label(const ustring & text) {
     BUTTON_BASE_IMPL->set_label(text);
 }
 
-void Button_base::set_icon(const ustring & icon_name, unsigned icon_size) {
+void Button_base::set_icon(const ustring & icon_name, int icon_size) {
     BUTTON_BASE_IMPL->set_icon(icon_name, icon_size);
 }
 
@@ -92,13 +92,13 @@ Button::Button(const ustring & label, const ustring & icon_name, int icon_size):
 {
 }
 
-Button::Button(Action & action, bool use_label):
-    Button_base(std::make_shared<Button_impl>(action, use_label))
+Button::Button(Action & action, Action_items items):
+    Button_base(std::make_shared<Button_impl>(action, items))
 {
 }
 
-Button::Button(Action & action, int icon_size, bool use_label):
-    Button_base(std::make_shared<Button_impl>(action, icon_size, use_label))
+Button::Button(Action & action, int icon_size, Action_items items):
+    Button_base(std::make_shared<Button_impl>(action, icon_size, items))
 {
 }
 
@@ -160,13 +160,13 @@ Toggle::Toggle(const ustring & label, const ustring & icon_name, int icon_size):
 {
 }
 
-Toggle::Toggle(Toggle_action & action, bool use_label):
-    Button_base(std::make_shared<Toggle_impl>(action, use_label))
+Toggle::Toggle(Toggle_action & action, Action_items items):
+    Button_base(std::make_shared<Toggle_impl>(action, items))
 {
 }
 
-Toggle::Toggle(Toggle_action & action, int icon_size, bool use_label):
-    Button_base(std::make_shared<Toggle_impl>(action, icon_size, use_label))
+Toggle::Toggle(Toggle_action & action, int icon_size, Action_items items):
+    Button_base(std::make_shared<Toggle_impl>(action, icon_size, items))
 {
 }
 
@@ -174,8 +174,8 @@ void Toggle::toggle() {
     TOGGLE_IMPL->toggle();
 }
 
-bool Toggle::toggled() const {
-    return TOGGLE_IMPL->toggled();
+bool Toggle::get() const {
+    return TOGGLE_IMPL->get();
 }
 
 signal<void(bool)> & Toggle::signal_toggle() {

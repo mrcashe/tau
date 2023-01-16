@@ -137,18 +137,20 @@ enum Oper {
 /// %Icon sizes used when getting icons.
 /// @ingroup enum_group
 enum Icon_size {
-    SMALL_ICON  = 0,    ///< Default icon size is 16 pixels.
-    MEDIUM_ICON = 1,    ///< Default icon size is 22 pixels.
-    NORMAL_ICON = 2,    ///< Default icon size is 32 pixels.
-    LARGE_ICON  = 3     ///< Default icon size is 48 pixels.
+    SMALL_ICON      = 0,    ///< Default icon size is 16 pixels.
+    MEDIUM_ICON     = 1,    ///< Default icon size is 22 pixels.
+    NORMAL_ICON     = 2,    ///< Default icon size is 32 pixels.
+    LARGE_ICON      = 3,    ///< Default icon size is 48 pixels.
+    SMALLEST_ICON   = 0,
+    LARGEST_ICON    = 3
 };
 
 /// Check style.
 /// @ingroup enum_group
 enum Check_style {
-    CHECK_VSTYLE,       ///< V-style rectangular check.
-    CHECK_XSTYLE,       ///< X-style rectangular check.
-    CHECK_RSTYLE        ///< Circular (Radio-like) check.
+    CHECK_VSTYLE,           ///< V-style rectangular check.
+    CHECK_XSTYLE,           ///< X-style rectangular check.
+    CHECK_RSTYLE            ///< Circular (Radio-like) check.
 };
 
 /// File and directory flags.
@@ -214,6 +216,19 @@ enum Wrap_mode {
     WRAP_ELLIPSIZE_CENTER,  ///< Insert ellipsis at the center of line.
     WRAP_ELLIPSIZE_END      ///< Insert ellipsis at the end of line.
                             //   TO BE ADDED...
+};
+
+/// Action items to be used.
+enum Action_items {
+    ACTION_LABEL    = 1 << 0,   ///< Use label provided by action.
+    ACTION_ACCEL    = 1 << 1,   ///< Use accelerators provided by action.
+    ACTION_TOOLTIP  = 1 << 2,   ///< Use tootip provided by action.
+    ACTION_ICON     = 1 << 3,   ///< Use icon provided by action.
+    ACTION_ALL = (ACTION_LABEL|ACTION_ACCEL|ACTION_TOOLTIP|ACTION_ICON),    ///< Use everything provided by action.
+    ACTION_NO_LABEL = (ACTION_ALL & ~ACTION_LABEL),     ///< Don't use label.
+    ACTION_NO_ACCEL = (ACTION_ALL & ~ACTION_ACCEL),     ///< Don't use accelerator.
+    ACTION_NO_TOOLTIP = (ACTION_ALL & ~ACTION_TOOLTIP), ///< Don't use tooltip.
+    ACTION_NO_ICON = (ACTION_ALL & ~ACTION_ICON)        ///< Don't use icon.
 };
 
 } // namespace tau

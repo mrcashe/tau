@@ -37,6 +37,11 @@ Box::Box(Orientation orient, unsigned spacing):
     BOX_IMPL->set_spacing(spacing);
 }
 
+Box::Box(Widget_ptr wp):
+    Container(std::dynamic_pointer_cast<Box_impl>(wp))
+{
+}
+
 void Box::set_spacing(unsigned spacing) {
     BOX_IMPL->set_spacing(spacing);
 }
@@ -73,6 +78,14 @@ void Box::remove_after(const Widget & w) {
     BOX_IMPL->remove_after(w.ptr().get());
 }
 
+void Box::remove_front() {
+    BOX_IMPL->remove_front();
+}
+
+void Box::remove_back() {
+    BOX_IMPL->remove_back();
+}
+
 bool Box::empty() const {
     return BOX_IMPL->empty();
 }
@@ -107,6 +120,10 @@ void Box::shrink_all() {
 
 void Box::expand_all() {
     BOX_IMPL->expand_all();
+}
+
+Orientation Box::orientation() const {
+    return BOX_IMPL->orientation();
 }
 
 void Box::set_orientation(Orientation orient) {

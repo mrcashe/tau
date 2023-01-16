@@ -33,99 +33,98 @@
 
 namespace tau {
 
-class Element_data {
-public:
+struct Element_impl {
+    virtual ~Element_impl() {}
+    std::map<ustring, ustring> attrs;
 
-    virtual ~Element_data() {}
-    std::list<std::pair<ustring, ustring>>      attrs;
+    ustring attribute(const ustring & attr_name) const {
+        auto i = std::find_if(attrs.begin(), attrs.end(), [&attr_name](const std::pair<ustring, ustring> & p) { return attr_name == p.first; } );
+        return i != attrs.end() ? i->second : ustring();
+    }
+
+    void set_attribute(const ustring & attr_name, const ustring & attr_value) {
+        auto i = std::find_if(attrs.begin(), attrs.end(), [&attr_name](const std::pair<ustring, ustring> & p) { return attr_name == p.first; } );
+
+        if (i != attrs.end()) {
+            i->second = attr_value;
+            return;
+        }
+
+        attrs[attr_name] = attr_value;
+    }
+
+    void remove_attribute(const ustring & attr_name) {
+        attrs.erase(attr_name);
+    }
+
 };
 
-class Text_element_data: public Element_data {
-public:
+struct Text_element_impl: Element_impl {
+    std::u32string          str;
 
-    ustring                                     text;
+    Text_element_impl(const ustring & s):
+        str(s)
+    {
+    }
 };
 
-class Data_element_data: public Element_data {
-public:
-
-    std::vector<char32_t>                       chars;
+struct Data_element_impl: Element_impl {
+    std::vector<uint8_t>    data;
 };
 
-class Decl_element_data: public Element_data {
-public:
-
-    ustring                                     encoding;
-    unsigned                                    version_major = 1;
-    unsigned                                    version_minor = 0;
-    bool                                        standalone = true;
+struct Decl_element_impl: Element_impl {
+    ustring                 encoding;
+    unsigned                version_major = 1;
+    unsigned                version_minor = 0;
+    bool                    standalone = true;
 };
 
-class Inst_element_data: public Element_data {
-public:
+struct Inst_element_impl: Element_impl {
+    ustring                 name;
 
-    ustring                                     name;
+    Inst_element_impl(const ustring & n):
+        name(n)
+    {
+    }
 };
 
-class Node_element_data: public Element_data {
-public:
+struct Node_element_impl: Element_impl {
+    ustring                 name;
+    std::list<Element_ptr>  elems;
 
-    ustring                                     name;
-    std::list<Element_ptr>                      elems;
-};
-
-#define TEXT_DATA (static_cast<Text_element_data *>(pdata))
-#define DATA_DATA (static_cast<Data_element_data *>(pdata))
-#define INST_DATA (static_cast<Inst_element_data *>(pdata))
-#define DECL_DATA (static_cast<Decl_element_data *>(pdata))
-#define NODE_DATA (static_cast<Node_element_data *>(pdata))
-
-class Doctype_impl: public Doctype {
-public:
-
-    explicit Doctype_impl(const ustring & name):
-        name_(name)
+    Node_element_impl(const ustring & n=ustring()):
+        name(n)
     {
     }
 
-    // Overrides pure Doctype.
-    ustring name_v() const override {
-        return name_;
+    Node_element_ptr append_node(const ustring & name) {
+        auto node = std::make_shared<Node_element_impl>(name);
+        elems.push_back(node);
+        return node;
     }
 
-    // Overrides pure Doctype.
-    ustring location_v() const override {
-        return location_;
+
+    Text_element_ptr append_text(const ustring & s) {
+        auto elem = std::make_shared<Text_element_impl>(s);
+        elems.push_back(elem);
+        return elem;
     }
+};
 
-    // Overrides pure Doctype.
-    ustring owner_v() const override {
-        return owner_;
+#define TEXT_IMPL (std::static_pointer_cast<Text_element_impl>(impl))
+#define DATA_IMPL (std::static_pointer_cast<Data_element_impl>(impl))
+#define INST_IMPL (std::static_pointer_cast<Inst_element_impl>(impl))
+#define DECL_IMPL (std::static_pointer_cast<Decl_element_impl>(impl))
+#define NODE_IMPL (std::static_pointer_cast<Node_element_impl>(impl))
+
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+
+struct Doctype_impl {
+    Doctype_impl(const ustring & name):
+        name_(name)
+    {
     }
-
-    // Overrides pure Doctype.
-    ustring description_v() const override {
-        return description_;
-    }
-
-    // Overrides pure Doctype.
-    ustring lang_v() const override {
-        return lang_;
-    }
-
-    void set_private(const ustring & loc) {
-        location_ = loc;
-        public_ = false;
-    }
-
-    void set_public(const ustring & name, const ustring & loc);
-
-    /// Overrides pure Doctype.
-    bool is_public_v() const override {
-        return public_;
-    }
-
-private:
 
     ustring     name_;                  // Root element name.
     ustring     location_;              // External DTD location.
@@ -133,66 +132,50 @@ private:
     ustring     description_;           // Public DTD description.
     ustring     lang_;                  // Public DTD language.
     bool        public_ = false;
+
+    void set_public(const ustring & name, const ustring & loc);
+    void set_private(const ustring & loc) { location_ = loc; public_ = false; }
 };
 
-class Doc_impl: public Doc {
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+
+class Doc_impl {
 public:
 
-    Doc_impl();
+    Doc_impl() = default;
+    static Doc_ptr create_xml(bool standalone, const ustring & encoding=ustring("UTF-8"), int version_major=1, int version_minor=0);
+    static Doc_ptr load_from_file(const ustring & path);
 
-    // Overrides pure Doc.
-    void load_v(Buffer buffer) override;
+    void load(Buffer buffer);
+    Node_element_ptr create_root(const ustring & root_name);
+    void set_entity(const ustring & name, const ustring & value);
+    void remove_entity(const ustring & name);
+    ustring entity(const ustring & name) const;
+    bool has_entity(const ustring & name) const;
+    void save(Buffer buf, int indent_size) const;
+    void save_to_file(const ustring & path, int indent_size) const;
 
-    // Overrides pure Doc.
-    Decl_element_ptr decl_v() override;
-
-    // Overrides pure Doc.
-    Doctype_ptr doctype_v() override;
-
-    // Overrides pure Doc.
-    Node_element_ptr root_v() override;
-
-    // Overrides pure Doc.
-    Node_element_ptr create_root_v(const ustring & root_name) override;
-
-    // Overrides pure Doc.
-    std::list<Inst_element_ptr> instrs_v() override;
-
-    // Overrides pure Doc.
-    void set_entity_v(const ustring & name, const ustring & value) override;
-
-    // Overrides pure Doc.
-    void remove_entity_v(const ustring & name) override;
-
-    // Overrides pure Doc.
-    ustring entity_v(const ustring & name) const override;
-
-    // Overrides pure Doc.
-    bool has_entity_v(const ustring & name) const override;
-
-    // Overrides pure Doc.
-    void save_v(Buffer buf, unsigned indent_size) const override;
-
-    // Used by Doc::create_xml().
-    void assign_decl(Decl_element_ptr decl) {
-        decl_ = decl;
-    }
+    Decl_element_ptr decl() { return decl_; }
+    Doctype_ptr doctype() { return doctype_; }
+    Node_element_ptr root() { return root_; }
+    std::vector<Inst_element_ptr> instructions() { return inst_; }
 
     static bool xml_element_name_valid(const ustring & name);
     static bool xml_attr_name_valid(const ustring & name);
 
+protected:
+
+    Node_element_ptr            root_;
+    Decl_element_ptr            decl_;
+    Doctype_ptr                 doctype_;
+    std::vector<Inst_element_ptr> inst_;
+    std::map<ustring, ustring>  entities_;
+
 private:
 
     void expand_entities(ustring & s);
-    void save_element(Element_ptr elem, Buffer buf, unsigned indent, unsigned indent_size) const;
-
-protected:
-
-    Node_element_ptr                    root_;
-    Decl_element_ptr                    decl_;
-    Doctype_ptr                         doctype_;
-    std::list<Inst_element_ptr>         instrs_;
-    std::map<ustring, ustring>          entities_;
+    void save_element(Element_ptr elem, Buffer buf, int indent, int indent_size) const;
 };
 
 } // namespace tau

@@ -188,8 +188,8 @@ void Key_file::load(std::istream & is) {
         Buffer buf;
         ustring sect;
 
-        buf.insert(buf.end(), is);
-        for (Buffer_iter i = buf.begin(); i != buf.end(); i.move_forward_line()) {
+        buf.insert(buf.cend(), is);
+        for (Buffer_citer i = buf.cbegin(); i != buf.cend(); i.move_forward_line()) {
             i.skip_blanks();
 
             if (' ' == csep && ('#' == *i || ';' == *i)) {
@@ -197,7 +197,7 @@ void Key_file::load(std::istream & is) {
             }
 
             if (csep != *i) {
-                Buffer_iter ii(i);
+                Buffer_citer ii(i);
                 ii.move_to_eol();
                 ustring s = str_trim(buf.text(i, ii));
                 ustring::size_type pos;

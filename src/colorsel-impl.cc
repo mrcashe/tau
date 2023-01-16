@@ -541,8 +541,8 @@ void Colorsel_impl::on_html_changed(const ustring & s) {
 
 void Colorsel_impl::on_html_focus_in() {
     Buffer buf = html_->buffer();
-    auto e = buf.end();
-    html_->select(buf.iter(0, 1), e);
+    auto e = buf.cend();
+    html_->select(buf.citer(0, 1), e);
     html_->move_to(e);
 }
 

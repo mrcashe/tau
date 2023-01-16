@@ -37,13 +37,13 @@ class Button_base_impl: public Frame_impl {
 protected:
 
     Button_base_impl();
-    explicit Button_base_impl(const ustring & label);
-    explicit Button_base_impl(Widget_ptr img);
+    Button_base_impl(const ustring & label);
+    Button_base_impl(Widget_ptr img);
     Button_base_impl(Widget_ptr img, const ustring & label);
     Button_base_impl(const ustring & icon_name, int icon_size);
     Button_base_impl(const ustring & label, const ustring & icon_name, int icon_size);
-    explicit Button_base_impl(Action_base & action, bool use_label=true);
-    Button_base_impl(Action_base & action, int icon_size, bool use_label=true);
+    Button_base_impl(Action_base & action, Action_items items=ACTION_ALL);
+    Button_base_impl(Action_base & action, int icon_size, Action_items items=ACTION_ALL);
 
 public:
 
@@ -69,7 +69,7 @@ protected:
 protected:
 
     void init();
-    void init_action(Action_base & action, int icon_size, bool use_label);
+    void init_action(Action_base & action, int icon_size, Action_items items);
 
     void on_mouse_enter(const Point & pt);
     bool on_mouse_down(int mbt, int mm, const Point & position);
@@ -98,13 +98,13 @@ class Button_impl: public Button_base_impl {
 public:
 
     Button_impl();
-    explicit Button_impl(const ustring & label);
-    explicit Button_impl(Widget_ptr img);
+    Button_impl(const ustring & label);
+    Button_impl(Widget_ptr img);
     Button_impl(Widget_ptr img, const ustring & label);
     Button_impl(const ustring & icon_name, int icon_size);
     Button_impl(const ustring & label, const ustring & icon_name, int icon_size);
-    explicit Button_impl(Action & action, bool use_label=true);
-    Button_impl(Action & action, int icon_size, bool use_label=true);
+    Button_impl(Action & action, Action_items items=ACTION_ALL);
+    Button_impl(Action & action, int icon_size, Action_items items=ACTION_ALL);
 
     void enable_repeat();
     void disable_repeat();
@@ -147,15 +147,15 @@ class Toggle_impl: public Button_base_impl {
 public:
 
     Toggle_impl();
-    explicit Toggle_impl(const ustring & label);
-    explicit Toggle_impl(Widget_ptr img);
+    Toggle_impl(const ustring & label);
+    Toggle_impl(Widget_ptr img);
     Toggle_impl(Widget_ptr img, const ustring & label);
     Toggle_impl(const ustring & icon_name, int icon_size);
     Toggle_impl(const ustring & label, const ustring & icon_name, int icon_size);
-    explicit Toggle_impl(Toggle_action & action, bool use_label=true);
-    Toggle_impl(Toggle_action & action, int icon_size, bool use_label=true);
+    Toggle_impl(Toggle_action & action, Action_items items=ACTION_ALL);
+    Toggle_impl(Toggle_action & action, int icon_size, Action_items items=ACTION_ALL);
 
-    bool toggled() const { return state_; }
+    bool get() const { return state_; }
     void toggle();
 
     signal<void(bool)> & signal_toggle() { return signal_toggle_; }

@@ -70,7 +70,7 @@ public:
     /// Test if empty (unassigned).
     bool empty() const;
 
-    /// Test if not empty.
+    /// Test if not empty (assigned).
     operator bool() const { return !empty(); }
 
     /// Compare.
@@ -106,10 +106,12 @@ public:
     /// @param[out] km key modifier, see #Key_modifiers enum.
     void get_keys(char32_t & kc, int & km) const;
 
-    /// Gets text representation of assigned key.
+    /// Gets specification of assigned key.
+    /// @sa key_spec_to_string()
     ustring spec() const;
 
     /// Gets human readable label.
+    /// @sa key_spec_to_label()
     ustring label() const;
 
     /// Enable accelerator.
@@ -118,12 +120,13 @@ public:
     /// Disable accelerator.
     void disable();
 
-    /// Determines whether accelerator disabled or not.
+    /// Determines whether accelerator disabled.
     bool disabled() const { return disabled_; }
 
     /// @private
     bool handle_accel(char32_t kc, int km);
 
+    /// Connect slot to the internal signal.
     connection connect(slot<bool()> slot_activate) {
         return signal_activate_.connect(slot_activate);
     }

@@ -53,8 +53,8 @@ struct Buffer_impl;
 using Buffer_ptr = std::shared_ptr<Buffer_impl>;
 using Buffer_cptr = std::shared_ptr<const Buffer_impl>;
 
-class Buffer_iter;
-class Buffer_iter_impl;
+class Buffer_citer;
+class Buffer_citer_impl;
 
 class Check;
 class Check_menu_item;
@@ -70,12 +70,14 @@ using Cursor_cptr = std::shared_ptr<const Cursor_impl>;
 class Curve;
 
 class Data_element;
-using Data_element_ptr = std::shared_ptr<Data_element>;
-using Data_element_cptr = std::shared_ptr<const Data_element>;
+struct Data_element_impl;
+using Data_element_ptr = std::shared_ptr<Data_element_impl>;
+using Data_element_cptr = std::shared_ptr<const Data_element_impl>;
 
 class Decl_element;
-using Decl_element_ptr = std::shared_ptr<Decl_element>;
-using Decl_element_cptr = std::shared_ptr<const Decl_element>;
+struct Decl_element_impl;
+using Decl_element_ptr = std::shared_ptr<Decl_element_impl>;
+using Decl_element_cptr = std::shared_ptr<const Decl_element_impl>;
 
 class Display;
 class Display_impl;
@@ -83,17 +85,19 @@ using Display_ptr = std::shared_ptr<Display_impl>;
 using Display_cptr = std::shared_ptr<const Display_impl>;
 
 class Doc;
-using Doc_ptr = std::shared_ptr<Doc>;
-using Doc_cptr = std::shared_ptr<const Doc>;
+class Doc_impl;
+using Doc_ptr = std::shared_ptr<Doc_impl>;
+using Doc_cptr = std::shared_ptr<const Doc_impl>;
 
 class Doctype;
-using Doctype_ptr = std::shared_ptr<Doctype>;
-using Doctype_cptr = std::shared_ptr<const Doctype>;
+struct Doctype_impl;
+using Doctype_ptr = std::shared_ptr<Doctype_impl>;
+using Doctype_cptr = std::shared_ptr<const Doctype_impl>;
 
 class Element;
-class Element_data;
-using Element_ptr = std::shared_ptr<Element>;
-using Element_cptr = std::shared_ptr<const Element>;
+struct Element_impl;
+using Element_ptr = std::shared_ptr<Element_impl>;
+using Element_cptr = std::shared_ptr<const Element_impl>;
 
 class Encoding;
 
@@ -123,8 +127,9 @@ using Glyph_ptr = std::shared_ptr<Glyph_impl>;
 using Glyph_cptr = std::shared_ptr<const Glyph_impl>;
 
 class Inst_element;
-using Inst_element_ptr = std::shared_ptr<Inst_element>;
-using Inst_element_cptr = std::shared_ptr<const Inst_element>;
+struct Inst_element_impl;
+using Inst_element_ptr = std::shared_ptr<Inst_element_impl>;
+using Inst_element_cptr = std::shared_ptr<const Inst_element_impl>;
 
 class Key_file;
 class Key_file_impl;
@@ -147,8 +152,9 @@ class Menubar;
 class Menubox;
 
 class Node_element;
-using Node_element_ptr = std::shared_ptr<Node_element>;
-using Node_element_cptr = std::shared_ptr<const Node_element>;
+struct Node_element_impl;
+using Node_element_ptr = std::shared_ptr<Node_element_impl>;
+using Node_element_cptr = std::shared_ptr<const Node_element_impl>;
 
 class Painter;
 class Painter_impl;
@@ -180,8 +186,9 @@ class Submenu_item;
 class Territory;
 
 class Text_element;
-using Text_element_ptr = std::shared_ptr<Text_element>;
-using Text_element_cptr = std::shared_ptr<const Text_element>;
+struct Text_element_impl;
+using Text_element_ptr = std::shared_ptr<Text_element_impl>;
+using Text_element_cptr = std::shared_ptr<const Text_element_impl>;
 
 class Timer;
 class Timer_impl;

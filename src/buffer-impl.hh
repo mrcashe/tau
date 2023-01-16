@@ -32,18 +32,18 @@
 
 namespace tau {
 
-class Buffer_iter_impl {
+class Buffer_citer_impl {
 protected:
 
-    friend Buffer_iter;
-    Buffer_iter_impl(const Buffer_iter_impl & other) = delete;
-    Buffer_iter_impl & operator=(const Buffer_iter_impl & other) = delete;
+    friend Buffer_citer;
+    Buffer_citer_impl(const Buffer_citer_impl & other) = delete;
+    Buffer_citer_impl & operator=(const Buffer_citer_impl & other) = delete;
 
 public:
 
-    Buffer_iter_impl() = default;
-    static Buffer_iter_impl * create();
-    static Buffer_iter_impl * create(Buffer_ptr buf, size_t row, size_t col);
+    Buffer_citer_impl() = default;
+    static Buffer_citer_impl * create();
+    static Buffer_citer_impl * create(Buffer_ptr buf, size_t row, size_t col);
 
 private:
 
@@ -80,9 +80,9 @@ struct Buffer_impl {
     Encoding            encoding { "UTF-8" };
     std::u32string      newlines;
 
-    signal<void(Buffer_iter, Buffer_iter, std::u32string)> signal_erase;
-    signal<void(Buffer_iter, Buffer_iter)> signal_insert;
-    signal<void(Buffer_iter, Buffer_iter, std::u32string)> signal_replace;
+    signal<void(Buffer_citer, Buffer_citer, std::u32string)> signal_erase;
+    signal<void(Buffer_citer, Buffer_citer)> signal_insert;
+    signal<void(Buffer_citer, Buffer_citer, std::u32string)> signal_replace;
     signal<void()> signal_lock;
     signal<void()> signal_unlock;
     signal<void(const Encoding &)> signal_encoding_changed;

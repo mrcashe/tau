@@ -77,18 +77,18 @@ Button_base_impl::Button_base_impl(const ustring & icon_name, int icon_size):
     set_icon(icon_name, icon_size);
 }
 
-Button_base_impl::Button_base_impl(Action_base & action, bool use_label):
+Button_base_impl::Button_base_impl(Action_base & action, Action_items items):
     Frame_impl()
 {
     init();
-    init_action(action, MEDIUM_ICON, use_label);
+    init_action(action, MEDIUM_ICON, items);
 }
 
-Button_base_impl::Button_base_impl(Action_base & action, int icon_size, bool use_label):
+Button_base_impl::Button_base_impl(Action_base & action, int icon_size, Action_items items):
     Frame_impl()
 {
     init();
-    init_action(action, icon_size, use_label);
+    init_action(action, icon_size, items);
 }
 
 void Button_base_impl::init() {
@@ -113,23 +113,34 @@ void Button_base_impl::init() {
     signal_mouse_up().connect(fun(this, &Button_base_impl::on_mouse_up), true);
 }
 
-void Button_base_impl::init_action(Action_base & action, int icon_size, bool use_label) {
+void Button_base_impl::init_action(Action_base & action, int icon_size, Action_items items) {
     action.signal_enable().connect(fun(this, &Button_base_impl::thaw));
     action.signal_disable().connect(fun(this, &Button_base_impl::freeze));
     action.signal_show().connect(fun(this, &Button_base_impl::appear));
     action.signal_hide().connect(fun(this, &Button_base_impl::disappear));
-    action.signal_label_changed().connect(fun(this, &Button_base_impl::on_action_label_changed));
-    action.signal_tooltip_changed().connect(tau::bind(fun(this, &Button_base_impl::on_action_tooltip_changed), std::ref(action)));
-    action.signal_accel_added().connect(tau::bind(fun(this, &Button_base_impl::on_action_accel_changed), std::ref(action)));
-    action.signal_accel_removed().connect(tau::bind(fun(this, &Button_base_impl::on_action_accel_changed), std::ref(action)));
-    action.signal_icon_changed().connect(tau::bind(fun(this, &Button_base_impl::set_icon), icon_size));
-
-    if (!action.label().empty() && use_label) { set_label(action.label()); }
-    if (!action.icon_name().empty()) { set_icon(action.icon_name(), icon_size); }
     if (action.hidden()) { disappear(); }
     if (action.disabled()) { freeze(); }
-    tooltip_ = action.tooltip();
-    set_action_tooltip(action);
+
+    if (items & ACTION_LABEL) {
+        action.signal_label_changed().connect(fun(this, &Button_base_impl::on_action_label_changed));
+        if (!action.label().empty()) { set_label(action.label()); }
+    }
+
+    if (items & ACTION_TOOLTIP) {
+        action.signal_tooltip_changed().connect(tau::bind(fun(this, &Button_base_impl::on_action_tooltip_changed), std::ref(action)));
+        set_action_tooltip(action);
+        tooltip_ = action.tooltip();
+    }
+
+    if (items & ACTION_ACCEL) {
+        action.signal_accel_added().connect(tau::bind(fun(this, &Button_base_impl::on_action_accel_changed), std::ref(action)));
+        action.signal_accel_removed().connect(tau::bind(fun(this, &Button_base_impl::on_action_accel_changed), std::ref(action)));
+    }
+
+    if (items & ACTION_ICON) {
+        action.signal_icon_changed().connect(tau::bind(fun(this, &Button_base_impl::set_icon), icon_size));
+        if (!action.icon_name().empty()) { set_icon(action.icon_name(), icon_size); }
+    }
 }
 
 void Button_base_impl::set_label(const ustring & s) {
@@ -339,15 +350,15 @@ Button_impl::Button_impl(const ustring & icon_name, int icon_size):
     init();
 }
 
-Button_impl::Button_impl(Action & action, bool use_label):
-    Button_base_impl(action, use_label)
+Button_impl::Button_impl(Action & action, Action_items items):
+    Button_base_impl(action, items)
 {
     init();
     signal_click_.connect(fun(action, &Action::exec));
 }
 
-Button_impl::Button_impl(Action & action, int icon_size, bool use_label):
-    Button_base_impl(action, icon_size, use_label)
+Button_impl::Button_impl(Action & action, int icon_size, Action_items items):
+    Button_base_impl(action, icon_size, items)
 {
     init();
     signal_click_.connect(fun(action, &Action::exec));
@@ -477,15 +488,15 @@ Toggle_impl::Toggle_impl(const ustring & icon_name, int icon_size):
 {
 }
 
-Toggle_impl::Toggle_impl(Toggle_action & action, bool use_label):
-    Button_base_impl(action, use_label)
+Toggle_impl::Toggle_impl(Toggle_action & action, Action_items items):
+    Button_base_impl(action, items)
 {
     signal_toggle_.connect(fun(action, &Toggle_action::set));
     action.connect(fun(this, &Toggle_impl::on_action_toggle));
 }
 
-Toggle_impl::Toggle_impl(Toggle_action & action, int icon_size, bool use_label):
-    Button_base_impl(action, icon_size, use_label)
+Toggle_impl::Toggle_impl(Toggle_action & action, int icon_size, Action_items items):
+    Button_base_impl(action, icon_size, items)
 {
     signal_toggle_.connect(fun(action, &Toggle_action::set));
     action.connect(fun(this, &Toggle_impl::on_action_toggle));
