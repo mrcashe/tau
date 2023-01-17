@@ -36,12 +36,17 @@ Navigator::Navigator(const ustring & path):
 {
 }
 
-ustring Navigator::dir() const {
-    return NAVIGATOR_IMPL->dir();
+Navigator::Navigator(Widget_ptr wp):
+    Widget(std::dynamic_pointer_cast<Navigator_impl>(wp))
+{
 }
 
-void Navigator::chdir(const ustring & path) {
-    NAVIGATOR_IMPL->chdir(path);
+void Navigator::set_uri(const ustring & uri) {
+    NAVIGATOR_IMPL->set_uri(uri);
+}
+
+ustring Navigator::uri() const {
+    return NAVIGATOR_IMPL->uri();
 }
 
 void Navigator::reload() {
@@ -88,18 +93,6 @@ ustring Navigator::invisible_info_items(char32_t sep) const {
     return NAVIGATOR_IMPL->visible_info_items(sep);
 }
 
-void Navigator::show_hidden_files() {
-    NAVIGATOR_IMPL->show_hidden_files();
-}
-
-void Navigator::hide_hidden_files() {
-    NAVIGATOR_IMPL->hide_hidden_files();
-}
-
-bool Navigator::hidden_files_visible() const {
-    return NAVIGATOR_IMPL->hidden_files_visible();
-}
-
 void Navigator::allow_multiple_select() {
     NAVIGATOR_IMPL->allow_multiple_select();
 }
@@ -122,18 +115,6 @@ void Navigator::disallow_dir_select() {
 
 bool Navigator::dir_select_allowed() const {
     return NAVIGATOR_IMPL->dir_select_allowed();
-}
-
-void Navigator::set_show_dirs_only() {
-    NAVIGATOR_IMPL->set_show_dirs_only();
-}
-
-void Navigator::unset_show_dirs_only() {
-    NAVIGATOR_IMPL->unset_show_dirs_only();
-}
-
-bool Navigator::dirs_only_visible() const {
-    return NAVIGATOR_IMPL->dirs_only_visible();
 }
 
 void Navigator::set_filter(const ustring & patterns) {

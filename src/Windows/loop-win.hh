@@ -74,7 +74,7 @@ public:
     void emit() override;
 
     // Overrides pure Event_impl.
-    void unset() override;
+    void release() override;
 
     HANDLE handle() const override { return handle_; }
     signal<void()> & signal_poll() override { return signal_ready_; }

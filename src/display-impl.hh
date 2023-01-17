@@ -50,10 +50,9 @@ public:
 
     static Display_ptr this_display();
     static Display_ptr open(const ustring & args);
-
-    static Display_ptr strip(Display dp) { return dp.impl; }
     static Display wrap(Display_ptr dp) { return Display(dp); }
 
+    int id() const { return dpid_; }
     Size size_px() const;
     Size size_mm() const;
     unsigned dpi() const;

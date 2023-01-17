@@ -40,31 +40,63 @@ namespace tau {
 class Curve {
 public:
 
+    /// @name Constructors
+    /// @{
+
     Curve(const Vector & end);
     Curve(const Vector & cp1, const Vector & end);
     Curve(const Vector & cp1, const Vector & cp2, const Vector & end);
     Curve(const Curve & other) = default;
     Curve & operator=(const Curve & other) = default;
+    Curve(Curve && other) = default;
+    Curve & operator=(Curve && other) = default;
 
+    /// @}
+    /// Gets curve order.
+    /// @return 0 if empty, 1 if linear, 2 if conic and 3 if cubic.
     unsigned order() const;
+
+    /// Gets end point.
     Vector end() const;
+
+    /// Gets control point 1 (for conic and cubic curves).
     Vector cp1() const;
+
+    /// Gets control point 2 (for cubic curves).
     Vector cp2() const;
 
-    void set(const Vector & end);
-    void set(const Vector & cp1, const Vector & end);
-    void set(const Vector & cp1, const Vector & cp2, const Vector & end);
+    /// Assign value.
+    void assign(const Vector & end);
+
+    /// Assign value.
+    void assign(const Vector & cp1, const Vector & end);
+
+    /// Assign value.
+    void assign(const Vector & cp1, const Vector & cp2, const Vector & end);
+
+    /// Set control point 1.
     void set_cp1(const Vector & v);
+
+    /// Set control point 2.
     void set_cp2(const Vector & v);
 
+    /// Scale by Vector.
     void scale(const Vector & v);
-    void scale(double s);
+
+    /// Scale by factor.
+    void scale(double factor);
+
+    /// Scale by factors.
     void scale(double sx, double sy, double sz=1.0);
 
+    /// Translate (offset) the cureve.
     void translate(const Vector & v);
+
+    /// Translate (offset) the cureve.
     void translate(double ox, double oy=0.0, double oz=0.0);
 
-    void map(const Matrix & mat);
+    /// Trnsform by Matrix.
+    void transform(const Matrix & mat);
 
 private:
 
@@ -75,11 +107,10 @@ private:
 };
 
 inline Curve & operator*=(Curve & cv, const Matrix & mat) {
-    cv.map(mat);
+    cv.transform(mat);
     return cv;
 }
 
 } // namespace tau
 
 #endif // TAU_CURVE_HH
-

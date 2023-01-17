@@ -34,10 +34,16 @@
 
 namespace tau {
 
-/// @ingroup widget_group
 /// Numeric value editor.
+///
+/// This class is a wrapper around its implementation shared pointer Counter_impl.
+///
+/// @ingroup widget_group
 class Counter: public Widget {
 public:
+
+    /// @name Constructors
+    /// @{
 
     /// Constructor with values.
     /// @param value assigned value
@@ -52,6 +58,34 @@ public:
     /// @param min_value minimal value
     Counter(Border_style bs, double value=0.0, double max_value=0.0, double min_value=0.0);
 
+    /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Counter(const Counter & other) = default;
+
+    /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Counter & operator=(const Counter & other) = default;
+
+    /// Constructor with implementation pointer.
+    ///
+    /// @warning Unlike some other classes (Painter as an example), the whole
+    /// @ref widget_group "widget stack" is unable to run with pure implementation
+    /// pointer, so attempting to construct widget from a pure (@b nullptr) pointer
+    /// will cause throwing an user_error exception!
+    /// That exception also will be thrown if user tries to construct the object
+    /// from incompatible implementation shared pointer.
+    ///
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Counter(Widget_ptr wp);
+
+    /// @}
     /// Set border style.
     /// @param bs the border style, see #Border_style enum
     void set_border_style(Border_style bs);
@@ -66,6 +100,9 @@ public:
     /// Disallow value edition.
     void disallow_edit();
 
+    /// Test whether value edition allowed or not.
+    bool edit_allowed() const;
+
     /// Show increment and decrement buttons.
     /// @note The buttons are visible by default.
     void show_buttons();
@@ -76,9 +113,6 @@ public:
 
     /// Determines if increment and decrement buttons visible.
     bool buttons_visible() const;
-
-    /// Test whether value edition allowed or not.
-    bool edit_allowed() const;
 
     /// Set new value.
     /// @note This method does not emit signal_value_changed()
@@ -178,24 +212,26 @@ public:
     void decrease_page();
 
     /// Append widget after counting value.
-    /// @throw user_error if widget already inserted into another container.
+    /// @throw user_error if w already inserted into another container.
+    /// @throw internal_error if w has pure implementation pointer.
     void append(Widget & w, bool shrink=false);
 
     /// Append text after counting value.
     /// @param text text to be appended.
-    /// @param margin_left_hint left margin.
-    /// @param margin_right_hint right margin.
-    void append(const ustring & text, unsigned margin_left_hint=0, unsigned margin_right_hint=0);
+    /// @param margin_left left margin.
+    /// @param margin_right right margin.
+    void append(const ustring & text, unsigned margin_left=0, unsigned margin_right=0);
 
     /// Prepend widget before counting value.
-    /// @throw user_error if widget already inserted into another container.
+    /// @throw user_error if w already inserted into another container.
+    /// @throw internal_error if w has pure implementation pointer.
     void prepend(Widget & w, bool shrink=false);
 
     /// Prepend text before counting value.
     /// @param text text to be prepended.
-    /// @param margin_left_hint left margin.
-    /// @param margin_right_hint right margin.
-    void prepend(const ustring & text, unsigned margin_left_hint=0, unsigned margin_right_hint=0);
+    /// @param margin_left left margin.
+    /// @param margin_right right margin.
+    void prepend(const ustring & text, unsigned margin_left=0, unsigned margin_right=0);
 
     /// Emits when entered text changed.
     signal<void(double)> & signal_value_changed();

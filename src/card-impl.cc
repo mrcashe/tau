@@ -208,7 +208,7 @@ void Card_impl::show_next() {
     }
 }
 
-void Card_impl::show_prev() {
+void Card_impl::show_previous() {
     if (holders_.size() > 1) {
         if (auto cw = current()) {
             for (auto i = holders_.rbegin(); i != holders_.rend(); ++i) {

@@ -39,8 +39,8 @@ class Entry_impl: public Frame_impl {
 public:
 
     Entry_impl(Border_style border_style=BORDER_INSET);
-    explicit Entry_impl(Align text_align, Border_style border_style=BORDER_INSET);
-    explicit Entry_impl(const ustring & text, Border_style border_style=BORDER_INSET);
+    Entry_impl(Align text_align, Border_style border_style=BORDER_INSET);
+    Entry_impl(const ustring & text, Border_style border_style=BORDER_INSET);
     Entry_impl(const ustring & text, Align text_align, Border_style border_style=BORDER_INSET);
 
     void allow_edit();
@@ -93,7 +93,7 @@ private:
 
     void init(Align text_align);
     void on_enter();
-    void on_edit_changed();
+    void on_buffer_changed();
     bool on_mouse_down(int mbt, int mm, const Point & where);
 };
 

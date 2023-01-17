@@ -74,7 +74,10 @@ class Main: public tau::Toplevel {
         tau::ustring    path;
         tau::connection meta_cx;
         tau::connection encoding_cx;
-        std::size_t     undo_index = 0;
+        tau::connection on_edit_focus_in_cx;
+        tau::connection enable_redo_cx;
+        tau::connection on_edit_focus_out_cx;
+        tau::connection disable_redo_cx;
         std::size_t     lines = 0;
         int             page;
         uint64_t        metaid = 0;
@@ -102,6 +105,7 @@ class Main: public tau::Toplevel {
     bool                fileop_in_dialogs_ = false;
     tau::connection     show_cx_;
     tau::connection     session_cx_;
+    tau::signal<bool()> signal_modified_;
 
     tau::Menubar        menubar_;
     tau::Box            toolbar_ { tau::OR_RIGHT, 6 };
@@ -171,14 +175,13 @@ public:
         connect_action(file_close_others_action_);
         file_close_others_action_.disable();
 
-        edit_undo_master_action_.disable();
+        edit_undo_action_.disable();
         connect_action(edit_undo_action_);
-
-        edit_redo_master_action_.disable();
+        edit_redo_action_.disable();
         connect_action(edit_redo_action_);
 
-        connect_action(edit_unselect_action_);
         edit_unselect_action_.disable();
+        connect_action(edit_unselect_action_);
 
         edit_select_all_master_action_.disable();
         connect_action(edit_select_all_action_);
@@ -556,6 +559,7 @@ private:
         return metas_.end() != iter ? iter->second.id : 0;
     }
 
+    // Connected to editor's signal_focus_in().
     void update_pos(Page & pg) {
         tau::Buffer_citer i = pg.edit.caret();
 
@@ -571,6 +575,30 @@ private:
             pg.col_value.assign("0");
             pg.uni_value.assign("U+0000");
         }
+    }
+
+    // Connected to editor's signal_focus_in().
+    void on_edit_focus_in(Page & pg) {
+        if (pg.edit.modified()) { file_save_action_.enable(); }
+        else { file_save_action_.disable(); }
+        if (pg.edit.undo_action().enabled()) { edit_undo_action_.enable(); }
+        else { edit_undo_action_.disable(); }
+        if (pg.edit.redo_action().enabled()) { edit_redo_action_.enable(); }
+        else { edit_redo_action_.disable(); }
+        pg.on_edit_focus_in_cx = pg.edit.undo_action().signal_enable().connect(tau::fun(edit_undo_action_, &tau::Action::enable));
+        pg.on_edit_focus_out_cx = pg.edit.undo_action().signal_disable().connect(tau::fun(edit_undo_action_, &tau::Action::disable));
+        pg.enable_redo_cx = pg.edit.redo_action().signal_enable().connect(tau::fun(edit_redo_action_, &tau::Action::enable));
+        pg.disable_redo_cx = pg.edit.redo_action().signal_disable().connect(tau::fun(edit_redo_action_, &tau::Action::disable));
+    }
+
+    // Connected to editor's signal_focus_out().
+    void on_edit_focus_out(Page & pg) {
+        edit_undo_action_.disable();
+        edit_redo_action_.disable();
+        pg.on_edit_focus_in_cx.disconnect();
+        pg.enable_redo_cx.disconnect();
+        pg.on_edit_focus_out_cx.disconnect();
+        pg.disable_redo_cx.disconnect();
     }
 
     void on_utimer(Page & pg) {
@@ -607,14 +635,18 @@ private:
 
         pg.edit.assign(buffer);
         pg.encoding_cx = pg.edit.buffer().signal_encoding_changed().connect(tau::bind(tau::fun(this, &Main::on_buffer_encoding_changed), std::ref(pg)));
-        pg.edit.signal_changed().connect(tau::bind(tau::fun(this, &Main::on_edit_changed), std::ref(pg)));
+        pg.edit.buffer().signal_changed().connect(tau::bind(tau::fun(this, &Main::on_edit_changed), std::ref(pg)));
 
         pg.edit.style().font("font").set(tau::font_size_change(font_spec_, font_size_));
         pg.edit.style().get("font").signal_changed().connect(tau::bind(tau::fun(this, &Main::on_edit_font_changed), std::ref(pg)));
         pg.edit.signal_caret_motion().connect(tau::bind(tau::fun(this, &Main::on_caret_motion), std::ref(pg)));
         pg.edit.signal_focus_in().connect(tau::bind(tau::fun(this, &Main::update_pos), std::ref(pg)));
+        pg.edit.signal_focus_in().connect(tau::bind(tau::fun(this, &Main::on_edit_focus_in), std::ref(pg)));
+        pg.edit.signal_focus_out().connect(tau::bind(tau::fun(this, &Main::on_edit_focus_out), std::ref(pg)));
         pg.edit.signal_selection_changed().connect(tau::bind(tau::fun(this, &Main::on_edit_selection_changed), std::ref(pg)));
+        pg.edit.signal_modified().connect(tau::bind(tau::fun(this, &Main::on_modified), std::ref(pg)));
         pg.edit.insert_action().connect(tau::bind(tau::fun(this, &Main::on_edit_insert_toggled), std::ref(pg)));
+        signal_modified_.connect(tau::fun(pg.edit, &tau::Edit::modified));
         pg.edit.cancel_action().disable();
 
         pg.zin_action.connect_master_action(view_increase_font_master_action_);
@@ -840,7 +872,6 @@ private:
 
     void on_notebook_page_added(int page) {
         if (!pages_.empty()) {
-            file_save_all_action_.enable();
             file_close_all_action_.enable();
         }
 
@@ -857,7 +888,6 @@ private:
         }
 
         if (pages_.empty()) {
-            file_save_all_action_.disable();
             file_close_all_action_.disable();
         }
 
@@ -871,6 +901,8 @@ private:
                 break;
             }
         }
+
+        update_save_all();
     }
 
     void on_notebook_page_reordered(int old_page, int new_page) {
@@ -893,10 +925,6 @@ private:
                 else { file_close_others_action_.disable(); }
                 file_save_as_action_.enable();
                 edit_select_all_master_action_.enable();
-                if (pg.edit.can_undo()) { edit_undo_master_action_.enable(); }
-                else { edit_undo_master_action_.disable(); }
-                if (pg.edit.can_redo()) { edit_redo_master_action_.enable(); }
-                else { edit_redo_master_action_.disable(); }
 
                 if (pg.edit.has_selection()) {
                     edit_copy_master_action_.enable();
@@ -907,9 +935,6 @@ private:
                     edit_copy_master_action_.disable();
                     edit_cut_master_action_.disable();
                 }
-
-                if (pg.undo_index != pg.edit.undo_index() && !pg.path.empty()) { file_save_action_.enable(); }
-                else { file_save_action_.disable(); }
 
                 view_increase_font_master_action_.enable();
                 view_decrease_font_master_action_.enable();
@@ -923,8 +948,6 @@ private:
         file_close_action_.disable();
         file_save_action_.disable();
         file_save_as_action_.disable();
-        edit_undo_master_action_.disable();
-        edit_redo_master_action_.disable();
         edit_copy_master_action_.disable();
         edit_cut_master_action_.disable();
         edit_select_all_master_action_.disable();
@@ -1031,46 +1054,11 @@ private:
     }
 
     void on_edit_changed(Page & pg) {
-        if (pg.page == notebook_.current_page()) {
-            if (pg.edit.can_undo()) { edit_undo_master_action_.enable(); }
-            else { edit_undo_master_action_.disable(); }
-            if (pg.edit.can_redo()) { edit_redo_master_action_.enable(); }
-            else { edit_redo_master_action_.disable(); }
-        }
-
         std::size_t lines = pg.edit.buffer().lines();
 
         if (lines != pg.lines) {
             pg.lines = lines;
             pg.rows_value.assign(tau::str_format(pg.lines));
-        }
-
-        if (pg.undo_index != pg.edit.undo_index()) {
-            pg.save_ico.show();
-
-            if (!pg.path.empty()) {
-                if (pg.page == notebook_.current_page()) { file_save_action_.enable(); }
-                file_save_all_action_.enable();
-            }
-        }
-
-        else {
-            pg.save_ico.hide();
-
-            if (!pg.path.empty()) {
-                if (pg.page == notebook_.current_page()) { file_save_action_.disable(); }
-                bool en = true;
-
-                for (const Page & p: pages_) {
-                    if (p.edit.undo_index() != pg.undo_index) {
-                        en = false;
-                        break;
-                    }
-                }
-
-                if (en) { file_save_all_action_.enable(); }
-                else { file_save_all_action_.disable(); }
-            }
         }
 
         pg.meta_cx.disconnect();
@@ -1095,11 +1083,26 @@ private:
         }
     }
 
+    void update_save_all() {
+        if (signal_modified_()) { file_save_all_action_.enable(); }
+        else { file_save_all_action_.disable(); }
+    }
+
+    void on_modified(bool modified, Page & pg) {
+        if (modified) { pg.save_ico.show(); }
+        else { pg.save_ico.hide(); }
+
+        if (!pg.path.empty() && pg.edit.has_focus()) {
+            if (modified) { file_save_action_.enable(); }
+            else { file_save_action_.disable(); }
+        }
+
+        update_save_all();
+    }
+
     void save_page(Page & pg) {
         if (!pg.path.empty()) {
             save_metadata(pg);
-            pg.undo_index = pg.edit.undo_index();
-            pg.edit.split_undo();
             pg.edit.buffer().save_to_file(pg.path);
             pg.save_ico.hide();
         }
@@ -1111,24 +1114,12 @@ private:
 
     void load_fileman(tau::Fileman & fman) {
         tau::Key_section & sect = state_.section("navigator");
-        if (state_.get_boolean(sect, "show_hidden")) { fman.show_hidden_files(); }
-        if (!state_.get_boolean(sect, "places_visible", true)) { fman.hide_places(); }
-        fman.show_info(state_.get_string(sect, "visible_info_items"), state_.list_separator());
-        fman.hide_info(state_.get_string(sect, "invisible_info_items"), state_.list_separator());
-        fman.sort_by(state_.get_string(sect, "sort_by", "name"));
-        fman.set_ratio(state_.get_double(sect, "ratio", 0.75));
-        if (state_.get_boolean(sect, "sort_backward")) { fman.sort_backward(); }
+        fman.load_state(state_, sect);
     }
 
-    void save_fileman(const tau::Fileman & fman) {
+    void save_fileman(tau::Fileman & fman) {
         tau::Key_section & sect = state_.section("navigator");
-        state_.set_string(sect, "visible_info_items", fman.visible_info_items(state_.list_separator()));
-        state_.set_string(sect, "invisible_info_items", fman.invisible_info_items(state_.list_separator()));
-        state_.set_string(sect, "sort_by", fman.sorted_by());
-        state_.set_boolean(sect, "sort_backward", fman.sorted_backward());
-        state_.set_boolean(sect, "show_hidden", fman.hidden_files_visible());
-        state_.set_boolean(sect, "places_visible", fman.places_visible());
-        state_.set_double(sect, "ratio", fman.ratio());
+        fman.save_state(state_, sect);
     }
 
     void on_saver_apply(tau::Fileman * fman) {
@@ -1136,13 +1127,13 @@ private:
         if (notebook_.hidden()) { close_pop(); }
     }
 
-    void on_loader_apply(const tau::Fileman & fman) {
+    void on_loader_apply(tau::Fileman & fman) {
         auto filenames = fman.selection();
         if (notebook_.hidden()) { card_.remove_current(); }
         int first_page = -1, exist_page = -1;
 
         for (const tau::ustring & f: filenames) {
-            tau::ustring path = path_build(fman.dir(), f);
+            tau::ustring path = path_build(fman.uri(), f);
 
             for (const Page & pg: pages_) {
                 if (pg.path == path) {
@@ -1197,7 +1188,7 @@ private:
             tau::Dialog dlg(*this, "Open a file", bounds);
             dlg.insert(fman);
             fman.signal_apply().connect(tau::bind(fun(this, &Main::on_loader_apply), std::ref(fman)));
-            fman.cancel_action().connect(tau::bind(fun(this, &Main::save_fileman), std::cref(fman)));
+            fman.cancel_action().connect(tau::bind(fun(this, &Main::save_fileman), std::ref(fman)));
             dlg.show();
             fman.take_focus();
             dlg.grab_modal();
@@ -1215,9 +1206,9 @@ private:
             tau::Fileman * fman = new tau::Fileman(tau::FILEMAN_OPEN, path);
             fman->allow_multiple_select();
             load_fileman(*fman);
-            fman->signal_apply().connect(tau::bind(fun(this, &Main::on_loader_apply), std::cref(*fman)));
+            fman->signal_apply().connect(tau::bind(fun(this, &Main::on_loader_apply), std::ref(*fman)));
             fman->signal_apply().connect(tau::fun(this, &Main::close_pop));
-            fman->cancel_action().connect(tau::bind(fun(this, &Main::save_fileman), std::cref(*fman)));
+            fman->cancel_action().connect(tau::bind(fun(this, &Main::save_fileman), std::ref(*fman)));
             fman->cancel_action().connect(tau::fun(this, &Main::close_pop));
             set_title(tau::program_name()+": Open a File");
             show_pop(fman);
@@ -1253,7 +1244,7 @@ private:
             tau::Fileman * fman = new tau::Fileman(tau::FILEMAN_SAVE, path.empty() ? tau::path_user_home_dir() : path);
             load_fileman(*fman);
             fman->signal_apply().connect(tau::bind(fun(this, &Main::on_saver_apply), fman));
-            fman->cancel_action().connect(tau::bind(fun(this, &Main::save_fileman), std::cref(*fman)));
+            fman->cancel_action().connect(tau::bind(fun(this, &Main::save_fileman), std::ref(*fman)));
             fman->cancel_action().connect(tau::fun(this, &Main::close_pop));
             set_title(tau::program_name()+": Save File As");
             show_pop(fman);
@@ -1366,7 +1357,7 @@ private:
     }
 
     void on_menu_prev_doc() {
-        notebook_.show_prev();
+        notebook_.show_previous();
     }
 
     void on_edit_font_changed(Page & pg) {

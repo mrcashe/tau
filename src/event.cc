@@ -31,24 +31,32 @@
 
 namespace tau {
 
+Event::Event() {}
+
 Event::Event(Event_ptr evp):
     impl(evp)
 {
 }
 
-void Event::emit() {
-    if (impl) { impl->emit(); }
-    else { throw user_error("Event::emit() called on empty Event"); }
+Event::operator bool() const {
+    return nullptr != impl;
 }
 
-void Event::unset() {
-    if (impl) { impl->unset(); }
-    else { throw user_error("Event::unset() called on empty Event"); }
+void Event::reset() {
+    impl.reset();
+}
+
+void Event::emit() {
+    if (impl) { impl->emit(); }
+}
+
+void Event::release() {
+    if (impl) { impl->release(); }
 }
 
 signal<void()> & Event::signal_ready() {
     if (impl) { return impl->signal_ready(); }
-    throw user_error("Event::signal_ready() called on empty Event");
+    throw user_error("Event::signal_ready() called on pure Event");
 }
 
 } // namespace tau

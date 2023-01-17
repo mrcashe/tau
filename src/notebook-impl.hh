@@ -64,7 +64,7 @@ public:
     int  page_number(Widget_cptr cwp) const;
 
     int  show_next();
-    int  show_prev();
+    int  show_previous();
     int  show_page(int nth_page);
 
     void reorder_page(Widget_ptr wp, int nth_page);

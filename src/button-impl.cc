@@ -118,8 +118,8 @@ void Button_base_impl::init_action(Action_base & action, int icon_size, Action_i
     action.signal_disable().connect(fun(this, &Button_base_impl::freeze));
     action.signal_show().connect(fun(this, &Button_base_impl::appear));
     action.signal_hide().connect(fun(this, &Button_base_impl::disappear));
-    if (action.hidden()) { disappear(); }
-    if (action.disabled()) { freeze(); }
+    if (!action.visible()) { disappear(); }
+    if (!action.enabled()) { freeze(); }
 
     if (items & ACTION_LABEL) {
         action.signal_label_changed().connect(fun(this, &Button_base_impl::on_action_label_changed));

@@ -41,6 +41,10 @@ Container::Container(std::nullptr_t):
 {
 }
 
+std::vector<Widget_ptr> Container::children() const {
+    return CONTAINER_IMPL->children();
+}
+
 void Container::queue_arrange() {
     CONTAINER_IMPL->queue_arrange();
 }

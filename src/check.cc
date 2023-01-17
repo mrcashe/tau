@@ -36,6 +36,11 @@ Check::Check(bool checked):
 {
 }
 
+Check::Check(Widget_ptr wp):
+    Widget(std::dynamic_pointer_cast<Check_impl>(wp))
+{
+}
+
 Check::Check(Check_style check_style, bool checked):
     Widget(std::make_shared<Check_impl>(check_style, checked))
 {

@@ -73,15 +73,40 @@ class Widget: public trackable {
 public:
 
     /// Default constructor.
+    /// Creates basic widget commonly used for drawing.
     Widget();
 
-    /// Constructor with opaque widget implementation shared pointer.
+    /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Widget(const Widget & other) = default;
+
+    /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Widget & operator=(const Widget & other) = default;
+
+    /// Constructor with widget implementation shared pointer.
+    ///
+    /// @warning Unlike some other classes (Painter as an example), the whole
+    /// @ref widget_group "widget stack" is unable to run with pure implementation
+    /// pointer, so attempting to construct widget from a pure (@b nullptr) pointer
+    /// will cause throwing an user_error exception!
+    /// That exception also will be thrown if user tries to
+    /// construct derived class from incompatible implementation shared pointer.
+    ///
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
     Widget(Widget_ptr wp);
 
-    /// Get underlying shared pointer to implementation.
+    /// Gets underlying shared pointer to implementation.
     Widget_ptr ptr();
 
-    /// Get underlying shared pointer to implementation.
+    /// Gets underlying shared pointer to implementation.
     Widget_cptr ptr() const;
 
     /// @name Size, position and coordinates

@@ -74,18 +74,18 @@ void Curve::set_cp2(const Vector & v) {
     cp2_ = v;
 }
 
-void Curve::set(const Vector & end) {
+void Curve::assign(const Vector & end) {
     order_ = 1;
     end_ = end;
 }
 
-void Curve::set(const Vector & cp1, const Vector & end) {
+void Curve::assign(const Vector & cp1, const Vector & end) {
     order_ = 2;
     cp1_ = cp1;
     end_ = end;
 }
 
-void Curve::set(const Vector & cp1, const Vector & cp2, const Vector & end) {
+void Curve::assign(const Vector & cp1, const Vector & cp2, const Vector & end) {
     order_ = 3;
     cp1_ = cp1;
     cp2_ = cp2;
@@ -116,7 +116,7 @@ void Curve::translate(double ox, double oy, double oz) {
     translate(Vector(ox, oy, oz));
 }
 
-void Curve::map(const Matrix & mat) {
+void Curve::transform(const Matrix & mat) {
     end_ *= mat;
     cp1_ *= mat;
     cp2_ *= mat;

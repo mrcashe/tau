@@ -264,6 +264,14 @@ Doc::operator bool() const {
     return nullptr != impl;
 }
 
+Doc_ptr Doc::ptr() {
+    return impl;
+}
+
+Doc_cptr Doc::ptr() const {
+    return impl;
+}
+
 void Doc::reset() {
     impl.reset();
 }

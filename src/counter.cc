@@ -41,6 +41,11 @@ Counter::Counter(Border_style bs, double value, double max_value, double min_val
 {
 }
 
+Counter::Counter(Widget_ptr wp):
+    Widget(std::dynamic_pointer_cast<Counter_impl>(wp))
+{
+}
+
 void Counter::set_border_style(Border_style bs) {
     COUNTER_IMPL->set_border_style(bs);
 }

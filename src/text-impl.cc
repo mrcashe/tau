@@ -247,7 +247,6 @@ void Text_impl::on_buffer_replace(Buffer_citer b, Buffer_citer e, const std::u32
 void Text_impl::on_buffer_replace_move(Buffer_citer b, Buffer_citer e, const std::u32string & replaced) {
     move_caret(e);
     hint_x();
-    signal_changed_();
 }
 
 Painter Text_impl::wipe_area(int x1, int y1, int x2, int y2, Painter pr) {
@@ -315,7 +314,6 @@ void Text_impl::on_buffer_erase(Buffer_citer b, Buffer_citer e, const std::u32st
 void Text_impl::on_buffer_erase_move(Buffer_citer b, Buffer_citer e, const std::u32string & erased) {
     move_caret(b);
     hint_x();
-    signal_changed_();
 }
 
 void Text_impl::on_buffer_insert(Buffer_citer b, Buffer_citer e) {
@@ -325,7 +323,6 @@ void Text_impl::on_buffer_insert(Buffer_citer b, Buffer_citer e) {
 void Text_impl::on_buffer_insert_move(Buffer_citer b, Buffer_citer e) {
     move_caret(e);
     hint_x();
-    signal_changed_();
 }
 
 void Text_impl::insert_range(Buffer_citer b, Buffer_citer e) {
@@ -364,7 +361,6 @@ void Text_impl::assign(Buffer buf) {
     buffer_ = buf;
     init_buffer();
     signal_caret_motion_();
-    signal_changed_();
 }
 
 // Overriden by Edit_impl.
@@ -384,7 +380,6 @@ void Text_impl::clear() {
         pr.paint(); pr.pop();
     }
 
-    bool changed = !buffer_.empty();
     buffer_.clear();
     lines_.clear();
     sel_.reset();
@@ -394,7 +389,6 @@ void Text_impl::clear() {
     caret_ = buffer_.cbegin();
     update_requisition();
     signal_caret_motion_();
-    if (changed) { signal_changed_(); }
 }
 
 void Text_impl::init_buffer() {

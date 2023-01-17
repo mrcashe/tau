@@ -35,34 +35,47 @@
 namespace tau {
 
 /// %Event.
+///
 /// %Event can be emitted by non-GUI thread.
 /// After emission an event loop emits signal_activate().
+///
+/// This class is a wrapper around its implementation shared pointer Event_impl.
+///
 /// @ingroup sys_group
 class Event {
 public:
 
-    /// Constructs an empty %Event.
-    Event() {}
+    /// Constructs a pure %Event.
+    Event();
 
     /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
     Event(const Event & other) = default;
 
     /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
     Event & operator=(const Event & other) = default;
 
-    /// Test if empty.
-    operator bool() const { return nullptr != impl; }
+    /// Test if pure.
+    operator bool() const;
 
     /// Reset implementation pointer.
-    void reset() { impl.reset(); }
+    void reset();
 
     /// Set event to signalled state.
     void emit();
 
     /// Reset event state.
-    void unset();
+    void release();
 
     /// Get "signal_ready" reference.
+    /// @throw user_error in case this event is pure, so test object before use this method.
     signal<void()> & signal_ready();
 
 private:

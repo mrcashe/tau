@@ -62,8 +62,16 @@ bool Button_base::relief_visible() const {
     return BUTTON_BASE_IMPL->relief_visible();
 }
 
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+
 Button::Button():
     Button_base(std::make_shared<Button_impl>())
+{
+}
+
+Button::Button(Widget_ptr wp):
+    Button_base(std::dynamic_pointer_cast<Button_impl>(wp))
 {
 }
 
@@ -130,8 +138,16 @@ signal<void()> & Button::signal_click() {
     return BUTTON_IMPL->signal_click();
 }
 
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+
 Toggle::Toggle():
     Button_base(std::make_shared<Toggle_impl>())
+{
+}
+
+Toggle::Toggle(Widget_ptr wp):
+    Button_base(std::dynamic_pointer_cast<Toggle_impl>(wp))
 {
 }
 

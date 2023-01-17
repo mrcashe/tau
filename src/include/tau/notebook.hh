@@ -190,7 +190,7 @@ public:
     /// @see allow_rollover().
     /// @see disallow_rollover().
     /// @see rollover_allowed().
-    int show_prev();
+    int show_previous();
 
     /// Show specified page.
     /// @return page number of the shown page.
@@ -216,13 +216,13 @@ public:
 
     /// Allow tabs rollover.
     /// When allowed:
-    /// When show_next() or show_prev() invoked and current tab is first or last,
+    /// When show_next() or show_previous() invoked and current tab is first or last,
     /// the next current page will be last or first, correspondingly.
-    /// When disallowed, show_next() and show_prev() will do nothing on first and
+    /// When disallowed, show_next() and show_previous() will do nothing on first and
     /// last pages.
     /// @note allowed by default.
     /// @see show_next().
-    /// @see show_prev().
+    /// @see show_previous().
     /// @see disallow_rollover().
     /// @see rollover_allowed().
     void allow_rollover();
@@ -230,14 +230,14 @@ public:
     /// Disallow tabs rollover.
     /// @note allowed by default.
     /// @see show_next().
-    /// @see show_prev().
+    /// @see show_previous().
     /// @see allow_rollover().
     /// @see rollover_allowed().
     void disallow_rollover();
 
     /// Test if rollover allowed.
     /// @see show_next().
-    /// @see show_prev().
+    /// @see show_previous().
     /// @see allow_rollover().
     /// @see disallow_rollover().
     /// @note allowed by default.

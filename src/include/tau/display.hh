@@ -37,6 +37,9 @@
 namespace tau {
 
 /// A display.
+///
+/// This class is a wrapper around its implementation shared pointer Display_impl.
+///
 /// @ingroup sys_group
 class Display {
 public:
@@ -45,12 +48,24 @@ public:
     Display();
 
     /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
     Display(const Display & other) = default;
 
     /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
     Display & operator=(const Display & other) = default;
 
+    /// Open display with optional arguments.
     static Display open(const ustring & args=ustring());
+
+    /// Gets unique id.
+    int id() const;
 
     /// Get size in pixels.
     Size size_px() const;
@@ -59,7 +74,7 @@ public:
     Size size_mm() const;
 
     /// Get dots per inch ratio.
-    unsigned dpi() const;
+    int dpi() const;
 
     /// Get number of bits per pixel.
     int depth() const;

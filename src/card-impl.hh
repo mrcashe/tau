@@ -43,7 +43,7 @@ public:
     void clear();
     bool empty() const;
     void show_next();
-    void show_prev();
+    void show_previous();
 
 private:
 

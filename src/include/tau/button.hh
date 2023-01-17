@@ -63,12 +63,46 @@ public:
 };
 
 /// Push button.
+///
+/// This class is a wrapper around its implementation shared pointer Button_impl.
+///
 /// @ingroup widget_group
 class Button: public Button_base {
 public:
 
+    /// @name Constructors
+    /// @{
+
     /// Default constructor.
+    /// Constructs basic %Button.
     Button();
+
+    /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Button(const Button & other) = default;
+
+    /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Button & operator=(const Button & other) = default;
+
+    /// Constructor with implementation pointer.
+    ///
+    /// @warning Unlike some other classes (Painter as an example), the whole
+    /// @ref widget_group "widget stack" is unable to run with pure implementation
+    /// pointer, so attempting to construct widget from a pure (@b nullptr) pointer
+    /// will cause throwing an user_error exception!
+    /// That exception also will be thrown if user tries to construct the object
+    /// from incompatible implementation shared pointer.
+    ///
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Button(Widget_ptr wp);
 
     /// Constructor with label.
     Button(const ustring & label);
@@ -88,13 +122,16 @@ public:
     /// Constructor with Action.
     /// Suitable for tool buttons. Uses @b MEDIUM_ICON size (see #Icon_size enum).
     /// @param action the Action to be used.
+    /// @param items action items to be used, see #Action_items enum.
     Button(Action & action, Action_items items=ACTION_ALL);
 
     /// Constructor with Action and icon size.
     /// @param action the Action to be used.
     /// @param icon_size the icon size.
+    /// @param items action items to be used, see #Action_items enum.
     Button(Action & action, int icon_size, Action_items items=ACTION_ALL);
 
+    /// @}
     /// Enable autorepeat of mouse click.
     /// Disabled by default.
     void enable_repeat();
@@ -121,12 +158,46 @@ public:
 };
 
 /// %Toggle button.
+///
+/// This class is a wrapper around its implementation shared pointer Toggle_impl.
+///
 /// @ingroup widget_group
 class Toggle: public Button_base {
 public:
 
+    /// @name Constructors
+    /// @{
+
     /// Default constructor.
+    /// Constructs basic %Toggle.
     Toggle();
+
+    /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Toggle(const Toggle & other) = default;
+
+    /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Toggle & operator=(const Toggle & other) = default;
+
+    /// Constructor with implementation pointer.
+    ///
+    /// @warning Unlike some other classes (Painter as an example), the whole
+    /// @ref widget_group "widget stack" is unable to run with pure implementation
+    /// pointer, so attempting to construct widget from a pure (@b nullptr) pointer
+    /// will cause throwing an user_error exception!
+    /// That exception also will be thrown if user tries to construct the object
+    /// from incompatible implementation shared pointer.
+    ///
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Toggle(Widget_ptr wp);
 
     /// Constructor with label.
     Toggle(const ustring & label);
@@ -146,13 +217,16 @@ public:
     /// Constructor with Action.
     /// Suitable for tool buttons. Uses @b MEDIUM_ICON size (see #Icon_size enum).
     /// @param action the Action to be used.
+    /// @param items action items to be used, see #Action_items enum.
     Toggle(Toggle_action & action, Action_items items=ACTION_ALL);
 
     /// Constructor with Action and icon size.
     /// @param action the Action to be used.
     /// @param icon_size the icon size.
+    /// @param items action items to be used, see #Action_items enum.
     Toggle(Toggle_action & action, int icon_size, Action_items items=ACTION_ALL);
 
+    /// @}
     /// Toggle button.
     void toggle();
 

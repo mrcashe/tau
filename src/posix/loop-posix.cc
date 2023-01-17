@@ -57,7 +57,7 @@ void Loop_posix::add_poller(Poller_base * ppi, short events) {
 // Overrides pure Loop_impl.
 Event_ptr Loop_posix::create_event() {
     auto evp = std::make_shared<Event_posix>();
-    evp->signal_ready().connect(fun(evp, &Event_posix::unset));
+    evp->signal_ready().connect(fun(evp, &Event_posix::release));
     add_poller(evp.get(), POLLIN);
     return evp;
 }

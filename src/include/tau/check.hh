@@ -35,13 +35,47 @@
 namespace tau {
 
 /// %Widget that can be checked or not.
+///
+/// This class is a wrapper around its implementation shared pointer Check_impl.
+///
 /// @ingroup widget_group
 class Check: public Widget {
 public:
 
+    /// @name Constructors
+    /// @{
+
     /// Default constructor.
+    /// Constructs basic %Check.
     /// @param checked the initial state.
     Check(bool checked=false);
+
+    /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Check(const Check & other) = default;
+
+    /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Check & operator=(const Check & other) = default;
+
+    /// Constructor with implementation pointer.
+    ///
+    /// @warning Unlike some other classes (Painter as an example), the whole
+    /// @ref widget_group "widget stack" is unable to run with pure implementation
+    /// pointer, so attempting to construct widget from a pure (@b nullptr) pointer
+    /// will cause throwing an user_error exception!
+    /// That exception also will be thrown if user tries to construct the object
+    /// from incompatible implementation shared pointer.
+    ///
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Check(Widget_ptr wp);
 
     /// Constructor with check style.
     /// @param check_style the check style.
@@ -59,6 +93,7 @@ public:
     /// @param checked the initial state.
     Check(Check_style check_style, Border_style border_style, bool checked=false);
 
+    /// @}
     /// Set check style.
     /// @param cs the check style.
     void set_check_style(Check_style cs);

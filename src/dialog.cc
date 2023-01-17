@@ -68,6 +68,11 @@ Dialog::Dialog(Toplevel & wnd, const ustring & title, const Rect & bounds):
     DIALOG_IMPL->set_title(title);
 }
 
+Dialog::Dialog(Widget_ptr wp):
+    Toplevel(std::dynamic_pointer_cast<Dialog_impl>(wp))
+{
+}
+
 void Dialog::run() {
     DIALOG_IMPL->run();
 }

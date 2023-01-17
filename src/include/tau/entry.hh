@@ -35,12 +35,45 @@
 namespace tau {
 
 /// Single line text editor with decorations.
+///
+/// This class is a wrapper around its implementation shared pointer Entry_impl.
+///
 /// @ingroup widget_group
 class Entry: public Widget {
 public:
 
+    /// @name Constructors, operators
+    /// @{
+
     /// Default constructor.
     Entry(Border_style border_style=BORDER_INSET);
+
+    /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Entry(const Entry & other) = default;
+
+    /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Entry & operator=(const Entry & other) = default;
+
+    /// Constructor with implementation pointer.
+    ///
+    /// @warning Unlike some other classes (Painter as an example), the whole
+    /// @ref widget_group "widget stack" is unable to run with pure implementation
+    /// pointer, so attempting to construct widget from a pure (@b nullptr) pointer
+    /// will cause throwing an user_error exception!
+    /// That exception also will be thrown if user tries to construct the object
+    /// from incompatible implementation shared pointer.
+    ///
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Entry(Widget_ptr wp);
 
     /// Constructor with horizontal text alignment.
     Entry(Align text_align, Border_style border_style=BORDER_INSET);
@@ -51,6 +84,7 @@ public:
     /// Constructor with text and horizontal text alignment.
     Entry(const ustring & text, Align text_align, Border_style border_style=BORDER_INSET);
 
+    /// @}
     /// Assign text.
     void assign(const ustring & s);
 
@@ -111,9 +145,9 @@ public:
 
     /// Append text after cycling widget.
     /// @param text text to be appended.
-    /// @param margin_left_hint left margin.
-    /// @param margin_right_hint right margin.
-    void append(const ustring & text, unsigned margin_left_hint=0, unsigned margin_right_hint=0);
+    /// @param margin_left left margin.
+    /// @param margin_right right margin.
+    void append(const ustring & text, unsigned margin_left=0, unsigned margin_right=0);
 
     /// Prepend widget before cycling widget.
     /// @throw user_error if widget already inserted into another container.
@@ -121,9 +155,9 @@ public:
 
     /// Prepend text before cycling widget.
     /// @param text text to be prepended.
-    /// @param margin_left_hint left margin.
-    /// @param margin_right_hint right margin.
-    void prepend(const ustring & text, unsigned margin_left_hint=0, unsigned margin_right_hint=0);
+    /// @param margin_left left margin.
+    /// @param margin_right right margin.
+    void prepend(const ustring & text, unsigned margin_left=0, unsigned margin_right=0);
 
     /// Gets "Cancel" action.
     Action & cancel_action();

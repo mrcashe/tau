@@ -47,6 +47,11 @@ Cycle_text::Cycle_text(Align align):
 {
 }
 
+Cycle_text::Cycle_text(Widget_ptr wp):
+    Widget(std::dynamic_pointer_cast<Cycle_text_impl>(wp))
+{
+}
+
 void Cycle_text::set_border_style(Border_style bs) {
     CYCLE_TEXT_IMPL->set_border_style(bs);
 }

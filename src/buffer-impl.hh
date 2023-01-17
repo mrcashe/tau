@@ -43,13 +43,13 @@ public:
 
     Buffer_citer_impl() = default;
     static Buffer_citer_impl * create();
-    static Buffer_citer_impl * create(Buffer_ptr buf, size_t row, size_t col);
+    static Buffer_citer_impl * create(Buffer_ptr buf, std::size_t row, std::size_t col);
 
 private:
 
     Buffer_ptr  buf;
-    size_t      row = 0;
-    size_t      col = 0;
+    std::size_t row = 0;
+    std::size_t col = 0;
     bool        busy = false;
     bool        heap = false;
 };
@@ -57,13 +57,19 @@ private:
 struct Buffer_impl {
     Buffer_impl() = default;
 
-    char32_t at(size_t row, size_t col) const;
-    size_t size() const;
-    size_t lines() const;
-    size_t length(size_t r1, size_t c1, size_t r2, size_t c2) const;
-    size_t length(size_t row) const;
-    std::u32string text(size_t r1, size_t c1, size_t r2, size_t c2) const;
+    char32_t at(std::size_t row, std::size_t col) const;
+    std::size_t size() const;
+    std::size_t lines() const;
+    std::size_t length(std::size_t r1, std::size_t c1, std::size_t r2, std::size_t c2) const;
+    std::size_t length(std::size_t row) const;
+    void change_encoding(const Encoding & enc);
+    Buffer_citer insert(Buffer_citer i, const std::u32string & str);
+    Buffer_citer insert(Buffer_citer i, std::istream & is);
+    void save(std::ostream & os);
+    std::u32string text(std::size_t r1, std::size_t c1, std::size_t r2, std::size_t c2) const;
     bool empty() const;
+    void enable_bom();
+    void disable_bom();
 
     struct Holder {
         std::u32string  s;
@@ -77,12 +83,20 @@ struct Buffer_impl {
     Rows                rows;
     bool                lock = false;
     bool                bom = false;
+    bool                changed = false;
     Encoding            encoding { "UTF-8" };
+    Encoding            utf8    { "UTF-8" };
+    Encoding            utf16be { "UTF-16BE" };
+    Encoding            utf16le { "UTF-16LE" };
+    Encoding            utf32be { "UTF-32BE" };
+    Encoding            utf32le { "UTF-32LE" };
     std::u32string      newlines;
 
     signal<void(Buffer_citer, Buffer_citer, std::u32string)> signal_erase;
     signal<void(Buffer_citer, Buffer_citer)> signal_insert;
     signal<void(Buffer_citer, Buffer_citer, std::u32string)> signal_replace;
+    signal<void()> signal_changed;
+    signal<void()> signal_flush;
     signal<void()> signal_lock;
     signal<void()> signal_unlock;
     signal<void(const Encoding &)> signal_encoding_changed;

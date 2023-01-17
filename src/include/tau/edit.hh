@@ -34,12 +34,45 @@
 namespace tau {
 
 /// %Text editor.
+///
+/// This class is a wrapper around its implementation shared pointer Edit_impl.
+///
 /// @ingroup widget_group
 class Edit: public Text {
 public:
 
+    /// @name Constructors, operators
+    /// @{
+
     /// Default constructor.
     Edit();
+
+    /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Edit(const Edit & other) = default;
+
+    /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Edit & operator=(const Edit & other) = default;
+
+    /// Constructor with implementation pointer.
+    ///
+    /// @warning Unlike some other classes (Painter as an example), the whole
+    /// @ref widget_group "widget stack" is unable to run with pure implementation
+    /// pointer, so attempting to construct widget from a pure (@b nullptr) pointer
+    /// will cause throwing an user_error exception!
+    /// That exception also will be thrown if user tries to construct the object
+    /// from incompatible implementation shared pointer.
+    ///
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Edit(Widget_ptr wp);
 
     /// Constructor with text alignment.
     Edit(Align halign, Align valign=ALIGN_START);
@@ -50,6 +83,7 @@ public:
     /// Constructor with buffer and text alignment.
     Edit(Buffer buf, Align halign=ALIGN_START, Align valign=ALIGN_START);
 
+    /// @}
     /// Allow edit.
     void allow_edit();
 
@@ -62,20 +96,10 @@ public:
     /// Enter text at current position.
     void enter_text(const ustring & text);
 
-    /// Determines if undo action possible.
-    bool can_undo() const;
+    /// Test if text modified.
+    bool modified() const;
 
-    /// Determines if redo action possible.
-    bool can_redo() const;
-
-    /// Get current undo index.
-    std::size_t undo_index() const;
-
-    /// Split next undo record.
-    /// This method can be used to establish the file save position.
-    void split_undo();
-
-    /// @name Access to the established actions.
+    /// @name Access to the established actions and signals.
     /// @{
 
     /// Gets "Cut" action (Ctrl+X, Ctrl+Delete").
@@ -104,6 +128,9 @@ public:
 
     /// Gets "Insert/Replace" action.
     Toggle_action & insert_action();
+
+    /// Gets "signal_modified".
+    signal<void(bool)> & signal_modified();
 
     /// @}
 };

@@ -59,8 +59,8 @@ Icon_impl::Icon_impl(Action_base & action, unsigned icon_size):
 
 void Icon_impl::init_action(Action_base & action) {
     icon_name_ = action.icon_name();
-    if (action.disabled()) { freeze(); }
-    if (action.hidden()) { disappear(); }
+    if (!action.enabled()) { freeze(); }
+    if (!action.visible()) { disappear(); }
     if (action.has_tooltip()) { set_tooltip(action.tooltip()); }
     action.signal_disable().connect(fun(this, &Icon_impl::freeze));
     action.signal_enable().connect(fun(this, &Icon_impl::thaw));

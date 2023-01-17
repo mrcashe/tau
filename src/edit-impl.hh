@@ -48,11 +48,8 @@ public:
     void allow_edit();
     void disallow_edit();
     bool edit_allowed() const { return edit_allowed_; }
-    bool can_undo() const;
-    bool can_redo() const;
     void enter_text(const ustring & str);
-    std::size_t undo_index() const { return undo_index_; }
-    void split_undo();
+    bool modified() const { return undo_index_ != flush_index_; }
 
     Action & enter_action() { return enter_action_; }
     Action & cut_action() { return cut_action_; }
@@ -63,6 +60,7 @@ public:
     Action & redo_action() { return redo_action_; }
     Action & tab_action() { return tab_action_; }
     Toggle_action & insert_action() { return insert_action_; }
+    signal<void(bool)> & signal_modified() { return signal_modified_; }
 
 protected:
 
@@ -82,6 +80,7 @@ protected:
 
     Undoes              undo_;
     std::size_t         undo_index_ = 0;
+    std::size_t         flush_index_ = 0;
     ustring             newline_ = "\u000a";
     bool                edit_allowed_ = true;
     bool                split_undo_ = false;
@@ -120,7 +119,9 @@ private:
     connection          edit_insert_cx_;
     connection          edit_replace_cx_;
     connection          edit_erase_cx_;
+    connection          flush_cx_;
     connection          paste_text_cx_;
+    signal<void(bool)>  signal_modified_;
 
 private:
 
@@ -131,6 +132,7 @@ private:
     void on_edit_insert(Buffer_citer b, Buffer_citer e);
     void on_edit_replace(Buffer_citer b, Buffer_citer e, const std::u32string & replaced);
     void on_edit_erase(Buffer_citer b, Buffer_citer e, const std::u32string & erased);
+    void on_flush();
 };
 
 } // namespace tau

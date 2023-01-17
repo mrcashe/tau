@@ -277,7 +277,7 @@ class Main: public tau::Toplevel {
     }
 
     int init_colors_page(int pg) {
-        color_names_ = tau::Color::list_names();
+        color_names_ = tau::Color::list_css_names();
         color_widgets_.resize(color_names_.size());
         tau::Table table;
         table.set_column_spacing(6);
@@ -595,7 +595,7 @@ private:
     }
 
     void on_prev_page() {
-        notebook_.show_prev();
+        notebook_.show_previous();
     }
 
     void on_geometry_changed() {

@@ -36,36 +36,58 @@
 namespace tau {
 
 /// File navigation and selection widget.
+///
+/// This class is a wrapper around its implementation shared pointer Fileman_impl.
+///
 /// @ingroup widget_group
 class Fileman: public Widget {
 public:
 
+    /// @name Constructors, operators
+    /// @{
+
     /// Constructor with mode and path.
     Fileman(Fileman_mode fm_mode, const ustring & path=ustring());
 
-    /// Get current directory.
-    ustring dir() const;
+    /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Fileman(const Fileman & other) = default;
 
-    /// Change current directory.
-    void chdir(const ustring & dirpath);
+    /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Fileman & operator=(const Fileman & other) = default;
+
+    /// Constructor with implementation pointer.
+    ///
+    /// @warning Unlike some other classes (Painter as an example), the whole
+    /// @ref widget_group "widget stack" is unable to run with pure implementation
+    /// pointer, so attempting to construct widget from a pure (@b nullptr) pointer
+    /// will cause throwing an user_error exception!
+    /// That exception also will be thrown if user tries to construct the object
+    /// from incompatible implementation shared pointer.
+    ///
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Fileman(Widget_ptr wp);
+
+    /// @}
+    /// Get current URI.
+    ustring uri() const;
+
+    /// Change current URI.
+    void set_uri(const ustring & uri);
 
     /// Gets selected filenames without path component.
     std::vector<ustring> selection() const;
 
     /// Gets text from entry.
     ustring entry() const;
-
-    /// Show places.
-    /// The places are visible by default.
-    void show_places();
-
-    /// Hide places.
-    /// The places are visible by default.
-    void hide_places();
-
-    /// Determine if places are visible.
-    /// The places are visible by default.
-    bool places_visible() const;
 
     /// Add filter.
     void add_filter(const ustring & patterns, const ustring & title=ustring());
@@ -132,15 +154,6 @@ public:
     /// @sa visible_info_items()
     ustring invisible_info_items(char32_t sep=U':') const;
 
-    /// Show hidden files.
-    void show_hidden_files();
-
-    /// Hide hidden files.
-    void hide_hidden_files();
-
-    /// Test hidden files visible.
-    bool hidden_files_visible() const;
-
     /// Allow multiple select.
     /// Disallowed by default.
     void allow_multiple_select();
@@ -165,43 +178,22 @@ public:
     /// Disallowed by default.
     bool dir_select_allowed() const;
 
-    /// Set show directories only.
-    void set_show_dirs_only();
-
-    /// Unset show directories only.
-    void unset_show_dirs_only();
-
-    /// Test if directories only visible.
-    bool dirs_only_visible() const;
-
-    /// Allow directory creation.
-    /// Allowed by default in file save mode.
-    void allow_dir_creation();
-
-    /// Disallow directory creation.
-    /// Allowed by default in file save mode.
-    void disallow_dir_creation();
-
-    /// Test if directory creation allowed.
-    /// Allowed by default in file save mode.
-    bool dir_creation_allowed() const;
-
     /// Allow file overwrite without a prompt.
     /// Disallowed by default.
-    void allow_silent_overwrite();
+    void allow_overwrite();
 
     /// Disallow file overwrite without a prompt.
     /// Disallowed by default.
-    void disallow_silent_overwrite();
+    void disallow_overwrite();
 
     /// Test if file overwrite without a prompt allowed.
-    bool silent_overwrite_allowed() const;
+    bool overwrite_allowed() const;
 
-    /// Get ratio.
-    double ratio() const;
+    /// Load state from the Key_file.
+    void load_state(Key_file & kf, Key_section & sect);
 
-    /// Set ratio.
-    void set_ratio(double ratio);
+    /// Save state to the Key_file.
+    void save_state(Key_file & kf, Key_section & sect);
 
     /// Get "Cancel" action.
     Action & cancel_action();

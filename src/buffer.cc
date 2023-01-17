@@ -80,7 +80,7 @@ Buffer_citer Buffer::replace(Buffer_citer i, const ustring & str) {
 }
 
 Buffer_citer Buffer::replace(Buffer_citer i, const std::u32string & str) {
-    if (locked()) {
+    if (locked() || str.empty()) {
         return i;
     }
 
@@ -126,7 +126,13 @@ Buffer_citer Buffer::replace(Buffer_citer i, const std::u32string & str) {
         n = eol;
     }
 
+    impl->changed = true;
+    impl->signal_changed();
     return i;
+}
+
+Buffer_citer Buffer::insert(Buffer_citer i, const std::u32string & str) {
+    return impl->insert(i, str);
 }
 
 Buffer_citer Buffer::insert(Buffer_citer i, char32_t uc, std::size_t count) {
@@ -137,79 +143,10 @@ Buffer_citer Buffer::insert(Buffer_citer i, const ustring & str) {
     return insert(i, std::u32string(str));
 }
 
-Buffer_citer Buffer::insert(Buffer_citer i, const std::u32string & str) {
-    if (locked()) {
-        return i;
-    }
-
-    std::size_t n = 0, len = str.size(), row, col;
-
-    if (impl->rows.empty()) {
-        row = 0;
-        col = 0;
-    }
-
-    else if (i.row() < impl->rows.size()) {
-        row = i.row();
-        col = std::min(impl->rows[row].s.size(), i.col());
-    }
-
-    else {
-        row = impl->rows.size()-1;
-        col = impl->rows[row].s.size();
-    }
-
-    while (n < len) {
-        std::size_t eol = str.find_first_of(impl->newlines, n);
-
-        // No EOL character.
-        // Add text at current position and exit.
-        if (std::u32string::npos == eol) {
-            if (impl->rows.empty()) { impl->rows.emplace_back(str.substr(n)); }
-            else { impl->rows[row].s.insert(col, str, n, len-n); }
-            col += len-n;
-            n = len;
-        }
-
-        // Have EOL character.
-        else {
-            // Insert text between col and next at current position.
-            std::u32string::size_type next, eeol;
-
-            if (0x000a == str[eol] && eol+1 < len && 0x000d == str[eol+1]) { eeol = eol+2; }
-            else if (0x000d == str[eol] && eol+1 < len && 0x000a == str[eol+1]) { eeol = eol+2; }
-            else { eeol = eol+1; }
-
-            std::u32string newline = std::u32string::npos == eeol ? str.substr(eol) : str.substr(eol, eeol-eol);
-            next = eol+newline.size();
-
-            if (impl->rows.empty()) {
-                impl->rows.emplace_back(str.substr(n, next-n));
-                impl->rows.emplace_back();
-            }
-
-            else {
-                std::u32string right = impl->rows[row].s.substr(col);
-                impl->rows[row].s.erase(col);
-                impl->rows[row].s.insert(col, str, n, next-n);
-                impl->rows.emplace(impl->rows.begin()+row+1, right);
-            }
-
-            n = next;
-            ++row;
-            col = 0;
-        }
-    }
-
-    Buffer_citer e(citer(row, col));
-    signal_insert()(i, e);
-    return e;
-}
-
 Buffer_citer Buffer::erase(Buffer_citer b, Buffer_citer e) {
     Buffer_citer ret(b);
 
-    if (!locked() && !empty()) {
+    if (!locked() && !empty() && b && e && b != e) {
         if (e < b) { std::swap(b, e); }
         std::size_t row1 = b.row(), col1 = b.col(), row2 = e.row(), col2 = e.col();
 
@@ -237,6 +174,8 @@ Buffer_citer Buffer::erase(Buffer_citer b, Buffer_citer e) {
                 if (1 == impl->rows.size() && 0 == impl->rows[0].s.size()) { impl->rows.clear(); }
                 ret = citer(row2, col2);
                 impl->signal_erase(b, ret, erased_text);
+                impl->changed = true;
+                impl->signal_changed();
             }
         }
     }
@@ -244,80 +183,11 @@ Buffer_citer Buffer::erase(Buffer_citer b, Buffer_citer e) {
     return ret;
 }
 
-void Buffer::save(std::ostream & os) const {
-    if (Encoding("UTF-8") == impl->encoding) {
-        if (impl->bom) { os.write("\xef\xbb\xbf", 3); }
-
-        for (auto & row: impl->rows) {
-            ustring s(row.s);
-            os.write(s.c_str(), s.bytes());
-        }
-    }
-
-    else if (Encoding("UTF-16BE") == impl->encoding) {
-        if (impl->bom) { os.write("\xfe\xff", 2); }
-
-        for (auto & row: impl->rows) {
-            for (char32_t wc: row.s) {
-                char16_t c1, c2;
-                char32_to_surrogate(wc, c1, c2);
-                os.put(c1);
-                os.put(c1 >> 8);
-
-                if (0 != c2) {
-                    os.put(c2);
-                    os.put(c2 >> 8);
-                }
-            }
-        }
-    }
-
-    else if (Encoding("UTF-16LE") == impl->encoding) {
-        if (impl->bom) { os.write("\xff\xfe", 2); }
-
-        for (auto & row: impl->rows) {
-            for (char32_t wc: row.s) {
-                char16_t c1, c2;
-                char32_to_surrogate(wc, c1, c2);
-                os.put(c1 >> 8);
-                os.put(c1);
-
-                if (0 != c2) {
-                    os.put(c2 >> 8);
-                    os.put(c2);
-                }
-            }
-        }
-    }
-
-    else if (Encoding("UTF-32BE") == impl->encoding) {
-        if (impl->bom) { os.write("\x00\x00\xfe\xff", 4); }
-
-        for (auto & row: impl->rows) {
-            for (char32_t wc: row.s) {
-                os.put(wc);
-                os.put(wc >> 8);
-                os.put(wc >> 16);
-                os.put(wc >> 24);
-            }
-        }
-    }
-
-    else if (Encoding("UTF-32LE") == impl->encoding) {
-        if (impl->bom) { os.write("\xff\xfe\x00\x00", 4); }
-
-        for (auto & row: impl->rows) {
-            for (char32_t wc: row.s) {
-                os.put(wc >> 24);
-                os.put(wc >> 16);
-                os.put(wc >> 8);
-                os.put(wc);
-            }
-        }
-    }
+void Buffer::save(std::ostream & os) {
+    impl->save(os);
 }
 
-void Buffer::save_to_file(const ustring & path) const {
+void Buffer::save_to_file(const ustring & path) {
     tau::Locale lc;
     std::ofstream os(lc.encode_filename(path));
     if (!os.good()) { throw sys_error(); }
@@ -341,15 +211,16 @@ bool Buffer::empty() const {
     return impl->empty();
 }
 
+bool Buffer::changed() const {
+    return impl->changed;
+}
+
 Encoding Buffer::encoding() const {
     return impl->encoding;
 }
 
 void Buffer::change_encoding(const Encoding & enc) {
-    if (impl->encoding != enc) {
-        impl->encoding = enc;
-        impl->signal_encoding_changed(impl->encoding);
-    }
+    impl->change_encoding(enc);
 }
 
 Buffer_citer Buffer::citer(std::size_t row, std::size_t col) const {
@@ -392,221 +263,7 @@ std::u32string Buffer::text32(Buffer_citer b, Buffer_citer e) const {
 }
 
 Buffer_citer Buffer::insert(Buffer_citer iter, std::istream & is) {
-    if (!locked()) {
-        char buffer[2048];
-        std::size_t fpos = 0;
-        std::string acc;
-        bool first = true;
-
-        while (!is.eof()) {
-            is.read(buffer, sizeof(buffer));
-            std::size_t offset = 0, len = is.gcount();
-
-            if (first) {
-                first = false;
-
-                if (len >= 4 && '\0' == buffer[0] && '\0' == buffer[1] && '\xfe' == buffer[2] && '\xff' == buffer[3]) {
-                    offset += 4;
-                    len -= 4;
-                    change_encoding(Encoding("UTF-32BE"));
-                    enable_bom();
-                }
-
-                else if (len >= 4 && '\xff' == buffer[0] && '\xfe' == buffer[1] && '\0' == buffer[2] && '\0' == buffer[3]) {
-                    offset += 4;
-                    len -= 4;
-                    change_encoding(Encoding("UTF-32LE"));
-                    enable_bom();
-                }
-
-                else if (len >= 3 && '\xef' == buffer[0] && '\xbb' == buffer[1] && '\xbf' == buffer[2]) {
-                    offset += 3;
-                    len -= 3;
-                    change_encoding(Encoding("UTF-8"));
-                    enable_bom();
-                }
-
-                else if (len >= 2 && '\xfe' == buffer[0] && '\xff' == buffer[1]) {
-                    offset += 2;
-                    len -= 2;
-                    change_encoding(Encoding("UTF-16BE"));
-                    enable_bom();
-                }
-
-                else if (len >= 2 && '\xff' == buffer[0] && '\xfe' == buffer[1]) {
-                    offset += 2;
-                    len -= 2;
-                    change_encoding(Encoding("UTF-16LE"));
-                    enable_bom();
-                }
-            }
-
-            if (Encoding("UTF-8") == impl->encoding) {
-                if (!acc.empty()) {
-                    std::size_t u8len = char8_len(acc[0]), more = u8len-acc.size();
-
-                    if (more > len) {
-                        throw std::length_error(str_format(fpos+offset, "incomplete UTF-8 sequence"));
-                    }
-
-                    while (0 != more--) {
-                        acc += buffer[offset++];
-                    }
-
-                    iter = insert(iter, acc);
-                    fpos += acc.size();
-                    acc.clear();
-                }
-
-                if (0 != len) {
-                    std::size_t pos = len-1;
-
-                    if (buffer[pos] < 0) {
-                        while (pos > offset) {
-                            char c = buffer[pos];
-
-                            if ('\xc0' == ('\xc0' & c)) {
-                                if (char8_len(c) > len-pos) {
-                                    acc = std::string(buffer+pos, len-pos);
-                                    --pos;
-                                }
-
-                                else {
-                                    pos = len-1;
-                                }
-
-                                break;
-                            }
-
-                            --pos;
-                            if (len-pos > 6) {
-                                throw std::length_error(str_format(fpos+pos, ": UTF-8 sequence (", len-pos, " bytes) is too long"));
-                            }
-                        }
-                    }
-
-                    len = pos-offset+1;
-                    fpos += len;
-                    const char * pe = buffer+pos+1;
-                    std::u32string ws;
-                    for (const char * p = buffer+offset; p < pe; p = str8_next(p)) { ws += char32_from_pointer(p); }
-                    iter = insert(iter, ws);
-                }
-            } // UTF-8
-
-            else if (Encoding("UTF-32BE") == impl->encoding) {
-                const char * p = buffer+offset;
-                std::u32string ws;
-
-                while (len >= 4) {
-                    char32_t wc = uint8_t(*p++);
-                    wc <<= 8; wc += uint8_t(*p++);
-                    wc <<= 8; wc += uint8_t(*p++);
-                    wc <<= 8; wc += uint8_t(*p++);
-                    ws += wc;
-                    len -= 4;
-                }
-
-                iter = insert(iter, ws);
-            }
-
-            else if (Encoding("UTF-32LE") == impl->encoding) {
-                const char * p = buffer+offset;
-                std::u32string ws;
-
-                while (len >= 4) {
-                    char32_t wc = uint8_t(p[3]);
-                    wc <<= 8; wc += uint8_t(p[2]);
-                    wc <<= 8; wc += uint8_t(p[1]);
-                    wc <<= 8; wc += uint8_t(p[0]);
-                    ws += wc;
-                    p += 4;
-                    len -= 4;
-                }
-
-                iter = insert(iter, ws);
-            }
-
-            else if (Encoding("UTF-16BE") == impl->encoding) {
-                const char * p = buffer+offset;
-                std::u32string ws;
-                char16_t sur = 0;
-
-                while (len > 1) {
-                    char16_t wc = uint8_t(*p++);
-                    wc <<= 8; wc += uint8_t(*p++);
-
-                    if (0 != sur) {
-                        if (char16_is_surrogate(wc)) {
-                            ws += char32_from_surrogate(sur, wc);
-                            sur = 0;
-                        }
-
-                        else {
-                            throw bad_encoding(impl->encoding);
-                        }
-                    }
-
-                    else {
-                        if (char16_is_surrogate(wc)) {
-                            sur = wc;
-                        }
-
-                        else {
-                            ws += static_cast<char32_t>(wc);
-                        }
-                    }
-
-                    len -= 2;
-                }
-
-                iter = insert(iter, ws);
-            }
-
-            else if (Encoding("UTF-16LE") == impl->encoding) {
-                const char * p = buffer+offset;
-                std::u32string ws;
-                char16_t sur = 0;
-
-                while (len > 1) {
-                    char16_t wc = uint8_t(p[1]);
-                    wc <<= 8; wc += uint8_t(p[0]);
-
-                    if (0 != sur) {
-                        if (char16_is_surrogate(wc)) {
-                            ws += char32_from_surrogate(sur, wc);
-                            sur = 0;
-                        }
-
-                        else {
-                            throw bad_encoding(impl->encoding);
-                        }
-                    }
-
-                    else {
-                        if (char16_is_surrogate(wc)) {
-                            sur = wc;
-                        }
-
-                        else {
-                            ws += static_cast<char32_t>(wc);
-                        }
-                    }
-
-                    p += 2;
-                    len -= 2;
-                }
-
-                iter = insert(iter, ws);
-            }
-
-            else {
-                throw bad_encoding(impl->encoding);
-            }
-        }
-    }
-
-    return iter;
+    return impl->insert(iter, is);
 }
 
 Buffer Buffer::load_from_file(const ustring & path) {
@@ -636,17 +293,11 @@ void Buffer::unlock() {
 }
 
 void Buffer::enable_bom() {
-    if (!impl->bom) {
-        impl->bom = true;
-        impl->signal_bom_changed();
-    }
+    impl->enable_bom();
 }
 
 void Buffer::disable_bom() {
-    if (impl->bom) {
-        impl->bom = false;
-        impl->signal_bom_changed();
-    }
+    impl->disable_bom();
 }
 
 bool Buffer::bom_enabled() const {
@@ -663,6 +314,14 @@ signal<void(Buffer_citer, Buffer_citer)> & Buffer::signal_insert() {
 
 signal<void(Buffer_citer, Buffer_citer, std::u32string)> & Buffer::signal_replace() {
     return impl->signal_replace;
+}
+
+signal<void()> & Buffer::signal_changed() {
+    return impl->signal_changed;
+}
+
+signal<void()> & Buffer::signal_flush() {
+    return impl->signal_flush;
 }
 
 signal<void()> & Buffer::signal_lock() {

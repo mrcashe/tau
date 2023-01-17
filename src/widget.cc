@@ -26,7 +26,9 @@
 
 #include <tau/buffer.hh>
 #include <tau/container.hh>
+#include <tau/exception.hh>
 #include <tau/painter.hh>
+#include <tau/string.hh>
 #include <tau/toplevel.hh>
 #include <tau/widget.hh>
 #include <container-impl.hh>
@@ -46,6 +48,9 @@ Widget::Widget(Widget_ptr wp):
     trackable(),
     impl(wp)
 {
+    if (!impl) {
+        throw user_error(str_format(this, " Widget::Widget(Widget_ptr wp): got pure or incompatible implementation pointer"));
+    }
 }
 
 Widget::Widget(std::nullptr_t):

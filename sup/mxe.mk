@@ -60,7 +60,7 @@ su-mxe-so: lj
 	@$(rm) $(builddir)/$(mxe_so_mk)
 
 rm-mxe-so: lj
-	@if [ -e $(builddir)/$(mxe_a_mk) ]; then $(MAKE) -C $(builddir) -f $(mxe_a_mk) rm; fi
+	@if [ -e $(builddir)/$(mxe_so_mk) ]; then $(MAKE) -C $(builddir) -f $(mxe_so_mk) rm; fi
 	@$(rm) $(builddir)/$(mxe_so_mk)
 
 .PHONY: en-mxe-test su-mxe-test rm-mxe-test

@@ -34,22 +34,66 @@
 namespace tau {
 
 /// The container with a single child widget.
+///
+/// This class is a wrapper around its implementation shared pointer Bin_impl.
+///
 /// %Bin always allocates all available space to its child.
+///
 /// @ingroup container_group
+/// @ingroup widget_group
 class Bin: public Container {
 public:
 
+    /// @name Constructors, operators
+    /// @{
+
     /// Default constructor.
+    /// Constructs basic %Bin @ref container_group "container".
     Bin();
 
+    /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Bin(const Bin & other) = default;
+
+    /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Bin & operator=(const Bin & other) = default;
+
     /// Constructor with implementation pointer.
+    ///
+    /// @warning Unlike some other classes (Painter as an example), the whole
+    /// @ref widget_group "widget stack" is unable to run with pure implementation
+    /// pointer, so attempting to construct widget from a pure (@b nullptr) pointer
+    /// will cause throwing an user_error exception!
+    /// That exception also will be thrown if user tries to construct the object
+    /// from incompatible implementation shared pointer.
+    ///
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
     Bin(Widget_ptr wp);
 
+    /// @}
     /// Set owning widget.
+    /// You can insert a new child into %Bin even when it is old child already
+    /// inserted into %Bin. In such a case, clear() will be called automatically
+    /// before insertion happens.
+    ///
+    /// @param w the widget to be inserted.
+    ///
     /// @throw user_error if widget already inserted into another container.
+    /// @throw internal_error if w has pure implementation pointer.
+    ///
+    /// @sa clear()
     void insert(Widget & w);
 
     /// Unset owning widget.
+    /// @sa insert()
     void clear();
 
     /// Test if empty.

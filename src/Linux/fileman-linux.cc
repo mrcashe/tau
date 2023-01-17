@@ -56,19 +56,19 @@ protected:
             removables_row_ = -1;
 
             Text_ptr tp = std::make_shared<Text_impl>("Root Folder", ALIGN_START);
-            tp->signal_select().connect(tau::bind(fun(this, &Fileman_linux::chdir), "/"));
+            tp->signal_select().connect(tau::bind(fun(this, &Fileman_linux::set_uri), "/"));
             int row = places_list_->append_row(tp, true);
 
             Icon_ptr ico = std::make_shared<Icon_impl>("drive-harddisk", SMALL_ICON);
-            ico->signal_select().connect(tau::bind(fun(this, &Fileman_linux::chdir), "/"));
+            ico->signal_select().connect(tau::bind(fun(this, &Fileman_linux::set_uri), "/"));
             places_list_->insert(row, ico, -1, true);
 
             tp = std::make_shared<Text_impl>("Home Folder", ALIGN_START);
-            tp->signal_select().connect(tau::bind(fun(this, &Fileman_linux::chdir), path_user_home_dir()));
+            tp->signal_select().connect(tau::bind(fun(this, &Fileman_linux::set_uri), path_user_home_dir()));
             row = places_list_->append_row(tp, true);
 
             ico = std::make_shared<Icon_impl>("go-home:folder", SMALL_ICON);
-            ico->signal_select().connect(tau::bind(fun(this, &Fileman_linux::chdir), path_user_home_dir()));
+            ico->signal_select().connect(tau::bind(fun(this, &Fileman_linux::set_uri), path_user_home_dir()));
             places_list_->insert(row, ico, -1, true);
 
             removables_ = list_removable_drives();
@@ -80,11 +80,11 @@ protected:
 
                 for (const ustring & mpoint: removables_) {
                     tp = std::make_shared<Text_impl>(path_notdir(mpoint));
-                    tp->signal_select().connect(tau::bind(fun(this, &Fileman_linux::chdir), mpoint));
+                    tp->signal_select().connect(tau::bind(fun(this, &Fileman_linux::set_uri), mpoint));
                     row = places_list_->append_row(tp, true);
 
                     ico = std::make_shared<Icon_impl>("drive-removable-media:drive-harddisk", SMALL_ICON);
-                    ico->signal_select().connect(tau::bind(fun(this, &Fileman_linux::chdir), mpoint));
+                    ico->signal_select().connect(tau::bind(fun(this, &Fileman_linux::set_uri), mpoint));
                     places_list_->insert(row, ico, -1, true);
                 }
             }

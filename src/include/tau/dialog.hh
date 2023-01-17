@@ -34,14 +34,22 @@
 namespace tau {
 
 /// %Dialog window.
+///
+/// This class is a wrapper around its implementation shared pointer Dialog_impl.
+///
 /// @ingroup window_group
+/// @ingroup container_group
+/// @ingroup widget_group
 class Dialog: public Toplevel {
 public:
 
+    /// @name Constructors
+    /// @{
+
     /// Constructor with widget.
     /// Constructs %Dialog with top level window obtained from the w.
-    /// In case widget w not inserted into hierarchy with Toplevel at the top,
-    /// an %exception throws. To prevent %exception throwing, test Toplevel
+    /// In case widget w is not inserted into hierarchy with Toplevel at the top,
+    /// an exception throws. To prevent %exception throwing, test Toplevel
     /// existance with Widget::has_window() method.
     /// @throw graphics_error if unable to obtain top level window.
     Dialog(Widget & w, const Rect & bounds=Rect());
@@ -49,7 +57,7 @@ public:
     /// Constructor with widget and title.
     /// Constructs %Dialog with top level window obtained from the w.
     /// In case widget w not inserted into hierarchy with Toplevel at the top,
-    /// an %exception throws. To prevent %exception throwing, test Toplevel
+    /// an exception throws. To prevent %exception throwing, test Toplevel
     /// existance with Widget::has_window() method.
     /// @throw graphics_error if unable to obtain top level window.
     Dialog(Widget & w, const ustring & title, const Rect & bounds=Rect());
@@ -62,6 +70,34 @@ public:
     /// @throw graphics_error if unable to obtain Display.
     Dialog(Toplevel & wnd, const ustring & title, const Rect & bounds=Rect());
 
+    /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Dialog(const Dialog & other) = default;
+
+    /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Dialog & operator=(const Dialog & other) = default;
+
+    /// Constructor with implementation pointer.
+    ///
+    /// @warning Unlike some other classes (Painter as an example), the whole
+    /// @ref widget_group "widget stack" is unable to run with pure implementation
+    /// pointer, so attempting to construct widget from a pure (@b nullptr) pointer
+    /// will cause throwing an user_error exception!
+    /// That exception also will be thrown if user tries to construct the object
+    /// from incompatible implementation shared pointer.
+    ///
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Dialog(Widget_ptr wp);
+
+    /// @}
     /// Run dialog.
     void run();
 

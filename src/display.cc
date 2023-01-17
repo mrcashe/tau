@@ -39,6 +39,10 @@ Display::Display(Display_ptr dp):
 {
 }
 
+int Display::id() const {
+    return impl->id();
+}
+
 Size Display::size_px() const {
     return impl->size_px();
 }
@@ -47,7 +51,7 @@ Size Display::size_mm() const {
     return impl->size_mm();
 }
 
-unsigned Display::dpi() const {
+int Display::dpi() const {
     return impl->dpi();
 }
 

@@ -33,25 +33,84 @@
 
 namespace tau {
 
-/// %Container that can display only one it's child at a time.
+/// %Container that can display only one its child at a time.
+///
+/// This class is a wrapper around its implementation shared pointer Card_impl.
+///
+/// To show or hide particular child, simply call Widget::show() or
+/// Widget::hide() on that child.
+///
+/// You also can cycle over children using Card::show_next() and
+/// Card::show_previous() methods.
+///
 /// @ingroup container_group
+/// @ingroup widget_group
 class Card: public Container {
 public:
 
+    /// @name Constructors
+    /// @{
+
     /// Default constructor.
+    /// Constructs basic %Card @ref container_group "container".
     Card();
 
+    /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Card(const Card & other) = default;
+
+    /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Card & operator=(const Card & other) = default;
+
+    /// Constructor with implementation pointer.
+    ///
+    /// @warning Unlike some other classes (Painter as an example), the whole
+    /// @ref widget_group "widget stack" is unable to run with pure implementation
+    /// pointer, so attempting to construct widget from a pure (@b nullptr) pointer
+    /// will cause throwing an user_error exception!
+    /// That exception also will be thrown if user tries to construct the object
+    /// from incompatible implementation shared pointer.
+    ///
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Card(Widget_ptr wp);
+
+    /// @}
     /// Add child into container.
     /// @throw user_error if widget already inserted into another container.
+    /// @throw internal_error if w has pure implementation pointer.
+    ///
+    /// @sa remove()
+    /// @sa remove_current()
+    /// @sa clear()
     void insert(Widget & w);
 
     /// Remove current child.
+    ///
+    /// @sa insert()
+    /// @sa remove()
+    /// @sa clear()
     void remove_current();
 
     /// Remove child from the container.
+    ///
+    /// @sa insert()
+    /// @sa remove_current()
+    /// @sa clear()
     void remove(Widget & w);
 
     /// Remove all children.
+    ///
+    /// @sa insert()
+    /// @sa remove_current()
+    /// @sa remove()
     void clear();
 
     /// Test if empty.
@@ -61,7 +120,7 @@ public:
     void show_next();
 
     /// Show previous child.
-    void show_prev();
+    void show_previous();
 };
 
 } // namespace tau

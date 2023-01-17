@@ -36,10 +36,17 @@
 namespace tau {
 
 /// A mouse cursor.
+///
+/// This class is a wrapper around its implementation shared pointer Cursor_impl.
+///
+/// @ingroup input_group
 class Cursor {
 public:
 
-    /// Creates an empty cursor.
+    /// @name Constructors
+    /// @{
+
+    /// Creates a pure (without implementation) cursor.
     Cursor();
 
     /// Create cursor from given pixmap and hot spot position.
@@ -48,15 +55,24 @@ public:
     Cursor(Pixmap pix, const Point & hotspot=Point());
 
     /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
     Cursor(const Cursor & other) = default;
 
     /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
     Cursor & operator=(const Cursor & other) = default;
 
-    /// Test if empty.
+    /// @}
+    /// Test if pure.
     operator bool() const;
 
-    /// Reset underlying implementation.
+    /// Reset underlying implementation (make pure).
     void reset();
 
     /// Create cursor from file with specified cursor size in pixels.

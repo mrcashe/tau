@@ -146,7 +146,7 @@ void Contour::scale(double sx, double sy, double sz) {
     scale(Vector(sx, sy, sz));
 }
 
-void Contour::map(const Matrix & mat) {
+void Contour::transform(const Matrix & mat) {
     start_ *= mat;
     for (Curve & c: curves_) { c *= mat; }
 }

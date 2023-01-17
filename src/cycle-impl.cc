@@ -68,7 +68,7 @@ Cycle_impl::Cycle_impl(Border_style bs):
     down_ = std::make_shared<Button_impl>();
     down_->enable_repeat();
     down_->hint_size(buttons_size);
-    down_->signal_click().connect(fun(card_, &Card_impl::show_prev));
+    down_->signal_click().connect(fun(card_, &Card_impl::show_previous));
     otable_->put(down_, 1, 1, 1, 1, true, false);
     otable_->align(down_.get(), ALIGN_CENTER, ALIGN_END);
 
@@ -83,7 +83,7 @@ Cycle_impl::Cycle_impl(Border_style bs):
     else { up_->hint_size(8, 4); }
 
     up_action_.connect(fun(card_, &Card_impl::show_next));
-    down_action_.connect(fun(card_, &Card_impl::show_prev));
+    down_action_.connect(fun(card_, &Card_impl::show_previous));
 
     connect_action(up_action_);
     connect_action(down_action_);
@@ -108,7 +108,7 @@ Border_style Cycle_impl::border_style() const {
 
 bool Cycle_impl::on_mouse_wheel(int delta, int mm, const Point & where) {
     if (delta < 0) { card_->show_next(); }
-    else { card_->show_prev(); }
+    else { card_->show_previous(); }
     return true;
 }
 

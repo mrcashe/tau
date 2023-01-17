@@ -36,12 +36,17 @@ Fileman::Fileman(Fileman_mode fs_type, const ustring & path):
 {
 }
 
-ustring Fileman::dir() const {
-    return FILEMAN_IMPL->dir();
+Fileman::Fileman(Widget_ptr wp):
+    Widget(std::dynamic_pointer_cast<Fileman_impl>(wp))
+{
 }
 
-void Fileman::chdir(const ustring & dirpath) {
-    FILEMAN_IMPL->chdir(dirpath);
+ustring Fileman::uri() const {
+    return FILEMAN_IMPL->uri();
+}
+
+void Fileman::set_uri(const ustring & uri) {
+    FILEMAN_IMPL->set_uri(uri);
 }
 
 std::vector<ustring> Fileman::selection() const {
@@ -58,18 +63,6 @@ void Fileman::add_filter(const ustring & patterns, const ustring & title) {
 
 ustring Fileman::filter() const {
     return FILEMAN_IMPL->filter();
-}
-
-void Fileman::show_places() {
-    FILEMAN_IMPL->show_places();
-}
-
-void Fileman::hide_places() {
-    FILEMAN_IMPL->hide_places();
-}
-
-bool Fileman::places_visible() const {
-    return FILEMAN_IMPL->places_visible();
 }
 
 void Fileman::sort_by(const ustring & col) {
@@ -112,18 +105,6 @@ ustring Fileman::invisible_info_items(char32_t sep) const {
     return FILEMAN_IMPL->invisible_info_items(sep);
 }
 
-void Fileman::show_hidden_files() {
-    FILEMAN_IMPL->show_hidden_files();
-}
-
-void Fileman::hide_hidden_files() {
-    FILEMAN_IMPL->hide_hidden_files();
-}
-
-bool Fileman::hidden_files_visible() const {
-    return FILEMAN_IMPL->hidden_files_visible();
-}
-
 void Fileman::allow_multiple_select() {
     FILEMAN_IMPL->allow_multiple_select();
 }
@@ -148,48 +129,24 @@ bool Fileman::dir_select_allowed() const {
     return FILEMAN_IMPL->dir_select_allowed();
 }
 
-void Fileman::set_show_dirs_only() {
-    FILEMAN_IMPL->set_show_dirs_only();
+void Fileman::allow_overwrite() {
+    FILEMAN_IMPL->allow_overwrite();
 }
 
-void Fileman::unset_show_dirs_only() {
-    FILEMAN_IMPL->unset_show_dirs_only();
+void Fileman::disallow_overwrite() {
+    FILEMAN_IMPL->disallow_overwrite();
 }
 
-bool Fileman::dirs_only_visible() const {
-    return FILEMAN_IMPL->dirs_only_visible();
+bool Fileman::overwrite_allowed() const {
+    return FILEMAN_IMPL->overwrite_allowed();
 }
 
-void Fileman::allow_dir_creation() {
-    FILEMAN_IMPL->allow_dir_creation();
+void Fileman::load_state(Key_file & kf, Key_section & sect) {
+    FILEMAN_IMPL->load_state(kf, sect);
 }
 
-void Fileman::disallow_dir_creation() {
-    FILEMAN_IMPL->disallow_dir_creation();
-}
-
-bool Fileman::dir_creation_allowed() const {
-    return FILEMAN_IMPL->dir_creation_allowed();
-}
-
-void Fileman::allow_silent_overwrite() {
-    FILEMAN_IMPL->allow_silent_overwrite();
-}
-
-void Fileman::disallow_silent_overwrite() {
-    FILEMAN_IMPL->disallow_silent_overwrite();
-}
-
-bool Fileman::silent_overwrite_allowed() const {
-    return FILEMAN_IMPL->silent_overwrite_allowed();
-}
-
-double Fileman::ratio() const {
-    return FILEMAN_IMPL->ratio();
-}
-
-void Fileman::set_ratio(double ratio) {
-    FILEMAN_IMPL->set_ratio(ratio);
+void Fileman::save_state(Key_file & kf, Key_section & sect) {
+    FILEMAN_IMPL->save_state(kf, sect);
 }
 
 Action & Fileman::cancel_action() {

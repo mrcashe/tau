@@ -33,13 +33,20 @@
 
 namespace tau {
 
-/// An abstract widget's container base.
+/// An abstract widget's @ref container_group "container" base.
+///
+/// This class is a wrapper around its implementation shared pointer Container_impl.
+///
 /// @ingroup container_group
+/// @ingroup widget_group
 class Container: public Widget {
 public:
 
     /// Force children arrange.
     void queue_arrange();
+
+    /// Get children.
+    std::vector<Widget_ptr> children() const;
 
 protected:
 

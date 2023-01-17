@@ -78,13 +78,13 @@ class Event_posix: public Event_impl, public Poller_base {
 public:
 
     Event_posix();
-    ~Event_posix();
+   ~Event_posix();
 
     // Overrides Event_impl.
     void emit() override;
 
     // Overrides pure Event_impl.
-    void unset() override;
+    void release() override;
 
     int fd() const override { return fds_[0]; }
     signal<void()> & signal_poll() override { return signal_ready_; }

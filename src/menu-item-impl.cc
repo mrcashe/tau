@@ -83,8 +83,8 @@ Action_menu_impl::Action_menu_impl(Action & action):
     action_(action),
     accel_label_(std::make_shared<Text_impl>())
 {
-    if (action_.disabled()) { freeze(); }
-    if (action_.hidden()) { disappear(); }
+    if (!action_.enabled()) { freeze(); }
+    if (!action_.visible()) { disappear(); }
 
     action_.signal_enable().connect(fun(this, &Action_menu_impl::thaw));
     action_.signal_disable().connect(fun(this, &Action_menu_impl::freeze));
@@ -164,8 +164,8 @@ Toggle_menu_impl::Toggle_menu_impl(Toggle_action & toggle_action, Check_style ch
     check_(std::make_shared<Check_impl>(check_style, border_style)),
     accel_label_(std::make_shared<Text_impl>())
 {
-    if (action_.disabled()) { freeze(); }
-    if (action_.hidden()) { disappear(); }
+    if (!action_.enabled()) { freeze(); }
+    if (!action_.visible()) { disappear(); }
 
     action_.signal_enable().connect(fun(this, &Toggle_menu_impl::thaw));
     action_.signal_disable().connect(fun(this, &Toggle_menu_impl::freeze));

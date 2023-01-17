@@ -57,7 +57,7 @@ void Event_posix::emit() {
 }
 
 // Overrides pure Event_impl.
-void Event_posix::unset() {
+void Event_posix::release() {
     char c;
     ssize_t num_read;
 

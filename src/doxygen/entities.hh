@@ -90,7 +90,8 @@
 /// Style and style items
 
 /// @defgroup widget_group Widgets
-/// Classes derived from Widget, nor containers and nor windows
+/// Classes derived from Widget, a whole widget stack, including containers
+/// and windows.
 
 /// @defgroup container_group Containers
 /// Classes derived from Container

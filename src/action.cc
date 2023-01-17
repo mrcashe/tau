@@ -430,8 +430,8 @@ void Action_base::connect_master_action(Master_action & master_action) {
         add_accel(kc, km);
     }
 
-    if (master_action.disabled()) { freeze(); }
-    if (master_action.hidden()) { disappear(); }
+    if (!master_action.enabled()) { freeze(); }
+    if (!master_action.visible()) { disappear(); }
     set_label(master_action.label());
     set_icon_name(master_action.icon_name());
     set_tooltip(master_action.tooltip());
@@ -533,7 +533,7 @@ Action::Action(Master_action & master_action, slot<void()> slot_activate):
 }
 
 void Action::exec() {
-    if (!disabled()) {
+    if (enabled()) {
         signal_activate_();
     }
 }
@@ -544,7 +544,7 @@ connection Action::connect(slot<void()> slot_activate, bool prepend) {
 
 // Overrides pure Action_base.
 bool Action::on_accel() {
-    if (!disabled() && !signal_activate_.empty()) {
+    if (enabled() && !signal_activate_.empty()) {
         signal_activate_();
         return true;
     }
@@ -616,7 +616,7 @@ Toggle_action::Toggle_action(Master_action & master_action, slot<void(bool)> slo
 }
 
 void Toggle_action::toggle() {
-    if (!disabled()) {
+    if (enabled()) {
         state_ = !state_;
         signal_toggle_(state_);
     }
@@ -627,7 +627,7 @@ bool Toggle_action::get() const {
 }
 
 void Toggle_action::set(bool state) {
-    if (!disabled() && state_ != state) {
+    if (enabled() && state_ != state) {
         state_ = state;
         signal_toggle_(state_);
     }
@@ -639,7 +639,7 @@ connection Toggle_action::connect(slot<void(bool)> slot_toggle, bool prepend) {
 
 // Overrides pure Action_base.
 bool Toggle_action::on_accel() {
-    if (!disabled()) {
+    if (enabled()) {
         state_ = !state_;
 
         if (!signal_toggle_.empty()) {

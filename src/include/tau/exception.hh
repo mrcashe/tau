@@ -60,7 +60,7 @@ struct user_error: public internal_error {
     user_error(const ustring & msg): internal_error("user error: "+msg) {}
 };
 
-/// Operating system error exception.
+/// Operating system error.
 /// @ingroup throw_group
 class sys_error: public exception {
     int     gerror_;    // Generic error code (from GetLastError() or errno).
@@ -73,34 +73,28 @@ public:
     int gerror() const { return gerror_; }
 };
 
-/// Graphics system error exception.
+/// Graphics system error.
 /// @ingroup throw_group
 struct graphics_error: public internal_error {
     explicit graphics_error(const ustring & msg): internal_error("graphics error: "+msg) {}
 };
 
-/// Bad document exception.
+/// Bad document.
 /// @ingroup throw_group
 struct bad_doc: public internal_error {
     explicit bad_doc(const ustring & msg): internal_error(msg) {}
 };
 
-/// Bad font exception.
+/// Bad font.
 /// @ingroup throw_group
 struct bad_font: public internal_error {
     explicit bad_font(const ustring & msg): internal_error(msg) {}
 };
 
-/// Bad image exception.
+/// Bad image.
 /// @ingroup throw_group
 struct bad_pixmap: public internal_error {
     explicit bad_pixmap(const ustring & path): internal_error("bad pixmap: "+path) {}
-};
-
-/// Bad encoding exception.
-/// @ingroup throw_group
-struct bad_encoding: public internal_error {
-    explicit bad_encoding(const Encoding & enc): internal_error("bad encoding: "+enc.name()) {}
 };
 
 } // namespace tau

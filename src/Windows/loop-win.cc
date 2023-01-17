@@ -88,7 +88,7 @@ Event_ptr Loop_win::create_event() {
     HANDLE handle = evp->handle();
     handles_.push_back(handle);
     signal_chain_poll_.connect(fun(evp, &Event_win::on_poll));
-    evp->signal_ready().connect(fun(evp, &Event_win::unset));
+    evp->signal_ready().connect(fun(evp, &Event_win::release));
     evp->signal_destroy().connect(tau::bind(fun(this, &Loop_win::on_handle_die), handle));
     return evp;
 }

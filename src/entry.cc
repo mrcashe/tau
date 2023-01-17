@@ -36,6 +36,11 @@ Entry::Entry(Border_style border_style):
 {
 }
 
+Entry::Entry(Widget_ptr wp):
+    Widget(std::dynamic_pointer_cast<Entry_impl>(wp))
+{
+}
+
 Entry::Entry(Align text_align, Border_style border_style):
     Widget(std::make_shared<Entry_impl>(text_align, border_style))
 {
@@ -127,16 +132,16 @@ void Entry::append(Widget & w, bool shrink) {
     ENTRY_IMPL->append(w.ptr(), shrink);
 }
 
-void Entry::append(const ustring & text, unsigned margin_left_hint, unsigned margin_right_hint) {
-    ENTRY_IMPL->append(text, margin_left_hint, margin_right_hint);
+void Entry::append(const ustring & text, unsigned margin_left, unsigned margin_right) {
+    ENTRY_IMPL->append(text, margin_left, margin_right);
 }
 
 void Entry::prepend(Widget & w, bool shrink) {
     ENTRY_IMPL->prepend(w.ptr(), shrink);
 }
 
-void Entry::prepend(const ustring & text, unsigned margin_left_hint, unsigned margin_right_hint) {
-    ENTRY_IMPL->prepend(text, margin_left_hint, margin_right_hint);
+void Entry::prepend(const ustring & text, unsigned margin_left, unsigned margin_right) {
+    ENTRY_IMPL->prepend(text, margin_left, margin_right);
 }
 
 Action & Entry::cancel_action() {

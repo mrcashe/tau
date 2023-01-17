@@ -36,6 +36,11 @@ Card::Card():
 {
 }
 
+Card::Card(Widget_ptr wp):
+    Container(std::dynamic_pointer_cast<Card_impl>(wp))
+{
+}
+
 void Card::insert(Widget & w) {
     CARD_IMPL->insert(w.ptr());
 }
@@ -56,8 +61,8 @@ void Card::show_next() {
     CARD_IMPL->show_next();
 }
 
-void Card::show_prev() {
-    CARD_IMPL->show_prev();
+void Card::show_previous() {
+    CARD_IMPL->show_previous();
 }
 
 bool Card::empty() const {

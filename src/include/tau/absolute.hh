@@ -34,46 +34,91 @@
 namespace tau {
 
 /// A container widget that allows freely move and resize its children.
+///
+/// This class is a wrapper around its implementation shared pointer Absolute_impl.
+///
 /// @ingroup container_group
+/// @ingroup widget_group
 class Absolute: public Container {
 public:
 
+    /// @name Constructors, operators
+    /// @{
+
     /// Default constructor.
+    /// Constructs basic %Absolute @ref container_group "container".
     Absolute();
 
+    /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Absolute(const Absolute & other) = default;
+
+    /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Absolute & operator=(const Absolute & other) = default;
+
     /// Constructor with implementation pointer.
+    ///
+    /// @warning Unlike some other classes (Painter as an example), the whole
+    /// @ref widget_group "widget stack" is unable to run with pure implementation
+    /// pointer, so attempting to construct widget from a pure (@b nullptr) pointer
+    /// will cause throwing an user_error exception!
+    /// That exception also will be thrown if user tries to construct the object
+    /// from incompatible implementation shared pointer.
+    ///
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
     Absolute(Widget_ptr wp);
 
+    /// @}
     /// Put widget at the specified position and give them specified size.
+    ///
     /// @param w widget to be put.
     /// @param pos position where widget will be placed.
     /// @param size size in pixel or automatic allocation if corresponding components are zero.
-    /// @throw user_error if widget already inserted into another container.
+    ///
+    /// @throw user_error if w already inserted into another container.
+    /// @throw internal_error if w has pure implementation pointer.
     void put(Widget & w, const Point & pos, const Size & size=Size());
 
     /// Put widget at the specified position and give them specified size.
+    ///
     /// @param w widget to be put.
     /// @param pos position where widget will be placed.
     /// @param width width in pixels or automatic allocation along X axis if zero.
     /// @param height height in pixels or automatic allocation along Y axis if zero.
-    /// @throw user_error if widget already inserted into another container.
+    ///
+    /// @throw user_error if w already inserted into another container.
+    /// @throw internal_error if w has pure implementation pointer.
     void put(Widget & w, const Point & pos, unsigned width, unsigned height);
 
     /// Put widget at the specified position and give them specified size.
+    ///
     /// @param w widget to be put.
     /// @param x X coordinate in pixels where widget will be placed.
     /// @param y Y coordinate in pixels where widget will be placed.
     /// @param size size in pixel or automatic allocation if corresponding components are zero.
-    /// @throw user_error if widget already inserted into another container.
+    ///
+    /// @throw user_error if w already inserted into another container.
+    /// @throw internal_error if w has pure implementation pointer.
     void put(Widget & w, int x, int y, const Size & size=Size());
 
     /// Put widget at the specified position and give them specified size.
+    ///
     /// @param w widget to be put.
     /// @param x X coordinate in pixels where widget will be placed.
     /// @param y Y coordinate in pixels where widget will be placed.
     /// @param width width in pixels or automatic allocation along X axis if zero.
     /// @param height height in pixels or automatic allocation along Y axis if zero.
-    /// @throw user_error if widget already inserted into another container.
+    ///
+    /// @throw user_error if w already inserted into another container.
+    /// @throw internal_error if w has pure implementation pointer.
     void put(Widget & w, int x, int y, unsigned width, unsigned height);
 
     /// Move child.

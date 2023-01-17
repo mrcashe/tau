@@ -36,6 +36,11 @@ Edit::Edit():
 {
 }
 
+Edit::Edit(Widget_ptr wp):
+    Text(std::dynamic_pointer_cast<Edit_impl>(wp))
+{
+}
+
 Edit::Edit(Align halign, Align valign):
     Text(std::make_shared<Edit_impl>(halign, valign))
 {
@@ -67,20 +72,8 @@ void Edit::enter_text(const ustring & s) {
     EDIT_IMPL->enter_text(s);
 }
 
-bool Edit::can_undo() const {
-    return EDIT_IMPL->can_undo();
-}
-
-bool Edit::can_redo() const {
-    return EDIT_IMPL->can_redo();
-}
-
-std::size_t Edit::undo_index() const {
-    return EDIT_IMPL->undo_index();
-}
-
-void Edit::split_undo() {
-    EDIT_IMPL->split_undo();
+bool Edit::modified() const {
+    return EDIT_IMPL->modified();
 }
 
 Action & Edit::cut_action() {
@@ -117,6 +110,10 @@ Action & Edit::tab_action() {
 
 Toggle_action & Edit::insert_action() {
     return EDIT_IMPL->insert_action();
+}
+
+signal<void(bool)> & Edit::signal_modified() {
+        return EDIT_IMPL->signal_modified();
 }
 
 } // namespace tau

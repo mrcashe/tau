@@ -45,7 +45,7 @@ void Event_win::emit() {
     SetEvent(handle_);
 }
 
-void Event_win::unset() {
+void Event_win::release() {
     ResetEvent(handle_);
 }
 

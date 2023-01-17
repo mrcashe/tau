@@ -241,8 +241,9 @@ const char * str8_next(const char * p) {
 }
 
 char32_t char32_from_pointer(const char * u) {
-    if (*u >= 0) return *u;
+    if (*u >= 0) { return *u; }
     unsigned n = char8_len(*u);
+    if (!n) { return U'\0'; }
     char32_t w = static_cast<uint8_t>(*u++ & ('\x7f' >> n));
     while (--n) { w <<= 6; w |= static_cast<uint8_t>('\x3f' & *u++); }
     return w;

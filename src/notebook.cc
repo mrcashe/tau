@@ -116,8 +116,8 @@ int Notebook::show_next() {
     return NOTEBOOK_IMPL->show_next();
 }
 
-int Notebook::show_prev() {
-    return NOTEBOOK_IMPL->show_prev();
+int Notebook::show_previous() {
+    return NOTEBOOK_IMPL->show_previous();
 }
 
 int Notebook::show_page(int nth_page) {

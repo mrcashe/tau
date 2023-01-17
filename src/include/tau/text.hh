@@ -303,13 +303,6 @@ public:
     /// @name Accessors to established signals.
     /// @{
 
-    /// Signal emitted when text added, replaced or erased.
-    /// Slot prototype:
-    /// ~~~~~~~~~~~~~~~
-    /// void on_text_changed();
-    /// ~~~~~~~~~~~~~~~
-    signal<void()> & signal_changed();
-
     /// Signal emitted when selection changes.
     /// Slot prototype:
     /// ~~~~~~~~~~~~~~~

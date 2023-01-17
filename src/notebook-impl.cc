@@ -504,7 +504,7 @@ int Notebook_impl::show_next() {
     return -1;
 }
 
-int Notebook_impl::show_prev() {
+int Notebook_impl::show_previous() {
     if (!pages_.empty()) {
         unsigned current = std::max(0, current_page());
 
@@ -646,7 +646,7 @@ bool Notebook_impl::on_tab_mouse_up(int mbt, int mm, const Point & pt, Widget_im
 
 bool Notebook_impl::on_mouse_wheel(int d, int mm, const Point & pt) {
     if (d > 0) { show_next(); }
-    else { show_prev(); }
+    else { show_previous(); }
     return true;
 }
 

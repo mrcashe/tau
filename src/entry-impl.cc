@@ -86,7 +86,7 @@ void Entry_impl::init(Align text_align) {
     edit_->move_page_up_action().disable();
     edit_->move_down_action().disable();
     edit_->move_up_action().disable();
-    changed_cx_ = edit_->signal_changed().connect(fun(this, &Entry_impl::on_edit_changed));
+    changed_cx_ = buffer_.signal_changed().connect(fun(this, &Entry_impl::on_buffer_changed));
     edit_->signal_focus_out().connect(fun(edit_, &Edit_impl::unselect));
     edit_->cancel_action().connect(fun(this, &Widget_impl::drop_focus));
 
@@ -188,7 +188,7 @@ void Entry_impl::prepend(const ustring & text, unsigned margin_left, unsigned ma
     box_->prepend(tp, true);
 }
 
-void Entry_impl::on_edit_changed() {
+void Entry_impl::on_buffer_changed() {
     ustring s = edit_->text();
 
     if (signal_validate_(s)) {

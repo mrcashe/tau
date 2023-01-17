@@ -414,7 +414,7 @@ Color Color::darken(double factor) const {
     return c;
 }
 
-std::vector<ustring> Color::list_names() {
+std::vector<ustring> Color::list_css_names() {
     std::vector<ustring> l;
     for (int i = 0; named_colors[i].name; ++i) { l.emplace_back(named_colors[i].name); }
     return l;

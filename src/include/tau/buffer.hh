@@ -35,10 +35,14 @@
 
 namespace tau {
 
-/// Shows current position within Buffer.
+/// Shows current position and perform search operations within Buffer.
+///
 /// @ingroup text_group
 class Buffer_citer {
 public:
+
+    /// @name Constructors, destructor, operators
+    /// @{
 
     /// Default constructor.
     Buffer_citer();
@@ -56,6 +60,7 @@ public:
     /// Destructor.
    ~Buffer_citer();
 
+    /// @}
     /// Get current row (line) number.
     std::size_t row() const;
 
@@ -205,12 +210,14 @@ public:
 
     /// Compare text at current position.
     /// Compare given text against text at current position.
+    /// @param text text to be compared.
     /// @param advance advance position by the length of given string in case of equality.
     /// @return @b true if both strings are equal.
     bool equals(const ustring & text, bool advance=false);
 
     /// Compare text at current position.
     /// Compare given text against text at current position.
+    /// @param text text to be compared.
     /// @param advance advance position by the length of given string in case of equality.
     /// @return @b true if both strings are equal.
     bool equals(const std::u32string & text, bool advance=false);
@@ -269,6 +276,9 @@ private:
 // ----------------------------------------------------------------------------
 
 /// The text buffer.
+///
+/// This class is a wrapper around its implementation shared pointer Buffer_impl.
+///
 /// @ingroup text_group
 class Buffer {
 public:
@@ -277,9 +287,17 @@ public:
     Buffer();
 
     /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
     Buffer(const Buffer & other) = default;
 
     /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
     Buffer & operator=(const Buffer & other) = default;
 
     /// Constructor with UTF-8 text.
@@ -296,10 +314,10 @@ public:
     static Buffer load_from_file(const ustring & path);
 
     /// Save to stream.
-    void save(std::ostream & os) const;
+    void save(std::ostream & os);
 
     /// Save to file.
-    void save_to_file(const ustring & path) const;
+    void save_to_file(const ustring & path);
 
     /// Replace buffer content from an UTF-8 string.
     void assign(const ustring & str);
@@ -367,6 +385,9 @@ public:
 
     /// Test if empty.
     bool empty() const;
+
+    /// Test if changed.
+    bool changed() const;
 
     /// Get text encoding.
     Encoding encoding() const;
@@ -440,6 +461,20 @@ public:
     /// void on_buffer_replace(Buffer_citer begin, Buffer_citer end, const std::u32string & replaced_text);
     /// ~~~~~~~~~~~~~~~
     signal<void(Buffer_citer, Buffer_citer, std::u32string)> & signal_replace();
+
+    /// Signal emitted when buffer changes somehow.
+    /// Slot prototype:
+    /// ~~~~~~~~~~~~~~~
+    /// void on_buffer_changed();
+    /// ~~~~~~~~~~~~~~~
+    signal<void()> & signal_changed();
+
+    /// Signal emitted when buffer flushed to disk or elsewhere using save* methods.
+    /// Slot prototype:
+    /// ~~~~~~~~~~~~~~~
+    /// void on_buffer_flush();
+    /// ~~~~~~~~~~~~~~~
+    signal<void()> & signal_flush();
 
     /// Signal emitted when buffer locked.
     /// Slot prototype:

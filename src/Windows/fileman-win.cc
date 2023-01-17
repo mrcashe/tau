@@ -55,12 +55,12 @@ protected:
             if (S_OK == SHGetFolderPathW(NULL, CSIDL_MYDOCUMENTS, NULL, 0, ws)) {
                 ustring path = str_from_wstring(std::wstring(ws));
                 Text_ptr tp = std::make_shared<Text_impl>("My Documents", ALIGN_START);
-                tp->signal_select().connect(tau::bind(fun(this, &Fileman_impl::chdir), path));
+                tp->signal_select().connect(tau::bind(fun(this, &Fileman_impl::set_uri), path));
                 tp->set_tooltip(path);
                 int row = places_list_->append_row(tp, true);
 
                 Icon_ptr ico = std::make_shared<Icon_impl>("folder", SMALL_ICON);
-                ico->signal_select().connect(tau::bind(fun(this, &Fileman_impl::chdir), path));
+                ico->signal_select().connect(tau::bind(fun(this, &Fileman_impl::set_uri), path));
                 places_list_->insert(row, ico, -1, true);
             }
 
@@ -96,11 +96,11 @@ protected:
 
                 for (const ustring & s: drives) {
                     tp = std::make_shared<Text_impl>(s, ALIGN_START);
-                    tp->signal_select().connect(tau::bind(fun(this, &Fileman_impl::chdir), s));
+                    tp->signal_select().connect(tau::bind(fun(this, &Fileman_impl::set_uri), s));
                     int row = places_list_->append_row(tp, true);
 
                     Icon_ptr ico = std::make_shared<Icon_impl>("drive-harddisk", SMALL_ICON);
-                    ico->signal_select().connect(tau::bind(fun(this, &Fileman_impl::chdir), s));
+                    ico->signal_select().connect(tau::bind(fun(this, &Fileman_impl::set_uri), s));
                     places_list_->insert(row, ico, -1, true);
                 }
             }
@@ -112,11 +112,11 @@ protected:
 
                 for (const ustring & s: cdroms) {
                     tp = std::make_shared<Text_impl>(s, ALIGN_START);
-                    tp->signal_select().connect(tau::bind(fun(this, &Fileman_impl::chdir), s));
+                    tp->signal_select().connect(tau::bind(fun(this, &Fileman_impl::set_uri), s));
                     int row = places_list_->append_row(tp, true);
 
                     Icon_ptr ico = std::make_shared<Icon_impl>("drive-optical:drive-harddisk", SMALL_ICON);
-                    ico->signal_select().connect(tau::bind(fun(this, &Fileman_impl::chdir), s));
+                    ico->signal_select().connect(tau::bind(fun(this, &Fileman_impl::set_uri), s));
                     places_list_->insert(row, ico, -1, true);
                 }
             }
@@ -128,11 +128,11 @@ protected:
 
                 for (const ustring & s: remotes) {
                     tp = std::make_shared<Text_impl>(s, ALIGN_START);
-                    tp->signal_select().connect(tau::bind(fun(this, &Fileman_impl::chdir), s));
+                    tp->signal_select().connect(tau::bind(fun(this, &Fileman_impl::set_uri), s));
                     int row = places_list_->append_row(tp, true);
 
                     Icon_ptr ico = std::make_shared<Icon_impl>("folder-remote:folder", SMALL_ICON);
-                    ico->signal_select().connect(tau::bind(fun(this, &Fileman_impl::chdir), s));
+                    ico->signal_select().connect(tau::bind(fun(this, &Fileman_impl::set_uri), s));
                     places_list_->insert(row, ico, -1, true);
                 }
             }
@@ -144,11 +144,11 @@ protected:
 
                 for (const ustring & s: removables) {
                     tp = std::make_shared<Text_impl>(s, ALIGN_START);
-                    tp->signal_select().connect(tau::bind(fun(this, &Fileman_impl::chdir), s));
+                    tp->signal_select().connect(tau::bind(fun(this, &Fileman_impl::set_uri), s));
                     int row = places_list_->append_row(tp, true);
 
                     Icon_ptr ico = std::make_shared<Icon_impl>("drive-removable-media:drive-harddisk", SMALL_ICON);
-                    ico->signal_select().connect(tau::bind(fun(this, &Fileman_impl::chdir), s));
+                    ico->signal_select().connect(tau::bind(fun(this, &Fileman_impl::set_uri), s));
                     places_list_->insert(row, ico, -1, true);
                 }
             }

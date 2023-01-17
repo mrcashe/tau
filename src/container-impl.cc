@@ -75,7 +75,6 @@ void Container_impl::make_child(Widget_ptr wp) {
 }
 
 void Container_impl::unparent_child(Widget_impl * wi) {
-//     if (!wi) { std::cerr << "** " << this << ": Container_impl::unparent_child(): got a nullptr widget pointer\n"; return; }
     auto i = std::find_if(children_.begin(), children_.end(), [wi](Widget_ptr wp) { return wi == wp.get(); } );
 
     if (children_.end() != i) {

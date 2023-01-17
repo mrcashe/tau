@@ -243,7 +243,7 @@ void Colorsel_impl::on_ntable_size_changed() {
     unsigned n_columns = ntable_->size().width()/18;
 
     if (n_columns > 0) {
-        std::vector<ustring> names = Color::list_names();
+        std::vector<ustring> names = Color::list_css_names();
         std::size_t cindex = 0;
         unsigned n_rows = names.size()/n_columns;
         if (0 != names.size()%n_columns) { ++n_rows; }

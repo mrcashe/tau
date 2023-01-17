@@ -34,21 +34,37 @@
 namespace tau {
 
 /// The brush used for contour filling.
+///
+/// This class is a wrapper around its implementation shared pointer Brush_impl.
+///
 /// @ingroup paint_group
 class Brush {
 public:
 
+    /// @name Constructors, operators
+    /// @{
+
     /// Default constructor.
     Brush();
-
-    /// Copy constructor.
-    Brush(const Brush & other) = default;
 
     /// Constructs solid brush of specified color.
     Brush(const Color & color);
 
+    /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Brush(const Brush & other) = default;
+
     /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
     Brush & operator=(const Brush & other) = default;
+
+    /// @}
 
 private:
 

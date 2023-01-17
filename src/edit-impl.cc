@@ -64,6 +64,8 @@ void Edit_impl::init() {
     signal_key_down_.connect(fun(this, &Edit_impl::on_key_down));
     signal_display().connect(fun(this, &Edit_impl::on_display));
 
+    undo_action_.disable();
+    redo_action_.disable();
     connect_action(insert_action_);
     connect_action(cut_action_);
     connect_action(paste_action_);
@@ -79,6 +81,7 @@ void Edit_impl::connect_buffer() {
     edit_insert_cx_ = buffer_.signal_insert().connect(fun(this, &Edit_impl::on_edit_insert), true);
     edit_replace_cx_ = buffer_.signal_replace().connect(fun(this, &Edit_impl::on_edit_replace), true);
     edit_erase_cx_ = buffer_.signal_erase().connect(fun(this, &Edit_impl::on_edit_erase), true);
+    flush_cx_ = buffer_.signal_flush().connect(fun(this, &Edit_impl::on_flush));
 }
 
 void Edit_impl::allow_edit() {
@@ -98,6 +101,7 @@ void Edit_impl::assign(Buffer buf) {
     edit_insert_cx_.disconnect();
     edit_replace_cx_.disconnect();
     edit_erase_cx_.disconnect();
+    flush_cx_.disconnect();
 
     undo_.clear();
     undo_index_ = 0;
@@ -170,7 +174,7 @@ void Edit_impl::del_selection() {
 }
 
 void Edit_impl::enter_text(const ustring & str) {
-    if (edit_allowed_ && !buffer_.locked() && !str.empty()) {
+    if (edit_allowed_ && !str.empty()) {
         del_selection();
         if (insert_) { buffer_.insert(caret_, str); }
         else { buffer_.replace(caret_, str); }
@@ -178,7 +182,7 @@ void Edit_impl::enter_text(const ustring & str) {
 }
 
 void Edit_impl::del_range(Buffer_citer b, Buffer_citer e) {
-    if (edit_allowed_ && !buffer_.locked() && b && e && b != e) {
+    if (edit_allowed_ && b && e && b != e) {
         if (e < b) { std::swap(b, e); }
         unselect();
         cutoff_redo();
@@ -187,10 +191,8 @@ void Edit_impl::del_range(Buffer_citer b, Buffer_citer e) {
 }
 
 void Edit_impl::on_insert(bool replace) {
-    if (edit_allowed_) {
-        insert_ = !replace;
-        signal_caret_motion_();
-    }
+    insert_ = !replace;
+    signal_caret_motion_();
 }
 
 void Edit_impl::cut() {
@@ -233,147 +235,137 @@ void Edit_impl::on_paste_text(const ustring & s) {
     }
 }
 
-bool Edit_impl::can_undo() const {
-    return edit_allowed_ && 0 != undo_index_;
-}
-
-bool Edit_impl::can_redo() const {
-    return edit_allowed_ && !undo_.empty() && undo_index_ < undo_.size();
-}
-
 void Edit_impl::cutoff_redo() {
-    if (can_redo()) {
+    if (undo_index_ < undo_.size()) {
         undo_.erase(undo_.begin()+undo_index_, undo_.end());
+        redo_action_.disable();
+        signal_modified_(modified());
     }
 }
 
 void Edit_impl::undo() {
-    if (edit_allowed_) {
-        if (can_undo()) {
-            Undo & u = undo_[--undo_index_];
-            edit_insert_cx_.block();
-            edit_replace_cx_.block();
-            edit_erase_cx_.block();
+    if (edit_allowed_ && 0 != undo_index_) {
+        Undo & u = undo_[--undo_index_];
+        edit_insert_cx_.block();
+        edit_replace_cx_.block();
+        edit_erase_cx_.block();
 
-            if (UNDO_ERASE == u.type) {
-                buffer_.insert(buffer_.citer(u.row1, u.col1), u.str1);
-            }
-
-            else if (UNDO_INSERT == u.type) {
-                buffer_.erase(buffer_.citer(u.row1, u.col1), buffer_.citer(u.row2, u.col2));
-            }
-
-            else if (UNDO_REPLACE == u.type) {
-                buffer_.replace(buffer_.citer(u.row1, u.col1), u.str1);
-            }
-
-            edit_insert_cx_.unblock();
-            edit_replace_cx_.unblock();
-            edit_erase_cx_.unblock();
-            signal_changed_();
+        if (UNDO_ERASE == u.type) {
+            buffer_.insert(buffer_.citer(u.row1, u.col1), u.str1);
         }
+
+        else if (UNDO_INSERT == u.type) {
+            buffer_.erase(buffer_.citer(u.row1, u.col1), buffer_.citer(u.row2, u.col2));
+        }
+
+        else if (UNDO_REPLACE == u.type) {
+            buffer_.replace(buffer_.citer(u.row1, u.col1), u.str1);
+        }
+
+        redo_action_.enable();
+        if (0 == undo_index_) { undo_action_.disable(); }
+        edit_insert_cx_.unblock();
+        edit_replace_cx_.unblock();
+        edit_erase_cx_.unblock();
+        signal_modified_(modified());
     }
 }
 
 void Edit_impl::redo() {
-    if (edit_allowed_) {
-        if (can_redo()) {
-            Undo & u = undo_[undo_index_++];
-            edit_insert_cx_.block();
-            edit_replace_cx_.block();
-            edit_erase_cx_.block();
+    if (edit_allowed_ && undo_index_ < undo_.size()) {
+        Undo & u = undo_[undo_index_++];
+        edit_insert_cx_.block();
+        edit_replace_cx_.block();
+        edit_erase_cx_.block();
 
-            if (UNDO_ERASE == u.type) {
-                Buffer_citer b = buffer_.citer(u.row1, u.col1), e = buffer_.citer(u.row2, u.col2);
+        if (UNDO_ERASE == u.type) {
+            Buffer_citer b = buffer_.citer(u.row1, u.col1), e = buffer_.citer(u.row2, u.col2);
 
-                if (buffer_.length(b, e) != u.str1.size()) {
-                    e = b;
+            if (buffer_.length(b, e) != u.str1.size()) {
+                e = b;
 
-                    for (char32_t wc: u.str1) {
-                        if (wc != *e) { break; }
-                        ++e;
-                    }
+                for (char32_t wc: u.str1) {
+                    if (wc != *e) { break; }
+                    ++e;
                 }
-
-                buffer_.erase(b, e);
             }
 
-            else if (UNDO_INSERT == u.type) {
-                buffer_.insert(buffer_.citer(u.row1, u.col1), u.str1);
-            }
-
-            else if (UNDO_REPLACE == u.type) {
-                buffer_.replace(buffer_.citer(u.row1, u.col1), u.str2);
-            }
-
-            edit_insert_cx_.unblock();
-            edit_replace_cx_.unblock();
-            edit_erase_cx_.unblock();
-            signal_changed_();
+            buffer_.erase(b, e);
         }
-    }
-}
 
-void Edit_impl::split_undo() {
-    split_undo_ = true;
+        else if (UNDO_INSERT == u.type) {
+            buffer_.insert(buffer_.citer(u.row1, u.col1), u.str1);
+        }
+
+        else if (UNDO_REPLACE == u.type) {
+            buffer_.replace(buffer_.citer(u.row1, u.col1), u.str2);
+        }
+
+        if (undo_index_ == undo_.size()) { redo_action_.disable(); }
+        undo_action_.enable();
+        edit_insert_cx_.unblock();
+        edit_replace_cx_.unblock();
+        edit_erase_cx_.unblock();
+        signal_modified_(modified());
+    }
 }
 
 void Edit_impl::on_edit_insert(Buffer_citer b, Buffer_citer e) {
     std::u32string str = buffer_.text32(b, e);
+    cutoff_redo();
 
-    if (!str.empty()) {
-        cutoff_redo();
-
-        if (!split_undo_ && !undo_.empty() && UNDO_INSERT == undo_.back().type && b.row() == undo_.back().row2 && b.col() == undo_.back().col2) {
-            Undo & u = undo_.back();
-            u.str1 += str;
-            u.row2 = e.row();
-            u.col2 = e.col();
-        }
-
-        else {
-            undo_.emplace_back();
-            Undo & u = undo_.back();
-            u.row1 = b.row();
-            u.col1 = b.col();
-            u.row2 = e.row();
-            u.col2 = e.col();
-            u.str1 = str;
-            u.type = UNDO_INSERT;
-            split_undo_ = false;
-            ++undo_index_;
-        }
+    if (!split_undo_ && !undo_.empty() && UNDO_INSERT == undo_.back().type && b.row() == undo_.back().row2 && b.col() == undo_.back().col2) {
+        Undo & u = undo_.back();
+        u.str1 += str;
+        u.row2 = e.row();
+        u.col2 = e.col();
     }
+
+    else {
+        undo_.emplace_back();
+        Undo & u = undo_.back();
+        u.row1 = b.row();
+        u.col1 = b.col();
+        u.row2 = e.row();
+        u.col2 = e.col();
+        u.str1 = str;
+        u.type = UNDO_INSERT;
+        split_undo_ = false;
+        ++undo_index_;
+    }
+
+    undo_action_.enable();
+    signal_modified_(modified());
 }
 
 void Edit_impl::on_edit_replace(Buffer_citer b, Buffer_citer e, const std::u32string & replaced) {
     std::u32string str = buffer_.text32(b, e);
+    cutoff_redo();
 
-    if (!str.empty()) {
-        cutoff_redo();
-
-        if (!split_undo_ && !undo_.empty() && UNDO_REPLACE == undo_.back().type && b.row() == undo_.back().row2 && b.col() == undo_.back().col2) {
-            Undo & u = undo_.back();
-            u.str1 += replaced;
-            u.str2 += str;
-            u.row2 = e.row();
-            u.col2 = e.col();
-        }
-
-        else {
-            undo_.emplace_back();
-            Undo & u = undo_.back();
-            u.row1 = b.row();
-            u.col1 = b.col();
-            u.row2 = e.row();
-            u.col2 = e.col();
-            u.str1 = replaced;
-            u.str2 = str;
-            u.type = UNDO_REPLACE;
-            split_undo_ = false;
-            ++undo_index_;
-        }
+    if (!split_undo_ && !undo_.empty() && UNDO_REPLACE == undo_.back().type && b.row() == undo_.back().row2 && b.col() == undo_.back().col2) {
+        Undo & u = undo_.back();
+        u.str1 += replaced;
+        u.str2 += str;
+        u.row2 = e.row();
+        u.col2 = e.col();
     }
+
+    else {
+        undo_.emplace_back();
+        Undo & u = undo_.back();
+        u.row1 = b.row();
+        u.col1 = b.col();
+        u.row2 = e.row();
+        u.col2 = e.col();
+        u.str1 = replaced;
+        u.str2 = str;
+        u.type = UNDO_REPLACE;
+        split_undo_ = false;
+        ++undo_index_;
+    }
+
+    undo_action_.enable();
+    signal_modified_(modified());
 }
 
 void Edit_impl::on_edit_erase(Buffer_citer b, Buffer_citer e, const std::u32string & erased) {
@@ -405,6 +397,15 @@ void Edit_impl::on_edit_erase(Buffer_citer b, Buffer_citer e, const std::u32stri
     u.type = UNDO_ERASE;
     split_undo_ = false;
     ++undo_index_;
+    undo_action_.enable();
+    signal_modified_(modified());
+}
+
+void Edit_impl::on_flush() {
+    split_undo_ = true;
+    flush_index_ = undo_index_;
+    signal_modified_(false);
+    cutoff_redo();
 }
 
 } // namespace tau

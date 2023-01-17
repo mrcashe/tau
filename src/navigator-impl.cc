@@ -129,12 +129,12 @@ void Navigator_impl::new_dir(const ustring & path) {
     }
 }
 
-ustring Navigator_impl::dir() const {
+ustring Navigator_impl::uri() const {
     return holder_ ? holder_->path : path_cwd();
 }
 
 void Navigator_impl::show_record(Rec & rec) {
-    if (list_ && !list_->running() && !rec.filtered && (show_hidden_ || !rec.hidden)) {
+    if (list_ && !list_->running() && !rec.filtered && (hidden_visible_ || !rec.hidden)) {
 
         // Show file/dir name.
         Text_ptr txt = std::make_shared<Text_impl>(rec.name, ALIGN_START);
@@ -322,7 +322,7 @@ void Navigator_impl::reload() {
     }
 }
 
-void Navigator_impl::chdir(const ustring & path) {
+void Navigator_impl::set_uri(const ustring & path) {
     try {
         ustring fpath = path_is_absolute(path) ? path : path_build(path_cwd(), path);
 
@@ -350,11 +350,11 @@ void Navigator_impl::on_list_activate(int br) {
 
     if (!name.empty()) {
         try {
-            ustring p = path_build(dir(), name);
+            ustring p = path_build(uri(), name);
             Fileinfo fi(p);
 
             if (fi.is_dir()) {
-                chdir(p);
+                set_uri(p);
             }
 
             else {
@@ -469,19 +469,19 @@ bool Navigator_impl::on_paint(Painter pr, const Rect & inval) {
 }
 
 void Navigator_impl::on_timer() {
-    chdir(user_path_.empty() ? path_cwd() : user_path_);
+    set_uri(user_path_.empty() ? path_cwd() : user_path_);
 }
 
-void Navigator_impl::show_hidden_files() {
-    if (!show_hidden_) {
-        show_hidden_ = true;
+void Navigator_impl::hidden_visible_files() {
+    if (!hidden_visible_) {
+        hidden_visible_ = true;
         show_current_dir();
     }
 }
 
 void Navigator_impl::hide_hidden_files() {
-    if (show_hidden_) {
-        show_hidden_ = false;
+    if (hidden_visible_) {
+        hidden_visible_ = false;
         show_current_dir();
     }
 }
@@ -508,20 +508,6 @@ void Navigator_impl::allow_dir_select() {
 
 void Navigator_impl::disallow_dir_select() {
     dir_select_allowed_ = false;
-}
-
-void Navigator_impl::set_show_dirs_only() {
-    if (!dirs_only_visible_) {
-        dirs_only_visible_ = true;
-        show_current_dir();
-    }
-}
-
-void Navigator_impl::unset_show_dirs_only() {
-    if (dirs_only_visible_) {
-        dirs_only_visible_ = false;
-        show_current_dir();
-    }
 }
 
 void Navigator_impl::set_filter(const ustring & filters) {
@@ -625,8 +611,9 @@ void Navigator_impl::sort_by(const ustring & col) {
 
 void Navigator_impl::show_info(const ustring & items, char32_t sep) {
     for (const ustring & s: str_explode(items, sep)) {
-        if ("date" == s) { date_visible_ = true; }
-        else if ("bytes" == s) { bytes_visible_ = true; }
+        if (str_similar("date", s)) { date_visible_ = true; }
+        else if (str_similar("bytes", s)) { bytes_visible_ = true; }
+        else if (str_similar("hidden", s)) { hidden_visible_ = true; }
     }
 
     show_current_dir();
@@ -635,27 +622,28 @@ void Navigator_impl::show_info(const ustring & items, char32_t sep) {
 
 void Navigator_impl::hide_info(const ustring & items, char32_t sep) {
     for (const ustring & s: str_explode(items, sep)) {
-        if ("date" == s) { date_visible_ = false; }
-        else if ("bytes" == s) { bytes_visible_ = false; }
+        if (str_similar("date", s)) { date_visible_ = false; }
+        else if (str_similar("bytes", s)) { bytes_visible_ = false; }
+        else if (str_similar("hidden", s)) { hidden_visible_ = false; }
     }
 
     show_current_dir();
     limit_name_column();
 }
 
-bool Navigator_impl::info_visible(const ustring & item) const {
-    if ("name" == item) { return true; }
-    else if ("bytes" == item) { return bytes_visible_; }
-    else if ("date" == item) { return date_visible_; }
+bool Navigator_impl::info_visible(const ustring & s) const {
+    if (str_similar("name", s)) { return true; }
+    else if (str_similar("bytes", s)) { return bytes_visible_; }
+    else if (str_similar("date", s)) { return date_visible_; }
+    else if (str_similar("hidden", s)) { return hidden_visible_; }
     return false;
 }
 
 ustring Navigator_impl::visible_info_items(char32_t sep) const {
     ustring res = "name";
-
     if (bytes_visible_) { res += sep; res += "bytes"; }
     if (date_visible_) { res += sep; res += "date"; }
-
+    if (hidden_visible_) { res += sep; res += "hidden"; }
     return res;
 }
 
@@ -664,6 +652,7 @@ ustring Navigator_impl::invisible_info_items(char32_t sep) const {
 
     if (!bytes_visible_) { res += "bytes"; }
     if (!date_visible_) { if (!res.empty()) { res += sep; } res += "date"; }
+    if (!hidden_visible_) { if (!res.empty()) { res += sep; } res += "hidden"; }
 
     return res;
 }

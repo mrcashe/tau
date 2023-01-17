@@ -36,9 +36,16 @@
 namespace tau {
 
 /// Cycle specification for text.
+///
+/// This class is a wrapper around its implementation shared pointer Cycle_text_impl.
+///
 /// @ingroup container_group
+/// @ingroup widget_group
 class Cycle_text: public Widget {
 public:
+
+    /// @name Constructors
+    /// @{
 
     /// Constructor with border style.
     /// @param bs the border style
@@ -53,6 +60,34 @@ public:
     /// @param align horizontal text align.
     Cycle_text(Border_style bs, Align align);
 
+    /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Cycle_text(const Cycle_text & other) = default;
+
+    /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Cycle_text & operator=(const Cycle_text & other) = default;
+
+    /// Constructor with implementation pointer.
+    ///
+    /// @warning Unlike some other classes (Painter as an example), the whole
+    /// @ref widget_group "widget stack" is unable to run with pure implementation
+    /// pointer, so attempting to construct widget from a pure (@b nullptr) pointer
+    /// will cause throwing an user_error exception!
+    /// That exception also will be thrown if user tries to construct the object
+    /// from incompatible implementation shared pointer.
+    ///
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Cycle_text(Widget_ptr wp);
+
+    /// @}
     /// Set border style.
     void set_border_style(Border_style bs);
 
@@ -96,7 +131,8 @@ public:
     bool empty() const;
 
     /// Append widget after cycling text.
-    /// @throw user_error if widget already inserted into another container.
+    /// @throw user_error if w already inserted into another container.
+    /// @throw internal_error if w has pure implementation pointer.
     void append(Widget & w, bool shrink=false);
 
     /// Append text after cycling text.
@@ -106,7 +142,8 @@ public:
     void append(const ustring & text, unsigned margin_left=0, unsigned margin_right=0);
 
     /// Prepend widget before cycling text.
-    /// @throw user_error if widget already inserted into another container.
+    /// @throw user_error if w already inserted into another container.
+    /// @throw internal_error if w has pure implementation pointer.
     void prepend(Widget & w, bool shrink=false);
 
     /// Prepend text before cycling text.

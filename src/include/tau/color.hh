@@ -34,10 +34,13 @@
 
 namespace tau {
 
-/// ARGB and HSV color model.
+/// ARGB and HSV model color.
 /// @ingroup paint_group
 class Color {
 public:
+
+    /// @name Constructors
+    /// @{
 
     /// Default constructor.
     Color() = default;
@@ -54,6 +57,7 @@ public:
     /// Constructor with HTML-like string and alpha.
     Color(const ustring & str, double alpha=1.0);
 
+    /// @}
     /// Assign value from HTML-like string and alpha.
     void set(const ustring & str, double alpha=1.0);
 
@@ -180,7 +184,7 @@ public:
     /// Return darken color.
     Color darken(double factor) const;
 
-    /// Return low-contrast color (used for disabled GUI elements).
+    /// Return low-contrast color (used for disabled GUI elements painting).
     Color inactive() const;
 
     /// Create from ARGB32 data.
@@ -195,8 +199,8 @@ public:
     /// Create from 8-bit gray level, range is 0...255.
     static Color from_gray8(uint8_t gray, double alpha=1.0);
 
-    /// List color names.
-    static std::vector<ustring> list_names();
+    /// List CSS color names.
+    static std::vector<ustring> list_css_names();
 
 private:
 

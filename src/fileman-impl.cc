@@ -25,6 +25,7 @@
 // ----------------------------------------------------------------------------
 
 #include <tau/exception.hh>
+#include <tau/key-file.hh>
 #include <tau/sys.hh>
 #include <tau/painter.hh>
 #include <button-impl.hh>
@@ -159,13 +160,13 @@ void Fileman_impl::on_display() {
     }
 }
 
-ustring Fileman_impl::dir() const {
-    return navi_->dir();
+ustring Fileman_impl::uri() const {
+    return navi_->uri();
 }
 
-void Fileman_impl::chdir(const ustring & dirpath) {
-    add_to_history(dir());
-    navi_->chdir(dirpath);
+void Fileman_impl::set_uri(const ustring & uri) {
+    add_to_history(uri);
+    navi_->set_uri(uri);
 }
 
 ustring Fileman_impl::entry() const {
@@ -217,7 +218,7 @@ void Fileman_impl::on_file_select(const ustring & filename) {
         selection_.push_back(filename);
     }
 
-    ustring p = path_build(navi_->dir(), filename);
+    ustring p = path_build(navi_->uri(), filename);
 
     if (file_is_dir(p) && !navi_->dir_select_allowed()) { apply_action_.disable(); }
     else { apply_action_.enable(); }
@@ -258,7 +259,7 @@ void Fileman_impl::on_dir_changed(const ustring & path) {
         for (;;) {
             Button_ptr button = std::make_shared<Button_impl>(path_notdir(p));
             button->hint_min_size(Size(14, 0));
-            button->signal_click().connect(tau::bind(fun(this, &Fileman_impl::chdir), p));
+            button->signal_click().connect(tau::bind(fun(this, &Fileman_impl::set_uri), p));
             button->hide_relief();
             pathbox_->prepend(button, true);
             q = path_dirname(p);
@@ -271,8 +272,8 @@ void Fileman_impl::on_dir_changed(const ustring & path) {
 
 void Fileman_impl::apply() {
     if (FILEMAN_SAVE == fm_mode_) {
-        if (!silent_overwrite_allowed_) {
-            ustring path = path_build(dir(), entry_->text());
+        if (!overwrite_allowed_) {
+            ustring path = path_build(uri(), entry_->text());
 
             if (file_exists(path)) {
                 if (auto dp = display()) {
@@ -344,10 +345,10 @@ void Fileman_impl::on_entry_changed(const ustring & s) {
     }
 
     else {
-        ustring p = path_build(dir(), s);
+        ustring p = path_build(uri(), s);
 
         if (("." == s || ".." == s || ustring::npos != s.find_first_of("/\\")) || s.empty()
-            || ((!navi_->dirs_only_visible() && !navi_->dir_select_allowed()) && file_is_dir(p)))
+            || ((!navi_->dir_select_allowed()) && file_is_dir(p)))
         {
             apply_action_.disable();
         }
@@ -378,12 +379,12 @@ void Fileman_impl::on_entry_changed(const ustring & s) {
 void Fileman_impl::on_entry_activate(const ustring & s) {
     if (!s.empty()) {
         if ("." == s || ".." == s || ustring::npos != s.find_first_of("/\\")) {
-            ustring p = path_is_absolute(s) ? s : path_real(path_build(dir(), s));
-            if (file_exists(p)) { entry_->clear(); chdir(p); }
+            ustring p = path_is_absolute(s) ? s : path_real(path_build(uri(), s));
+            if (file_exists(p)) { entry_->clear(); set_uri(p); }
         }
 
         else {
-            ustring p = path_build(dir(), s);
+            ustring p = path_build(uri(), s);
 
             if (file_is_dir(p)) {
                 if (navi_->dir_select_allowed()) {
@@ -392,7 +393,7 @@ void Fileman_impl::on_entry_activate(const ustring & s) {
 
                 else {
                     entry_->clear();
-                    chdir(p);
+                    set_uri(p);
                 }
             }
 
@@ -439,7 +440,7 @@ void Fileman_impl::on_mkdir() {
             Text_ptr tp = std::make_shared<Text_impl>("Create new folder in:", ALIGN_START, ALIGN_CENTER);
             box->append(tp, true);
 
-            tp = std::make_shared<Text_impl>(dir(), ALIGN_START, ALIGN_CENTER);
+            tp = std::make_shared<Text_impl>(uri(), ALIGN_START, ALIGN_CENTER);
             box->append(tp, true);
 
             Entry_ptr ent = std::make_shared<Entry_impl>();
@@ -477,7 +478,7 @@ void Fileman_impl::mkdir(const ustring & path) {
     if (!path.empty()) {
         try {
             path_mkdir(path);
-            chdir(path);
+            set_uri(path);
             entry_->clear();
         }
 
@@ -488,13 +489,13 @@ void Fileman_impl::mkdir(const ustring & path) {
 }
 
 void Fileman_impl::on_mkdir_apply(Entry_impl * entry) {
-    ustring path = path_build(dir(), entry->text());
+    ustring path = path_build(uri(), entry->text());
     mkdir(path);
     entry->quit_dialog();
 }
 
 void Fileman_impl::on_mkdir_activate(const ustring & dirname, Entry_impl * entry) {
-    ustring path = path_build(dir(), dirname);
+    ustring path = path_build(uri(), dirname);
     mkdir(path);
     entry->quit_dialog();
 }
@@ -505,27 +506,9 @@ void Fileman_impl::on_mkdir_changed(const ustring & s) {
     }
 
     else {
-        ustring p = path_build(dir(), s);
+        ustring p = path_build(uri(), s);
         if (file_exists(p)) { mkdir_ok_button_->disable(); }
         else { mkdir_ok_button_->enable(); }
-    }
-}
-
-void Fileman_impl::allow_dir_creation() {
-    if (!dir_creation_allowed_) {
-        if (FILEMAN_SAVE == fm_mode_) {
-            dir_creation_allowed_ = true;
-            mkdir_action_.enable();
-            mkdir_action_.show();
-        }
-    }
-}
-
-void Fileman_impl::disallow_dir_creation() {
-    if (dir_creation_allowed_) {
-        dir_creation_allowed_ = false;
-        mkdir_action_.hide();
-        mkdir_action_.disable();
     }
 }
 
@@ -590,20 +573,6 @@ bool Fileman_impl::sorted_backward() const {
     return navi_->sorted_backward();
 }
 
-void Fileman_impl::show_hidden_files() {
-    navi_->show_hidden_files();
-    hidden_action_.set(true);
-}
-
-void Fileman_impl::hide_hidden_files() {
-    navi_->hide_hidden_files();
-    hidden_action_.set(false);
-}
-
-bool Fileman_impl::hidden_files_visible() const {
-    return navi_->hidden_files_visible();
-}
-
 void Fileman_impl::allow_multiple_select() {
     navi_->allow_multiple_select();
 }
@@ -628,24 +597,12 @@ bool Fileman_impl::dir_select_allowed() const {
     return navi_->dir_select_allowed();
 }
 
-void Fileman_impl::set_show_dirs_only() {
-    navi_->set_show_dirs_only();
+void Fileman_impl::allow_overwrite() {
+    overwrite_allowed_ = true;
 }
 
-void Fileman_impl::unset_show_dirs_only() {
-    navi_->unset_show_dirs_only();
-}
-
-bool Fileman_impl::dirs_only_visible() const {
-    return navi_->dirs_only_visible();
-}
-
-void Fileman_impl::allow_silent_overwrite() {
-    silent_overwrite_allowed_ = true;
-}
-
-void Fileman_impl::disallow_silent_overwrite() {
-    silent_overwrite_allowed_ = false;
+void Fileman_impl::disallow_overwrite() {
+    overwrite_allowed_ = false;
 }
 
 void Fileman_impl::on_configure() {
@@ -696,12 +653,12 @@ void Fileman_impl::on_configure() {
 
     menu->append_separator();
 
-    Check_menu_ptr show_hidden = std::make_shared<Check_menu_impl>("Show Hidden Files", CHECK_VSTYLE, hidden_files_visible());
+    Check_menu_ptr show_hidden = std::make_shared<Check_menu_impl>("Show Hidden Files", CHECK_VSTYLE, info_visible("hidden"));
     show_hidden->signal_check().connect(tau::bind(fun(this, &Fileman_impl::on_show_hidden), true));
     show_hidden->signal_uncheck().connect(tau::bind(fun(this, &Fileman_impl::on_show_hidden), false));
     menu->append(show_hidden);
 
-    Check_menu_ptr show_places = std::make_shared<Check_menu_impl>("Show Places", CHECK_VSTYLE, places_visible());
+    Check_menu_ptr show_places = std::make_shared<Check_menu_impl>("Show Places", CHECK_VSTYLE, places_visible_);
     show_places->signal_check().connect(fun(this, &Fileman_impl::show_places));
     show_places->signal_uncheck().connect(fun(this, &Fileman_impl::hide_places));
     menu->append(show_places);
@@ -730,7 +687,7 @@ void Fileman_impl::next() {
     if (1+ihistory_ < history_.size()) {
         bool p_avail = prev_avail();
         ++ihistory_;
-        navi_->chdir(history_[ihistory_]);
+        navi_->set_uri(history_[ihistory_]);
         if (!next_avail()) { next_action_.disable(); }
         if (!p_avail && prev_avail()) { prev_action_.enable(); }
     }
@@ -740,20 +697,71 @@ void Fileman_impl::prev() {
     if (ihistory_ > 0) {
         bool n_avail = next_avail();
         --ihistory_;
-        if (ihistory_ < history_.size()) { navi_->chdir(history_[ihistory_]); }
+        if (ihistory_ < history_.size()) { navi_->set_uri(history_[ihistory_]); }
         if (!prev_avail()) { prev_action_.disable(); }
         if (!n_avail && next_avail()) { next_action_.enable(); }
     }
 }
 
 void Fileman_impl::updir() {
-    ustring p = path_dirname(navi_->dir());
-    if (p != dir()) { chdir(p); }
+    ustring p = path_dirname(navi_->uri());
+    if (p != uri()) { set_uri(p); }
 }
 
 void Fileman_impl::on_show_hidden(bool show) {
-    if (show) { show_hidden_files(); }
-    else { hide_hidden_files(); }
+    if (show) { show_info("hidden"); }
+    else { hide_info("hidden"); }
+}
+
+void Fileman_impl::load_state(Key_file & kf, Key_section & sect) {
+    show_info(kf.get_string(sect, "visible_info_items"), kf.list_separator());
+    hide_info(kf.get_string(sect, "invisible_info_items"), kf.list_separator());
+    sort_by(kf.get_string(sect, "sort_by", "name"));
+    set_ratio(kf.get_double(sect, "ratio", ratio()));
+    if (kf.get_boolean(sect, "sort_backward")) { sort_backward(); }
+}
+
+void Fileman_impl::save_state(Key_file & kf, Key_section & sect) {
+    kf.set_string(sect, "visible_info_items", visible_info_items(kf.list_separator()));
+    kf.set_string(sect, "invisible_info_items", invisible_info_items(kf.list_separator()));
+    kf.set_string(sect, "sort_by", sorted_by());
+    kf.set_boolean(sect, "sort_backward", sorted_backward());
+    kf.set_double(sect, "ratio", ratio());
+}
+
+void Fileman_impl::show_info(const ustring & items, char32_t sep) {
+    for (const ustring & s: str_explode(items, sep)) {
+        if (str_similar("hidden", s)) { hidden_action_.set(true); }
+        else if (str_similar("places", s)) { show_places(); }
+    }
+
+    navi_->show_info(items, sep);
+}
+
+void Fileman_impl::hide_info(const ustring & items, char32_t sep) {
+    for (const ustring & s: str_explode(items, sep)) {
+        if (str_similar("hidden", s)) { hidden_action_.set(false); }
+        else if (str_similar("places", s)) { hide_places(); }
+    }
+
+    navi_->hide_info(items, sep);
+}
+
+bool Fileman_impl::info_visible(const ustring & item) const {
+    if (str_similar(item, "places")) { return places_visible_; }
+    return navi_->info_visible(item);
+}
+
+ustring Fileman_impl::visible_info_items(char32_t sep) const {
+    ustring s = navi_->visible_info_items(sep);
+    if (places_visible_) { s += sep; s += "places"; }
+    return s;
+}
+
+ustring Fileman_impl::invisible_info_items(char32_t sep) const {
+    ustring s = navi_->invisible_info_items(sep);
+    if (!places_visible_) { s += sep; s += "places"; }
+    return s;
 }
 
 } // namespace tau

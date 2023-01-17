@@ -35,6 +35,9 @@
 namespace tau {
 
 /// Single dimension container.
+///
+/// This class is a wrapper around its implementation shared pointer Box_impl.
+///
 /// The %Box arranges its multiple children in line. Depending on the orientation,
 /// widgets are located from right to left, from left to right, from top to bottom
 /// or from bottom to top.
@@ -49,18 +52,49 @@ namespace tau {
 ///
 /// The %Box supports alignment. When shrank widgets do not occupy the entire space
 /// completely, they can be distributed accordingly.
+///
 /// @ingroup container_group
+/// @ingroup widget_group
 class Box: public Container {
 public:
 
-    /// The constructor.
+    /// @name Constructors, operators
+    /// @{
+
+    /// Constructor.
+    /// Constructs basic %Box @ref container_group "container".
     /// @param orient the box orientation.
     /// @param spacing the amount of space being allocated between widgets.
     Box(Orientation orient, unsigned spacing=0);
 
+    /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Box(const Box & other) = default;
+
+    /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Box & operator=(const Box & other) = default;
+
     /// Constructor with implementation pointer.
+    ///
+    /// @warning Unlike some other classes (Painter as an example), the whole
+    /// @ref widget_group "widget stack" is unable to run with pure implementation
+    /// pointer, so attempting to construct widget from a pure (@b nullptr) pointer
+    /// will cause throwing an user_error exception!
+    /// That exception also will be thrown if user tries to construct the object
+    /// from incompatible implementation shared pointer.
+    ///
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
     Box(Widget_ptr wp);
 
+    /// @}
     /// Set spacing.
     /// @param spacing the amount of space being allocated between widgets.
     void set_spacing(unsigned spacing);

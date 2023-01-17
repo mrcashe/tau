@@ -123,7 +123,6 @@ public:
     Action & copy_action() { return copy_action_; }
     Action & cancel_action() { return cancel_action_; }
 
-    signal<void()> & signal_changed() { return signal_changed_; }
     signal<void()> & signal_caret_motion() { return signal_caret_motion_; }
     signal<void()> & signal_selection_changed() { return signal_selection_changed_; }
     signal<void()> & signal_click() { return signal_click_; }
@@ -167,7 +166,6 @@ protected:
     Action              copy_action_ { "<Ctrl>C <Ctrl>Insert", fun(this, &Text_impl::copy) };
     Action              cancel_action_ { "Escape Cancel", fun(this, &Widget_impl::drop_focus) };
 
-    signal<void()>      signal_changed_;
     signal<void()>      signal_selection_changed_;
     signal<void()>      signal_caret_motion_;
     signal<void()>      signal_click_;
@@ -248,8 +246,8 @@ private:
     using Lines = std::vector<Line>;
 
     Lines               lines_;
-    Buffer_citer         msel_;                  // Mouse selection start.
-    Buffer_citer         emsel_;                 // Mouse selection last.
+    Buffer_citer        msel_;                  // Mouse selection start.
+    Buffer_citer        emsel_;                 // Mouse selection last.
     bool                caret_visible_ = false;
     bool                caret_exposed_ = false;
 

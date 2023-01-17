@@ -36,6 +36,11 @@ Cycle::Cycle(Border_style bs):
 {
 }
 
+Cycle::Cycle(Widget_ptr wp):
+    Widget(std::dynamic_pointer_cast<Cycle_impl>(wp))
+{
+}
+
 void Cycle::set_border_style(Border_style bs) {
     CYCLE_IMPL->set_border_style(bs);
 }

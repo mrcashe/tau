@@ -36,6 +36,11 @@ Colorsel::Colorsel(const Color & initial_color):
 {
 }
 
+Colorsel::Colorsel(Widget_ptr wp):
+    Widget(std::dynamic_pointer_cast<Colorsel_impl>(wp))
+{
+}
+
 void Colorsel::set_color(const Color & color) {
     COLORSEL_IMPL->set_color(color);
 }

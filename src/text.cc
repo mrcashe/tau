@@ -317,10 +317,6 @@ signal<void()> & Text::signal_caret_motion() {
     return TEXT_IMPL->signal_caret_motion();
 }
 
-signal<void()> & Text::signal_changed() {
-    return TEXT_IMPL->signal_changed();
-}
-
 signal<void()> & Text::signal_selection_changed() {
     return TEXT_IMPL->signal_selection_changed();
 }

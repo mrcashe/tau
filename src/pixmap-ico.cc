@@ -30,6 +30,7 @@
 #include <tau/fileinfo.hh>
 #include <tau/locale.hh>
 #include <fstream>
+#include <iostream>
 
 namespace {
 

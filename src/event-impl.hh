@@ -41,7 +41,7 @@ public:
     static Event wrap(Event_ptr evp) { return Event(evp); }
 
     virtual void emit() = 0;
-    virtual void unset() = 0;
+    virtual void release() = 0;
 
     signal<void()> & signal_ready() { return signal_ready_; }
 

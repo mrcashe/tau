@@ -741,6 +741,419 @@ std::size_t Buffer_impl::length(std::size_t r1, std::size_t c1, std::size_t r2, 
     return result;
 }
 
+Buffer_citer Buffer_impl::insert(Buffer_citer i, const std::u32string & str) {
+    if (lock || str.empty()) {
+        return i;
+    }
+
+    Buffer_citer e(i);
+    std::size_t n = 0, len = str.size(), row, col;
+
+    if (rows.empty()) {
+        row = 0;
+        col = 0;
+    }
+
+    else if (i.row() < rows.size()) {
+        row = i.row();
+        col = std::min(rows[row].s.size(), i.col());
+    }
+
+    else {
+        row = rows.size()-1;
+        col = rows[row].s.size();
+    }
+
+    while (n < len) {
+        std::size_t eol = str.find_first_of(newlines, n);
+
+        // No EOL character.
+        // Add text at current position and exit.
+        if (std::u32string::npos == eol) {
+            if (rows.empty()) { rows.emplace_back(str.substr(n)); }
+            else { rows[row].s.insert(col, str, n, len-n); }
+            col += len-n;
+            n = len;
+        }
+
+        // Have EOL character.
+        else {
+            // Insert text between col and next at current position.
+            std::u32string::size_type next, eeol;
+
+            if (0x000a == str[eol] && eol+1 < len && 0x000d == str[eol+1]) { eeol = eol+2; }
+            else if (0x000d == str[eol] && eol+1 < len && 0x000a == str[eol+1]) { eeol = eol+2; }
+            else { eeol = eol+1; }
+
+            std::u32string newline = std::u32string::npos == eeol ? str.substr(eol) : str.substr(eol, eeol-eol);
+            next = eol+newline.size();
+
+            if (rows.empty()) {
+                rows.emplace_back(str.substr(n, next-n));
+                rows.emplace_back();
+            }
+
+            else {
+                std::u32string right = rows[row].s.substr(col);
+                rows[row].s.erase(col);
+                rows[row].s.insert(col, str, n, next-n);
+                rows.emplace(rows.begin()+row+1, right);
+            }
+
+            n = next;
+            ++row;
+            col = 0;
+        }
+    }
+
+    e.move_to(row, col);
+    signal_insert(i, e);
+    changed = true;
+    signal_changed();
+    return e;
+}
+
+void Buffer_impl::change_encoding(const Encoding & enc) {
+    if (encoding != enc) {
+        encoding = enc;
+        signal_encoding_changed(encoding);
+    }
+}
+
+void Buffer_impl::enable_bom() {
+    if (!bom) {
+        bom = true;
+        signal_bom_changed();
+    }
+}
+
+void Buffer_impl::disable_bom() {
+    if (bom) {
+        bom = false;
+        signal_bom_changed();
+    }
+}
+
+Buffer_citer Buffer_impl::insert(Buffer_citer iter, std::istream & is) {
+    if (lock || !is.good()) {
+        return iter;
+    }
+
+    char buffer[2048];
+    char32_t ob[10240];
+    std::size_t fpos = 0, len = 0;
+    bool not8 = false;
+    std::string acc;
+
+    while (!is.eof()) {
+        fpos += len;
+        is.read(buffer, sizeof(buffer));
+        len = is.gcount();
+        if (0 == len) { break; }
+        std::size_t offset = 0, epos = len;
+        char32_t * obp = ob;
+
+        if (0 == fpos) {
+            if (len >= 4 && '\0' == buffer[0] && '\0' == buffer[1] && '\xfe' == buffer[2] && '\xff' == buffer[3]) {
+                offset += 4;
+                len -= 4;
+                change_encoding(utf32be);
+                enable_bom();
+            }
+
+            else if (len >= 4 && '\xff' == buffer[0] && '\xfe' == buffer[1] && '\0' == buffer[2] && '\0' == buffer[3]) {
+                offset += 4;
+                len -= 4;
+                change_encoding(utf32le);
+                enable_bom();
+            }
+
+            else if (len >= 3 && '\xef' == buffer[0] && '\xbb' == buffer[1] && '\xbf' == buffer[2]) {
+                offset += 3;
+                len -= 3;
+                change_encoding(utf8);
+                enable_bom();
+            }
+
+            else if (len >= 2 && '\xfe' == buffer[0] && '\xff' == buffer[1]) {
+                offset += 2;
+                len -= 2;
+                change_encoding(utf16be);
+                enable_bom();
+            }
+
+            else if (len >= 2 && '\xff' == buffer[0] && '\xfe' == buffer[1]) {
+                offset += 2;
+                len -= 2;
+                change_encoding(utf16le);
+                enable_bom();
+            }
+        }
+
+        if (utf32be == encoding) {
+            const char * p = buffer+offset;
+
+            while (len >= 4) {
+                char32_t wc = uint8_t(*p++);
+                wc <<= 8; wc += uint8_t(*p++);
+                wc <<= 8; wc += uint8_t(*p++);
+                wc <<= 8; wc += uint8_t(*p++);
+                *obp++ = wc;
+                len -= 4;
+            }
+        }
+
+        else if (utf32le == encoding) {
+            const char * p = buffer+offset;
+
+            while (len >= 4) {
+                char32_t wc = uint8_t(p[3]);
+                wc <<= 8; wc += uint8_t(p[2]);
+                wc <<= 8; wc += uint8_t(p[1]);
+                wc <<= 8; wc += uint8_t(p[0]);
+                *obp++ = wc;
+                p += 4;
+                len -= 4;
+            }
+        }
+
+        else if (utf16be == encoding) {
+            const char * p = buffer+offset;
+            char16_t sur = 0;
+
+            while (len >= 2) {
+                char16_t wc = uint8_t(*p++);
+                wc <<= 8; wc += uint8_t(*p++);
+
+                if (0 != sur) {
+                    if (char16_is_surrogate(wc)) {
+                        *obp++ = char32_from_surrogate(sur, wc);
+                    }
+
+                    // FIXME Simply skip character on error? Is it correct?
+                    else {
+                        std::cerr << "** Buffer::insert(stream): (" << encoding.name() << "), position "
+                        << fpos+offset << ": skip surrogate (?) pair " << std::hex << std::showbase
+                        << sur << ':' << std::hex << std::showbase << wc << std::dec << std::endl;
+                    }
+
+                    sur = 0;
+                }
+
+                else {
+                    if (char16_is_surrogate(wc)) {
+                        sur = wc;
+                    }
+
+                    else {
+                        *obp++ = char32_t(wc);
+                    }
+                }
+
+                len -= 2;
+                offset += 2;
+            }
+        }
+
+        else if (utf16le == encoding) {
+            const char * p = buffer+offset;
+            char16_t sur = 0;
+
+            while (len >= 2) {
+                char16_t wc = uint8_t(p[1]);
+                wc <<= 8; wc += uint8_t(p[0]);
+
+                if (0 != sur) {
+                    if (char16_is_surrogate(wc)) {
+                        *obp++ = char32_from_surrogate(sur, wc);
+                    }
+
+                    // FIXME Simply skip character on error? Is it correct?
+                    else {
+                        std::cerr << "** Buffer::insert(stream): (" << encoding.name() << "), position "
+                        << fpos+offset << ": skip surrogate (?) pair " << std::hex << std::showbase
+                        << sur << ':' << std::hex << std::showbase << wc << std::dec << std::endl;
+                    }
+
+                    sur = 0;
+                }
+
+                else {
+                    if (char16_is_surrogate(wc)) {
+                        sur = wc;
+                    }
+
+                    else {
+                        *obp++ = char32_t(wc);
+                    }
+                }
+
+                p += 2;
+                len -= 2;
+                offset += 2;
+            }
+        }
+
+        // Assume UTF-8?
+        else {
+            if (!not8) {
+                // Incomplete sequence stored in acc.
+                if (!acc.empty()) {
+                    std::size_t u8len = char8_len(acc[0]), more = u8len-acc.size();
+
+                    // Assume encoding is not UTF-8.
+                    if (more > len) {
+                        not8 = true;
+                    }
+
+                    else {
+                        while (0 != more--) { acc += buffer[offset++]; }
+                        ustring uacc(acc);
+                        *obp++ = char32_t(uacc[0]);
+                        offset += more;
+                        acc.clear();
+                    }
+                }
+            }
+
+            if (!not8) {
+                int n8bytes = 7;
+
+                for (std::size_t pos = epos-1; pos >= offset && (buffer[pos] < 0) && n8bytes; --pos, --n8bytes) {
+                    char c = buffer[pos];
+
+                    // Found UTF-8 sequence leader character?
+                    if ('\xc0' == ('\xc0' & c)) {
+
+                        // Has incomplete sequence within buffer?
+                        if (char8_len(c) > epos-pos) {
+                            acc.assign(buffer+pos-1, epos-pos);
+                            epos = pos;
+                            // std::cout << "c0 " << " " << epos << " " << epos-pos << "\n";
+                        }
+
+                        break;
+                    }
+                }
+
+                not8 = !n8bytes;
+            }
+
+            if (!not8) {
+                for (const char * p = buffer+offset; offset < epos; p = str8_next(p)) {
+                    char32_t wc = char32_from_pointer(p);
+
+                    if (!wc) {
+                        not8 = true;
+                        iter = insert(iter, std::u32string(ob, obp-ob));
+                        obp = ob;
+                        // std::cout << "non UTF-8 " << fpos+offset << " " << acc.size() << "\n";
+                        break;
+                    }
+
+                    *obp++ = wc;
+                    offset += char8_len(*p);
+                }
+            }
+
+            // Not UTF-8, so far simply skip non UTF-8 characters.
+            if (not8) {
+                change_encoding(Encoding("ASCII"));
+
+                for (const char * p = buffer+offset; p < buffer+epos; ++p) {
+                    if (*p > 0) {
+                        *obp++ = char32_t(*p);
+                    }
+                }
+            }
+        }
+
+        iter = insert(iter, std::u32string(ob, obp-ob));
+    }
+
+    return iter;
+}
+
+void Buffer_impl::save(std::ostream & os) {
+    if (utf16be == encoding) {
+        if (bom) { os.write("\xfe\xff", 2); }
+
+        for (auto & row: rows) {
+            for (char32_t wc: row.s) {
+                char16_t c1, c2;
+                char32_to_surrogate(wc, c1, c2);
+                os.put(c1);
+                os.put(c1 >> 8);
+
+                if (0 != c2) {
+                    os.put(c2);
+                    os.put(c2 >> 8);
+                }
+            }
+        }
+    }
+
+    else if (utf16le == encoding) {
+        if (bom) { os.write("\xff\xfe", 2); }
+
+        for (auto & row: rows) {
+            for (char32_t wc: row.s) {
+                char16_t c1, c2;
+                char32_to_surrogate(wc, c1, c2);
+                os.put(c1 >> 8);
+                os.put(c1);
+
+                if (0 != c2) {
+                    os.put(c2 >> 8);
+                    os.put(c2);
+                }
+            }
+        }
+    }
+
+    else if (utf32be == encoding) {
+        if (bom) { os.write("\x00\x00\xfe\xff", 4); }
+
+        for (auto & row: rows) {
+            for (char32_t wc: row.s) {
+                os.put(wc);
+                os.put(wc >> 8);
+                os.put(wc >> 16);
+                os.put(wc >> 24);
+            }
+        }
+    }
+
+    else if (utf32le == encoding) {
+        if (bom) { os.write("\xff\xfe\x00\x00", 4); }
+
+        for (auto & row: rows) {
+            for (char32_t wc: row.s) {
+                os.put(wc >> 24);
+                os.put(wc >> 16);
+                os.put(wc >> 8);
+                os.put(wc);
+            }
+        }
+    }
+
+    else {
+        if (utf8 == encoding) {
+            if (bom) {
+                os.write("\xef\xbb\xbf", 3);
+            }
+        }
+
+        for (auto & row: rows) {
+            ustring s(row.s);
+            os.write(s.c_str(), s.bytes());
+        }
+    }
+
+    changed = false;
+    signal_flush();
+}
+
 } // namespace tau
 
 //END

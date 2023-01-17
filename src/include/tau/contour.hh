@@ -37,6 +37,7 @@
 namespace tau {
 
 /// %List of Bezier curves and a starting point.
+///
 /// @ingroup geometry_group
 class Contour {
 public:
@@ -44,6 +45,9 @@ public:
     using list_type = std::vector<Curve>;
     using iterator = list_type::iterator;
     using const_iterator = list_type::const_iterator;
+
+    /// @name Constructors
+    /// @{
 
     /// Default constructor.
     /// @param start the start point.
@@ -64,6 +68,7 @@ public:
     /// Move operator.
     Contour & operator=(Contour && other);
 
+    /// @}
     /// Create from rectangle.
     static Contour from_rectangle(const Vector & a, const Vector & b);
 
@@ -143,7 +148,7 @@ public:
     void revert();
 
     /// Transform contour by matrix.
-    void map(const Matrix & mat);
+    void transform(const Matrix & mat);
 
     /// Get begin iterator.
     iterator begin();
@@ -169,13 +174,13 @@ private:
 
 /// @relates Contour
 inline Contour & operator*=(Contour & ctr, const Matrix & mat) {
-    ctr.map(mat);
+    ctr.transform(mat);
     return ctr;
 }
 
 /// @relates Contour
 inline Contour & operator*=(const Matrix & mat, Contour & ctr) {
-    ctr.map(mat);
+    ctr.transform(mat);
     return ctr;
 }
 

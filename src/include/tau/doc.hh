@@ -37,6 +37,9 @@
 namespace tau {
 
 /// A document element.
+///
+/// This class is a wrapper around its implementation shared pointer Element_impl.
+///
 /// @ingroup text_group
 class Element {
 public:
@@ -45,9 +48,17 @@ public:
     Element() = default;
 
     /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
     Element(const Element & other) = default;
 
     /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
     Element & operator=(const Element & other) = default;
 
     /// Constructor with an opaque implementation object.
@@ -93,6 +104,9 @@ protected:
 };
 
 /// A document element that contains character data.
+///
+/// This class is a wrapper around its implementation shared pointer Data_element_impl.
+///
 /// @ingroup text_group
 class Data_element: public Element {
 public:
@@ -102,6 +116,20 @@ public:
 
     /// Create data element from the implementation pointer.
     Data_element(Data_element_ptr eptr);
+
+    /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Data_element(const Data_element & other) = default;
+
+    /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Data_element & operator=(const Data_element & other) = default;
 
     /// Get containing data.
     const uint8_t * data() const;
@@ -114,6 +142,10 @@ public:
 };
 
 /// Document declaration element.
+///
+/// This class is a wrapper around its implementation shared pointer Decl_element_impl.
+///
+/// @ingroup text_group
 class Decl_element: public Element {
 public:
 
@@ -122,6 +154,20 @@ public:
 
     /// Create declaration element from the implementation pointer.
     Decl_element(Decl_element_ptr eptr);
+
+    /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Decl_element(const Decl_element & other) = default;
+
+    /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Decl_element & operator=(const Decl_element & other) = default;
 
     /// Get encoding.
     ustring encoding() const;
@@ -137,6 +183,9 @@ public:
 };
 
 /// A document element that contains processing instruction.
+///
+/// This class is a wrapper around its implementation shared pointer Inst_element_impl.
+///
 /// @ingroup text_group
 class Inst_element: public Element {
 public:
@@ -147,11 +196,28 @@ public:
     /// Create instruction element from the implementation object.
     Inst_element(Inst_element_ptr eptr);
 
+    /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Inst_element(const Inst_element & other) = default;
+
+    /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Inst_element & operator=(const Inst_element & other) = default;
+
     /// Get name.
     ustring name() const;
 };
 
 /// A document element that can own other elements.
+///
+/// This class is a wrapper around its implementation shared pointer Node_element_impl.
+///
 /// @ingroup text_group
 class Node_element: public Element {
 public:
@@ -161,6 +227,20 @@ public:
 
     /// Create node element from the implementation object.
     Node_element(Node_element_ptr eptr);
+
+    /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Node_element(const Node_element & other) = default;
+
+    /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Node_element & operator=(const Node_element & other) = default;
 
     /// Get node name.
     ustring name() const;
@@ -188,6 +268,9 @@ public:
 };
 
 /// A document element that contains text.
+///
+/// This class is a wrapper around its implementation shared pointer Text_element_impl.
+///
 /// @ingroup text_group
 class Text_element: public Element {
 public:
@@ -197,6 +280,20 @@ public:
 
     /// Create text element from the implementation object.
     Text_element(Text_element_ptr eptr);
+
+    /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Text_element(const Text_element & other) = default;
+
+    /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Text_element & operator=(const Text_element & other) = default;
 
     /// Get containing text.
     ustring text() const;
@@ -209,6 +306,9 @@ public:
 };
 
 /// Document type.
+///
+/// This class is a wrapper around its implementation shared pointer Doctype_impl.
+///
 /// @ingroup text_group
 class Doctype {
 public:
@@ -217,9 +317,17 @@ public:
     Doctype() = default;
 
     /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
     Doctype(const Doctype & other) = default;
 
     /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
     Doctype & operator=(const Doctype & other) = default;
 
     /// Create document type from the implementation pointer.
@@ -255,6 +363,9 @@ private:
 };
 
 /// Document.
+///
+/// This class is a wrapper around its implementation shared pointer Doc_impl.
+///
 /// @ingroup text_group
 class Doc {
 public:
@@ -262,17 +373,34 @@ public:
     /// Create a pure document, without implementation.
     Doc() = default;
 
-    /// Copy cosntructor.
+    /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
     Doc(const Doc & other) = default;
 
     /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
     Doc & operator=(const Doc & other) = default;
+
+    /// Construct from implementation pointer.
+    Doc(Doc_ptr dptr);
 
     /// Test if pure.
     operator bool() const;
 
     /// Reset implementation pointer.
     void reset();
+
+    /// Gets implementation pointer.
+    Doc_ptr ptr();
+
+    /// Gets implementation pointer.
+    Doc_cptr ptr() const;
 
     /// Create an XML document with corresponding declaration.
     static Doc create_xml(bool standalone, const ustring & encoding=ustring("UTF-8"), int version_major=1, int version_minor=0);
@@ -327,7 +455,6 @@ public:
 private:
 
     Doc_ptr impl;
-    Doc(Doc_ptr dptr);
 };
 
 } // namespace tau

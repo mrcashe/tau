@@ -43,33 +43,25 @@ public:
 
     static Fileman_ptr create(Fileman_mode fs_type, const ustring & path=ustring());
 
-    ustring dir() const;
-    void chdir(const ustring & dirpath);
+    ustring uri() const;
+    void set_uri(const ustring & dirpath);
     std::vector<ustring> selection() const;
     ustring entry() const;
-
-    void show_places();
-    void hide_places();
-    bool places_visible() const { return places_visible_; }
 
     void add_filter(const ustring & patterns, const ustring & title=ustring());
     ustring filter() const { return navi_->filter(); }
 
     void sort_by(const ustring & col) { navi_->sort_by(col); }
     ustring sorted_by() const { return navi_->sorted_by(); }
-    void show_info(const ustring & items, char32_t sep=U':') { navi_->show_info(items, sep); }
-    void hide_info(const ustring & items, char32_t sep=U':') { navi_->hide_info(items, sep); }
-    bool info_visible(const ustring & item) const { return navi_->info_visible(item); }
-    ustring visible_info_items(char32_t sep=U':') const { return navi_->visible_info_items(sep); }
-    ustring invisible_info_items(char32_t sep=U':') const { return navi_->invisible_info_items(sep); }
+    void show_info(const ustring & items, char32_t sep=U':');
+    void hide_info(const ustring & items, char32_t sep=U':');
+    bool info_visible(const ustring & item) const;
+    ustring visible_info_items(char32_t sep=U':') const;
+    ustring invisible_info_items(char32_t sep=U':') const;
 
     void sort_forward();
     void sort_backward();
     bool sorted_backward() const;
-
-    void show_hidden_files();
-    void hide_hidden_files();
-    bool hidden_files_visible() const;
 
     void allow_multiple_select();
     void disallow_multiple_select();
@@ -79,20 +71,14 @@ public:
     void disallow_dir_select();
     bool dir_select_allowed() const;
 
-    void set_show_dirs_only();
-    void unset_show_dirs_only();
-    bool dirs_only_visible() const;
+    void allow_overwrite();
+    void disallow_overwrite();
+    bool overwrite_allowed() const { return overwrite_allowed_; }
 
-    void allow_dir_creation();
-    void disallow_dir_creation();
-    bool dir_creation_allowed() const { return dir_creation_allowed_; }
-
-    void allow_silent_overwrite();
-    void disallow_silent_overwrite();
-    bool silent_overwrite_allowed() const { return silent_overwrite_allowed_; }
+    void load_state(Key_file & kf, Key_section & sect);
+    void save_state(Key_file & kf, Key_section & sect);
 
     Action & cancel_action() { return cancel_action_; }
-
     signal<void()> & signal_apply() { return signal_apply_; }
 
 protected:
@@ -103,7 +89,7 @@ protected:
     Cycle_ptr               filters_;
     bool                    places_visible_ = true; // Places visible by default.
     bool                    dir_creation_allowed_;  // Directory creation allowed.
-    bool                    silent_overwrite_allowed_ = false; // Allow overwrite without a prompt.
+    bool                    overwrite_allowed_ = false; // Allow overwrite without a prompt.
 
     signal<void()>          signal_apply_;
 
@@ -149,6 +135,8 @@ private:
     void next();
     void prev();
     void updir();
+    void show_places();
+    void hide_places();
 
     void on_file_select(const ustring & filename);
     void on_file_unselect(const ustring & filename);

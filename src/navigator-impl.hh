@@ -36,11 +36,11 @@ namespace tau {
 class Navigator_impl: public Bin_impl {
 public:
 
-    Navigator_impl(const ustring & path=ustring());
+    Navigator_impl(const ustring & uri=ustring());
    ~Navigator_impl();
 
-    ustring dir() const;
-    void chdir(const ustring & path);
+    ustring uri() const;
+    void set_uri(const ustring & uri);
     void reload();
 
     void sort_by(const ustring & col);
@@ -53,11 +53,11 @@ public:
         return sort_backward_;
     }
 
-    void show_hidden_files();
+    void hidden_visible_files();
     void hide_hidden_files();
 
     bool hidden_files_visible() const {
-        return show_hidden_;
+        return hidden_visible_;
     }
 
     void show_info(const ustring & items, char32_t sep=U':');
@@ -78,13 +78,6 @@ public:
 
     bool dir_select_allowed() const {
         return dir_select_allowed_;
-    }
-
-    void set_show_dirs_only();
-    void unset_show_dirs_only();
-
-    bool dirs_only_visible() const {
-        return dirs_only_visible_;
     }
 
     void set_filter(const ustring & patterns);
@@ -146,10 +139,10 @@ private:
 
     ustring                     sort_by_ = "name";
     bool                        sort_backward_ = false;
-    bool                        show_hidden_ = false;
     bool                        multiple_select_allowed_ = false;
     bool                        dir_select_allowed_ = false;
     bool                        dirs_only_visible_ = false;
+    bool                        hidden_visible_ = false;
     bool                        bytes_visible_ = true;
     bool                        date_visible_ = true;
 

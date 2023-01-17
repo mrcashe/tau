@@ -36,6 +36,9 @@
 namespace tau {
 
 /// Information about certain file.
+///
+/// This class is a wrapper around its implementation shared pointer Fileinfo_impl.
+///
 /// @ingroup file_group
 class Fileinfo {
 public:
@@ -44,9 +47,17 @@ public:
     Fileinfo();
 
     /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
     Fileinfo(const Fileinfo & other) = default;
 
     /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
     Fileinfo & operator=(const Fileinfo & other) = default;
 
     /// Constructor with path.

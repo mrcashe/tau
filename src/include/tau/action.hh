@@ -42,7 +42,7 @@ namespace tau {
 class Master_action: public trackable {
 public:
 
-    /// @name Constructors
+    /// @name Constructors, operators
     /// @{
 
     /// Default constructor.
@@ -79,7 +79,6 @@ public:
     Master_action(char32_t kc, int km, const ustring & label, const ustring & icon_name, const ustring & tooltip);
 
     /// @}
-
     /// Get label.
     ustring label() const { return label_; }
 
@@ -94,9 +93,9 @@ public:
     /// %Master_action is enabled (sensitive) by default.
     void disable();
 
-    /// Determines whether action disabled or not.
+    /// Determines whether action enabled or not.
     /// %Master_action is enabled (sensitive) by default.
-    bool disabled() const { return disabled_; }
+    bool enabled() const { return !disabled_; }
 
     /// Show action.
     /// %Master_action is shown by default.
@@ -106,9 +105,9 @@ public:
     /// %Master_action is shown by default.
     void hide();
 
-    /// Determines whether action hidden or not.
-    /// %Master_action is shown by default.
-    bool hidden() const { return hidden_; }
+    /// Determines whether action visible or not.
+    /// %Master_action is visible by default.
+    bool visible() const { return !hidden_; }
 
     /// Assign an icon name.
     void set_icon_name(const ustring & icon_name);
@@ -217,7 +216,7 @@ private:
 class Action_base: public trackable {
 public:
 
-    /// @name Constructors and destructor
+    /// @name Constructors, destructor, operators
     /// @{
 
     /// Default constructor.
@@ -269,9 +268,9 @@ public:
     /// %Action is enabled (sensitive) by default.
     void disable();
 
-    /// Determines whether action disabled or not.
+    /// Determines whether action enabled or not.
     /// %Action is enabled (sensitive) by default.
-    bool disabled() const { return disabled_ || frozen_; }
+    bool enabled() const { return !disabled_ && !frozen_; }
 
     /// Show action.
     /// %Action is shown by default.
@@ -281,9 +280,9 @@ public:
     /// %Action is shown by default.
     void hide();
 
-    /// Determines whether action hidden or not.
-    /// %Action is shown by default.
-    bool hidden() const { return hidden_ || disappeared_; }
+    /// Determines whether action visible or not.
+    /// %Action is visible by default.
+    bool visible() const { return !hidden_ && !disappeared_; }
 
     /// Connect master action.
     void connect_master_action(Master_action & master_action);
@@ -424,7 +423,7 @@ private:
 class Action: public Action_base {
 public:
 
-    /// @name Constructors
+    /// @name Constructors, operators
     /// @{
 
     /// Default constructor.
@@ -489,7 +488,7 @@ private:
 class Toggle_action: public Action_base {
 public:
 
-    /// @name Constructors
+    /// @name Constructors, operators
     /// @{
 
     /// Default constructor.

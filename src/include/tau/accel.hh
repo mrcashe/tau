@@ -41,6 +41,9 @@ namespace tau {
 class Accel: public trackable {
 public:
 
+    /// @name Constructors, operators
+    /// @{
+
     /// Default constructor.
     Accel() = default;
 
@@ -67,6 +70,7 @@ public:
     /// Constructor with string representation and slot.
     Accel(const ustring & spec, slot<bool()> slot_activate);
 
+    /// @}
     /// Test if empty (unassigned).
     bool empty() const;
 

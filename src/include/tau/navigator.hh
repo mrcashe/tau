@@ -35,21 +35,55 @@
 namespace tau {
 
 /// Filesystem navigation widget.
+///
+/// This class is a wrapper around its implementation shared pointer Navigator_impl.
+///
 /// @ingroup widget_group
 class Navigator: public Widget {
 public:
 
-    /// Constructor with path.
-    Navigator(const ustring & path=ustring());
+    /// @name Constructors, operators
+    /// @{
 
-    /// Change directory.
-    void chdir(const ustring & path);
+    /// Constructor with path.
+    Navigator(const ustring & uri=ustring());
+
+    /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Navigator(const Navigator & other) = default;
+
+    /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Navigator & operator=(const Navigator & other) = default;
+
+    /// Constructor with implementation pointer.
+    ///
+    /// @warning Unlike some other classes (Painter as an example), the whole
+    /// @ref widget_group "widget stack" is unable to run with pure implementation
+    /// pointer, so attempting to construct widget from a pure (@b nullptr) pointer
+    /// will cause throwing an user_error exception!
+    /// That exception also will be thrown if user tries to construct the object
+    /// from incompatible implementation shared pointer.
+    ///
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Navigator(Widget_ptr wp);
+
+    /// @}
+    /// Set current URI.
+    void set_uri(const ustring & uri);
+
+    /// Get current URI.
+    ustring uri() const;
 
     /// Reload current directory.
     void reload();
-
-    /// Get current directory.
-    ustring dir() const;
 
     /// Set sort column name.
     void sort_by(const ustring & col);
@@ -110,15 +144,6 @@ public:
     /// @sa visible_info_items()
     ustring invisible_info_items(char32_t sep=U':') const;
 
-    /// Show hidden files.
-    void show_hidden_files();
-
-    /// Hide hidden files.
-    void hide_hidden_files();
-
-    /// Test hidden files visible.
-    bool hidden_files_visible() const;
-
     /// Allow multiple select.
     /// Disallowed by default.
     void allow_multiple_select();
@@ -141,15 +166,6 @@ public:
 
     /// Determine if directory select allowed.
     bool dir_select_allowed() const;
-
-    /// Set show directories only.
-    void set_show_dirs_only();
-
-    /// Unset show directories only.
-    void unset_show_dirs_only();
-
-    /// Test if directories only visible.
-    bool dirs_only_visible() const;
 
     /// Set filter.
     void set_filter(const ustring & patterns);

@@ -660,7 +660,7 @@ public:
     /// Move operator.
     signal & operator=(signal && other) {
         slots_.clear();
-        slots_ = std::move(other.slots);
+        slots_ = std::move(other.slots_);
         return *this;
     }
 
