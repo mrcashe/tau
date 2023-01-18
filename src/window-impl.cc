@@ -95,7 +95,7 @@ bool Window_impl::grab_modal_up(Widget_impl * caller) {
 // Overrides Container_impl.
 // Overrides Widget_impl.
 bool Window_impl::end_modal_up(Widget_impl * caller) {
-    if (display()->end_modal(this)) {
+    if (caller && display()->end_modal(this)) {
         if (auto mc = modal_child_) {
             if (mc == caller) {
                 modal_child_ = nullptr;
@@ -116,7 +116,7 @@ int Window_impl::grab_focus_up(Widget_impl * caller) {
 
     int res = 1;
 
-    if (!has_focus()) {
+    if (!focused()) {
         display()->grab_window_focus(this);
         res = 0;
     }
@@ -166,17 +166,19 @@ bool Window_impl::grab_mouse_up(Widget_impl * caller) {
 // Overrides Container_impl.
 // Overrides Widget_impl.
 bool Window_impl::ungrab_mouse_up(Widget_impl * caller) {
-    if (caller == mouse_grabber_) {
-        mouse_grabber_ = nullptr;
-    }
+    if (caller) {
+        if (caller == mouse_grabber_) {
+            mouse_grabber_ = nullptr;
+        }
 
-    if (this != display()->mouse_grabber()) {
-        return true;
-    }
+        if (this != display()->mouse_grabber()) {
+            return true;
+        }
 
-    if (!mouse_grabber_) {
-        display()->ungrab_mouse();
-        return true;
+        if (!mouse_grabber_) {
+            display()->ungrab_mouse();
+            return true;
+        }
     }
 
     return false;

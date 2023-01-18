@@ -36,7 +36,7 @@ namespace tau {
 
 /// Single dimension container.
 ///
-/// This class is a wrapper around its implementation shared pointer Box_impl.
+/// This class is a wrapper around its implementation shared pointer.
 ///
 /// The %Box arranges its multiple children in line. Depending on the orientation,
 /// widgets are located from right to left, from left to right, from top to bottom

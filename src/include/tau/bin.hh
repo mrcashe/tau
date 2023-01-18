@@ -35,7 +35,7 @@ namespace tau {
 
 /// The container with a single child widget.
 ///
-/// This class is a wrapper around its implementation shared pointer Bin_impl.
+/// This class is a wrapper around its implementation shared pointer.
 ///
 /// %Bin always allocates all available space to its child.
 ///

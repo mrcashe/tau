@@ -25,23 +25,24 @@
 // ----------------------------------------------------------------------------
 
 #include <tau/locale.hh>
+#include <tau/string.hh>
 #include <tau/sys.hh>
 #include "fileinfo-posix.hh"
 #include <sys/stat.h>
 #include <errno.h>
+#include <iostream>
 
 namespace tau {
 
 Fileinfo_posix::Fileinfo_posix(const ustring & uri) {
-    uri_ = uri;
+    uri_ = path_real(uri);
     update_stat();
 }
 
 void Fileinfo_posix::update_stat() {
     flags_ = 0;
     atime_ = ctime_ = mtime_ = 0;
-    exists_ = false;
-    noacc_ = false;
+    exists_ = noacc_ = exec_ = false;
     bytes_ = 0;
 
     if (!uri_.empty()) {
@@ -57,6 +58,7 @@ void Fileinfo_posix::update_stat() {
         else {
             exists_ = true;
             bytes_ = st.st_size;
+            // if (str_has_prefix(uri_, "/sys")) std::cout << "stat " << uri_ << '\n';
             if (S_ISDIR(st.st_mode)) { flags_ |= IS_DIR; }
             if (S_ISREG(st.st_mode)) { flags_ |= IS_REG; }
             if (S_ISCHR(st.st_mode)) { flags_ |= IS_CHR; }
@@ -64,12 +66,34 @@ void Fileinfo_posix::update_stat() {
             if (S_ISFIFO(st.st_mode)) { flags_ |= IS_FIFO; }
             if (S_ISLNK(st.st_mode)) { flags_ |= IS_LNK; }
             if (S_ISSOCK(st.st_mode)) { flags_ |= IS_SOCK; }
-
+            exec_ = S_ISREG(st.st_mode) && (S_IXUSR & st.st_mode);
             atime_ = Timeval(uint64_t(1000000)*uint64_t(st.st_atime));
             ctime_ = Timeval(uint64_t(1000000)*uint64_t(st.st_ctime));
             mtime_ = Timeval(uint64_t(1000000)*uint64_t(st.st_mtime));
         }
     }
+}
+
+// Overrides pure Fileinfo_impl.
+bool Fileinfo_posix::is_hidden() {
+    return exists_ && !uri_.empty() && '.' == path_notdir(uri_)[0];
+}
+
+// Overrides pure Fileinfo_impl.
+bool Fileinfo_posix::is_removable() {
+    auto loop = Loop_posix::this_posix_loop();
+
+    if (!uri_.empty()) {
+        for (const ustring & s: loop->mounts()) {
+            for (ustring p = uri_; "/" != p; p = path_dirname(p)) {
+                if (p == s) {
+                    return loop->is_removable(p);
+                }
+            }
+        }
+    }
+
+    return false;
 }
 
 } // namespace tau

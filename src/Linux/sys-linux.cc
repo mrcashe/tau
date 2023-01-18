@@ -39,41 +39,6 @@ ustring path_self() {
     return -1 != len ? ustring(buffer, len) : ustring();
 }
 
-std::vector<ustring> list_removable_drives() {
-    std::vector<ustring> v;
-    std::ifstream is("/proc/self/mounts");
-
-    if (is.good()) {
-        std::map<ustring, ustring> devs;
-        char s[2048];
-
-        while (!is.eof()) {
-            is.getline(s, sizeof(s)-1);
-            auto w = str_explode(s, ' ');
-
-            if (w.size() > 1 && str_has_prefix(w[0], "/dev/")) {
-                ustring dev = path_notdir(w[0]);
-                while (std::isdigit(*dev.rbegin())) { dev.erase(dev.size()-1); }
-                if (devs.end() == devs.find(dev)) { devs[dev] = w[1]; }
-            }
-        }
-
-        for (auto & pair: devs) {
-            if ("/" != pair.first) {
-                std::ifstream iss(path_build("/sys/block", pair.first, "removable"));
-
-                if (iss.good()) {
-                    char t[16];
-                    iss.getline(t, 15);
-                    if (0 != std::atoi(t)) { v.push_back(pair.second); }
-                }
-            }
-        }
-    }
-
-    return v;
-}
-
 } // namespace tau
 
 //END

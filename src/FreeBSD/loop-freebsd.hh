@@ -85,22 +85,16 @@ public:
 
     static Loop_freebsd_ptr this_freebsd_loop();
 
-    explicit Loop_freebsd(std::thread::id tid);
+    Loop_freebsd(std::thread::id tid);
 
     // Overrides pure Loop.
     File_monitor_ptr create_file_monitor(const ustring & path, int mask) override;
 
+    // Overrides pure Loop_impl.
+    std::vector<ustring> mounts() override;
+
 private:
 
-    struct Mount {
-        ustring         dev;
-        ustring         mpoint;
-        bool            removable = false;
-    };
-
-    using Mounts = std::list<Mount>;
-
-    Mounts          mounts_;
     int             infd_ = -1;
     int             loopid_ = -1;
     Poller_posix *  infd_poller_ = nullptr;

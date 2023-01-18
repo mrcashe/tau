@@ -74,16 +74,16 @@ public:
     char32_t operator*() const;
 
     /// Get an UTF-8 text between two iterators.
-    ustring peek(Buffer_citer other) const;
+    ustring text(Buffer_citer other) const;
 
     /// Get an UTF-8 text containing specified character count.
-    ustring peek(std::size_t nchars) const;
+    ustring text(std::size_t nchars) const;
 
     /// Get an UTF-32 text between two iterators.
-    std::u32string peek32(Buffer_citer other) const;
+    std::u32string text32(Buffer_citer other) const;
 
     /// Get an UTF-32 text containing specified character count.
-    std::u32string peek32(std::size_t nchars) const;
+    std::u32string text32(std::size_t nchars) const;
 
     /// Advance pointer by one character.
     Buffer_citer & operator++();
@@ -277,7 +277,7 @@ private:
 
 /// The text buffer.
 ///
-/// This class is a wrapper around its implementation shared pointer Buffer_impl.
+/// This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup text_group
 class Buffer {

@@ -49,8 +49,8 @@ ustring Navigator::uri() const {
     return NAVIGATOR_IMPL->uri();
 }
 
-void Navigator::reload() {
-    NAVIGATOR_IMPL->reload();
+void Navigator::refresh() {
+    NAVIGATOR_IMPL->refresh();
 }
 
 void Navigator::sort_by(const ustring & col) {

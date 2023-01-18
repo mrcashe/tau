@@ -187,13 +187,13 @@ std::vector<ustring> Font::list_families() {
 // Font_win class methods.
 // ----------------------------------------------------------------------------
 
-Font_win::Font_win(HDC hdc, unsigned dpi, const ustring & font_spec):
+Font_win::Font_win(HDC hdc, unsigned dpi, const ustring & spec):
     hdc_(hdc),
-    dpi_(dpi),
-    spec_(font_spec)
+    dpi_(dpi)
 {
-    sz_ = font_size_from_spec(font_spec);
+    sz_ = font_size_from_spec(spec);
     if (sz_ < 1.0) { sz_ = 10; }
+    spec_ = font_size_change(spec, sz_);
 
     LOGFONT lf;
     memset(&lf, 0, sizeof(lf));
@@ -202,12 +202,12 @@ Font_win::Font_win(HDC hdc, unsigned dpi, const ustring & font_spec):
     lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
     lf.lfQuality = DEFAULT_QUALITY;
     lf.lfPitchAndFamily = DEFAULT_PITCH|FF_DONTCARE;
-    ustring fam = font_family_from_spec(font_spec);
+    ustring fam = font_family_from_spec(spec);
     std::size_t len = std::min(std::size_t(LF_FACESIZE), fam.bytes());
     memcpy(lf.lfFaceName, fam.c_str(), len);
     lf.lfFaceName[len < LF_FACESIZE ? len : LF_FACESIZE-1] = '\0';
 
-    ustring face = str_tolower(font_face_from_spec(font_spec));
+    ustring face = str_tolower(font_face_from_spec(spec));
     lf.lfItalic = (ustring::npos != face.find("italic") || ustring::npos != face.find("oblique"));
 
     if (ustring::npos != face.find("thin")) {

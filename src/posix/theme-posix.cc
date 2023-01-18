@@ -190,7 +190,7 @@ Font_face_ptr Theme_posix::create_font_face(const ustring & spec) {
 
 void Theme_posix::cache_font(Font_ptr font, const ustring & spec) {
     if (font) {
-        uint64_t size = std::round(64.0*font->size());
+        uint64_t size = std::round(64.0*font_size_from_spec(spec));
         std::string key = str_format(str_toupper(font_size_remove(spec)), ' ', size, ' ', font->dpi());
         Font_holder hol;
         hol.font = font;

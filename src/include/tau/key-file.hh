@@ -38,6 +38,7 @@
 namespace tau {
 
 /// This class lets you parse, edit or create files containing groups of key-value pairs.
+///
 /// @ingroup text_group
 class Key_file: public trackable {
 public:
@@ -61,7 +62,7 @@ public:
     Key_file & operator=(const Key_file & other);
 
     /// Destructor.
-    ~Key_file();
+   ~Key_file();
 
     /// Load from stream.
     void load(std::istream & is);
@@ -79,6 +80,9 @@ public:
 
     /// Gets list separator.
     char32_t list_separator() const;
+
+    /// Gets comment separator.
+    char32_t comment_separator() const;
 
     /// Get root section.
     Key_section & root();
@@ -107,6 +111,9 @@ public:
     /// Places comment above sect.
     void set_comment(Key_section & sect, const ustring & comment);
 
+    /// Get comment above section sect.
+    ustring comment(Key_section & sect);
+
     /// Associates a new string value with key key under sect.
     void set_string(Key_section & sect, const ustring & key, const ustring & value);
 
@@ -130,9 +137,6 @@ public:
 
     /// Sets a list of doubles for the key under sect.
     void set_doubles(Key_section & sect, const ustring & key, const std::vector<double> & vec);
-
-    /// Get comment above section sect.
-    ustring comment(Key_section & sect);
 
     /// Gets string value associated with key key under sect section.
     /// @return key value or fallback value if key not found.

@@ -68,6 +68,13 @@ void Loop_freebsd::done() {
     loops_.erase(tid_);
 }
 
+// Overrides pure Loop_impl.
+std::vector<ustring> Loop_freebsd::mounts() {
+    std::vector<ustring> v;
+    for (auto & m: mounts_) { v.push_back(m.mpoint); }
+    return v;
+}
+
 void Loop_freebsd::on_inotify() {
     char buffer[16384];
 
@@ -183,6 +190,11 @@ Loop_freebsd_ptr Loop_freebsd::this_freebsd_loop() {
     loops_[tid] = lp;
     ++loopcnt_;
     return lp;
+}
+
+// static
+Loop_posix_ptr Loop_posix::this_posix_loop() {
+    return Loop_freebsd::this_freebsd_loop();
 }
 
 // static

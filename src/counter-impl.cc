@@ -380,7 +380,7 @@ bool Counter_impl::on_mouse_wheel(int delta, int mm, const Point & where) {
 void Counter_impl::drop_entry_focus() {
     entry_->unselect();
 
-    if (entry_->has_focus()) {
+    if (entry_->focused()) {
         entry_->move_to(0, 0);
         grab_focus();
     }

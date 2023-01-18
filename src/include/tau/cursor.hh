@@ -37,7 +37,7 @@ namespace tau {
 
 /// A mouse cursor.
 ///
-/// This class is a wrapper around its implementation shared pointer Cursor_impl.
+/// This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup input_group
 class Cursor {

@@ -162,7 +162,7 @@ void Check_impl::toggle() {
 }
 
 void Check_impl::on_cancel() {
-    if (has_focus()) {
+    if (focused()) {
         drop_focus();
     }
 }

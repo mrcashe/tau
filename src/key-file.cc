@@ -267,6 +267,10 @@ char32_t Key_file::list_separator() const {
     return impl_->lsep_;
 }
 
+char32_t Key_file::comment_separator() const {
+    return impl_->csep_;
+}
+
 std::vector<ustring> Key_file::list_sections() const {
     std::vector<ustring> v;
     for (auto & p: impl_->sections_) { v.push_back(p.first); }

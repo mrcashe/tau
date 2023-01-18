@@ -190,7 +190,7 @@ void Card_impl::on_child_show(Widget_impl * wi) {
         }
 
         if (!in_hide_) { arrange(); }
-        if (has_focus()) { wi->take_focus(); }
+        if (focused()) { wi->take_focus(); }
     }
 }
 

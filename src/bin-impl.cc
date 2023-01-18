@@ -97,7 +97,7 @@ void Bin_impl::on_child_show() {
     if (!destroy_) {
         update_requisition();
         arrange();
-        if (has_focus() && cp_) { cp_->take_focus(); }
+        if (focused() && cp_) { cp_->take_focus(); }
     }
 }
 

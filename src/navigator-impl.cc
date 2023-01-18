@@ -223,7 +223,7 @@ void Navigator_impl::read_dir(Holder * hol) {
                 Rec rec;
                 rec.name = name;
                 rec.fi = fi;
-                rec.hidden = file_is_hidden(path);
+                rec.hidden = fi.is_hidden();
                 hol->recs.push_back(rec);
             }
 
@@ -310,7 +310,7 @@ void Navigator_impl::select_name(const ustring & name) {
     }
 }
 
-void Navigator_impl::reload() {
+void Navigator_impl::refresh() {
     if (holder_ && list_ && !list_->running()) {
         int selected_row = list_->selected_row();
         ustring filename;
@@ -566,7 +566,7 @@ void Navigator_impl::on_file_monitor_timer(const ustring & dirname) {
 
     if (holder) {
         if (holder_ == holder) {
-            reload();
+            refresh();
         }
 
         else {

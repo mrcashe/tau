@@ -27,6 +27,8 @@
 #ifndef TAU_LOOP_POSIX_HH
 #define TAU_LOOP_POSIX_HH
 
+#include "types-posix.hh"
+#include <tau/ustring.hh>
 #include <event-impl.hh>
 #include <loop-impl.hh>
 #include <poll.h>
@@ -101,13 +103,26 @@ private:
 class Loop_posix: public Loop_impl {
 public:
 
+    static Loop_posix_ptr this_posix_loop();
+
+    bool is_removable(const ustring & mp);
+
     // Overrides pure Loop_impl.
     Event_ptr create_event() override;
 
-    // Overrides pure Loop_impl.
-    Event_ptr create_event(const slot<void()> & slot_ready) override;
-
     void add_poller(Poller_base * ppi, short events);
+
+protected:
+
+    struct Mount {
+        ustring     dev;
+        ustring     mpoint;
+        bool        removable = false;
+    };
+
+    using Mounts = std::list<Mount>;
+
+    Mounts          mounts_;
 
 protected:
 

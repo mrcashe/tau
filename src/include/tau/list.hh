@@ -35,17 +35,20 @@
 namespace tau {
 
 /// A container that allocates widgets along the Y axis.
-/// One or more widgets form a branch. Each branch is identified by its coordinate
+///
+/// This class is a wrapper around its implementation shared pointer.
+///
+/// One or more widgets form a row. Each row is identified by its coordinate
 /// on the Y axis. The coordinates in this case do not imply the
 /// pixel coordinates on the screen - on the contrary, now we are talking about
 /// cells that hold the whole widget. The coordinates of two neighboring
-/// branches differ by at least one. All widgets on the same branch have
+/// rows differ by at least one. All widgets on the same row have
 /// the same coordinates on the Y axis.
-/// As already noted above, the branch can consist of several widgets.
+/// As already noted above, the row can consist of several widgets.
 /// This principle allows you to build lists consisting of several columns.
-/// All branches are selectable. When list selects or deselects branch, it sends
-/// signal_select() or signal_unselect(), respectively, to each widget in the branch.
-/// In addition, it is possible to insert widgets outside the branches. Such widgets
+/// All rowes are selectable. When list selects or deselects row, it sends
+/// signal_select() or signal_unselect(), respectively, to each widget in the row.
+/// In addition, it is possible to insert widgets outside the rowes. Such widgets
 /// are not selectable and can serve for better structuring of information.
 /// @ingroup container_group
 class List: public Widget {
@@ -54,101 +57,146 @@ public:
     /// Default constructor.
     List();
 
-    /// Prepend selectable branch.
-    /// @throw user_error if widget already inserted into another container.
+    /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    List(const List & other) = default;
+
+    /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    List & operator=(const List & other) = default;
+
+    /// Constructor with implementation pointer.
+    ///
+    /// @warning Unlike some other classes (Painter as an example), the whole
+    /// @ref widget_group "widget stack" is unable to run with pure implementation
+    /// pointer, so attempting to construct widget from a pure (@b nullptr) pointer
+    /// will cause throwing an user_error exception!
+    /// That exception also will be thrown if user tries to construct the object
+    /// from incompatible implementation shared pointer.
+    ///
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    List(Widget_ptr wp);
+
+    /// Prepend selectable row.
+    /// @throw user_error if w already inserted into another container.
+    /// @throw internal_error if w has pure implementation pointer.
     int prepend_row(Widget & w, bool shrink=false);
 
-    /// Prepend selectable branch.
-    /// @throw user_error if widget already inserted into another container.
+    /// Prepend selectable row.
+    /// @throw user_error if w already inserted into another container.
+    /// @throw internal_error if w has pure implementation pointer.
     int prepend_row(Widget & w, Align align);
 
-    /// Insert selectable branch at specified position.
-    /// @throw user_error if widget already inserted into another container.
+    /// Insert selectable row at specified position.
+    /// @throw user_error if w already inserted into another container.
+    /// @throw internal_error if w has pure implementation pointer.
     int insert_row(Widget & w, int position, bool shrink=false);
 
-    /// Insert selectable branch at specified position.
-    /// @throw user_error if widget already inserted into another container.
+    /// Insert selectable row at specified position.
+    /// @throw user_error if w already inserted into another container.
+    /// @throw internal_error if w has pure implementation pointer.
     int insert_row(Widget & w, int position, Align align);
 
-    /// Append selectable branch.
-    /// @throw user_error if widget already inserted into another container.
+    /// Append selectable row.
+    /// @throw user_error if w already inserted into another container.
+    /// @throw internal_error if w has pure implementation pointer.
     int append_row(Widget & w, bool shrink=false);
 
-    /// Append selectable branch.
-    /// @throw user_error if widget already inserted into another container.
+    /// Append selectable row.
+    /// @throw user_error if w already inserted into another container.
+    /// @throw internal_error if w has pure implementation pointer.
     int append_row(Widget & w, Align align);
 
     /// Prepend non-selectable widget.
-    /// @throw user_error if widget already inserted into another container.
+    /// @throw user_error if w already inserted into another container.
+    /// @throw internal_error if w has pure implementation pointer.
     int prepend(Widget & w, bool shrink=false);
 
     /// Prepend non-selectable widget.
-    /// @throw user_error if widget already inserted into another container.
+    /// @throw user_error if w already inserted into another container.
+    /// @throw internal_error if w has pure implementation pointer.
     int prepend(Widget & w, Align align);
 
     /// Insert non-selectable widget at specified position.
-    /// @throw user_error if widget already inserted into another container.
+    /// @throw user_error if w already inserted into another container.
+    /// @throw internal_error if w has pure implementation pointer.
     int insert(Widget & w, int position, bool shrink=false);
 
     /// Insert non-selectable widget at specified position.
-    /// @throw user_error if widget already inserted into another container.
+    /// @throw user_error if w already inserted into another container.
+    /// @throw internal_error if w has pure implementation pointer.
     int insert(Widget & w, int position, Align align);
 
     /// Append non-selectable widget.
-    /// @throw user_error if widget already inserted into another container.
+    /// @throw user_error if w already inserted into another container.
+    /// @throw internal_error if w has pure implementation pointer.
     int append(Widget & w, bool shrink=false);
 
     /// Append non-selectable widget.
-    /// @throw user_error if widget already inserted into another container.
+    /// @throw user_error if w already inserted into another container.
+    /// @throw internal_error if w has pure implementation pointer.
     int append(Widget & w, Align align);
 
-    /// Prepend widget into specified branch.
-    /// @throw user_error if widget already inserted into another container.
-    /// @throw graphics_error (bad branch).
-    int prepend(int branch, Widget & w, bool shrink=false);
+    /// Prepend widget into specified row.
+    /// @throw user_error if w already inserted into another container.
+    /// @throw internal_error if w has pure implementation pointer.
+    /// @throw graphics_error (bad row).
+    int prepend(int row, Widget & w, bool shrink=false);
 
-    /// Prepend widget into specified branch.
-    /// @throw user_error if widget already inserted into another container.
-    /// @throw graphics_error (bad branch).
-    int prepend(int branch, Widget & w, Align align);
+    /// Prepend widget into specified row.
+    /// @throw user_error if w already inserted into another container.
+    /// @throw internal_error if w has pure implementation pointer.
+    /// @throw graphics_error (bad row).
+    int prepend(int row, Widget & w, Align align);
 
-    /// Insert widget into specified branch and specified position.
-    /// @throw user_error if widget already inserted into another container.
-    /// @throw graphics_error (bad branch).
-    int insert(int branch, Widget & w, int position, bool shrink=false);
+    /// Insert widget into specified row and specified position.
+    /// @throw user_error if w already inserted into another container.
+    /// @throw internal_error if w has pure implementation pointer.
+    /// @throw graphics_error (bad row).
+    int insert(int row, Widget & w, int position, bool shrink=false);
 
-    /// Insert widget into specified branch and specified position.
-    /// @throw user_error if widget already inserted into another container.
-    /// @throw graphics_error (bad branch).
-    int insert(int branch, Widget & w, int position, Align align);
+    /// Insert widget into specified row and specified position.
+    /// @throw user_error if w already inserted into another container.
+    /// @throw internal_error if w has pure implementation pointer.
+    /// @throw graphics_error (bad row).
+    int insert(int row, Widget & w, int position, Align align);
 
-    /// Append widget into specified branch.
-    /// @throw user_error if widget already inserted into another container.
-    /// @throw graphics_error (bad branch).
-    int append(int branch, Widget & w, bool shrink=false);
+    /// Append widget into specified row.
+    /// @throw user_error if w already inserted into another container.
+    /// @throw internal_error if w has pure implementation pointer.
+    /// @throw graphics_error (bad row).
+    int append(int row, Widget & w, bool shrink=false);
 
-    /// Append widget into specified branch.
-    /// @throw graphics_error (bad branch).
-    /// @throw user_error if widget already inserted into another container.
-    int append(int branch, Widget & w, Align align);
+    /// Append widget into specified row.
+    /// @throw user_error if w already inserted into another container.
+    /// @throw internal_error if w has pure implementation pointer.
+    /// @throw graphics_error (bad row).
+    int append(int row, Widget & w, Align align);
 
-    /// Select specified branch.
-    /// @return INT_MIN if no selection available or branch index.
+    /// Select specified row.
+    /// @return INT_MIN if no selection available or row index.
     int select_row(int br);
 
-    /// Select first branch.
-    /// @return INT_MIN if no selection available or branch index.
+    /// Select first row.
+    /// @return INT_MIN if no selection available or row index.
     int select_first();
 
-    /// Select last branch.
-    /// @return INT_MIN if no selection available or branch index.
+    /// Select last row.
+    /// @return INT_MIN if no selection available or row index.
     int select_last();
 
-    /// Get current selected branch.
-    /// @return INT_MIN if no selection available or branch index.
+    /// Get current selected row.
+    /// @return INT_MIN if no selection available or row index.
     int selected_row() const;
 
-    /// Remove specified branch.
+    /// Remove specified row.
     void remove(int br);
 
     /// Remove all.
@@ -158,7 +206,7 @@ public:
     void unselect();
 
     /// Test if empty.
-    /// @return true if no branches made.
+    /// @return true if no rowes made.
     bool empty() const;
 
     /// Allow multiple select.
@@ -295,39 +343,39 @@ public:
     /// @param right where to store right margin width in pixels.
     void get_column_margin(int x, unsigned & left, unsigned & right) const;
 
-    /// Signal emitted when some branch selected.
+    /// Signal emitted when some row selected.
     /// Slot prototype:
     /// ~~~~~~~~~~~~~~
-    /// void on_row_selected(int branch);
+    /// void on_row_selected(int row);
     /// ~~~~~~~~~~~~~~
     signal<void(int)> & signal_row_selected();
 
-    /// Signal emitted when some branch activated.
+    /// Signal emitted when some row activated.
     /// Slot prototype:
     /// ~~~~~~~~~~~~~~
-    /// void on_row_activated(int branch);
+    /// void on_row_activated(int row);
     /// ~~~~~~~~~~~~~~
     signal<void(int)> & signal_row_activated();
 
-    /// Signal emitted when some branch removed.
+    /// Signal emitted when some row removed.
     /// Slot prototype:
     /// ~~~~~~~~~~~~~~
-    /// void on_row_removed(int branch);
+    /// void on_row_removed(int row);
     /// ~~~~~~~~~~~~~~
     signal<void(int)> & signal_row_removed();
 
-    /// Signal emitted when some branch changed it position.
+    /// Signal emitted when some row changed it position.
     /// Slot prototype:
     /// ~~~~~~~~~~~~~~
     /// void on_row_moved(int old_row, int new_row);
     /// ~~~~~~~~~~~~~~
     signal<void(int, int)> & signal_row_moved();
 
-    /// Signal emitted when %List going to mark branch.
+    /// Signal emitted when %List going to mark row.
     /// Returning true from this signal will prevent marking.
     /// Slot prototype:
     /// ~~~~~~~~~~~~~~
-    /// bool on_mark_validate(int branch);
+    /// bool on_mark_validate(int row);
     /// ~~~~~~~~~~~~~~
     signal<bool(int)> & signal_mark_validate();
 

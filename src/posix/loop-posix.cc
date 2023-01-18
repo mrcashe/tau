@@ -62,13 +62,6 @@ Event_ptr Loop_posix::create_event() {
     return evp;
 }
 
-// Overrides pure Loop_impl.
-Event_ptr Loop_posix::create_event(const slot<void()> & slot_ready) {
-    auto evp = create_event();
-    evp->signal_ready().connect(slot_ready);
-    return evp;
-}
-
 void Loop_posix::on_poller_destroy(int fd) {
     auto * p = fds_.data();
 
@@ -78,6 +71,11 @@ void Loop_posix::on_poller_destroy(int fd) {
             return;
         }
     }
+}
+
+bool Loop_posix::is_removable(const ustring & mp) {
+    auto i = std::find_if(mounts_.begin(), mounts_.end(), [mp](const Mount & m) { return mp == m.mpoint; } );
+    return i != mounts_.end() && i->removable;
 }
 
 } // namespace tau

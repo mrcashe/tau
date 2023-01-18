@@ -37,7 +37,7 @@ namespace tau {
 
 /// Cycle specification for text.
 ///
-/// This class is a wrapper around its implementation shared pointer Cycle_text_impl.
+/// This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup container_group
 /// @ingroup widget_group

@@ -92,7 +92,7 @@ private:
 class Locale {
 public:
 
-    /// Construct from system locale.
+    /// Construct from the system locale.
     Locale();
 
     /// Construct from ISO code.
@@ -111,7 +111,7 @@ public:
     Locale & operator=(const Locale & other);
 
     /// Destructor.
-    ~Locale();
+   ~Locale();
 
     /// Compare operator.
     bool operator==(const Locale & other) const;

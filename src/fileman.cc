@@ -31,14 +31,18 @@ namespace tau {
 
 #define FILEMAN_IMPL (std::static_pointer_cast<Fileman_impl>(impl))
 
-Fileman::Fileman(Fileman_mode fs_type, const ustring & path):
-    Widget(Fileman_impl::create(fs_type, path))
+Fileman::Fileman(Fileman_mode mode, const ustring & path):
+    Widget(Fileman_impl::create(mode, path))
 {
 }
 
 Fileman::Fileman(Widget_ptr wp):
     Widget(std::dynamic_pointer_cast<Fileman_impl>(wp))
 {
+}
+
+Widget_ptr Fileman::navigator_ptr() {
+    return FILEMAN_IMPL->navigator();
 }
 
 ustring Fileman::uri() const {
@@ -65,26 +69,6 @@ ustring Fileman::filter() const {
     return FILEMAN_IMPL->filter();
 }
 
-void Fileman::sort_by(const ustring & col) {
-    FILEMAN_IMPL->sort_by(col);
-}
-
-ustring Fileman::sorted_by() const {
-    return FILEMAN_IMPL->sorted_by();
-}
-
-void Fileman::sort_forward() {
-    FILEMAN_IMPL->sort_forward();
-}
-
-void Fileman::sort_backward() {
-    FILEMAN_IMPL->sort_backward();
-}
-
-bool Fileman::sorted_backward() const {
-    return FILEMAN_IMPL->sorted_backward();
-}
-
 void Fileman::show_info(const ustring & items, char32_t sep) {
     FILEMAN_IMPL->show_info(items, sep);
 }
@@ -103,30 +87,6 @@ ustring Fileman::visible_info_items(char32_t sep) const {
 
 ustring Fileman::invisible_info_items(char32_t sep) const {
     return FILEMAN_IMPL->invisible_info_items(sep);
-}
-
-void Fileman::allow_multiple_select() {
-    FILEMAN_IMPL->allow_multiple_select();
-}
-
-void Fileman::disallow_multiple_select() {
-    FILEMAN_IMPL->disallow_multiple_select();
-}
-
-bool Fileman::multiple_select_allowed() const {
-    return FILEMAN_IMPL->multiple_select_allowed();
-}
-
-void Fileman::allow_dir_select() {
-    FILEMAN_IMPL->allow_dir_select();
-}
-
-void Fileman::disallow_dir_select() {
-    FILEMAN_IMPL->disallow_dir_select();
-}
-
-bool Fileman::dir_select_allowed() const {
-    return FILEMAN_IMPL->dir_select_allowed();
 }
 
 void Fileman::allow_overwrite() {

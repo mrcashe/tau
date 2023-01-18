@@ -47,16 +47,6 @@ Font_posix::Font_posix(Font_face_ptr face, const ustring & spec, double size_pt,
 }
 
 // Overrides pure Font_impl.
-ustring Font_posix::family_name() const {
-    return font_family_from_spec(spec_);
-}
-
-// Overrides pure Font_impl.
-ustring Font_posix::face_name() const {
-    return font_face_from_spec(spec_);
-}
-
-// Overrides pure Font_impl.
 ustring Font_posix::psname() const {
     return face_->psname();
 }

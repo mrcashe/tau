@@ -254,8 +254,8 @@ void Widget::disallow_focus() {
     impl->disallow_focus();
 }
 
-bool Widget::has_focus() const {
-    return impl->has_focus();
+bool Widget::focused() const {
+    return impl->focused();
 }
 
 bool Widget::focus_allowed() const {
@@ -446,8 +446,8 @@ bool Widget::has_window() const {
     return impl->has_window();
 }
 
-bool Widget::has_scroller() const {
-    return impl->has_scroller();
+bool Widget::scrollable() const {
+    return impl->scrollable();
 }
 
 signal<void()> & Widget::signal_destroy() {

@@ -455,7 +455,7 @@ void Doc_impl::load(Buffer buffer) {
                 d.skip_whitespace();
 
                 if (d < c) {
-                    ustring s = b.peek(c);
+                    ustring s = b.text(c);
                     expand_entities(s);
                     nodes.back()->append_text(s);
                 }
@@ -470,7 +470,7 @@ void Doc_impl::load(Buffer buffer) {
                     if (!c.find("?>")) { throw bad_doc(str_format(1+b.row(), ':', 1+b.col(), ": unterminated XML processing instruction")); }
                     while (!char32_isblank(*d) && d < c) { ++d; }
                     if (b == d) { throw bad_doc(str_format(1+b.row(), ':', 1+b.col(), ": XML processing instruction syntax error")); }
-                    ustring iname = b.peek(d);
+                    ustring iname = b.text(d);
                     std::list<std::pair<ustring, ustring>> attrs;
 
                     while (d < c) {
@@ -479,14 +479,14 @@ void Doc_impl::load(Buffer buffer) {
                         if (!d.find('=', c)) { break; }
 
                         if (b < d) {
-                            ustring attr_name = b.peek(d++);
+                            ustring attr_name = b.text(d++);
 
                             if ('"' == *d) {
                                 ++d;
                                 b = d;
 
                                 if (d.find('"', c)) {
-                                    ustring attr_value = b.peek(d++);
+                                    ustring attr_value = b.text(d++);
                                     attrs.push_back(std::pair<ustring, ustring>(attr_name, attr_value));
                                 }
                             }
@@ -540,7 +540,7 @@ void Doc_impl::load(Buffer buffer) {
                     if (nodes.empty()) { throw bad_doc(str_format(1+c.row(), ':', 1+c.col(), ": CDATA outside of node")); }
                     const Buffer_citer b(c);
                     if (!c.find("]]>")) { throw bad_doc(str_format(1+b.row(), ':', 1+b.col(), ": unterminated CDATA section")); }
-                    nodes.back()->append_text(b.peek(c));
+                    nodes.back()->append_text(b.text(c));
                     c += 3;
                 }
 
@@ -552,7 +552,7 @@ void Doc_impl::load(Buffer buffer) {
                     const ustring delimiters = "['\">";
                     while (!char32_isblank(*c) && !char32_is_newline(*c) && ustring::npos == delimiters.find(*c)) { ++c; }
                     if (c == b) { throw bad_doc(str_format(1+b.row(), ':', 1+b.col(), ": missing DOCTYPE name")); }
-                    auto obj = std::shared_ptr<Doctype_impl>(new Doctype_impl(b.peek(c)));
+                    auto obj = std::shared_ptr<Doctype_impl>(new Doctype_impl(b.text(c)));
                     doctype_ = obj;
 
                     // After root element.
@@ -566,7 +566,7 @@ void Doc_impl::load(Buffer buffer) {
                         char32_t wc = *c++;
                         b = c;
                         if ((U'\'' != wc && U'"' != wc) || !c.find_first_of(ustring(">[")+wc) || wc != *c) { throw bad_doc(str_format(1+b.row(), ':', 1+b.col(), ": missing private DTD location")); }
-                        obj->set_private(b.peek(c++));
+                        obj->set_private(b.text(c++));
                         c.skip_whitespace();
                     }
 
@@ -577,14 +577,14 @@ void Doc_impl::load(Buffer buffer) {
                         char32_t wc = *c++;
                         b = c;
                         if ((U'\'' != wc && U'"' != wc) || !c.find_first_of(ustring(">[")+wc) || wc != *c) { throw bad_doc(str_format(1+b.row(), ':', 1+b.col(), ": missing public DTD name")); }
-                        ustring name = b.peek(c++);
+                        ustring name = b.text(c++);
 
                         // DTD location required (quoted string).
                         c.skip_whitespace();
                         wc = *c++;
                         b = c;
                         if ((U'\'' != wc && U'"' != wc) || !c.find_first_of(ustring(">[")+wc) || wc != *c) { throw bad_doc(str_format(1+b.row(), ':', 1+b.col(), ": missing public DTD location")); }
-                        obj->set_public(name, b.peek(c++));
+                        obj->set_public(name, b.text(c++));
                         c.skip_whitespace();
                     }
 
@@ -656,7 +656,7 @@ void Doc_impl::load(Buffer buffer) {
                             Buffer_citer d(c);
                             if (!c.find_first_of("=/>")) { throw bad_doc(str_format(1+b.row(), ':', 1+b.col(), ": unterminated XML ELEMENT ", name, " definition")); }
                             if ('=' != *c) { attrs_done = true; continue; }
-                            ustring attr_name = d.peek(c++);
+                            ustring attr_name = d.text(c++);
                             if (!xml_attr_name_valid(attr_name))  { throw bad_doc(str_format(1+d.row(), ':', 1+d.col(), ": invalid XML ATTRIBUTE name '", attr_name, "'")); }
 
                             // Move to the opening quote.
@@ -668,7 +668,7 @@ void Doc_impl::load(Buffer buffer) {
 
                             // Move to the closing quote.
                             if (!c.find(qchar)) { throw bad_doc(str_format(1+d.row(), ':', 1+d.col(), ": need closing quote for attribute ", attr_name)); }
-                            ustring attr_value = d.peek(c++);
+                            ustring attr_value = d.text(c++);
                             node->set_attribute(attr_name, attr_value);
                         }
 

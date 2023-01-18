@@ -36,6 +36,9 @@
 namespace tau {
 
 /// The scaled font.
+///
+/// This class is a wrapper around its implementation shared pointer.
+///
 /// A font represents an organized collection of glyphs in which the various Glyph
 /// representations will share a common look or styling such that, when a string of
 /// characters is rendered together, the result is highly legible, conveys a particular
@@ -44,16 +47,24 @@ namespace tau {
 class Font {
 public:
 
-    /// Default constructor creates an empty font.
+    /// Default constructor creates a pure font.
     Font();
 
     /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
     Font(const Font & other) = default;
 
     /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
     Font & operator=(const Font & other) = default;
 
-    /// Test if empty.
+    /// Test if pure.
     operator bool() const { return nullptr != impl; }
 
     /// Compare operator.
@@ -74,20 +85,11 @@ public:
     /// Reset underlying implementation.
     void reset() { impl.reset(); }
 
-    /// Get font family name.
-    ustring family_name() const;
-
-    /// Get font face name.
-    ustring face_name() const;
-
-    /// Get font name.
+    /// Get font specification.
     ustring spec() const;
 
     /// Get PostScript font name.
     ustring psname() const;
-
-    /// Get size in points.
-    double size() const;
 
     /// Get dots-per-inch.
     unsigned dpi() const;
@@ -187,7 +189,7 @@ ustring font_spec_build(const ustring & family, const ustring & face, double siz
 /// If current font specificaion is "Arial Bold" and the face_elements is
 /// "Italic", the result will be "Arial Bold Italic".
 /// @return modified font specification.
-ustring font_add_face(const ustring & spec, const ustring & face_elements);
+ustring font_face_add(const ustring & spec, const ustring & face_elements);
 
 /// Set face.
 /// @ingroup font_group
@@ -196,7 +198,7 @@ ustring font_add_face(const ustring & spec, const ustring & face_elements);
 /// If current font specificaion is "Arial Bold" and the face is
 /// "Italic", the result will be "Arial Italic".
 /// @return modified font specification.
-ustring font_set_face(const ustring & spec, const ustring & face);
+ustring font_face_set(const ustring & spec, const ustring & face);
 
 } // namespace tau
 

@@ -35,6 +35,9 @@
 namespace tau {
 
 /// %Menu item base.
+///
+/// This class is a wrapper around its implementation shared pointer.
+///
 /// @ingroup widget_group
 class Menu_item: public Widget {
 public:
@@ -48,18 +51,78 @@ protected:
 };
 
 /// %Menu item with Action.
+///
+/// This class is a wrapper around its implementation shared pointer.
+///
 /// @ingroup widget_group
 class Action_menu_item: public Menu_item {
 public:
+
+    /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Action_menu_item(const Action_menu_item & other) = default;
+
+    /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Action_menu_item & operator=(const Action_menu_item & other) = default;
+
+    /// Constructor with implementation pointer.
+    ///
+    /// @warning Unlike some other classes (Painter as an example), the whole
+    /// @ref widget_group "widget stack" is unable to run with pure implementation
+    /// pointer, so attempting to construct widget from a pure (@b nullptr) pointer
+    /// will cause throwing an user_error exception!
+    /// That exception also will be thrown if user tries to construct the object
+    /// from incompatible implementation shared pointer.
+    ///
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Action_menu_item(Widget_ptr wp);
 
     /// Constructor with Action.
     Action_menu_item(Action & action);
 };
 
 /// %Menu item with Toggle_action.
+///
+/// This class is a wrapper around its implementation shared pointer.
+///
 /// @ingroup widget_group
 class Toggle_menu_item: public Menu_item {
 public:
+
+    /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Toggle_menu_item(const Toggle_menu_item & other) = default;
+
+    /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Toggle_menu_item & operator=(const Toggle_menu_item & other) = default;
+
+    /// Constructor with implementation pointer.
+    ///
+    /// @warning Unlike some other classes (Painter as an example), the whole
+    /// @ref widget_group "widget stack" is unable to run with pure implementation
+    /// pointer, so attempting to construct widget from a pure (@b nullptr) pointer
+    /// will cause throwing an user_error exception!
+    /// That exception also will be thrown if user tries to construct the object
+    /// from incompatible implementation shared pointer.
+    ///
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Toggle_menu_item(Widget_ptr wp);
 
     /// Constructor with Toggle_action.
     Toggle_menu_item(Toggle_action & toggle_action, Check_style check_style=CHECK_VSTYLE, Border_style border_style=BORDER_INSET);
@@ -85,9 +148,39 @@ public:
 };
 
 /// %Menu item with other menu.
+///
+/// This class is a wrapper around its implementation shared pointer.
+///
 /// @ingroup widget_group
 class Submenu_item: public Menu_item {
 public:
+
+    /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Submenu_item(const Submenu_item & other) = default;
+
+    /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Submenu_item & operator=(const Submenu_item & other) = default;
+
+    /// Constructor with implementation pointer.
+    ///
+    /// @warning Unlike some other classes (Painter as an example), the whole
+    /// @ref widget_group "widget stack" is unable to run with pure implementation
+    /// pointer, so attempting to construct widget from a pure (@b nullptr) pointer
+    /// will cause throwing an user_error exception!
+    /// That exception also will be thrown if user tries to construct the object
+    /// from incompatible implementation shared pointer.
+    ///
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Submenu_item(Widget_ptr wp);
 
     /// Constructor with label and submenu.
     Submenu_item(const ustring & label, Menu & menu);
@@ -100,9 +193,39 @@ public:
 };
 
 /// %Menu item with slot.
+///
+/// This class is a wrapper around its implementation shared pointer.
+///
 /// @ingroup widget_group
 class Slot_menu_item: public Menu_item {
 public:
+
+    /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Slot_menu_item(const Slot_menu_item & other) = default;
+
+    /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Slot_menu_item & operator=(const Slot_menu_item & other) = default;
+
+    /// Constructor with implementation pointer.
+    ///
+    /// @warning Unlike some other classes (Painter as an example), the whole
+    /// @ref widget_group "widget stack" is unable to run with pure implementation
+    /// pointer, so attempting to construct widget from a pure (@b nullptr) pointer
+    /// will cause throwing an user_error exception!
+    /// That exception also will be thrown if user tries to construct the object
+    /// from incompatible implementation shared pointer.
+    ///
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Slot_menu_item(Widget_ptr wp);
 
     /// Constructor with label and slot.
     Slot_menu_item(const ustring & label, const slot<void()> & slot_activate);
@@ -115,9 +238,39 @@ public:
 };
 
 /// %Menu item with Check.
+///
+/// This class is a wrapper around its implementation shared pointer.
+///
 /// @ingroup widget_group
 class Check_menu_item: public Menu_item {
 public:
+
+    /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Check_menu_item(const Check_menu_item & other) = default;
+
+    /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Check_menu_item & operator=(const Check_menu_item & other) = default;
+
+    /// Constructor with implementation pointer.
+    ///
+    /// @warning Unlike some other classes (Painter as an example), the whole
+    /// @ref widget_group "widget stack" is unable to run with pure implementation
+    /// pointer, so attempting to construct widget from a pure (@b nullptr) pointer
+    /// will cause throwing an user_error exception!
+    /// That exception also will be thrown if user tries to construct the object
+    /// from incompatible implementation shared pointer.
+    ///
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Check_menu_item(Widget_ptr wp);
 
     /// Constructor with label and initial state.
     /// @param label the label.
@@ -196,7 +349,11 @@ public:
 };
 
 /// Basic menu class.
+///
+/// This class is a wrapper around its implementation shared pointer.
+///
 /// @ingroup container_group
+/// @ingroup widget_group
 class Menu: public Container {
 public:
 
@@ -296,24 +453,86 @@ protected:
 };
 
 /// %Popup menu.
+///
+/// This class is a wrapper around its implementation shared pointer.
+///
 /// @ingroup container_group
+/// @ingroup widget_group
 class Menubox: public Menu {
 public:
 
     /// Constructor.
     Menubox();
 
+    /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Menubox(const Menubox & other) = default;
+
+    /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Menubox & operator=(const Menubox & other) = default;
+
+    /// Constructor with implementation pointer.
+    ///
+    /// @warning Unlike some other classes (Painter as an example), the whole
+    /// @ref widget_group "widget stack" is unable to run with pure implementation
+    /// pointer, so attempting to construct widget from a pure (@b nullptr) pointer
+    /// will cause throwing an user_error exception!
+    /// That exception also will be thrown if user tries to construct the object
+    /// from incompatible implementation shared pointer.
+    ///
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Menubox(Widget_ptr wp);
+
     /// %Popup menu.
     void popup(Toplevel & parent, const Point & position, Gravity gravity=GRAVITY_NONE);
 };
 
 /// %Menu with items arranged horizontally.
+///
+/// This class is a wrapper around its implementation shared pointer.
+///
 /// @ingroup container_group
+/// @ingroup widget_group
 class Menubar: public Menu {
 public:
 
     /// Constructor.
     Menubar();
+
+    /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Menubar(const Menubar & other) = default;
+
+    /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Menubar & operator=(const Menubar & other) = default;
+
+    /// Constructor with implementation pointer.
+    ///
+    /// @warning Unlike some other classes (Painter as an example), the whole
+    /// @ref widget_group "widget stack" is unable to run with pure implementation
+    /// pointer, so attempting to construct widget from a pure (@b nullptr) pointer
+    /// will cause throwing an user_error exception!
+    /// That exception also will be thrown if user tries to construct the object
+    /// from incompatible implementation shared pointer.
+    ///
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Menubar(Widget_ptr wp);
 
     /// Activate menu.
     void activate();

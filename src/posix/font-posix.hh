@@ -40,23 +40,12 @@ public:
     Font_posix(Font_face_ptr fface, const ustring & spec, double size_pt, unsigned dpi);
 
     // Overrides pure Font_impl.
-    ustring family_name() const override;
-
-    // Overrides pure Font_impl.
-    ustring face_name() const override;
-
-    // Overrides pure Font_impl.
     ustring spec() const override {
-        return font_spec_build(family_name(), face_name(), sz_);
+        return spec_;
     }
 
     // Overrides pure Font_impl.
     ustring psname() const override;
-
-    // Overrides pure Font_impl.
-    double size() const override {
-        return sz_;
-    }
 
     // Overrides pure Font_impl.
     unsigned dpi() const override {

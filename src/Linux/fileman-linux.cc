@@ -45,8 +45,7 @@ public:
 
 private:
 
-    std::vector<ustring> removables_;
-    int                  removables_row_ = -1;
+    int     removables_row_ = -1;
 
 protected:
 
@@ -70,8 +69,6 @@ protected:
             ico = std::make_shared<Icon_impl>("go-home:folder", SMALL_ICON);
             ico->signal_select().connect(tau::bind(fun(this, &Fileman_linux::set_uri), path_user_home_dir()));
             places_list_->insert(row, ico, -1, true);
-
-            removables_ = list_removable_drives();
 
             if (!removables_.empty()) {
                 tp = std::make_shared<Text_impl>("Removable Drives");

@@ -203,7 +203,7 @@ public:
     bool  grab_focus();
     void  drop_focus();
     bool  focus_allowed() const { return focus_allowed_; }
-    bool  has_focus() const { return has_focus_; }
+    bool  focused() const { return focused_; }
     bool  take_focus();
     bool  grab_mouse();
     bool  ungrab_mouse();
@@ -211,7 +211,7 @@ public:
 
     Rect  exposed_area() const;
     bool  has_parent() const;
-    bool  has_scroller() const;
+    bool  scrollable() const;
 
     bool  hint_size(const Size & sz);
     bool  hint_size(unsigned width, unsigned height);
@@ -410,7 +410,7 @@ private:
     Size        required_size_;
 
     bool        focus_allowed_ = false;
-    bool        has_focus_ = false;
+    bool        focused_ = false;
     bool        upshow_ = false;
     bool        enabled_ = false;
     bool        disappeared_ = false;

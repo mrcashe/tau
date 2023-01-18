@@ -38,7 +38,7 @@ namespace tau {
 
 /// A display.
 ///
-/// This class is a wrapper around its implementation shared pointer Display_impl.
+/// This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup sys_group
 class Display {

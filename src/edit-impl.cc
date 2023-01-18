@@ -230,7 +230,7 @@ void Edit_impl::on_display() {
 }
 
 void Edit_impl::on_paste_text(const ustring & s) {
-    if (has_focus()) {
+    if (focused()) {
         enter_text(s);
     }
 }

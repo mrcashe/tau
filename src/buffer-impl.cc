@@ -119,15 +119,15 @@ char32_t Buffer_citer::operator*() const {
     return 0;
 }
 
-ustring Buffer_citer::peek(Buffer_citer other) const {
-    return peek32(other);
+ustring Buffer_citer::text(Buffer_citer other) const {
+    return text32(other);
 }
 
-ustring Buffer_citer::peek(std::size_t nchars) const {
-    return peek32(nchars);
+ustring Buffer_citer::text(std::size_t nchars) const {
+    return text32(nchars);
 }
 
-std::u32string Buffer_citer::peek32(Buffer_citer other) const {
+std::u32string Buffer_citer::text32(Buffer_citer other) const {
     std::u32string res;
 
     if (impl->buf && other.impl->buf == impl->buf) {
@@ -137,7 +137,7 @@ std::u32string Buffer_citer::peek32(Buffer_citer other) const {
     return res;
 }
 
-std::u32string Buffer_citer::peek32(std::size_t nchars) const {
+std::u32string Buffer_citer::text32(std::size_t nchars) const {
     std::u32string res;
 
     if (impl->buf && !eof()) {
@@ -465,7 +465,7 @@ bool Buffer_citer::find(const std::u32string & text) {
 
     if (impl->buf && 0 != len) {
         while (!eof()) {
-            if (text == peek32(len)) { return true; }
+            if (text == text32(len)) { return true; }
             operator++();
         }
     }
@@ -479,7 +479,7 @@ bool Buffer_citer::find(const std::u32string & text, Buffer_citer other) {
 
         if (0 != len) {
             while (!eof() && operator<(other)) {
-                if (text == peek32(len)) { return true; }
+                if (text == text32(len)) { return true; }
                 operator++();
             }
         }
@@ -652,7 +652,7 @@ bool Buffer_citer::equals(const std::u32string & text, bool advance) {
     std::size_t len = text.size();
 
     if (impl->buf && 0 != len) {
-        if (peek32(len) == text) {
+        if (text32(len) == text) {
             if (advance) { operator+=(len); }
             return true;
         }

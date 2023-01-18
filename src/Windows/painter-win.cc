@@ -118,7 +118,7 @@ void Painter_win::set_font(Font_ptr font) {
     if (hdc_ && font) {
         if (auto fms = std::dynamic_pointer_cast<Font_win>(font)) {
             if (HFONT hfont = fms->handle()) {
-                state().font_spec = font_spec_build(font->family_name(), font->face_name(), font->size());
+                state().font_spec = font->spec();
                 SelectFont(hdc_, hfont);
                 state().font = font;
                 return;

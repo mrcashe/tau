@@ -122,7 +122,7 @@ bool Cycle_impl::on_mouse_down(int mbt, int mm, const Point & where) {
 }
 
 bool Cycle_impl::on_escape() {
-    if (has_focus()) {
+    if (focused()) {
         drop_focus();
         return true;
     }

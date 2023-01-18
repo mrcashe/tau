@@ -36,6 +36,11 @@ List_text::List_text(Align align):
 {
 }
 
+List_text::List_text(Widget_ptr wp):
+    Widget(std::dynamic_pointer_cast<List_text_impl>(wp))
+{
+}
+
 void List_text::set_text_align(Align align) {
     LIST_TEXT_IMPL->set_text_align(align);
 }

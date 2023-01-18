@@ -31,10 +31,14 @@
 
 #include <tau/types.hh>
 #include <tau/signal.hh>
+#include <vector>
 
 namespace tau {
 
 /// The event loop.
+///
+/// This class is a wrapper around its implementation shared pointer.
+///
 /// @ingroup sys_group
 class Loop {
 public:
@@ -43,9 +47,17 @@ public:
     Loop();
 
     /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
     Loop(const Loop & other) = default;
 
     /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
     Loop & operator=(const Loop & other) = default;
 
     /// Run loop.
@@ -60,12 +72,8 @@ public:
     /// Test if running.
     bool running() const;
 
-    /// Create event.
-    Event create_event();
-
-    /// Create event.
-    /// @param slot_ready slot to be called when event become ready.
-    Event create_event(const slot<void()> & slot_ready);
+    /// List mount points.
+    std::vector<ustring> mounts() const;
 
     /// Signal emitted when first instance of run() method start its work.
     signal<void()> & signal_start();

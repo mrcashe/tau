@@ -43,19 +43,10 @@ public:
    ~Font_win();
 
     // Overrides Font_impl.
-    ustring family_name() const override { return font_family_from_spec(spec_); }
-
-    // Overrides Font_impl.
-    ustring face_name() const override { return font_face_from_spec(spec_); }
-
-    // Overrides Font_impl.
-    ustring spec() const override { return font_spec_build(family_name(), face_name(), sz_); }
+    ustring spec() const override { return spec_; }
 
     // Overrides Font_impl.
     ustring psname() const override { return psname_; }
-
-    // Overrides Font_impl.
-    double size() const override { return sz_; }
 
     // Overrides Font_impl.
     unsigned dpi() const override { return dpi_; }

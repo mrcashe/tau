@@ -61,6 +61,10 @@ signal<void()> & Container::signal_arrange() {
     return CONTAINER_IMPL->signal_arrange();
 }
 
+signal<void()> & Container::signal_children_changed() {
+    return CONTAINER_IMPL->signal_children_changed();
+}
+
 } // namespace tau
 
 //END

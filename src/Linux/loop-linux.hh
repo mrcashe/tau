@@ -83,22 +83,16 @@ class Loop_linux: public Loop_posix {
 public:
 
     static Loop_linux_ptr this_linux_loop();
-    explicit Loop_linux(std::thread::id tid);
+    Loop_linux(std::thread::id tid);
 
     // Overrides pure Loop_impl.
     File_monitor_ptr create_file_monitor(const ustring & path, int mask) override;
 
+    // Overrides pure Loop_impl.
+    std::vector<ustring> mounts() override;
+
 private:
 
-    struct Mount {
-        ustring     dev;
-        ustring     mpoint;
-        bool        removable = false;
-    };
-
-    using Mounts = std::list<Mount>;
-
-    Mounts          mounts_;
     int             infd_ = -1;
     int             loopid_ = -1;
     int             mntfd_ = -1;

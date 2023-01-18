@@ -65,6 +65,18 @@ bool Fileinfo::is_fifo() const {
     return impl->is_fifo();
 }
 
+bool Fileinfo::is_exec() const {
+    return impl->is_exec();
+}
+
+bool Fileinfo::is_hidden() const {
+    return impl->is_hidden();
+}
+
+bool Fileinfo::is_removable() const {
+    return impl->is_removable();
+}
+
 Timeval Fileinfo::atime() const {
     return impl->atime();
 }

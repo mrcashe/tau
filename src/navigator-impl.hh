@@ -41,7 +41,7 @@ public:
 
     ustring uri() const;
     void set_uri(const ustring & uri);
-    void reload();
+    void refresh();
 
     void sort_by(const ustring & col);
     ustring sorted_by() const { return sort_by_; }

@@ -188,7 +188,7 @@ ustring font_size_remove(const ustring & spec) {
     return font_spec_build(font_family_from_spec(spec), font_face_from_spec(spec));
 }
 
-ustring font_add_face(const ustring & spec, const ustring & face_elements) {
+ustring font_face_add(const ustring & spec, const ustring & face_elements) {
     double pt = font_size_from_spec(spec);
     ustring family = font_family_from_spec(spec);
     auto v = str_explode(face_elements, str_blanks());
@@ -217,7 +217,7 @@ ustring font_add_face(const ustring & spec, const ustring & face_elements) {
     return font_spec_build(family, str_implode(w, ' '), pt);
 }
 
-ustring font_set_face(const ustring & spec, const ustring & face) {
+ustring font_face_set(const ustring & spec, const ustring & face) {
     double pt = font_size_from_spec(spec);
     ustring family = font_family_from_spec(spec);
     return font_spec_build(family, face, pt);

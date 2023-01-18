@@ -42,22 +42,19 @@ template <typename R, typename... Args> class fun_functor;
 template <class Class, typename R, typename... Args> class mem_functor;
 template <typename R, typename... Args> class slot;
 template <typename R, typename... Args> class signal;
-template <class Functor, typename... Bound> class bind_functor;
 template <class Slot, typename R, typename... Args> struct signal_emitter;
-
-template <class Functor>
-struct functor_trait {
-    using functor_type = Functor;
-};
+template <class Functor> struct functor_trait {};
 
 template <typename R, typename... Args>
-struct functor_trait<R (*)(Args...)> {
+struct functor_trait<fun_functor<R(Args...)>> {
     using functor_type = fun_functor<R(Args...)>;
+    using result_type = R;
 };
 
 template <class Class, typename R, class... Args>
-struct functor_trait<R (Class::*)(Args...)> {
+struct functor_trait<mem_functor<Class, R(Args...)>> {
     using functor_type = mem_functor<Class, R(Args...)>;
+    using result_type = R;
 };
 
 class trackable;
@@ -65,9 +62,14 @@ class trackable;
 class functor_base {
 public:
 
-    virtual bool empty() const = 0;
-    virtual void reset() = 0;
-    virtual trackable * target() = 0;
+    functor_base(trackable * target=nullptr): target_(target) {}
+    virtual bool empty() const { return true; }
+    virtual void reset() { target_ = nullptr; }
+    virtual trackable * target() { return target_; }
+
+protected:
+
+    trackable * target_ = nullptr;
 };
 
 template<typename R, typename... Args>
@@ -75,7 +77,6 @@ class fun_functor<R(Args...)>: public functor_base {
 public:
 
     using function_type = std::function<R (Args...)>;
-    using result_type = R;
 
 protected:
 
@@ -83,17 +84,11 @@ protected:
 
 public:
 
-    explicit fun_functor(const function_type & fun):
-        fun_(fun)
-    {
-    }
+    fun_functor(): functor_base() {}
+    fun_functor(const function_type & fun): functor_base(), fun_(fun) {}
 
     R operator()(Args... args) const {
         return fun_ ? fun_(args...) : R();
-    }
-
-    trackable * target() override {
-        return nullptr;
     }
 
     bool empty() const override {
@@ -101,51 +96,34 @@ public:
     }
 
     void reset() override {
-        fun_ = function_type();
+        fun_ = nullptr;
+        functor_base::reset();
     }
 };
 
-template <class Class, bool is_trackable=std::is_base_of<trackable, Class>::value>
-class mem_functor_base: public functor_base {
+template <bool is_trackable, class Class> class mem_functor_base;
+
+template <class Class>
+class mem_functor_base<false, Class>: public functor_base {
 public:
 
-    mem_functor_base(Class * obj) {}
-
-    trackable * target() override {
-        return nullptr;
-    }
-
-    void reset() override {}
+    mem_functor_base(Class * obj): functor_base() {}
 };
 
 template <class Class>
-class mem_functor_base<Class, true>: public functor_base {
-    trackable * target_;
-
+class mem_functor_base<true, Class>: public functor_base {
 public:
 
-    mem_functor_base(Class * obj):
-        target_(obj)
-    {
-    }
-
-    trackable * target() override {
-        return target_;
-    }
-
-    void reset() override {
-        target_ = nullptr;
-    }
+    mem_functor_base(Class * obj): functor_base(obj) {}
 };
 
 template <class Class, typename R, typename... Args>
 class mem_functor<Class, R(Args...)>:
-    public mem_functor_base<Class> {
+    public mem_functor_base<std::is_base_of<trackable, Class>::value, Class> {
 
 public:
 
-    using base_type = mem_functor_base<Class>;
-    using result_type = R;
+    using base_type = mem_functor_base<std::is_base_of<trackable, Class>::value, Class>;
     using function_type = std::function<R(Class *, Args...)>;
 
 protected:
@@ -155,12 +133,7 @@ protected:
 
 public:
 
-    explicit mem_functor(Class * obj, const function_type & fun):
-        base_type(obj),
-        obj_(obj)
-    {
-        fun_ = fun;
-    }
+    mem_functor(Class * obj, const function_type & fun): base_type(obj), obj_(obj), fun_(fun) {}
 
     R operator()(Args... args) const {
         return fun_ ? fun_(obj_, args...) : R();
@@ -172,57 +145,35 @@ public:
     }
 
     bool empty() const override {
-        return false == bool(fun_);
+        return !fun_;
     }
 };
 
-template <class Functor, typename... Bound>
+template <class tuple_type, class functor_type>
 class bind_functor: public functor_base {
-public:
-
-    using functor_type = typename functor_trait<Functor>::functor_type;
-    using result_type = typename functor_type::result_type;
-    using bound_type = std::tuple<Bound...>;
-
-protected:
-
+    using R = typename functor_trait<functor_type>::result_type;
+    tuple_type   tuple_;
     functor_type functor_;
-    bound_type   bound_;
 
-    template <class Tuple, typename... Args>
-    auto bind_call(const Tuple & bound, Args... args) const {
-        return std::tuple_cat(std::make_tuple(args...), bound);
-    }
-
-    template<class Tuple, std::size_t... Index>
-    auto call_functor_impl(const Functor & functor, const Tuple & tuple, std::index_sequence<Index...>) const {
-        return functor(std::get<Index>(tuple)...);
-    }
-
-    template<class Tuple>
-    auto call_functor(const Functor & functor, const Tuple & tuple) const {
-        using index_type = std::make_index_sequence<std::tuple_size<Tuple>::value>;
-        return call_functor_impl(functor, tuple, index_type());
+    template<class Tuple, std::size_t... index_type>
+    R call_functor(const Tuple & tuple, std::index_sequence<index_type...>) const {
+        return functor_(std::get<index_type>(tuple)...);
     }
 
 public:
 
-    bind_functor(const functor_type & functor, Bound... bounds):
-        functor_(functor),
-        bound_(std::make_tuple(bounds...))
+    bind_functor(tuple_type tuple, const functor_type & functor):
+        tuple_(tuple),
+        functor_(functor)
     {
     }
 
     template <typename... Args>
-    result_type operator()(Args... args) const {
-        auto call = bind_call<bound_type, Args...>(bound_, args...);
-        using call_type = decltype(bind_call(std::declval<bound_type>(), args...));
-        return call_functor<call_type>(functor_, call);
-    }
-
-    result_type operator()() const {
-        using call_type = bound_type;
-        return call_functor<call_type>(functor_, bound_);
+    R operator()(Args... args) const {
+        auto tuple = std::tuple_cat(std::make_tuple(args...), tuple_);
+        using index_type = std::make_index_sequence<std::tuple_size<decltype(tuple)>::value>;
+        auto index = index_type();
+        return call_functor(tuple, index);
     }
 
     trackable * target() override {
@@ -347,19 +298,19 @@ inline trackable::~trackable() {
     for (auto s: slots_) { s->reset(); s->disconnect(); }
 }
 
-template <class Functor>
+template <class functor_type>
 struct slot_impl_T: slot_impl {
-    using self_type = slot_impl_T<Functor>;
-    Functor functor_;
+    using self_type = slot_impl_T<functor_type>;
+    functor_type functor_;
 
-    slot_impl_T(const Functor & functor, slot_base * slot=nullptr):
+    slot_impl_T(const functor_type & functor, slot_base * slot=nullptr):
         slot_impl(slot),
         functor_(functor)
     {
         track();
     }
 
-    ~slot_impl_T() {
+   ~slot_impl_T() {
         untrack();
     }
 
@@ -385,18 +336,18 @@ struct slot_impl_T: slot_impl {
 template <typename R, typename... Args>
 class slot<R(Args...)>: public slot_base {
 
-    template <class Functor>
+    template <class functor_type>
     struct call {
-        inline static R call_it(slot_ptr impl, Args... args) {
-            return (std::static_pointer_cast<slot_impl_T<Functor>>(impl))->functor_(args...);
+        using impl_type = slot_impl_T<functor_type>;
+
+        inline static R call_it(impl_type & impl, Args... args) {
+            return impl.functor_(args...);
         }
 
         inline static void * address() {
             return reinterpret_cast<void *>(&call_it);
         }
     };
-
-    using call_type = R (*)(slot_ptr, Args...);
 
 public:
 
@@ -405,11 +356,12 @@ public:
     slot() = default;
 
     /// Constructor with functor.
-    template <class Functor>
-    slot(const Functor & functor) {
-        using impl_type = slot_impl_T<Functor>;
+    template <class functor_type>
+    slot(const functor_type & functor) {
+        using call_type = call<functor_type>;
+        using impl_type = typename call_type::impl_type;
         impl_ = std::make_shared<impl_type>(functor, this);
-        call_ = call<Functor>::address();
+        call_ = call_type::address();
     }
 
     /// Copy constructor.
@@ -487,8 +439,10 @@ public:
 
     /// Call holding function.
     R operator()(Args... args) const {
+        using call_type = R (*)(slot_impl &, Args...);
+
         if (impl_ && !impl_->blocked()) {
-            return reinterpret_cast<call_type>(call_)(impl_, args...);
+            return reinterpret_cast<call_type>(call_)(*impl_, args...);
         }
 
         return R();
@@ -630,13 +584,8 @@ struct signal_emitter<Slot, void(Args...)> {
 /// @ingroup signal_group
 template<typename R, typename... Args>
 class signal<R(Args...)>: public signal_base {
-public:
-
     using slot_type = slot<R(Args...)>;
     using emitter_type = signal_emitter<slot_type, R(Args...)>;
-
-private:
-
     std::list<slot_type> slots_;
 
 public:
@@ -866,9 +815,10 @@ fun(signal<R(Args...)> * sig) {
 /// Create functor with bound parameters.
 /// @ingroup signal_group
 template <class Functor, typename... Bound>
-inline bind_functor<Functor, Bound...>
+inline bind_functor<std::tuple<Bound...>, Functor>
 bind(const Functor & functor, Bound... bounds) {
-    return bind_functor<Functor, Bound...>(functor, bounds...);
+    using functor_type = typename functor_trait<Functor>::functor_type;
+    return bind_functor<std::tuple<Bound...>, functor_type>(std::make_tuple(bounds...), functor);
 }
 
 } // namespace tau

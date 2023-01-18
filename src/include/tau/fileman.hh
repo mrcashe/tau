@@ -37,7 +37,7 @@ namespace tau {
 
 /// File navigation and selection widget.
 ///
-/// This class is a wrapper around its implementation shared pointer Fileman_impl.
+/// This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup widget_group
 class Fileman: public Widget {
@@ -83,6 +83,9 @@ public:
     /// Change current URI.
     void set_uri(const ustring & uri);
 
+    /// Get opaque implementation pointer to buil-in Navigator object.
+    Widget_ptr navigator_ptr();
+
     /// Gets selected filenames without path component.
     std::vector<ustring> selection() const;
 
@@ -94,21 +97,6 @@ public:
 
     /// Get current filter.
     ustring filter() const;
-
-    /// Set sort item name.
-    void sort_by(const ustring & item);
-
-    /// Get sort item name.
-    ustring sorted_by() const;
-
-    /// Sort files forward.
-    void sort_forward();
-
-    /// Sort file list backward.
-    void sort_backward();
-
-    /// Determine if file list sorted backward.
-    bool sorted_backward() const;
 
     /// Show info items.
     /// @param items item list
@@ -153,30 +141,6 @@ public:
     /// @sa info_visible()
     /// @sa visible_info_items()
     ustring invisible_info_items(char32_t sep=U':') const;
-
-    /// Allow multiple select.
-    /// Disallowed by default.
-    void allow_multiple_select();
-
-    /// Disallow multiple select.
-    /// Disallowed by default.
-    void disallow_multiple_select();
-
-    /// Test if multiple select allowed.
-    /// Disallowed by default.
-    bool multiple_select_allowed() const;
-
-    /// Allow directory select.
-    /// Disallowed by default.
-    void allow_dir_select();
-
-    /// Disallow directory select.
-    /// Disallowed by default.
-    void disallow_dir_select();
-
-    /// Determine if directory select allowed.
-    /// Disallowed by default.
-    bool dir_select_allowed() const;
 
     /// Allow file overwrite without a prompt.
     /// Disallowed by default.

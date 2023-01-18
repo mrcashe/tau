@@ -53,7 +53,7 @@ uninstall:
 	done
 
 
-$(bindir)/%.exe: %.cc $(mxe_so)
+$(bindir)/%.exe: %.cc
 	$(MXE_CXX) $(CXXFLAGS) -MD -MF $(mxe_test_so_builddir)/$(basename $(notdir $@)).dep -o $@ $< $(mxe_so)
 
 $(bindir):

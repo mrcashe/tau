@@ -35,6 +35,9 @@
 namespace tau {
 
 /// A glyph represents a unit of rendered content within a Font.
+///
+/// This class is a wrapper around its implementation shared pointer.
+///
 /// Often, there is a one-to-one correspondence between characters to be drawn and
 /// corresponding glyphs (e.g., often, the character "A" is rendered using a single glyph),
 /// but other times multiple glyphs are used to render a single character
@@ -50,9 +53,17 @@ public:
     Glyph();
 
     /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
     Glyph(const Glyph & other) = default;
 
     /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
     Glyph & operator=(const Glyph & other) = default;
 
     /// Test if empty.

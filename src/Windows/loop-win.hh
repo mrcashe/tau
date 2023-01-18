@@ -129,7 +129,7 @@ public:
     Event_ptr create_event() override;
 
     // Overrides pure Loop_impl.
-    Event_ptr create_event(const slot<void()> & slot_ready) override;
+    std::vector<ustring> mounts() override;
 
     void handle_mount();
     void handle_umount();

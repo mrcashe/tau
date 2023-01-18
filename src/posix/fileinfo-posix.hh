@@ -28,6 +28,7 @@
 #define TAU_FILEINFO_POSIX_HH
 
 #include <fileinfo-impl.hh>
+#include "loop-posix.hh"
 
 namespace tau {
 
@@ -37,9 +38,19 @@ protected:
     Fileinfo_posix(const ustring & uri);
     void update_stat();
 
+    // Overrides pure Fileinfo_impl.
+    bool is_exec() override { return exec_; }
+
+    // Overrides pure Fileinfo_impl.
+    bool is_hidden() override;
+
+    // Overrides pure Fileinfo_impl.
+    bool is_removable() override;
+
 protected:
 
-    bool        noacc_ = false;         // Access denied.
+    bool    noacc_ = false;         // Access denied.
+    bool    exec_ = false;
 };
 
 } // namespace tau

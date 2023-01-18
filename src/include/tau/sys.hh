@@ -164,21 +164,6 @@ bool file_is_dir(const ustring & path);
 /// @throw sys_error
 void file_unlink(const ustring & path);
 
-/// @ingroup file_group
-/// Test if file is hidden.
-/// @return true if file does not exist or hidden.
-bool file_is_hidden(const ustring & path);
-
-/// @ingroup file_group
-/// Test if file is executable.
-/// @return true if file exist and executable.
-bool file_is_executable(const ustring & path);
-
-/// %List removable drives connected at the moment.
-/// @return The list of mount points where removable drives can be found.
-/// @ingroup sys_group
-std::vector<ustring> list_removable_drives();
-
 /// Sleep for a while.
 /// @param time_ms time of the sleep, in milliseconds.
 /// @ingroup time_group

@@ -36,7 +36,7 @@ namespace tau {
 
 /// %Widget that can be checked or not.
 ///
-/// This class is a wrapper around its implementation shared pointer Check_impl.
+/// This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup widget_group
 class Check: public Widget {

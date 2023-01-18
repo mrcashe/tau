@@ -66,6 +66,17 @@ public:
 
 protected:
 
+    using Items = std::list<Menu_item_ptr>;
+
+    Items               items_;
+    Orientation         submenu_or_ = OR_RIGHT;
+    Menu_impl *         pmenu_ = nullptr;
+    Menu_ptr            submenu_;
+    Menu_item_ptr       current_item_;
+    Menu_item_impl *    marked_item_ = nullptr;
+
+protected:
+
     Menu_impl(Orientation orient);
 
     virtual void mark_item(Menu_item_impl * ip, bool select) = 0;
@@ -87,17 +98,6 @@ protected:
     void activate_current();
     void reset_submenu();
     void pass_quit();
-
-protected:
-
-    using Items = std::list<Menu_item_ptr>;
-
-    Items               items_;
-    Orientation         submenu_or_ = OR_RIGHT;
-    Menu_impl *         pmenu_ = nullptr;
-    Menu_ptr            submenu_;
-    Menu_item_ptr       current_item_;
-    Menu_item_impl *    marked_item_ = nullptr;
 
 private:
 

@@ -66,12 +66,6 @@ ustring path_self() {
     return ustring();
 }
 
-std::vector<ustring> list_removable_drives() {
-    std::vector<ustring> v;
-
-    return v;
-}
-
 } // namespace tau
 
 //END

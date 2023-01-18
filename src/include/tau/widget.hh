@@ -462,7 +462,7 @@ public:
     signal<void()> & signal_scroll_changed();
 
     /// Test if widget inserted into Scroller.
-    bool has_scroller() const;
+    bool scrollable() const;
 
     /// @}
     /// @name Visibility
@@ -793,7 +793,7 @@ public:
 
     /// Determines if the widget is on the focus path within its parents.
     /// This method also returns @b true if widget has a modal focus.
-    bool has_focus() const;
+    bool focused() const;
 
     /// Take focus.
     /// @sa signal_take_focus()
@@ -819,7 +819,7 @@ public:
     /// @sa grab_modal()
     /// @sa grab_focus()
     /// @sa has_modal()
-    /// @sa has_focus()
+    /// @sa focused()
     void end_modal();
 
     /// Determines if the widget on the modal focus path within its parents.

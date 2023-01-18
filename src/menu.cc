@@ -200,6 +200,11 @@ Submenu_item::Submenu_item(const ustring & label, Menu & menu):
 {
 }
 
+Submenu_item::Submenu_item(Widget_ptr wp):
+    Menu_item(std::dynamic_pointer_cast<Submenu_impl>(wp))
+{
+}
+
 Submenu_item::Submenu_item(const ustring & label, Menu & menu, const ustring & icon_name):
     Menu_item(std::make_shared<Submenu_impl>(label, std::static_pointer_cast<Menu_impl>(menu.ptr()), icon_name))
 {
@@ -214,6 +219,11 @@ void Submenu_item::set_label(const ustring & label) {
 
 Slot_menu_item::Slot_menu_item(const ustring & label, const slot<void()> & slot_activate):
     Menu_item(std::make_shared<Slot_menu_impl>(label, slot_activate))
+{
+}
+
+Slot_menu_item::Slot_menu_item(Widget_ptr wp):
+    Menu_item(std::dynamic_pointer_cast<Slot_menu_impl>(wp))
 {
 }
 
@@ -234,6 +244,11 @@ Action_menu_item::Action_menu_item(Action & action):
 {
 }
 
+Action_menu_item::Action_menu_item(Widget_ptr wp):
+    Menu_item(std::dynamic_pointer_cast<Action_menu_impl>(wp))
+{
+}
+
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
 
@@ -241,6 +256,11 @@ Action_menu_item::Action_menu_item(Action & action):
 
 Toggle_menu_item::Toggle_menu_item(Toggle_action & toggle_action, Check_style check_style, Border_style border_style):
     Menu_item(std::make_shared<Toggle_menu_impl>(toggle_action, check_style, border_style))
+{
+}
+
+Toggle_menu_item::Toggle_menu_item(Widget_ptr wp):
+    Menu_item(std::dynamic_pointer_cast<Toggle_menu_impl>(wp))
 {
 }
 
@@ -275,6 +295,11 @@ unsigned Toggle_menu_item::border_width() const {
 
 Check_menu_item::Check_menu_item(const ustring & label, bool checked):
     Menu_item(std::make_shared<Check_menu_impl>(label, checked))
+{
+}
+
+Check_menu_item::Check_menu_item(Widget_ptr wp):
+    Menu_item(std::dynamic_pointer_cast<Check_menu_impl>(wp))
 {
 }
 
@@ -359,6 +384,11 @@ Menubar::Menubar():
 {
 }
 
+Menubar::Menubar(Widget_ptr wp):
+    Menu(std::dynamic_pointer_cast<Menubar_impl>(wp))
+{
+}
+
 void Menubar::activate() {
     MENUBAR_IMPL->activate();
 }
@@ -370,6 +400,11 @@ void Menubar::activate() {
 
 Menubox::Menubox():
     Menu(std::make_shared<Menubox_impl>())
+{
+}
+
+Menubox::Menubox(Widget_ptr wp):
+    Menu(std::dynamic_pointer_cast<Menubox_impl>(wp))
 {
 }
 

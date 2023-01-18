@@ -36,6 +36,11 @@ Fontsel::Fontsel():
 {
 }
 
+Fontsel::Fontsel(Widget_ptr wp):
+    Widget(std::dynamic_pointer_cast<Fontsel_impl>(wp))
+{
+}
+
 Fontsel::Fontsel(const ustring & spec, const ustring & sample):
     Widget(std::make_shared<Fontsel_impl>(spec, sample))
 {

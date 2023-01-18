@@ -749,7 +749,7 @@ void Widget_impl::end_modal() {
 
 // Overriden by Window_impl.
 bool Widget_impl::has_modal() const {
-    return has_focus_ && parent_ && this == parent_->modal_child();
+    return focused_ && parent_ && this == parent_->modal_child();
 }
 
 // Overriden by Container_impl.
@@ -788,16 +788,16 @@ void Widget_impl::drop_focus() {
 
 // Overriden by Container_impl.
 void Widget_impl::resume_focus() {
-    if (!has_focus_ && focus_allowed_) {
-        has_focus_ = true;
+    if (!focused_ && focus_allowed_) {
+        focused_ = true;
         signal_focus_in_();
     }
 }
 
 // Overriden by Container_impl.
 void Widget_impl::suspend_focus() {
-    if (has_focus_) {
-        has_focus_ = false;
+    if (focused_) {
+        focused_ = false;
         signal_focus_out_();
     }
 }
@@ -977,7 +977,7 @@ bool Widget_impl::has_parent() const {
     return nullptr != parent_;
 }
 
-bool Widget_impl::has_scroller() const {
+bool Widget_impl::scrollable() const {
     return parent_ && dynamic_cast<Scroller_impl *>(parent_);
 }
 

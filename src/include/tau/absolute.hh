@@ -35,7 +35,7 @@ namespace tau {
 
 /// A container widget that allows freely move and resize its children.
 ///
-/// This class is a wrapper around its implementation shared pointer Absolute_impl.
+/// This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup container_group
 /// @ingroup widget_group

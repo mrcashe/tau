@@ -36,6 +36,11 @@ List::List():
 {
 }
 
+List::List(Widget_ptr wp):
+    Widget(std::dynamic_pointer_cast<List_impl>(wp))
+{
+}
+
 int List::prepend_row(Widget & w, bool shrink) {
     return LIST_IMPL->prepend_row(w.ptr(), shrink);
 }

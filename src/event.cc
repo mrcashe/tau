@@ -50,10 +50,6 @@ void Event::emit() {
     if (impl) { impl->emit(); }
 }
 
-void Event::release() {
-    if (impl) { impl->release(); }
-}
-
 signal<void()> & Event::signal_ready() {
     if (impl) { return impl->signal_ready(); }
     throw user_error("Event::signal_ready() called on pure Event");

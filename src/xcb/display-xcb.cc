@@ -629,7 +629,8 @@ void Display_xcb::open(const ustring & args) {
     abcd_atom_ = atom("_ABCD");
 
     loop()->signal_quit().connect(fun(this, &Display_xcb::on_loop_quit));
-    xcb_event_ = loop()->create_event(fun(this, &Display_xcb::on_xcb_event));
+    xcb_event_ = loop()->create_event();
+    xcb_event_->signal_ready().connect(fun(this, &Display_xcb::on_xcb_event));
     Theme_impl::root()->take_cursor_lookup_slot(fun(this, &Display_xcb::lookup_cursor));
     xcb_thr_ = std::thread([this] { this->xcb_thread(); });
 }
@@ -1433,7 +1434,7 @@ Toplevel_ptr Display_xcb::create_toplevel(Display_ptr dp, const Rect & ubounds) 
     auto wf = std::make_shared<Winface_xcb>(wdp, root());
     auto wip = std::make_shared<Toplevel_xcb>(wf, wr);
     wf->init(wip.get(), wr.origin(), wr.size());
-    wip->signal_close().connect(tau::bind(fun(this, &Display_xcb::on_window_close), wf->wid()));
+    wip->signal_close().connect(bind(fun(this, &Display_xcb::on_window_close), wf->wid()));
     winmap_[wf->wid()] = wf;
     add_window(wip);
 

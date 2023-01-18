@@ -35,7 +35,7 @@ namespace tau {
 
 /// The brush used for contour filling.
 ///
-/// This class is a wrapper around its implementation shared pointer Brush_impl.
+/// This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup paint_group
 class Brush {

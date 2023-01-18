@@ -99,7 +99,7 @@ int List_impl::prepend_row(Widget_ptr wp, Align align, bool shrink) {
     table_->set_row_margin(trunk_min_, 1, 1);
     table_->align(wp.get(), align, ALIGN_CENTER);
     selectables_[trunk_min_] = Selectable { 0, 0 };
-    if (INT_MIN == selected_row() && has_focus()) { select_row(trunk_min_); }
+    if (INT_MIN == selected_row() && focused()) { select_row(trunk_min_); }
     adjust();
     return trunk_min_;
 }
@@ -147,7 +147,7 @@ int List_impl::insert_row(Widget_ptr wp, int position, Align align, bool shrink)
     }
 
     selectables_[position] = Selectable { 0, 0 };
-    if (INT_MIN == selected_row() && has_focus()) { select_row(position); }
+    if (INT_MIN == selected_row() && focused()) { select_row(position); }
     adjust();
     return position;
 }
@@ -167,7 +167,7 @@ int List_impl::append_row(Widget_ptr wp, Align align, bool shrink) {
     table_->align(wp.get(), align, ALIGN_CENTER);
     int br = trunk_max_++;
     selectables_[br] = Selectable { 0, 0 };
-    if (INT_MIN == selected_row() && has_focus()) { select_row(br); }
+    if (INT_MIN == selected_row() && focused()) { select_row(br); }
     adjust();
     return br;
 }
@@ -699,7 +699,7 @@ bool List_impl::on_table_mouse_down(int mbt, int mm, const Point & pt) {
     bool res = false;
 
     if (MBT_LEFT == mbt) {
-        if (!has_focus()) { res = scroller_->take_focus(); }
+        if (!focused()) { res = scroller_->take_focus(); }
 
         int cy = table_->row_at_y(pt.y());
 

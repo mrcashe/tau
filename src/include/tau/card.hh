@@ -35,7 +35,7 @@ namespace tau {
 
 /// %Container that can display only one its child at a time.
 ///
-/// This class is a wrapper around its implementation shared pointer Card_impl.
+/// This class is a wrapper around its implementation shared pointer.
 ///
 /// To show or hide particular child, simply call Widget::show() or
 /// Widget::hide() on that child.

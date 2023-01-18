@@ -97,13 +97,13 @@ void Matrix::scale(double s) {
     }
 }
 
-Vector Matrix::map_distance(double dx, double dy) const {
+Vector Matrix::transform_distance(double dx, double dy) const {
     double x = xx_*dx+yx_*dy;
     double y = yy_*dy+xy_*dx;
     return Vector(x, y);
 }
 
-Vector Matrix::map(const Vector & vec) const {
+Vector Matrix::transform(const Vector & vec) const {
     double x = xx_*vec.x()+yx_*vec.y()+x0_;
     double y = yy_*vec.y()+xy_*vec.x()+y0_;
     return Vector(x, y);

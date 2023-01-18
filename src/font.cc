@@ -54,28 +54,6 @@ bool Font::operator!=(const Font & other) const {
     return !impl || !other.impl || impl.get() != other.impl.get();
 }
 
-ustring Font::family_name() const {
-    if (impl) {
-        return impl->family_name();
-    }
-
-    else {
-        log("family_name");
-        return ustring();
-    }
-}
-
-ustring Font::face_name() const {
-    if (impl) {
-        return impl->face_name();
-    }
-
-    else {
-        log("face_name");
-        return ustring();
-    }
-}
-
 ustring Font::spec() const {
     if (impl) {
         return impl->spec();
@@ -95,17 +73,6 @@ ustring Font::psname() const {
     else {
         log("psname");
         return ustring();
-    }
-}
-
-double Font::size() const {
-    if (impl) {
-        return impl->size();
-    }
-
-    else {
-        log("size");
-        return 0.0;
     }
 }
 

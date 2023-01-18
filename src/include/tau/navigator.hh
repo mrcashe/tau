@@ -36,7 +36,7 @@ namespace tau {
 
 /// Filesystem navigation widget.
 ///
-/// This class is a wrapper around its implementation shared pointer Navigator_impl.
+/// This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup widget_group
 class Navigator: public Widget {
@@ -83,7 +83,7 @@ public:
     ustring uri() const;
 
     /// Reload current directory.
-    void reload();
+    void refresh();
 
     /// Set sort column name.
     void sort_by(const ustring & col);

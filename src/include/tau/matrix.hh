@@ -72,14 +72,14 @@ public:
     /// If it impossible to get inverted matrix, returns itself.
     Matrix inverted() const;
 
-    /// Map coordinates.
-    Vector map(const Vector & vec) const;
+    /// Transform coordinates.
+    Vector transform(const Vector & vec) const;
 
-    /// Map distance.
-    Vector map_distance(double dx, double dy) const;
+    /// Transform distance.
+    Vector transform_distance(double dx, double dy) const;
 
-    /// Map distance.
-    Vector map_distance(const Vector & vec) const { return map_distance(vec.x(), vec.y()); }
+    /// Transform distance.
+    Vector transform_distance(const Vector & vec) const { return transform_distance(vec.x(), vec.y()); }
 
     /// Test if has unity scale.
     bool has_unity_scale() const;
@@ -119,21 +119,21 @@ private:
 /// @ingroup geometry_group
 /// @relates Matrix
 inline Vector operator*(const Vector & vec, const Matrix & mat) {
-    return mat.map(vec);
+    return mat.transform(vec);
 }
 
 /// Scale Vector by Matrix.
 /// @ingroup geometry_group
 /// @relates Matrix
 inline Vector operator*(const Matrix & mat, const Vector & vec) {
-    return mat.map(vec);
+    return mat.transform(vec);
 }
 
 /// Scale Vector by Matrix.
 /// @ingroup geometry_group
 /// @relates Matrix
 inline Vector & operator*=(Vector & vec, const Matrix & mat) {
-    vec = mat.map(vec);
+    vec = mat.transform(vec);
     return vec;
 }
 

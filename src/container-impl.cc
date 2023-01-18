@@ -60,7 +60,7 @@ Container_impl::Container_impl():
 
 Container_impl::~Container_impl() {
     destroy_ = true;
-    for (auto wp: children_) { wp->unparent(); }
+    unparent_all();
 }
 
 void Container_impl::make_child(Widget_ptr wp) {
@@ -72,6 +72,7 @@ void Container_impl::make_child(Widget_ptr wp) {
     if (display()) { wp->signal_display()(); }
     wp->on_owner_show(visible());
     wp->on_owner_enable(enabled());
+    signal_children_changed_();
 }
 
 void Container_impl::unparent_child(Widget_impl * wi) {
@@ -92,9 +93,32 @@ void Container_impl::unparent_child(Widget_impl * wi) {
         if (wi == mouse_grabber_) { mouse_grabber_ = nullptr; }
         if (wi == mouse_owner_) { mouse_owner_ = nullptr; }
         update_mouse_owner();
+        signal_children_changed_();
     }
 }
 
+void Container_impl::unparent_all() {
+    for (auto wp: children_) {
+        wp->unparent();
+    }
+
+    if (!destroy_) {
+        end_modal_up(modal_child_);
+        ungrab_mouse_up(mouse_grabber_);
+        if (focused()) { grab_focus(); }
+        for (auto wp: children_) { woff_.push_back(wp); }
+        woff_timer_.start(11, true);
+        children_.clear();
+        obscured_.clear();
+        containers_.clear();
+        modal_child_ = nullptr;
+        focused_child_ = nullptr;
+        mouse_grabber_ = nullptr;
+        mouse_owner_ = nullptr;
+        update_mouse_owner();
+        signal_children_changed_();
+    }
+}
 void Container_impl::paint_children(Painter pr, const Rect & inval, bool backpaint) {
     Painter_ptr pp = pr.impl;
     Point wpos = worigin(), sc = scroll_position();
@@ -322,12 +346,14 @@ bool Container_impl::grab_mouse_up(Widget_impl * caller) {
 // Overriden by Window_impl.
 // Overrides Widget_impl.
 bool Container_impl::ungrab_mouse_up(Widget_impl * caller) {
-    if (caller == mouse_grabber_) {
-        mouse_grabber_ = nullptr;
-    }
+    if (caller) {
+        if (caller == mouse_grabber_) {
+            mouse_grabber_ = nullptr;
+        }
 
-    if (!mouse_grabber_ && parent_) {
-        return parent_->ungrab_mouse_up(this);
+        if (!mouse_grabber_ && parent_) {
+            return parent_->ungrab_mouse_up(this);
+        }
     }
 
     return false;
@@ -383,12 +409,16 @@ bool Container_impl::grab_modal_up(Widget_impl * caller) {
 // Overriden by Window_impl.
 // Overrides Widget_impl.
 bool Container_impl::end_modal_up(Widget_impl * caller) {
-    bool res = (this == caller || modal_child_ == caller) && parent_ && parent_->end_modal_up(this);
+    bool res = false;
 
-    if (res) {
-        if (auto mc = modal_child_) {
-            modal_child_ = nullptr;
-            mc->clear_focus();
+    if (caller) {
+        res = (this == caller || modal_child_ == caller) && parent_ && parent_->end_modal_up(this);
+
+        if (res) {
+            if (auto mc = modal_child_) {
+                modal_child_ = nullptr;
+                mc->clear_focus();
+            }
         }
     }
 
@@ -436,7 +466,7 @@ void Container_impl::focus_child(Widget_impl * caller, int res) {
 int Container_impl::grab_focus_up(Widget_impl * caller) {
     if (!focus_allowed() || has_modal()) { return -1; }
 
-    if (!has_focus()) {
+    if (!focused()) {
         if (!parent_) { return -1; }
         int res = parent_->grab_focus_up(this);
         if (res >= 0) { focus_child(caller, res); }
@@ -541,18 +571,12 @@ void Container_impl::on_child_visibility_changed(Widget_impl * wi) {
 void Container_impl::sync_arrange() {
     if (visible()) {
         arrange_timer_.stop();
-
-        if (qarrange_) {
-            qarrange_ = false;
-            signal_arrange_();
-        }
-
+        signal_arrange_();
         for (auto ci: containers_) { ci->sync_arrange(); }
     }
 }
 
 void Container_impl::queue_arrange() {
-    qarrange_ = true;
     arrange_timer_.start(31);
 }
 

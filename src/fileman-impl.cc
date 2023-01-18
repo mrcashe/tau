@@ -50,10 +50,21 @@ namespace tau {
 
 Fileman_impl::Fileman_impl(Fileman_mode fm_mode, const ustring & path):
     Twins_impl(OR_WEST, 0.75),
-    fm_mode_(fm_mode),
+    mode_(fm_mode),
     navi_(std::make_shared<Navigator_impl>(path))
 {
-    dir_creation_allowed_ = (FILEMAN_OPEN != fm_mode_);
+    auto loop = Loop_impl::this_loop();
+
+    // List removables.
+    for (const ustring & s: loop->mounts()) {
+        if (Fileinfo(s).is_removable()) {
+            removables_.push_back(s);
+        }
+    }
+
+    loop->signal_mount().connect(fun(this, &Fileman_impl::on_mount));
+
+    dir_creation_allowed_ = (FILEMAN_OPEN != mode_);
 
     table_ = std::make_shared<Table_impl>();
     table_->hint_margin(3, 3, 0, 0);
@@ -84,7 +95,7 @@ Fileman_impl::Fileman_impl(Fileman_mode fm_mode, const ustring & path):
     table_->put(tp, 0, 1, 1, 1, true, true);
     table_->align(tp.get(), ALIGN_END, ALIGN_CENTER);
     entry_ = std::make_shared<Entry_impl>();
-    table_->put(entry_, 1, 1, FILEMAN_BROWSE == fm_mode_ ? 2 : 1, 1, false, true);
+    table_->put(entry_, 1, 1, FILEMAN_BROWSE == mode_ ? 2 : 1, 1, false, true);
     entry_->signal_activate().connect(fun(this, &Fileman_impl::on_entry_activate));
     entry_->signal_changed().connect(fun(this, &Fileman_impl::on_entry_changed));
     entry_->signal_mouse_down().connect(fun(this, &Fileman_impl::on_entry_mouse_down));
@@ -95,12 +106,12 @@ Fileman_impl::Fileman_impl(Fileman_mode fm_mode, const ustring & path):
     table_->put(tp, 0, 2, 1, 1, true, true);
     table_->align(tp.get(), ALIGN_END, ALIGN_CENTER);
     filters_ = std::make_shared<Cycle_impl>();
-    table_->put(filters_, 1, 2, FILEMAN_BROWSE == fm_mode_ ? 2 : 1, 1, false, true);
+    table_->put(filters_, 1, 2, FILEMAN_BROWSE == mode_ ? 2 : 1, 1, false, true);
     add_filter("*", "All Files");
 
     // Buttons "Open"/"Save" & "Cancel".
-    if (FILEMAN_BROWSE != fm_mode_) {
-        apply_action_.set_label(FILEMAN_SAVE == fm_mode_ ? "Save" : "Load");
+    if (FILEMAN_BROWSE != mode_) {
+        apply_action_.set_label(FILEMAN_SAVE == mode_ ? "Save" : "Load");
         Button_ptr button = std::make_shared<Button_impl>(apply_action_);
         table_->put(button, 2, 1, 1, 1, true, true);
         table_->align(button.get(), ALIGN_FILL, ALIGN_CENTER);
@@ -131,7 +142,7 @@ Fileman_impl::Fileman_impl(Fileman_mode fm_mode, const ustring & path):
     next_action_.disable();
     apply_action_.disable();
     if (!dir_creation_allowed_) { mkdir_action_.disable(); mkdir_action_.hide(); }
-    refresh_action_.connect(fun(navi_, &Navigator_impl::reload));
+    refresh_action_.connect(fun(navi_, &Navigator_impl::refresh));
 
     connect_action(configure_action_);
     connect_action(cancel_action_);
@@ -151,12 +162,6 @@ void Fileman_impl::on_display() {
     if (places_visible_) {
         init_places();
         fill_places();
-    }
-
-    if (auto dp = display()) {
-        if (auto loop = dp->loop()) {
-            loop->signal_mount().connect(fun(this, &Fileman_impl::on_mount));
-        }
     }
 }
 
@@ -271,7 +276,7 @@ void Fileman_impl::on_dir_changed(const ustring & path) {
 }
 
 void Fileman_impl::apply() {
-    if (FILEMAN_SAVE == fm_mode_) {
+    if (FILEMAN_SAVE == mode_) {
         if (!overwrite_allowed_) {
             ustring path = path_build(uri(), entry_->text());
 
@@ -320,7 +325,7 @@ void Fileman_impl::apply() {
 }
 
 void Fileman_impl::on_apply() {
-    if (FILEMAN_OPEN == fm_mode_) {
+    if (FILEMAN_OPEN == mode_) {
         if (!selection_.empty()) {
             apply();
         }
@@ -354,13 +359,13 @@ void Fileman_impl::on_entry_changed(const ustring & s) {
         }
 
         else {
-            if (FILEMAN_OPEN == fm_mode_) {
+            if (FILEMAN_OPEN == mode_) {
                 if (!file_exists(p)) {
                     apply_action_.disable();
                 }
 
                 else {
-                    if (!multiple_select_allowed()) {
+                    if (!navi_->multiple_select_allowed()) {
                         auto iter = std::find(selection_.begin(), selection_.end(), s);
                         if (selection_.end() == iter) { selection_.push_back(s); }
                     }
@@ -398,9 +403,9 @@ void Fileman_impl::on_entry_activate(const ustring & s) {
             }
 
             else {
-                if (FILEMAN_OPEN == fm_mode_) {
+                if (FILEMAN_OPEN == mode_) {
                     if (file_exists(p)) {
-                        if (!multiple_select_allowed()) {
+                        if (!navi_->multiple_select_allowed()) {
                             auto iter = std::find(selection_.begin(), selection_.end(), s);
                             if (selection_.end() == iter) { selection_.push_back(s); }
                         }
@@ -409,7 +414,7 @@ void Fileman_impl::on_entry_activate(const ustring & s) {
                     }
                 }
 
-                else if (FILEMAN_SAVE == fm_mode_) {
+                else if (FILEMAN_SAVE == mode_) {
                     apply();
                 }
             }
@@ -549,8 +554,20 @@ void Fileman_impl::hide_places() {
     places_list_.reset();
 }
 
-void Fileman_impl::on_mount(int flags, const ustring & mpoint) {
-    fill_places();
+void Fileman_impl::on_mount(int flags, const ustring & mp) {
+    if (FILE_UMOUNT & flags) {
+        if (str_similar(mp, removables_)) {
+            removables_.erase(std::find(removables_.begin(), removables_.end(), mp));
+            fill_places();
+        }
+    }
+
+    else if (FILE_MOUNT & flags) {
+        if (Fileinfo(mp).is_removable()) {
+            removables_.push_back(mp);
+            fill_places();
+        }
+    }
 }
 
 void Fileman_impl::add_filter(const ustring & patterns, const ustring & title) {
@@ -559,42 +576,6 @@ void Fileman_impl::add_filter(const ustring & patterns, const ustring & title) {
     Text_ptr tp = std::make_shared<Text_impl>(s, ALIGN_START);
     tp->signal_select().connect(tau::bind(fun(navi_, &Navigator_impl::set_filter), patterns));
     filters_->add(tp);
-}
-
-void Fileman_impl::sort_forward() {
-    navi_->sort_forward();
-}
-
-void Fileman_impl::sort_backward() {
-    navi_->sort_backward();
-}
-
-bool Fileman_impl::sorted_backward() const {
-    return navi_->sorted_backward();
-}
-
-void Fileman_impl::allow_multiple_select() {
-    navi_->allow_multiple_select();
-}
-
-void Fileman_impl::disallow_multiple_select() {
-    navi_->disallow_multiple_select();
-}
-
-bool Fileman_impl::multiple_select_allowed() const {
-    return navi_->multiple_select_allowed();
-}
-
-void Fileman_impl::allow_dir_select() {
-    navi_->allow_dir_select();
-}
-
-void Fileman_impl::disallow_dir_select() {
-    navi_->disallow_dir_select();
-}
-
-bool Fileman_impl::dir_select_allowed() const {
-    return navi_->dir_select_allowed();
 }
 
 void Fileman_impl::allow_overwrite() {
@@ -611,23 +592,23 @@ void Fileman_impl::on_configure() {
     Submenu_ptr sort_item = std::make_shared<Submenu_impl>("Sort", sort_menu);
     menu->append(sort_item);
 
-    Check_menu_ptr sort_name = std::make_shared<Check_menu_impl>("By Name", CHECK_RSTYLE, "name" == sorted_by());
-    sort_name->signal_check().connect(tau::bind(fun(this, &Fileman_impl::sort_by), "name"));
+    Check_menu_ptr sort_name = std::make_shared<Check_menu_impl>("By Name", CHECK_RSTYLE, "name" == navi_->sorted_by());
+    sort_name->signal_check().connect(tau::bind(fun(navi_, &Navigator_impl::sort_by), "name"));
     sort_menu->append(sort_name);
 
-    Check_menu_ptr sort_size = std::make_shared<Check_menu_impl>("By Size", CHECK_RSTYLE, "bytes" == sorted_by());
+    Check_menu_ptr sort_size = std::make_shared<Check_menu_impl>("By Size", CHECK_RSTYLE, "bytes" == navi_->sorted_by());
     sort_size->join(sort_name);
-    sort_size->signal_check().connect(tau::bind(fun(this, &Fileman_impl::sort_by), "bytes"));
+    sort_size->signal_check().connect(tau::bind(fun(navi_, &Navigator_impl::sort_by), "bytes"));
     sort_menu->append(sort_size);
 
-    Check_menu_ptr sort_date = std::make_shared<Check_menu_impl>("By Date", CHECK_RSTYLE, "date" == sorted_by());
+    Check_menu_ptr sort_date = std::make_shared<Check_menu_impl>("By Date", CHECK_RSTYLE, "date" == navi_->sorted_by());
     sort_date->join(sort_name);
-    sort_date->signal_check().connect(tau::bind(fun(this, &Fileman_impl::sort_by), "date"));
+    sort_date->signal_check().connect(tau::bind(fun(navi_, &Navigator_impl::sort_by), "date"));
     sort_menu->append(sort_date);
 
-    Check_menu_ptr sort_unsorted = std::make_shared<Check_menu_impl>("Keep Unsorted", CHECK_RSTYLE, "" == sorted_by());
+    Check_menu_ptr sort_unsorted = std::make_shared<Check_menu_impl>("Keep Unsorted", CHECK_RSTYLE, "" == navi_->sorted_by());
     sort_unsorted->join(sort_name);
-    sort_unsorted->signal_check().connect(tau::bind(fun(this, &Fileman_impl::sort_by), ""));
+    sort_unsorted->signal_check().connect(tau::bind(fun(navi_, &Navigator_impl::sort_by), ""));
     sort_menu->append(sort_unsorted);
 
     Menubox_ptr columns_menu = std::make_shared<Menubox_impl>();
@@ -646,9 +627,9 @@ void Fileman_impl::on_configure() {
 
     sort_menu->append_separator();
 
-    Check_menu_ptr sort_back = std::make_shared<Check_menu_impl>("Sort Descent", CHECK_VSTYLE, sorted_backward());
-    sort_back->signal_check().connect(fun(this, &Fileman_impl::sort_backward));
-    sort_back->signal_uncheck().connect(fun(this, &Fileman_impl::sort_forward));
+    Check_menu_ptr sort_back = std::make_shared<Check_menu_impl>("Sort Descent", CHECK_VSTYLE, navi_->sorted_backward());
+    sort_back->signal_check().connect(fun(navi_, &Navigator_impl::sort_backward));
+    sort_back->signal_uncheck().connect(fun(navi_, &Navigator_impl::sort_forward));
     sort_menu->append(sort_back);
 
     menu->append_separator();
@@ -716,16 +697,16 @@ void Fileman_impl::on_show_hidden(bool show) {
 void Fileman_impl::load_state(Key_file & kf, Key_section & sect) {
     show_info(kf.get_string(sect, "visible_info_items"), kf.list_separator());
     hide_info(kf.get_string(sect, "invisible_info_items"), kf.list_separator());
-    sort_by(kf.get_string(sect, "sort_by", "name"));
+    navi_->sort_by(kf.get_string(sect, "sort_by", "name"));
     set_ratio(kf.get_double(sect, "ratio", ratio()));
-    if (kf.get_boolean(sect, "sort_backward")) { sort_backward(); }
+    if (kf.get_boolean(sect, "sort_backward")) { navi_->sort_backward(); }
 }
 
 void Fileman_impl::save_state(Key_file & kf, Key_section & sect) {
     kf.set_string(sect, "visible_info_items", visible_info_items(kf.list_separator()));
     kf.set_string(sect, "invisible_info_items", invisible_info_items(kf.list_separator()));
-    kf.set_string(sect, "sort_by", sorted_by());
-    kf.set_boolean(sect, "sort_backward", sorted_backward());
+    kf.set_string(sect, "sort_by", navi_->sorted_by());
+    kf.set_boolean(sect, "sort_backward", navi_->sorted_backward());
     kf.set_double(sect, "ratio", ratio());
 }
 

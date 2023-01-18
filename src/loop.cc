@@ -54,12 +54,8 @@ bool Loop::alive() const {
     return impl->alive();
 }
 
-Event Loop::create_event() {
-    return Event_impl::wrap(impl->create_event());
-}
-
-Event Loop::create_event(const slot<void()> & slot_ready) {
-    return Event_impl::wrap(impl->create_event(slot_ready));
+std::vector<ustring> Loop::mounts() const {
+    return impl->mounts();
 }
 
 signal<void()> & Loop::signal_start() {

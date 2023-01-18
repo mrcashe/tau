@@ -35,8 +35,8 @@ namespace tau {
 
 struct Fileinfo_win: public Fileinfo_impl {
 
-    explicit Fileinfo_win(const ustring & uri) {
-        uri_ = uri;
+    Fileinfo_win(const ustring & uri) {
+        uri_ = path_real(uri);
         update_stat();
     }
 
@@ -94,6 +94,43 @@ struct Fileinfo_win: public Fileinfo_impl {
         }
 
         return signal_watch_;
+    }
+
+    // Overrides pure Fileinfo_impl.
+    bool is_exec() override {
+        if (exists_) {
+            std::wstring ws = str_to_wstring(uri_);
+            DWORD type;
+            if (GetBinaryTypeW(ws.c_str(), &type)) { return true; }
+        }
+
+        return false;
+    }
+
+    // Overrides pure Fileinfo_impl.
+    bool is_hidden() override {
+        DWORD attrs = GetFileAttributesW(str_to_wstring(uri_).c_str());
+
+        if (INVALID_FILE_ATTRIBUTES != attrs) {
+            return 0 != (FILE_ATTRIBUTE_HIDDEN & attrs);
+        }
+
+        return true;
+    }
+
+    // Overrides pure Fileinfo_impl.
+    bool is_removable() override {
+        if (uri_.size() > 1) {
+            if (':' == uri_[1]) {
+                UINT dtype = GetDriveType(str_format(uri_[0], ":\\").c_str());
+
+                if (DRIVE_UNKNOWN != dtype && DRIVE_NO_ROOT_DIR != dtype) {
+                    return DRIVE_REMOVABLE == dtype;
+                }
+            }
+        }
+
+        return false;
     }
 
     bool noacc_ = false;         // Access denied.

@@ -94,13 +94,6 @@ Event_ptr Loop_win::create_event() {
 }
 
 // Overrides pure Loop_impl.
-Event_ptr Loop_win::create_event(const slot<void()> & slot_ready) {
-    auto evp = create_event();
-    evp->signal_ready().connect(slot_ready);
-    return evp;
-}
-
-// Overrides pure Loop_impl.
 File_monitor_ptr Loop_win::create_file_monitor(const ustring & path, int umask) {
     auto fm = std::make_shared<File_monitor_win>(path, umask);
     HANDLE handle = fm->handle();
@@ -108,6 +101,13 @@ File_monitor_ptr Loop_win::create_file_monitor(const ustring & path, int umask) 
     signal_chain_poll_.connect(fun(fm, &File_monitor_win::on_poll));
     fm->signal_destroy().connect(tau::bind(fun(this, &Loop_win::on_handle_die), handle));
     return fm;
+}
+
+// Overrides pure Loop_impl.
+std::vector<ustring> Loop_win::mounts() {
+    std::vector<ustring>  v;
+    for (const ustring & s: drives_) { v.push_back(s); }
+    return v;
 }
 
 void Loop_win::on_handle_die(HANDLE handle) {

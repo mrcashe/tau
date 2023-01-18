@@ -58,7 +58,7 @@ uninstall:
 	    fi; \
 	done
 
-$(bindir)/%: %.cc $(unix_so)
+$(bindir)/%: %.cc
 	$(CXX) $(CXXFLAGS) -o $@ $< -MD -MF $(unix_test_so_builddir)/$(notdir $@).dep $(unix_so) $(unix_sys_shared)
 
 $(bindir):

@@ -37,7 +37,7 @@ namespace tau {
 
 /// Information about certain file.
 ///
-/// This class is a wrapper around its implementation shared pointer Fileinfo_impl.
+/// This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup file_group
 class Fileinfo {
@@ -86,6 +86,15 @@ public:
 
     /// Test if socket.
     bool is_socket() const;
+
+    /// Test if executable.
+    bool is_exec() const;
+
+    /// Test if hidden.
+    bool is_hidden() const;
+
+    /// Test if removable.
+    bool is_removable() const;
 
     /// Get file size in bytes.
     uintmax_t bytes() const;

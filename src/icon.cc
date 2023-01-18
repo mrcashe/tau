@@ -36,17 +36,22 @@ Icon::Icon():
 {
 }
 
-Icon::Icon(const ustring & icon_name, unsigned icon_size):
+Icon::Icon(Widget_ptr wp):
+    Widget(std::dynamic_pointer_cast<Icon_impl>(wp))
+{
+}
+
+Icon::Icon(const ustring & icon_name, int icon_size):
     Widget(std::make_shared<Icon_impl>(icon_name, icon_size))
 {
 }
 
-Icon::Icon(Action_base & action, unsigned icon_size):
+Icon::Icon(Action_base & action, int icon_size):
     Widget(std::make_shared<Icon_impl>(action, icon_size))
 {
 }
 
-void Icon::assign(const ustring & icon_name, unsigned icon_size) {
+void Icon::assign(const ustring & icon_name, int icon_size) {
     ICON_IMPL->assign(icon_name, icon_size);
 }
 
@@ -62,7 +67,7 @@ void Icon::set_icon_size(unsigned icon_size) {
     ICON_IMPL->set_icon_size(icon_size);
 }
 
-unsigned Icon::icon_size() const {
+int Icon::icon_size() const {
     return ICON_IMPL->icon_size();
 }
 

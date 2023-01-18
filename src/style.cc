@@ -288,7 +288,7 @@ void Font_style::add_face(const ustring & face_elements) {
 }
 
 void Font_style::set_face(const ustring & face) {
-    set(font_set_face(spec(), face));
+    set(font_face_set(spec(), face));
 }
 
 Font_style::operator ustring() const {

@@ -36,7 +36,7 @@ namespace tau {
 
 /// %Color selection widget.
 ///
-/// This class is a wrapper around its implementation shared pointer Colorsel_impl.
+/// This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup widget_group
 class Colorsel: public Widget {

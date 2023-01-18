@@ -258,7 +258,7 @@ void Scroller_impl::end() {
 }
 
 bool Scroller_impl::on_mouse_down(int mbt, int mm, const Point & pt) {
-    return MBT_LEFT == mbt && MM_NONE == mm && !has_focus() && grab_focus();
+    return MBT_LEFT == mbt && MM_NONE == mm && !focused() && grab_focus();
 }
 
 bool Scroller_impl::on_mouse_wheel(int delta, int mm, const Point & pt) {

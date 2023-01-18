@@ -36,7 +36,7 @@ namespace tau {
 
 /// Single line text editor with decorations.
 ///
-/// This class is a wrapper around its implementation shared pointer Entry_impl.
+/// This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup widget_group
 class Entry: public Widget {

@@ -47,29 +47,16 @@ public:
     void set_uri(const ustring & dirpath);
     std::vector<ustring> selection() const;
     ustring entry() const;
+    Navigator_ptr navigator() { return navi_; }
 
     void add_filter(const ustring & patterns, const ustring & title=ustring());
     ustring filter() const { return navi_->filter(); }
 
-    void sort_by(const ustring & col) { navi_->sort_by(col); }
-    ustring sorted_by() const { return navi_->sorted_by(); }
     void show_info(const ustring & items, char32_t sep=U':');
     void hide_info(const ustring & items, char32_t sep=U':');
     bool info_visible(const ustring & item) const;
     ustring visible_info_items(char32_t sep=U':') const;
     ustring invisible_info_items(char32_t sep=U':') const;
-
-    void sort_forward();
-    void sort_backward();
-    bool sorted_backward() const;
-
-    void allow_multiple_select();
-    void disallow_multiple_select();
-    bool multiple_select_allowed() const;
-
-    void allow_dir_select();
-    void disallow_dir_select();
-    bool dir_select_allowed() const;
 
     void allow_overwrite();
     void disallow_overwrite();
@@ -83,13 +70,14 @@ public:
 
 protected:
 
-    Fileman_mode            fm_mode_;
+    Fileman_mode            mode_;
     Table_ptr               table_;
     List_ptr                places_list_;           // Places list.
     Cycle_ptr               filters_;
     bool                    places_visible_ = true; // Places visible by default.
     bool                    dir_creation_allowed_;  // Directory creation allowed.
     bool                    overwrite_allowed_ = false; // Allow overwrite without a prompt.
+    std::vector<ustring>    removables_;
 
     signal<void()>          signal_apply_;
 

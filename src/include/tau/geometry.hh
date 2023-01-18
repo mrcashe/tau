@@ -821,7 +821,7 @@ public:
     }
 
     /// Constructor with coordinates and size.
-    explicit Rect(const Point & org, const Size & size) {
+    Rect(const Point & org, const Size & size) {
         set(org, size);
     }
 
@@ -831,12 +831,12 @@ public:
     }
 
     /// Constructor with coordinates.
-    explicit Rect(const Point & a, const Point & b) {
+    Rect(const Point & a, const Point & b) {
         set(a, b);
     }
 
     /// Constructor with Size and coordinates at (0, 0).
-    explicit Rect(const Size & size) {
+    Rect(const Size & size) {
         set(size);
     }
 

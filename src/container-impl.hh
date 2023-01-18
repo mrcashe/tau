@@ -115,6 +115,7 @@ public:
     std::vector<Widget_ptr> children() { return children_; }
 
     signal<void()> & signal_arrange() { return signal_arrange_; }
+    signal<void()> & signal_children_changed() { return signal_children_changed_; }
 
 protected:
 
@@ -124,11 +125,13 @@ protected:
     Widget_impl *   mouse_owner_ = nullptr;
 
     signal<void()>  signal_arrange_;
+    signal<void()>  signal_children_changed_;
 
 protected:
 
     void make_child(Widget_ptr  wp);
     void unparent_child(Widget_impl * wi);
+    void unparent_all();
     void focus_child(Widget_impl * wi, int res);
     void set_modal_child(Widget_impl * wi);
 
@@ -150,7 +153,6 @@ private:
     Obscured        obscured_;          // Currently obscured children.
     Timer           arrange_timer_;     // Sync arrange timer.
     Timer           woff_timer_;        // Written off timer.
-    bool            qarrange_ = false;  // Arrange was queued.
 
 private:
 

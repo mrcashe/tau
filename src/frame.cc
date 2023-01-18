@@ -39,6 +39,11 @@ Frame::Frame():
 {
 }
 
+Frame::Frame(Widget_ptr wp):
+    Container(std::dynamic_pointer_cast<Frame_impl>(wp))
+{
+}
+
 Frame::Frame(const ustring & label):
     Container(std::make_shared<Frame_impl>(label))
 {

@@ -288,7 +288,7 @@ void Fontsel_impl::update_tooltips() {
         oaccels += accel.label();
     }
 
-    spc = font_set_face(spc, "Bold");
+    spc = font_face_set(spc, "Bold");
     tp = std::make_shared<Text_impl>(iaccels, ALIGN_END);
     table->put(tp, 1, 0, 1, 1, true, true);
     tp->style().font("font") = spc;
@@ -314,17 +314,17 @@ void Fontsel_impl::on_entry_changed(const ustring & s) {
 }
 
 void Fontsel_impl::focus_next() {
-    if (has_focus()) {
-        if (families_->has_focus()) { faces_->take_focus(); }
-        else if (faces_->has_focus()) { counter_->take_focus(); }
+    if (focused()) {
+        if (families_->focused()) { faces_->take_focus(); }
+        else if (faces_->focused()) { counter_->take_focus(); }
         else { families_->take_focus(); }
     }
 }
 
 void Fontsel_impl::focus_previous() {
-    if (has_focus()) {
-        if (counter_->has_focus()) { faces_->take_focus(); }
-        else if (families_->has_focus()) { counter_->take_focus(); }
+    if (focused()) {
+        if (counter_->focused()) { faces_->take_focus(); }
+        else if (families_->focused()) { counter_->take_focus(); }
         else { families_->take_focus(); }
     }
 }

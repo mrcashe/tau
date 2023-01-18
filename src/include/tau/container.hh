@@ -35,7 +35,7 @@ namespace tau {
 
 /// An abstract widget's @ref container_group "container" base.
 ///
-/// This class is a wrapper around its implementation shared pointer Container_impl.
+/// This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup container_group
 /// @ingroup widget_group
@@ -47,6 +47,14 @@ public:
 
     /// Get children.
     std::vector<Widget_ptr> children() const;
+
+    /// Signal emitted when some child (or children) added to or removed from container.
+    ///
+    /// Slot prototype:
+    /// ~~~~~~~~~~~~~~~
+    /// void on_children_changed();
+    /// ~~~~~~~~~~~~~~~
+    signal<void()> & signal_children_changed();
 
 protected:
 

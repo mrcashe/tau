@@ -47,15 +47,9 @@ public:
 
     static Font_ptr strip(Font f) { return f.impl; }
 
-    virtual ustring family_name() const = 0;
-
-    virtual ustring face_name() const = 0;
-
     virtual ustring spec() const = 0;
 
     virtual ustring psname() const = 0;
-
-    virtual double size() const = 0;
 
     virtual unsigned dpi() const = 0;
 

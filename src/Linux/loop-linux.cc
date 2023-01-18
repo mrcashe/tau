@@ -83,6 +83,13 @@ void Loop_linux::done() {
     loops_.erase(tid_);
 }
 
+// Overrides pure Loop_impl.
+std::vector<ustring> Loop_linux::mounts() {
+    std::vector<ustring> v;
+    for (auto & m: mounts_) { v.push_back(m.mpoint); }
+    return v;
+}
+
 void Loop_linux::on_inotify() {
     char buffer[16384];
 
@@ -189,7 +196,7 @@ void Loop_linux::init_mounts() {
 
             if (v.size() > 1 && str_has_prefix(v[0], "/dev/")) {
                 ustring dev = path_notdir(v[0]);
-                while (std::isdigit(*dev.rbegin())) { dev.erase(dev.size()-1); }
+                //while (std::isdigit(*dev.rbegin())) { dev.erase(dev.size()-1); }
                 if ("/" == v[1]) { where_root = dev; }
                 if (devs.end() == devs.find(dev)) { devs[dev] = v[1]; }
             }
@@ -272,9 +279,9 @@ void Loop_linux::on_mounts() {
             for (auto i = mounts_.begin(); i != mounts_.end(); ++i) {
                 Mount & mnt = *i;
 
-                if (devs.end() == std::find_if(devs.begin(), devs.end(), [mnt](const std::pair<ustring, ustring> & pair) { return mnt.dev == pair.first; })) {
+                if (devs.end() == std::find_if(devs.begin(), devs.end(), [mnt](auto & pair) { return mnt.dev == pair.first; })) {
                     ustring mpoint = mnt.mpoint;
-                    int flags = FILE_MOUNT;
+                    int flags = FILE_UMOUNT;
                     if (mnt.removable) { flags |= FILE_REMOVABLE; }
                     signal_mount_(flags, mpoint);
                     mounts_.erase(i);
@@ -296,12 +303,16 @@ Loop_linux_ptr Loop_linux::this_linux_loop() {
     auto i = loops_.find(tid);
     if (loops_.end() != i) { return i->second; }
     smx_.unlock();
-//     std::cout << "Started new Linux Loop, id is " << loopcnt_ << std::endl;
     auto lp = std::make_shared<Loop_linux>(tid);
     smx_.lock();
     loops_[tid] = lp;
     ++loopcnt_;
     return lp;
+}
+
+// static
+Loop_posix_ptr Loop_posix::this_posix_loop() {
+    return Loop_linux::this_linux_loop();
 }
 
 // static

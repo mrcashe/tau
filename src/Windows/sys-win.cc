@@ -26,6 +26,7 @@
 
 #include "types-win.hh"
 #include <tau/exception.hh>
+#include <tau/fileinfo.hh>
 #include <tau/locale.hh>
 #include <tau/sys.hh>
 #include <tau/string.hh>
@@ -291,38 +292,6 @@ ustring path_real(const ustring & path) {
     return path;
 }
 
-bool file_is_hidden(const ustring & path) {
-    DWORD attrs = GetFileAttributesW(str_to_wstring(path).c_str());
-
-    if (INVALID_FILE_ATTRIBUTES != attrs) {
-        return 0 != (FILE_ATTRIBUTE_HIDDEN & attrs);
-    }
-
-    return true;
-}
-
-std::vector<ustring> list_removable_drives() {
-    std::vector<ustring> v;
-    DWORD nbytes = GetLogicalDriveStringsA(0, NULL);
-
-    if (0 != nbytes) {
-        Locale loc;
-        char buf[1+nbytes];
-        GetLogicalDriveStringsA(1+nbytes, buf);
-
-        for (std::size_t i = 0; i < nbytes; ++i) {
-            if ('\0' != buf[i]) {
-                UINT type = GetDriveType(buf+i);
-                if (DRIVE_REMOVABLE == type) { v.push_back(loc.encode_filename(buf+i)); }
-            }
-
-            while ('\0' != buf[i]) { ++i; }
-        }
-    }
-
-    return v;
-}
-
 bool path_match(const ustring & pattern, const ustring & path) {
     std::wstring wpattern = str_to_wstring(pattern), wpath = str_to_wstring(path);
     return PathMatchSpecW(wpath.c_str(), wpattern.c_str());
@@ -339,25 +308,12 @@ std::vector<ustring> path_which(const ustring & cmd) {
 
             for (const ustring & s: vv) {
                 ustring path = path_build(s, cmd);
-                if (file_is_executable(path)) { v.push_back(path); }
+                if (Fileinfo(path).is_exec()) { v.push_back(path); }
             }
         }
     }
 
     return v;
-}
-
-bool file_is_executable(const ustring & path) {
-    if (!path.empty()) {
-        std::wstring ws = str_to_wstring(path);
-        DWORD type;
-
-        if (GetBinaryTypeW(ws.c_str(), &type)) {
-            return true;
-        }
-    }
-
-    return false;
 }
 
 void file_unlink(const ustring & path) {

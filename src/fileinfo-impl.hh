@@ -73,6 +73,9 @@ public:
     Timeval mtime() const { return mtime_; }
 
     virtual signal<void(int, ustring)> & signal_watch(int event_mask) = 0;
+    virtual bool is_exec() = 0;
+    virtual bool is_hidden() = 0;
+    virtual bool is_removable() = 0;
 
 protected:
 

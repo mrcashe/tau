@@ -293,14 +293,6 @@ ustring path_real(const ustring & path) {
     return path;
 }
 
-bool file_is_hidden(const ustring & path) {
-    if (file_exists(path)) {
-        return '.' == path_notdir(path)[0];
-    }
-
-    return true;
-}
-
 bool path_match(const ustring & pattern, const ustring & path) {
     Locale loc;
     return 0 == fnmatch(loc.encode_filename(pattern).c_str(), loc.encode_filename(path).c_str(), FNM_PATHNAME|FNM_PERIOD);
@@ -317,24 +309,12 @@ std::vector<ustring> path_which(const ustring & cmd) {
 
             for (const ustring & s: vv) {
                 ustring path = path_build(s, cmd);
-                if (file_is_executable(path)) { v.push_back(path); }
+                if (Fileinfo(path).is_exec()) { v.push_back(path); }
             }
         }
     }
 
     return v;
-}
-
-bool file_is_executable(const ustring & path) {
-    if (!path.empty()) {
-        struct stat st;
-
-        if (0 == ::stat(Locale().encode_filename(path).c_str(), &st)) {
-            return S_ISREG(st.st_mode) && (S_IXUSR & st.st_mode);
-        }
-    }
-
-    return false;
 }
 
 void file_unlink(const ustring & path) {

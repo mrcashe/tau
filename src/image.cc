@@ -37,6 +37,11 @@ Image::Image():
 {
 }
 
+Image::Image(Widget_ptr wp):
+    Widget(std::dynamic_pointer_cast<Image_impl>(wp))
+{
+}
+
 Image::Image(Pixmap pix, bool transparent):
     Widget(std::make_shared<Image_impl>(Pixmap_impl::strip(pix), transparent))
 {

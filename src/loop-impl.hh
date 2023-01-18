@@ -29,6 +29,7 @@
 
 #include <types-impl.hh>
 #include <tau/signal.hh>
+#include <vector>
 #include <thread>
 
 namespace tau {
@@ -51,9 +52,10 @@ public:
     bool alive() const { return runlevel_ >= 0; }
     void start_timer(Timer_ptr tp);
     void stop_timer(Timer_impl * tpi);
+
     virtual File_monitor_ptr create_file_monitor(const ustring & path, int event_mask) = 0;
     virtual Event_ptr create_event() = 0;
-    virtual Event_ptr create_event(const slot<void()> & slot_ready) = 0;
+    virtual std::vector<ustring> mounts() = 0;
 
     signal<void()> & signal_start() { return signal_start_; }
     signal<void()> & signal_idle() { return signal_idle_; }
