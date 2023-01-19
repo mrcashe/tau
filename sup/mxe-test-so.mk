@@ -42,14 +42,14 @@ all: $(mxe_test_so_builddir) $(bindir) $(binaries)
 # Install binaries with long name including target platform sepcification.
 install: $(bin_prefix) $(binaries)
 	@for f in $(sources); do \
-	    fname=$(mxe_target)-$$f.exe; \
+	    fname=$$f-$(mxe_target)-mxe.exe; \
 	    $(cp) "$(bindir)/$$f.exe" $(bin_prefix)/$$fname; \
 	    $(MXE_STRIP) --strip-unneeded $$bin_prefix/$$fname; \
 	done
 
 uninstall:
 	@for f in $(all_sources); do \
-	    $(rmr) $(bin_prefix)/$(mxe_target)-$$f.exe; \
+	    $(rmr) $(bin_prefix)/$$f-$(mxe_target)-mxe.exe; \
 	done
 
 

@@ -42,7 +42,7 @@ public:
     void clear();
 
     Size logical_size() const;
-    Point offset() const;
+    Point pan() const;
 
     void pan_to_x(int x);
     void pan_to_y(int y);
@@ -62,7 +62,7 @@ public:
     void set_step(int xstep, int ystep) { step_.set(xstep, ystep); }
     Point step() const { return step_; }
 
-    signal<void()> & signal_offset_changed() { return signal_offset_changed_; }
+    signal<void()> & signal_pan_changed() { return signal_pan_changed_; }
     signal<void()> & signal_logical_size_changed() { return signal_logical_size_changed_; }
 
 private:
@@ -84,7 +84,7 @@ private:
     Action      home_action_       { KC_HOME, KM_NONE,   fun(this, &Scroller_impl::home)      };
     Action      end_action_        { KC_END,  KM_NONE,   fun(this, &Scroller_impl::end)       };
 
-    signal<void()> signal_offset_changed_;
+    signal<void()> signal_pan_changed_;
     signal<void()> signal_logical_size_changed_;
 
 private:

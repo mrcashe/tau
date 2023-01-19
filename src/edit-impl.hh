@@ -126,6 +126,7 @@ private:
 private:
 
     bool on_key_down(char32_t kc, uint32_t km);
+    bool on_input(const ustring & s);
     void on_insert(bool replace);
     void on_display();
     void on_paste_text(const ustring & s);

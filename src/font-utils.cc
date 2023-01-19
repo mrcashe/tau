@@ -35,7 +35,7 @@ namespace {
 const std::vector<tau::ustring> faces_  = {
     "Regular", "Normal", "Book", "Italic", "Oblique", "Roman", "Medium", "Thin",
     "Bold", "Light", "Heavy", "Plain", "Initials", "Demi", "Condensed",
-    "SemiBold", "ExtraBold", "BoldItalic", "BoldOblique", "LightOblique"
+    "SemiBold", "ExtraBold", "BoldItalic", "BoldOblique", "LightOblique", "Mono"
 };
 
 const std::string digits_ = ".,-+=0123456789eE";

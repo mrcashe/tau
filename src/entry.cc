@@ -148,15 +148,15 @@ Action & Entry::cancel_action() {
     return ENTRY_IMPL->cancel_action();
 }
 
-signal<void(ustring)> & Entry::signal_changed() {
+signal<void(const ustring &)> & Entry::signal_changed() {
     return ENTRY_IMPL->signal_changed();
 }
 
-signal<void(ustring)> & Entry::signal_activate() {
+signal<void(const ustring &)> & Entry::signal_activate() {
     return ENTRY_IMPL->signal_activate();
 }
 
-signal<bool(ustring)> & Entry::signal_validate() {
+signal<bool(const ustring &)> & Entry::signal_validate() {
     return ENTRY_IMPL->signal_validate();
 }
 

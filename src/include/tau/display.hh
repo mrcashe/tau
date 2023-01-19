@@ -38,7 +38,7 @@ namespace tau {
 
 /// A display.
 ///
-/// This class is a wrapper around its implementation shared pointer.
+/// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup sys_group
 class Display {
@@ -99,7 +99,7 @@ public:
     /// ~~~~~~~~~~~~~~~
     /// void on_paste_text(const ustring & path).
     /// ~~~~~~~~~~~~~~~
-    signal<void(ustring)> & signal_paste_text();
+    signal<void(const ustring &)> & signal_paste_text();
 
     /// @}
 

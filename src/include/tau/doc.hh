@@ -38,7 +38,7 @@ namespace tau {
 
 /// A document element.
 ///
-/// This class is a wrapper around its implementation shared pointer.
+/// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup text_group
 class Element {
@@ -105,7 +105,7 @@ protected:
 
 /// A document element that contains character data.
 ///
-/// This class is a wrapper around its implementation shared pointer.
+/// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup text_group
 class Data_element: public Element {
@@ -143,7 +143,7 @@ public:
 
 /// Document declaration element.
 ///
-/// This class is a wrapper around its implementation shared pointer.
+/// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup text_group
 class Decl_element: public Element {
@@ -184,7 +184,7 @@ public:
 
 /// A document element that contains processing instruction.
 ///
-/// This class is a wrapper around its implementation shared pointer.
+/// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup text_group
 class Inst_element: public Element {
@@ -216,7 +216,7 @@ public:
 
 /// A document element that can own other elements.
 ///
-/// This class is a wrapper around its implementation shared pointer.
+/// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup text_group
 class Node_element: public Element {
@@ -269,7 +269,7 @@ public:
 
 /// A document element that contains text.
 ///
-/// This class is a wrapper around its implementation shared pointer.
+/// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup text_group
 class Text_element: public Element {
@@ -307,7 +307,7 @@ public:
 
 /// Document type.
 ///
-/// This class is a wrapper around its implementation shared pointer.
+/// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup text_group
 class Doctype {
@@ -364,7 +364,7 @@ private:
 
 /// Document.
 ///
-/// This class is a wrapper around its implementation shared pointer.
+/// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup text_group
 class Doc {

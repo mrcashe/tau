@@ -62,6 +62,7 @@ void Edit_impl::init() {
 
     style_.redirect("whitespace/background", "background");
     signal_key_down_.connect(fun(this, &Edit_impl::on_key_down));
+    signal_input_.connect(fun(this, &Edit_impl::on_input));
     signal_display().connect(fun(this, &Edit_impl::on_display));
 
     undo_action_.disable();
@@ -114,6 +115,15 @@ void Edit_impl::assign(const ustring & s) {
     undo_.clear();
     undo_index_ = 0;
     Text_impl::assign(s);
+}
+
+bool Edit_impl::on_input(const ustring & s) {
+    if (edit_allowed_) {
+        enter_text(s);
+        return true;
+    }
+
+    return false;
 }
 
 bool Edit_impl::on_key_down(char32_t kc, uint32_t km) {

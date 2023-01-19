@@ -36,6 +36,11 @@ Roller::Roller(Orientation orient, bool autohide):
 {
 }
 
+Roller::Roller(Widget_ptr wp):
+    Widget(std::dynamic_pointer_cast<Roller_impl>(wp))
+{
+}
+
 void Roller::insert(Widget & w) {
     ROLLER_IMPL->insert(w.ptr());
 }

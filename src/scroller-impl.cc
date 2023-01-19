@@ -126,7 +126,7 @@ void Scroller_impl::arrange() {
     }
 
     Size max = logical_size()-size();
-    int xm = max.iwidth(), ym = max.iheight(), ox = offset().x(), oy = offset().y();
+    int xm = max.iwidth(), ym = max.iheight(), ox = pan().x(), oy = pan().y();
     if (ox > xm || oy > xm) { update_offset(std::min(ox, xm), std::min(oy, ym)); }
     if (changed) { invalidate(); }
 }
@@ -137,8 +137,8 @@ void Scroller_impl::on_child_requisition_changed() {
 
 void Scroller_impl::limit_scroll() {
     Size max = logical_size()-size();
-    if (offset().x() >= max.iwidth()) { pan_to_x(max.iwidth()); }
-    if (offset().y() >= max.iheight()) { pan_to_y(max.iheight()); }
+    if (pan().x() >= max.iwidth()) { pan_to_x(max.iwidth()); }
+    if (pan().y() >= max.iheight()) { pan_to_y(max.iheight()); }
 }
 
 void Scroller_impl::on_child_hide() {
@@ -158,7 +158,7 @@ Size Scroller_impl::logical_size() const {
     return child_requisition();
 }
 
-Point Scroller_impl::offset() const {
+Point Scroller_impl::pan() const {
     return cp_ ? pan_ : Point();
 }
 
@@ -172,18 +172,18 @@ void Scroller_impl::pan_to(int x, int y) {
 }
 
 void Scroller_impl::pan_to_x(int x) {
-    pan_to(x, offset().y());
+    pan_to(x, pan().y());
 }
 
 void Scroller_impl::pan_to_y(int y) {
-    pan_to(offset().x(), y);
+    pan_to(pan().x(), y);
 }
 
 bool Scroller_impl::update_offset(const Point & pt) {
     if (cp_) {
         if (pan_.update(pt)) {
             cp_->signal_scroll_changed()();
-            signal_offset_changed_();
+            signal_pan_changed_();
             return true;
         }
     }

@@ -154,7 +154,7 @@ ustring user_name() {
     return "somebody";
 }
 
-ustring path_tmp_dir() {
+ustring path_tmp() {
     const char * tmp = getenv("TEMP");
 
     if (tmp && '\0' != *tmp) {
@@ -314,11 +314,6 @@ std::vector<ustring> path_which(const ustring & cmd) {
     }
 
     return v;
-}
-
-void file_unlink(const ustring & path) {
-    std::wstring ws = str_to_wstring(path);
-    if (!DeleteFileW(ws.c_str())) { throw sys_error(); }
 }
 
 void msleep(unsigned time_ms) {

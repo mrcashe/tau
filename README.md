@@ -88,7 +88,6 @@ Note that, the building system does not support native **FreeBSD**
 - basename
 - bash
 - cat
-- cmp
 - cp
 - dirname
 - envsubst

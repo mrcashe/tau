@@ -36,6 +36,11 @@ Table::Table():
 {
 }
 
+Table::Table(Widget_ptr wp):
+    Container(std::dynamic_pointer_cast<Table_impl>(wp))
+{
+}
+
 void Table::put(Widget & w, int x, int y, unsigned xspan, unsigned yspan, bool xsh, bool ysh) {
     TABLE_IMPL->put(w.ptr(), x, y, xspan, yspan, xsh, ysh);
 }
@@ -52,12 +57,16 @@ void Table::get_row_span(int col, int & ymin, int & ymax) {
     return TABLE_IMPL->get_row_span(col, ymin, ymax);
 }
 
-void Table::set_column_spacing(unsigned spacing) {
-    TABLE_IMPL->set_column_spacing(spacing);
+void Table::set_column_spacing(unsigned xspacing) {
+    TABLE_IMPL->set_column_spacing(xspacing);
 }
 
-void Table::set_row_spacing(unsigned spacing) {
-    TABLE_IMPL->set_row_spacing(spacing);
+void Table::set_row_spacing(unsigned yspacing) {
+    TABLE_IMPL->set_row_spacing(yspacing);
+}
+
+void Table::set_spacing(unsigned xspacing, unsigned yspacing) {
+    TABLE_IMPL->set_spacing(xspacing, yspacing);
 }
 
 unsigned Table::column_spacing() const {

@@ -27,6 +27,7 @@
 #include <tau/font.hh>
 #include <font-impl.hh>
 #include <glyph-impl.hh>
+#include <theme-impl.hh>
 #include <iostream>     // Needed for error logging!
 
 namespace {
@@ -52,6 +53,14 @@ bool Font::operator==(const Font & other) const {
 
 bool Font::operator!=(const Font & other) const {
     return !impl || !other.impl || impl.get() != other.impl.get();
+}
+
+Font::operator bool() const {
+    return nullptr != impl;
+}
+
+void Font::reset() {
+    impl.reset();
 }
 
 ustring Font::spec() const {
@@ -151,6 +160,16 @@ Glyph Font::glyph(char32_t wc) {
         log("glyph");
         return Glyph();
     }
+}
+
+// static
+ustring Font::normal() {
+    return Theme_impl::root()->font_normal();
+}
+
+// static
+ustring Font::mono() {
+    return Theme_impl::root()->font_mono();
 }
 
 } // namespace tau

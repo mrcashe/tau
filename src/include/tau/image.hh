@@ -36,7 +36,7 @@ namespace tau {
 
 /// An image (picture).
 ///
-/// This class is a wrapper around its implementation shared pointer.
+/// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup widget_group
 class Image: public Widget {

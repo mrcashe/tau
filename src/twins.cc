@@ -36,6 +36,11 @@ Twins::Twins(Orientation orient, double ratio):
 {
 }
 
+Twins::Twins(Widget_ptr wp):
+    Container(std::dynamic_pointer_cast<Twins_impl>(wp))
+{
+}
+
 void Twins::insert_first(Widget & w) {
     TWINS_IMPL->insert_first(w.ptr());
 }

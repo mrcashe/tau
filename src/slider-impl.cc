@@ -77,7 +77,7 @@ void Slider_impl::init() {
     if (scroller_) {
         scroller_->signal_size_changed().connect(fun(this, &Slider_impl::on_scroller_changed));
         scroller_->signal_logical_size_changed().connect(fun(this, &Slider_impl::on_scroller_changed));
-        scroller_->signal_offset_changed().connect(fun(this, &Slider_impl::on_scroller_changed));
+        scroller_->signal_pan_changed().connect(fun(this, &Slider_impl::on_scroller_changed));
         signal_visible_.connect(fun(this, &Slider_impl::update_scroller));
     }
 
@@ -434,7 +434,7 @@ void Slider_impl::update_scroller() {
         Size lsize = scroller_->logical_size(), size = scroller_->size(), max(lsize-size);
         range_ = lsize ? (horizontal() ? double(size.width())/lsize.width() : double(size.height())/lsize.height()) : 1.0;
 
-        Point ofs = scroller_->offset();
+        Point ofs = scroller_->pan();
         loc_ = lsize ? (horizontal() ? double(ofs.x())/lsize.iwidth() : double(ofs.y())/lsize.iheight()) : 0.0;
         paint_now();
 

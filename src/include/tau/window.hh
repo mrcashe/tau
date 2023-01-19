@@ -33,7 +33,10 @@
 
 namespace tau {
 
-/// Base class for all windows.
+/// An abstract base class for all windows.
+///
+/// @note This class is a wrapper around its implementation shared pointer.
+///
 /// @ingroup window_group
 class Window: public Bin {
 public:
@@ -77,16 +80,16 @@ public:
 
     /// Signal emitted when window moves across it's parent or screen.
     /// Slot prototype:
-    /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    /// ~~~~~~~~~~~~~~~
     /// void on_position_changed();
-    /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    /// ~~~~~~~~~~~~~~~
     signal<void()> & signal_position_changed();
 
     /// Signal emitted when window is going to close.
     /// Slot prototype:
-    /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    /// ~~~~~~~~~~~~~~~
     /// void on_close();
-    /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    /// ~~~~~~~~~~~~~~~
     signal<void()> & signal_close();
 
 protected:

@@ -56,7 +56,7 @@ Loop_freebsd::Loop_freebsd(std::thread::id tid):
     Loop_posix()
 {
     tid_ = tid;
-    loopid_ = loopcnt_;
+    id_ = loopcnt_;
     signal_quit_.connect(fun(this, &Loop_freebsd::done));
     init_mounts();
 }

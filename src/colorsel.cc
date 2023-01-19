@@ -57,7 +57,7 @@ signal<void()> & Colorsel::signal_cancel() {
     return COLORSEL_IMPL->signal_cancel();
 }
 
-signal<void(Color)> & Colorsel::signal_color_changed() {
+signal<void(const Color &)> & Colorsel::signal_color_changed() {
     return COLORSEL_IMPL->signal_color_changed();
 }
 

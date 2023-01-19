@@ -166,13 +166,13 @@ public:
     signal<void(const Accel & accel)> & signal_accel_removed() { return signal_accel_removed_; }
 
     /// Signal emitted when label changed using set_label() method.
-    signal<void(ustring)> & signal_label_changed() { return signal_label_changed_; }
+    signal<void(const ustring &)> & signal_label_changed() { return signal_label_changed_; }
 
     /// Signal emitted when label changed using set_icon_name() method.
-    signal<void(ustring)> & signal_icon_changed() { return signal_icon_changed_; }
+    signal<void(const ustring &)> & signal_icon_changed() { return signal_icon_changed_; }
 
     /// Signal emitted when tooltip changed using one of set_tooltip() methods.
-    signal<void(ustring)> & signal_tooltip_changed() { return signal_tooltip_changed_; }
+    signal<void(const ustring &)> & signal_tooltip_changed() { return signal_tooltip_changed_; }
 
 private:
 
@@ -193,9 +193,9 @@ private:
     signal<void(const Accel &)> signal_accel_added_;
     signal<void(const Accel &)> signal_accel_removed_;
 
-    signal<void(ustring)> signal_label_changed_;
-    signal<void(ustring)> signal_icon_changed_;
-    signal<void(ustring)> signal_tooltip_changed_;
+    signal<void(const ustring &)> signal_label_changed_;
+    signal<void(const ustring &)> signal_icon_changed_;
+    signal<void(const ustring &)> signal_tooltip_changed_;
 };
 
 /// An action which can be activated in some way by keyboard accelerator,
@@ -366,13 +366,13 @@ public:
     signal<void(Accel &)> & signal_accel_removed() { return signal_accel_removed_; }
 
     /// Signal emitted when label changed using set_label() method.
-    signal<void(ustring)> & signal_label_changed() { return signal_label_changed_; }
+    signal<void(const ustring &)> & signal_label_changed() { return signal_label_changed_; }
 
     /// Signal emitted when label changed using set_icon_name() method.
-    signal<void(ustring)> & signal_icon_changed() { return signal_icon_changed_; }
+    signal<void(const ustring &)> & signal_icon_changed() { return signal_icon_changed_; }
 
     /// Signal emitted when tooltip changed using one of set_tooltip() methods.
-    signal<void(ustring)> & signal_tooltip_changed() { return signal_tooltip_changed_; }
+    signal<void(const ustring &)> & signal_tooltip_changed() { return signal_tooltip_changed_; }
 
     /// Signal emitted when action destroyed.
     signal<void()> & signal_destroy() { return signal_destroy_; }
@@ -396,9 +396,9 @@ protected:
     signal<void()>        signal_hide_;
     signal<void(Accel &)> signal_accel_added_;
     signal<void(Accel &)> signal_accel_removed_;
-    signal<void(ustring)> signal_label_changed_;
-    signal<void(ustring)> signal_icon_changed_;
-    signal<void(ustring)> signal_tooltip_changed_;
+    signal<void(const ustring &)> signal_label_changed_;
+    signal<void(const ustring &)> signal_icon_changed_;
+    signal<void(const ustring &)> signal_tooltip_changed_;
     signal<void()>        signal_destroy_;
 
 protected:

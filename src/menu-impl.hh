@@ -64,6 +64,8 @@ public:
     void on_item_enable();
     void on_item_disable();
 
+    signal<void()> & signal_quit() { return signal_quit_; }
+
 protected:
 
     using Items = std::list<Menu_item_ptr>;
@@ -74,6 +76,9 @@ protected:
     Menu_ptr            submenu_;
     Menu_item_ptr       current_item_;
     Menu_item_impl *    marked_item_ = nullptr;
+    Action              enter_action_ { "Enter", fun(this, &Menu_impl::activate_current) };
+    Action              cancel_action_ { "Escape", fun(this, &Menu_impl::cancel) };
+    signal<void()>      signal_quit_;
 
 protected:
 
@@ -98,11 +103,6 @@ protected:
     void activate_current();
     void reset_submenu();
     void pass_quit();
-
-private:
-
-    Action              enter_action_ { "Enter", fun(this, &Menu_impl::activate_current) };
-    Action              cancel_action_ { "Escape", fun(this, &Menu_impl::cancel) };
 
 private:
 

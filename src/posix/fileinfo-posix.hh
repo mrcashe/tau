@@ -47,6 +47,9 @@ protected:
     // Overrides pure Fileinfo_impl.
     bool is_removable() override;
 
+    // Overrides pure Fileinfo_impl.
+    void rm(int opts=0, slot<void(int)> slot_async=slot<void(int)>()) override;
+
 protected:
 
     bool    noacc_ = false;         // Access denied.

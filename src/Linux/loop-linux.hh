@@ -94,7 +94,6 @@ public:
 private:
 
     int             infd_ = -1;
-    int             loopid_ = -1;
     int             mntfd_ = -1;
     Poller_posix *  infd_poller_ = nullptr;
     Poller_posix *  mnt_poller_ = nullptr;

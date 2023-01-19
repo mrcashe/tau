@@ -1552,7 +1552,7 @@ ustring Language::sample() const {
 
 std::vector<Script> Language::scripts() const {
     std::vector<Script> v;
-    for (const ustring & s: str_explode(data->scr)) { v.push_back(Script::from_code(s)); }
+    for (const ustring & s: str_explode(data->scr, str_blanks())) { v.push_back(Script::from_code(s)); }
     return v;
 }
 

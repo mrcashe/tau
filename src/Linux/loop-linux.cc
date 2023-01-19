@@ -58,7 +58,7 @@ Loop_linux::Loop_linux(std::thread::id tid):
     Loop_posix()
 {
     tid_ = tid;
-    loopid_ = loopcnt_;
+    id_ = loopcnt_;
     signal_quit_.connect(fun(this, &Loop_linux::done));
     init_mounts();
     mntfd_ = open("/proc/self/mounts", O_RDONLY, 0);

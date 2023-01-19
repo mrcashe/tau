@@ -72,10 +72,11 @@ public:
     Timeval ctime() const { return ctime_; }
     Timeval mtime() const { return mtime_; }
 
-    virtual signal<void(int, ustring)> & signal_watch(int event_mask) = 0;
+    virtual signal<void(int, const ustring &)> & signal_watch(int event_mask) = 0;
     virtual bool is_exec() = 0;
     virtual bool is_hidden() = 0;
     virtual bool is_removable() = 0;
+    virtual void rm(int opts=0, slot<void(int)> slot_async=slot<void(int)>()) = 0;
 
 protected:
 

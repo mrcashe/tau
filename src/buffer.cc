@@ -304,7 +304,7 @@ bool Buffer::bom_enabled() const {
     return impl->bom;
 }
 
-signal<void(Buffer_citer, Buffer_citer, std::u32string)> & Buffer::signal_erase() {
+signal<void(Buffer_citer, Buffer_citer, const std::u32string &)> & Buffer::signal_erase() {
     return impl->signal_erase;
 }
 
@@ -312,7 +312,7 @@ signal<void(Buffer_citer, Buffer_citer)> & Buffer::signal_insert() {
     return impl->signal_insert;
 }
 
-signal<void(Buffer_citer, Buffer_citer, std::u32string)> & Buffer::signal_replace() {
+signal<void(Buffer_citer, Buffer_citer, const std::u32string &)> & Buffer::signal_replace() {
     return impl->signal_replace;
 }
 

@@ -132,8 +132,8 @@ using Inst_element_ptr = std::shared_ptr<Inst_element_impl>;
 using Inst_element_cptr = std::shared_ptr<const Inst_element_impl>;
 
 class Key_file;
-class Key_file_impl;
-class Key_section;
+struct Key_file_impl;
+struct Key_section;
 
 class Language;
 class Locale;
@@ -162,7 +162,7 @@ using Painter_ptr = std::shared_ptr<Painter_impl>;
 using Painter_cptr = std::shared_ptr<const Painter_impl>;
 
 class Pen;
-class Pen_impl;
+struct Pen_impl;
 using Pen_ptr = std::shared_ptr<Pen_impl>;
 using Pen_cptr = std::shared_ptr<const Pen_impl>;
 
@@ -172,17 +172,12 @@ using Pixmap_ptr = std::shared_ptr<Pixmap_impl>;
 using Pixmap_cptr = std::shared_ptr<const Pixmap_impl>;
 
 class Point;
-class Progress;
 class Rect;
-class Roller;
 class Size;
-class Slider;
-class Slot_menu_item;
 
 class Style;
 struct Style_impl;
 
-class Submenu_item;
 class Territory;
 
 class Text_element;
@@ -191,7 +186,7 @@ using Text_element_ptr = std::shared_ptr<Text_element_impl>;
 using Text_element_cptr = std::shared_ptr<const Text_element_impl>;
 
 class Timer;
-class Timer_impl;
+struct Timer_impl;
 using Timer_ptr = std::shared_ptr<Timer_impl>;
 using Timer_cptr = std::shared_ptr<const Timer_impl>;
 
@@ -201,7 +196,6 @@ using Theme_ptr = std::shared_ptr<Theme_impl>;
 using Theme_cptr = std::shared_ptr<const Theme_impl>;
 
 class Toggle_action;
-class Toggle_menu_item;
 class Toplevel;
 class ustring;
 class Vector;

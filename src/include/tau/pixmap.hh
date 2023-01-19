@@ -35,7 +35,10 @@
 
 namespace tau {
 
-/// %Widget containing image data.
+/// Object containing image data.
+///
+/// @note This class is a wrapper around its implementation shared pointer.
+///
 /// @ingroup pixmap_group
 /// See also @ref pixmap_page
 class Pixmap {
@@ -44,17 +47,25 @@ public:
     /// Default constructor creates an empty pixmap.
     Pixmap();
 
+    /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Pixmap(const Pixmap & other) = default;
+
+    /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Pixmap & operator=(const Pixmap & other) = default;
+
     /// Create pixmap with specified depth and size.
     Pixmap(int depth, const Size & size=Size());
 
     /// Create pixmap with specified depth and size.
     Pixmap(int depth, unsigned width, unsigned height);
-
-    /// Copy constructor.
-    Pixmap(const Pixmap & other) = default;
-
-    /// Copy operator.
-    Pixmap & operator=(const Pixmap & other) = default;
 
     /// Duplicate pixmap.
     Pixmap dup(const Pixmap & other);

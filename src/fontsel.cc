@@ -74,11 +74,11 @@ Action & Fontsel::cancel_action() {
     return FONTSEL_IMPL->cancel_action();
 }
 
-signal<void(ustring)> & Fontsel::signal_font_selected() {
+signal<void(const ustring &)> & Fontsel::signal_font_selected() {
     return FONTSEL_IMPL->signal_font_selected();
 }
 
-signal<void(ustring)> & Fontsel::signal_font_activated() {
+signal<void(const ustring &)> & Fontsel::signal_font_activated() {
     return FONTSEL_IMPL->signal_font_activated();
 }
 

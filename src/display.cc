@@ -87,7 +87,7 @@ signal<void()> & Display::signal_can_paste() {
     return impl->signal_can_paste();
 }
 
-signal<void(ustring)> & Display::signal_paste_text() {
+signal<void(const ustring &)> & Display::signal_paste_text() {
     return impl->signal_paste_text();
 }
 

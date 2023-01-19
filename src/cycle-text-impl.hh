@@ -59,7 +59,7 @@ public:
         return edit_allowed_;
     }
 
-    signal<void(ustring)> & signal_selection_changed() {
+    signal<void(const ustring &)> & signal_selection_changed() {
         return signal_selection_changed_;
     }
 
@@ -84,7 +84,7 @@ private:
     ustring                 current_;
     Align                   align_;
     bool                    edit_allowed_ = false;
-    signal<void(ustring)>   signal_selection_changed_;
+    signal<void(const ustring &)>   signal_selection_changed_;
 };
 
 } // namespace tau

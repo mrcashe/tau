@@ -138,7 +138,7 @@ public:
     const Window_impl * mouse_owner() const { return mouse_owner_; }
 
     signal<void()> & signal_can_paste() { return signal_can_paste_; }
-    signal<void(ustring)> & signal_paste_text() { return signal_paste_text_; }
+    signal<void(const ustring &)> & signal_paste_text() { return signal_paste_text_; }
 
 protected:
 
@@ -155,7 +155,7 @@ protected:
     Window_impl *           focused_ = nullptr;
 
     signal<void()>          signal_can_paste_;
-    signal<void(ustring)>   signal_paste_text_;
+    signal<void(const ustring &)> signal_paste_text_;
 
 protected:
 

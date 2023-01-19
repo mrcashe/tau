@@ -555,9 +555,17 @@ LRESULT Display_win::handle(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
         case WM_CHAR:
             if (!char32_is_control(wp)) {
+                char32_t wc = wp;
+
                 if (auto wf = find(hwnd)) {
-                    if (!wf->self()->handle_accel(wp, 0)) {
-                        wf->self()->handle_key_down(wp, 0);
+                    if (!wf->self()->handle_accel(wc, 0)) {
+                        if (char32_is_unicode(wc)) {
+                            if (wf->self()->handle_input(ustring(1, wc))) {
+                                return 0;
+                            }
+                        }
+
+                        wf->self()->handle_key_down(wc, 0);
                     }
 
                     return 0;

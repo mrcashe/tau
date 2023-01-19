@@ -36,7 +36,7 @@ namespace tau {
 
 /// An icon (image) displaying widget.
 ///
-/// This class is a wrapper around its implementation shared pointer.
+/// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup widget_group
 class Icon: public Widget {

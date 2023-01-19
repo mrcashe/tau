@@ -36,6 +36,9 @@
 namespace tau {
 
 /// A container which arranges its child widgets in rows and columns.
+///
+/// @note This class is a wrapper around its implementation shared pointer.
+///
 /// The table places widgets in two-dimensional space using X and Y axes.
 /// The X and Y cell coordinates may be both negative or positive excluding
 /// INT_MIN and INT_MAX values.
@@ -55,6 +58,33 @@ public:
 
     /// Default constructor.
     Table();
+
+    /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Table(const Table & other) = default;
+
+    /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Table & operator=(const Table & other) = default;
+
+    /// Constructor with implementation pointer.
+    ///
+    /// @warning Unlike some other classes (Painter as an example), the whole
+    /// @ref widget_group "widget stack" is unable to run with pure implementation
+    /// pointer, so attempting to construct widget from a pure (@b nullptr) pointer
+    /// will cause throwing an user_error exception!
+    /// That exception also will be thrown if user tries to construct the object
+    /// from incompatible implementation shared pointer.
+    ///
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Table(Widget_ptr wp);
 
     /// Get table span in cells.
     /// On empty table both xmin and ymin are equals to @b INT_MAX and
@@ -78,12 +108,17 @@ public:
     void get_row_span(int row, int & xmin, int & xmax);
 
     /// Set column spacing in pixels.
-    /// @param spacing the spacing in pixels along X axis.
-    void set_column_spacing(unsigned spacing);
+    /// @param xspacing the spacing in pixels along X axis.
+    void set_column_spacing(unsigned xspacing);
 
     /// Set row spacing in pixels.
-    /// @param spacing the spacing in pixels along Y axis.
-    void set_row_spacing(unsigned spacing);
+    /// @param yspacing the spacing in pixels along Y axis.
+    void set_row_spacing(unsigned yspacing);
+
+    /// Set column and row spacing.
+    /// @param xspacing the spacing in pixels along X axis.
+    /// @param yspacing the spacing in pixels along Y axis.
+    void set_spacing(unsigned xspacing, unsigned yspacing);
 
     /// Get column (along X axis) spacing in pixels.
     /// @return column spacing in pixels.
@@ -114,6 +149,9 @@ public:
     /// @param xmax maximal X coordinate (the first coordinate outside of range).
     /// @param ymax maximal Y coordinate (the first coordinate outside of range).
     void remove(int xmin, int ymin, int xmax, int ymax);
+
+    /// Remove all children.
+    void clear();
 
     /// Change widget's span in cells using existing shrink options.
     /// @param w the widget.
@@ -205,7 +243,7 @@ public:
     /// @param w the widget.
     /// @param xalign align along X axis.
     /// @param yalign align along Y axis.
-    void align(Widget & w, Align xalign, Align yalign);
+    void align(Widget & w, Align xalign, Align yalign=ALIGN_CENTER);
 
     /// Get widget align.
     /// @param[in] w the widget.
@@ -216,9 +254,6 @@ public:
     /// Unset widget align.
     /// @param w the widget.
     void unalign(Widget & w);
-
-    /// Remove all children.
-    void clear();
 
     /// Select range.
     /// @param x the X coordinate in cells of top left selection corner.

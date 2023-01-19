@@ -75,7 +75,6 @@ public:
 
 private:
 
-    double      sz_ = 0.0;
     HDC         hdc_ = NULL;
     HFONT       hfont_ = NULL;
     unsigned    dpi_;

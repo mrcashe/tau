@@ -96,7 +96,6 @@ public:
 private:
 
     int             infd_ = -1;
-    int             loopid_ = -1;
     Poller_posix *  infd_poller_ = nullptr;
 
     signal<bool(int, ustring, unsigned)> signal_chain_notify_;

@@ -94,7 +94,7 @@ ustring path_cwd();
 
 /// @ingroup path_group
 /// Get temporary directory.
-ustring path_tmp_dir();
+ustring path_tmp();
 
 /// @ingroup path_group
 /// Get program installation prefix directory.
@@ -158,11 +158,6 @@ bool file_exists(const ustring & path);
 /// @ingroup file_group
 /// Test if file is directory.
 bool file_is_dir(const ustring & path);
-
-/// @ingroup file_group
-/// Remove file from disk.
-/// @throw sys_error
-void file_unlink(const ustring & path);
 
 /// Sleep for a while.
 /// @param time_ms time of the sleep, in milliseconds.

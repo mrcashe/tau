@@ -35,7 +35,7 @@ namespace tau {
 
 /// %Text specialization of List container.
 ///
-/// This class is a wrapper around its implementation shared pointer.
+/// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup container_group
 class List_text: public Widget {
@@ -275,28 +275,28 @@ public:
     /// ~~~~~~~~~~~~~~
     /// void on_text_selected(int row, const ustring & text);
     /// ~~~~~~~~~~~~~~
-    signal<void(int, ustring)> & signal_text_selected();
+    signal<void(int, const ustring &)> & signal_text_selected();
 
     /// Signal emitted when some text activated.
     /// Slot prototype:
     /// ~~~~~~~~~~~~~~
     /// void on_text_activated(int row, const ustring & text);
     /// ~~~~~~~~~~~~~~
-    signal<void(int, ustring)> & signal_text_activated();
+    signal<void(int, const ustring &)> & signal_text_activated();
 
     /// Signal emitted when some text removed.
     /// Slot prototype:
     /// ~~~~~~~~~~~~~~
     /// void on_text_removed(int row, const ustring & text);
     /// ~~~~~~~~~~~~~~
-    signal<void(int, ustring)> & signal_text_removed();
+    signal<void(int, const ustring &)> & signal_text_removed();
 
     /// Signal emitted when some text changed it's position.
     /// Slot prototype:
     /// ~~~~~~~~~~~~~~
     /// void on_text_moved(int old_row, int new_row, const ustring & text);
     /// ~~~~~~~~~~~~~~
-    signal<void(int, int, ustring)> & signal_text_moved();
+    signal<void(int, int, const ustring &)> & signal_text_moved();
 
     /// Signal emitted when %List going to mark branch.
     /// Returning true from this signal will prevent marking.

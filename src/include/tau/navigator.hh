@@ -36,7 +36,7 @@ namespace tau {
 
 /// Filesystem navigation widget.
 ///
-/// This class is a wrapper around its implementation shared pointer.
+/// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup widget_group
 class Navigator: public Widget {
@@ -175,21 +175,21 @@ public:
 
     /// Signal emitted when file selected.
     /// The bound string represents a name of the currently selected file or directory.
-    signal<void(ustring)> & signal_file_select();
+    signal<void(const ustring &)> & signal_file_select();
 
     /// Signal emitted when file unselected.
     /// The bound string represents a name of the unselected file or directory.
-    signal<void(ustring)> & signal_file_unselect();
+    signal<void(const ustring &)> & signal_file_unselect();
 
     /// Signal emitted when directory had changed.
     /// The bound string represents a full path to the current directory.
-    signal<void(ustring)> & signal_dir_changed();
+    signal<void(const ustring &)> & signal_dir_changed();
 
     /// Signal emitted when:
     /// 1. The user presses "ENTER" on file.
     /// 2. The user double clicks on file.
     /// The bound string represents a full path to the clicked or ENTERed file or directory.
-    signal<void(ustring)> & signal_file_activate();
+    signal<void(const ustring &)> & signal_file_activate();
 };
 
 } // namespace tau

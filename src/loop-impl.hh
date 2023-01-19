@@ -48,6 +48,7 @@ public:
 
     void run();
     void quit();
+    int id() const { return id_; }
     bool running() const { return 0 != runlevel_; }
     bool alive() const { return runlevel_ >= 0; }
     void start_timer(Timer_ptr tp);
@@ -61,7 +62,7 @@ public:
     signal<void()> & signal_idle() { return signal_idle_; }
     signal<void()> & signal_run() { return signal_run_; }
     signal<void()> & signal_quit() { return signal_quit_; }
-    signal<void(int, ustring)> & signal_mount() { return signal_mount_; }
+    signal<void(int, const ustring &)> & signal_mount() { return signal_mount_; }
     signal<void()> & signal_alarm(int timeout_ms, bool periodical=false);
 
 protected:
@@ -72,17 +73,18 @@ protected:
 
     using Timers = std::list<Timer_ptr>;
 
-    int                     runlevel_ = 0;
-    Timers                  timers_;
-    uint64_t                uidle_ = 200000;    // Idle timeout in microseconds.
-    uint64_t                next_idle_ = 0;
-    std::thread::id         tid_;
+    int             runlevel_ = 0;
+    Timers          timers_;
+    uint64_t        uidle_ = 200000;    // Idle timeout in microseconds.
+    uint64_t        next_idle_ = 0;
+    std::thread::id tid_;
+    int             id_ = -1;
 
-    signal<void()>          signal_start_;
-    signal<void()>          signal_idle_;
-    signal<void()>          signal_run_;
-    signal<void()>          signal_quit_;
-    signal<void(int, ustring)> signal_mount_;
+    signal<void()>  signal_start_;
+    signal<void()>  signal_idle_;
+    signal<void()>  signal_run_;
+    signal<void()>  signal_quit_;
+    signal<void(int, const ustring &)> signal_mount_;
 
 protected:
 

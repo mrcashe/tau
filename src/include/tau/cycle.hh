@@ -36,7 +36,7 @@ namespace tau {
 
 /// %Container that show its children by cycle.
 ///
-/// This class is a wrapper around its implementation shared pointer.
+/// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup container_group
 /// @ingroup widget_group

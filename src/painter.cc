@@ -31,14 +31,14 @@
 #include <font-impl.hh>
 #include <glyph-impl.hh>
 #include <painter-impl.hh>
-#include <iostream>     // Needed for error logging!
+#include <iostream>
 
 namespace {
 
 tau::Matrix dummy_matrix;
 
 void log(const char * s) {
-    std::cerr << "tau::Painter::" << s << "() called on empty Painter" << std::endl;
+    std::cerr << "tau::Painter::" << s << "() called on pure Painter" << std::endl;
 }
 
 } // anonymous namespace
@@ -88,7 +88,7 @@ Font Painter::font() {
     }
 }
 
-Vector Painter::text_size(const ustring & s) {
+Vector Painter::text_size(const ustring & s, Orientation orient) {
     if (impl) {
         return impl->text_size(s);
     }
@@ -99,7 +99,7 @@ Vector Painter::text_size(const ustring & s) {
     }
 }
 
-Vector Painter::text_size(const std::u32string & s) {
+Vector Painter::text_size(const std::u32string & s, Orientation orient) {
     if (impl) {
         return impl->text_size(s);
     }
@@ -110,7 +110,7 @@ Vector Painter::text_size(const std::u32string & s) {
     }
 }
 
-void Painter::text(const ustring & s, const Color & c) {
+void Painter::text(const ustring & s, const Color & c, Orientation orient) {
     if (impl) {
         impl->text(s, c);
     }
@@ -120,7 +120,7 @@ void Painter::text(const ustring & s, const Color & c) {
     }
 }
 
-void Painter::text(const std::u32string & s, const Color & c) {
+void Painter::text(const std::u32string & s, const Color & c, Orientation orient) {
     if (impl) {
         impl->text(s, c);
     }
@@ -130,7 +130,7 @@ void Painter::text(const std::u32string & s, const Color & c) {
     }
 }
 
-void Painter::text(std::u32string && s, const Color & c) {
+void Painter::text(std::u32string && s, const Color & c, Orientation orient) {
     if (impl) {
         impl->text(std::move(s), c);
     }
@@ -375,7 +375,7 @@ void Painter::move_rel(const Vector & v) {
     }
 }
 
-void Painter::rectangle(double x1, double y1, double x2, double y2) {
+void Painter::rectangle(double x1, double y1, double x2, double y2, double radius) {
     if (impl) {
         impl->rectangle(x1, y1, x2, y2);
     }
@@ -385,7 +385,7 @@ void Painter::rectangle(double x1, double y1, double x2, double y2) {
     }
 }
 
-void Painter::rectangle(const Vector & v1, const Vector & v2) {
+void Painter::rectangle(const Vector & v1, const Vector & v2, double radius) {
     if (impl) {
         impl->rectangle(v1, v2);
     }

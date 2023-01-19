@@ -35,6 +35,9 @@
 namespace tau {
 
 /// A widget which indicates progress visually.
+///
+/// @note This class is a wrapper around its implementation shared pointer.
+///
 /// @ingroup widget_group
 class Progress: public Widget {
 public:
@@ -42,6 +45,33 @@ public:
     /// Constructor with direction.
     /// @param vertical create vertical(true) or horizontal(false) progress bar.
     Progress(bool vertical=false);
+
+    /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Progress(const Progress & other) = default;
+
+    /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Progress & operator=(const Progress & other) = default;
+
+    /// Constructor with implementation pointer.
+    ///
+    /// @warning Unlike some other classes (Painter as an example), the whole
+    /// @ref widget_group "widget stack" is unable to run with pure implementation
+    /// pointer, so attempting to construct widget from a pure (@b nullptr) pointer
+    /// will cause throwing an user_error exception!
+    /// That exception also will be thrown if user tries to construct the object
+    /// from incompatible implementation shared pointer.
+    ///
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Progress(Widget_ptr wp);
 
     /// Set border style.
     /// The default border style is BORDER_INSET.

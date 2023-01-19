@@ -98,7 +98,7 @@ static Pixmap_ptr load_xpm_from_buffer(Buffer buf) {
 
                 if (ustring::npos != close) {
                     ustring ss = s.substr(1+open, close-open-1);
-                    auto v = str_explode(str_trim(ss), " \t");
+                    auto v = str_explode(str_trim(ss), str_blanks());
 
                     if (char32_isblank(*ss.begin())) {
                         v.insert(v.begin(), ustring(nchars, ' '));

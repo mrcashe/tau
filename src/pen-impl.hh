@@ -32,9 +32,7 @@
 
 namespace tau {
 
-class Pen_impl {
-public:
-
+struct Pen_impl {
     Color      color;
     Line_style line_style  = SOLID_LINE;
     double     line_width  = 1.0;

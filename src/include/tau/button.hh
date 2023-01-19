@@ -64,7 +64,7 @@ public:
 
 /// Push button.
 ///
-/// This class is a wrapper around its implementation shared pointer.
+/// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup widget_group
 class Button: public Button_base {
@@ -159,7 +159,7 @@ public:
 
 /// %Toggle button.
 ///
-/// This class is a wrapper around its implementation shared pointer.
+/// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup widget_group
 class Toggle: public Button_base {

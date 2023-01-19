@@ -37,7 +37,7 @@ namespace tau {
 
 /// The scaled font.
 ///
-/// This class is a wrapper around its implementation shared pointer.
+/// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// A font represents an organized collection of glyphs in which the various Glyph
 /// representations will share a common look or styling such that, when a string of
@@ -65,7 +65,10 @@ public:
     Font & operator=(const Font & other) = default;
 
     /// Test if pure.
-    operator bool() const { return nullptr != impl; }
+    operator bool() const;
+
+    /// Reset underlying implementation.
+    void reset();
 
     /// Compare operator.
     bool operator==(const Font & other) const;
@@ -82,8 +85,8 @@ public:
     /// Get system default font specification.
     static ustring normal();
 
-    /// Reset underlying implementation.
-    void reset() { impl.reset(); }
+    /// Get system default monospace font specification.
+    static ustring mono();
 
     /// Get font specification.
     ustring spec() const;

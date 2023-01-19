@@ -25,19 +25,19 @@
 # -----------------------------------------------------------------------------
 
 mxe_so_builddir = mxe-so
-src_dirs = $(srcdir) $(srcdir)/Windows $(confdir)
-sources = $(foreach dir, $(src_dirs), $(wildcard $(dir)/*.cc))
+srcdirs += $(srcdir)/Windows $(confdir)/Windows
+VPATH = $(srcdirs)
+sources = $(foreach dir, $(srcdirs), $(wildcard $(dir)/*.cc))
 objects = $(addprefix $(mxe_so_builddir)/, $(sort $(addsuffix .o, $(basename $(notdir $(sources))))))
 syslibs = $(addprefix $(mxe_prefix)/$(mxe_target)/lib/,$(mxe_syslibs))
 CXXFLAGS += -O2 -Wall $(hh_impl_options)
 MXE_CXX = $(mxe_prefix)/bin/$(mxe_target)-g++
 MXE_STRIP = $(mxe_prefix)/bin/$(mxe_target)-strip
-VPATH = $(src_dirs)
 
 all: $(mxe_sodir) $(mxe_so_builddir) $(mxe_so)
 
 $(mxe_so): $(objects)
-	$(MXE_CXX) -shared -o $@ $(mxe_so_builddir)/*.o $(syslibs)
+	$(MXE_CXX) -shared -o $@ $(mxe_so_builddir)/*.o $(syslibs) && chmod -x $@
 
 clean:
 	@$(rm) $(mxe_so_builddir)/*.o $(mxe_so_builddir)/*.dep $(mxe_so)
@@ -53,6 +53,7 @@ include $(wildcard $(mxe_so_builddir)/*.dep)
 install: $(lib_prefix)
 	@$(cp) $(mxe_so) $(mxe_so_dest)
 	@$(MXE_STRIP) --strip-unneeded $(mxe_so_dest)
+	@chmod -x $(mxe_so_dest)
 
 uninstall:
 	@$(rm) $(mxe_so_dest)

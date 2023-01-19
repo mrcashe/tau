@@ -159,7 +159,7 @@ void Master_action::add_accel(char32_t kc, int km) {
 }
 
 void Master_action::add_accels(const ustring & key_specs) {
-    for (const ustring & spec: str_explode(key_specs, " \t")) {
+    for (const ustring & spec: str_explode(key_specs, str_blanks())) {
         char32_t kc; int km;
         key_spec_from_string(spec, kc, km);
         add_accel(kc, km);
@@ -177,7 +177,7 @@ void Master_action::remove_accel(char32_t kc, int km) {
 }
 
 void Master_action::remove_accels(const ustring & key_specs) {
-    for (const ustring & spec: str_explode(key_specs, " \t")) {
+    for (const ustring & spec: str_explode(key_specs, str_blanks())) {
         char32_t kc; int km;
         key_spec_from_string(spec, kc, km);
         remove_accel(kc, km);

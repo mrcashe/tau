@@ -708,7 +708,7 @@ void Widget_impl::scroll_to(int x, int y) {
 
 Point Widget_impl::scroll_position() const {
     if (const Scroller_impl * pp = dynamic_cast<const Scroller_impl *>(parent_)) {
-        return pp->offset();
+        return pp->pan();
     }
 
     return Point();
@@ -829,7 +829,7 @@ Rect Widget_impl::visible_area() const {
 
     if (size_) {
         if (auto pp = dynamic_cast<const Scroller_impl *>(parent_)) {
-            r.translate(pp->offset());
+            r.translate(pp->pan());
         }
     }
 
@@ -960,12 +960,17 @@ bool Widget_impl::handle_key_up(char32_t kc, int km) {
     return signal_key_up_(kc, km);
 }
 
+// Overriden by Container_impl.
+bool Widget_impl::handle_input(const ustring & s) {
+    return signal_input_(std::cref(s));
+}
+
 void Widget_impl::handle_paint(Painter pr, const Rect & inval) {
-    signal_paint_(pr, inval);
+    signal_paint_(pr, inval.translated(scroll_position()));
 }
 
 void Widget_impl::handle_backpaint(Painter pr, const Rect & inval) {
-    signal_backpaint_(pr, inval);
+    signal_backpaint_(pr, inval.translated(scroll_position()));
 }
 
 // Overriden by Window_impl.

@@ -733,21 +733,25 @@ void Display_xcb::init_xkb() {
     }
 
     int32_t kbd_id = xkb_x11_get_core_keyboard_device_id(cx_);
+
     if (-1 == kbd_id) {
         throw graphics_error("Display_xcb: failed to obtain core keyboard device");
     }
 
     xkbcontext_ = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
+
     if (!xkbcontext_) {
         throw graphics_error("Display_xcb: failed to create xkb context");
     }
 
     xkbkeymap_ = xkb_x11_keymap_new_from_device(xkbcontext_, cx_, kbd_id, XKB_KEYMAP_COMPILE_NO_FLAGS);
+
     if (!xkbkeymap_) {
         throw graphics_error("Display_xcb: failed to create xkb keymap");
     }
 
-    xkbstate_ = xkb_state_new(xkbkeymap_);
+    xkbstate_ = xkb_x11_state_new_from_device(xkbkeymap_, cx_, kbd_id);
+
     if (!xkbstate_) {
         throw graphics_error("Display_xcb: failed to create xkb state");
     }
@@ -1201,7 +1205,7 @@ void Display_xcb::handle_kbd(bool press, xcb_key_press_event_t * event) {
     Window_impl * wii = modal_window_ ? modal_window_ : focused_;
 
     if (wii) {
-        uint32_t kc = 0;
+        char32_t kc = 0;
 
         if (uni < 0x000020 || uni == 0x007f || uni > 0x10ffff) {
             auto iter = kc_translate_.find(xkeycode);
@@ -1248,7 +1252,15 @@ void Display_xcb::handle_kbd(bool press, xcb_key_press_event_t * event) {
         if (0 != kc) {
             if (press) {
                 if (!wii->handle_accel(kc, km)) {
-                    wii->handle_key_down(kc, km);
+                    if (char32_is_unicode(kc) && (0 == km || KM_SHIFT == km)) {
+                        if (!wii->handle_input(ustring(1, kc))) {
+                            wii->handle_key_down(kc, km);
+                        }
+                    }
+
+                    else {
+                        wii->handle_key_down(kc, km);
+                    }
                 }
             }
 

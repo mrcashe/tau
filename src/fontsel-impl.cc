@@ -96,15 +96,43 @@ void Fontsel_impl::init() {
     entry_->set_tooltip("Click on the sample text to edit it");
     frame->insert(entry_);
 
-    Text_ptr tp = std::make_shared<Text_impl>("Font name:", ALIGN_START);
-    put(tp, 0, 3, 1, 1, false, true);
+    ustring hint = "Selected font specification";
+    Text_ptr tp = std::make_shared<Text_impl>("Spec:", ALIGN_START);
+    put(tp, 0, 3, 1, 1, true, true);
+    tp->set_tooltip(hint);
+    align(tp.get(), ALIGN_START);
     fontspec_ = std::make_shared<Text_impl>(ALIGN_END);
-    put(fontspec_, 1, 3, 3, 1, false, true);
+    put(fontspec_, 1, 3, 1, 1, false, true);
+    fontspec_->set_tooltip(hint);
 
-    tp = std::make_shared<Text_impl>("PostScript name:", ALIGN_START);
-    put(tp, 0, 4, 1, 1, false, true);
+    hint = "PostScript font name";
+    tp = std::make_shared<Text_impl>("PostScript:", ALIGN_START);
+    put(tp, 0, 4, 1, 1, true, true);
+    tp->set_tooltip(hint);
+    align(tp.get(), ALIGN_START);
     psname_ = std::make_shared<Text_impl>(ALIGN_END);
-    put(psname_, 1, 4, 3, 1, false, true);
+    put(psname_, 1, 4, 1, 1, false, true);
+    psname_->set_tooltip(hint);
+
+    hint = "Normal (Default) system font";
+    tp = std::make_shared<Text_impl>("Normal:", ALIGN_START);
+    put(tp, 2, 3, 1, 1, true, true);
+    tp->set_tooltip(hint);
+    align(tp.get(), ALIGN_START);
+    tp = std::make_shared<Text_impl>(Font::normal(), ALIGN_END);
+    put(tp, 3, 3, 1, 1, false, true);
+    tp->set_tooltip(hint);
+
+    hint = "Default system monospace font";
+    tp = std::make_shared<Text_impl>("Mono:", ALIGN_START);
+    put(tp, 2, 4, 1, 1, true, true);
+    tp->set_tooltip(hint);
+    align(tp.get(), ALIGN_START);
+    tp = std::make_shared<Text_impl>(Font::mono(), ALIGN_END);
+    put(tp, 3, 4, 1, 1, false, true);
+    tp->set_tooltip(hint);
+
+    set_column_margin(2, 16, 0);
 
     apply_ = std::make_shared<Button_impl>("Apply", "dialog-ok", MEDIUM_ICON);
     apply_->signal_click().connect(fun(this, &Fontsel_impl::on_apply_clicked));

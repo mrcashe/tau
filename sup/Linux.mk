@@ -31,10 +31,8 @@ export xcb_so_builddir = linux-xcb-so
 export unix_test_a_builddir = linux-test-a
 export unix_test_so_builddir = linux-test-so
 
-export srcroot = $(topdir)/src
-export cplat_srcdir = $(srcroot)
-export posix_srcdir = $(srcroot)/posix
-export unix_srcdir = $(srcroot)/Linux
+export posix_srcdir = $(srcdir)/posix
+export unix_srcdir = $(srcdir)/Linux
 
 export unix_sys_headers = $(shell pkg-config --cflags $(pkg_required))
 export unix_sys_shared =

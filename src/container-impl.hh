@@ -49,6 +49,9 @@ public:
     bool handle_key_up(char32_t kc, int km) override;
 
     // Overrides Widget_impl.
+    bool handle_input(const ustring & s) override;
+
+    // Overrides Widget_impl.
     void handle_paint(Painter pr, const Rect & inval) override;
 
     // Overrides Widget_impl.

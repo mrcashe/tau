@@ -146,7 +146,6 @@ private:
 
     Handles         handles_;
     Drives          drives_;
-    int             loopid_;
 
     signal<bool(HANDLE)> signal_chain_poll_;
 

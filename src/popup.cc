@@ -42,6 +42,11 @@ Popup::Popup(Toplevel & tp, const Point & origin, Gravity gravity):
     impl = dp->create_popup(dp, tpl.get(), origin, gravity);
 }
 
+Popup::Popup(Widget_ptr wp):
+    Window(std::dynamic_pointer_cast<Popup_impl>(wp))
+{
+}
+
 void Popup::close() {
     POPUP_IMPL->close();
 }

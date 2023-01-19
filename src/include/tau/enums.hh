@@ -59,14 +59,23 @@ enum Border_style {
 /// Used by multiple widgets.
 /// @ingroup enum_group
 enum Orientation {
-    OR_UP,                  ///< Down-to-Up orientation.
-    OR_DOWN,                ///< Up-to-Down orientation.
-    OR_RIGHT,               ///< Left-to-Right orientation.
-    OR_LEFT,                ///< Right-to-Left orientation.
-    OR_NORTH = OR_UP,       ///< Synonymous OR_UP.
-    OR_SOUTH = OR_DOWN,     ///< Synonymous OR_DOWN.
-    OR_EAST  = OR_RIGHT,    ///< Synonymous OR_RIGHT.
-    OR_WEST  = OR_LEFT      ///< Synonymous OR_LEFT.
+    OR_UP,                          ///< Down-to-Up orientation.
+    OR_DOWN,                        ///< Up-to-Down orientation.
+    OR_LEFT,                        ///< Right-to-Left orientation.
+    OR_RIGHT,                       ///< Left-to-Right orientation.
+    OR_NORTH = OR_UP,               ///< Synonymous OR_UP.
+    OR_SOUTH = OR_DOWN,             ///< Synonymous OR_DOWN.
+    OR_WEST  = OR_LEFT,             ///< Synonymous OR_LEFT.
+    OR_EAST  = OR_RIGHT,            ///< Synonymous OR_RIGHT.
+    ORIENTATION_UP = OR_UP,         ///< Synonymous OR_UP.
+    ORIENTATION_DOWN = OR_DOWN,     ///< Synonymous OR_DOWN.
+    ORIENTATION_LEFT = OR_LEFT,     ///< Synonymous OR_LEFT.
+    ORIENTATION_RIGHT = OR_RIGHT,   ///< Synonymous OR_RIGHT.
+    ORIENTATION_NORTH = OR_UP,      ///< Synonymous OR_UP.
+    ORIENTATION_SOUTH = OR_DOWN,    ///< Synonymous OR_DOWN.
+    ORIENTATION_WEST = OR_LEFT,     ///< Synonymous OR_LEFT.
+    ORIENTATION_EAST = OR_RIGHT,    ///< Synonymous OR_RIGHT.
+
 };
 
 /// The window gravity.
@@ -137,12 +146,14 @@ enum Oper {
 /// %Icon sizes used when getting icons.
 /// @ingroup enum_group
 enum Icon_size {
-    SMALL_ICON      = 0,    ///< Default icon size is 16 pixels.
-    MEDIUM_ICON     = 1,    ///< Default icon size is 22 pixels.
-    NORMAL_ICON     = 2,    ///< Default icon size is 32 pixels.
-    LARGE_ICON      = 3,    ///< Default icon size is 48 pixels.
-    SMALLEST_ICON   = 0,
-    LARGEST_ICON    = 3
+    SMALLEST_ICON   = 0,    ///< Smallest icon.
+    NANO_ICON       = 0,    ///< Default icon size is  8 pixels.
+    TINY_ICON       = 1,    ///< Default icon size is 12 pixels.
+    SMALL_ICON      = 2,    ///< Default icon size is 16 pixels.
+    MEDIUM_ICON     = 3,    ///< Default icon size is 22 pixels.
+    NORMAL_ICON     = 4,    ///< Default icon size is 32 pixels.
+    LARGE_ICON      = 5,    ///< Default icon size is 48 pixels.
+    LARGEST_ICON    = 5     ///< Largest icon.
 };
 
 /// Check style.
@@ -156,6 +167,7 @@ enum Check_style {
 /// File and directory flags.
 /// @ingroup enum_group
 enum File_flags {
+    FILE_NOTHING        = 0x00000000,   ///< Nothing specified/happend.
     FILE_ACCESSED       = 0x00000001,   ///< File or directory was accessed.
     FILE_ATTRIB         = 0x00000002,   ///< File or directory metadata changed.
     FILE_CHANGED        = 0x00000004,   ///< File or directory was changed.
@@ -220,6 +232,7 @@ enum Wrap_mode {
 
 /// Action items to be used.
 enum Action_items {
+    ACTION_NOTHING  = 0,        ///< Do not use anything.
     ACTION_LABEL    = 1 << 0,   ///< Use label provided by action.
     ACTION_ACCEL    = 1 << 1,   ///< Use accelerators provided by action.
     ACTION_TOOLTIP  = 1 << 2,   ///< Use tootip provided by action.

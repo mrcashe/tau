@@ -37,7 +37,7 @@ namespace tau {
 
 /// The event loop.
 ///
-/// This class is a wrapper around its implementation shared pointer.
+/// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup sys_group
 class Loop {
@@ -72,6 +72,9 @@ public:
     /// Test if running.
     bool running() const;
 
+    /// Get unique loop id.
+    int id() const;
+
     /// List mount points.
     std::vector<ustring> mounts() const;
 
@@ -93,7 +96,7 @@ public:
     /// void on_mount(int file_flags, const ustring & path).
     /// ~~~~~~~~~~~~~~~
     /// The meaning of file_flags can be found at #File_flags enum.
-    signal<void(int, ustring)> & signal_mount();
+    signal<void(int, const ustring &)> & signal_mount();
 
 private:
 

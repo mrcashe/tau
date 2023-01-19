@@ -31,10 +31,8 @@ export xcb_so_builddir = freebsd-xcb-so
 export unix_test_a_builddir = freebsd-test-a
 export unix_test_so_builddir = freebsd-test-so
 
-export srcroot = $(topdir)/src
-export cplat_srcdir = $(srcroot)
-export posix_srcdir = $(srcroot)/posix
-export unix_srcdir = $(srcroot)/FreeBSD
+export posix_srcdir = $(srcdir)/posix
+export unix_srcdir = $(srcdir)/FreeBSD
 
 export unix_sys_headers = $(shell pkg-config --cflags $(pkg_required))
 export unix_sys_shared = -lintl

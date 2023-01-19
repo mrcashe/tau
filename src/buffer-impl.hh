@@ -92,9 +92,9 @@ struct Buffer_impl {
     Encoding            utf32le { "UTF-32LE" };
     std::u32string      newlines;
 
-    signal<void(Buffer_citer, Buffer_citer, std::u32string)> signal_erase;
+    signal<void(Buffer_citer, Buffer_citer, const std::u32string &)> signal_erase;
     signal<void(Buffer_citer, Buffer_citer)> signal_insert;
-    signal<void(Buffer_citer, Buffer_citer, std::u32string)> signal_replace;
+    signal<void(Buffer_citer, Buffer_citer, const std::u32string &)> signal_replace;
     signal<void()> signal_changed;
     signal<void()> signal_flush;
     signal<void()> signal_lock;

@@ -36,7 +36,7 @@
 namespace tau {
 
 char32_t char32_from_iterator(std::string::const_iterator pos);
-std::size_t char8_len(char leader);
+std::size_t utf8_len(char leader);
 
 template <class T>
 class ustring_iterator {
@@ -72,7 +72,7 @@ public:
     }
 
     ustring_iterator & operator++() {
-        pos_ += char8_len(*pos_);
+        pos_ += utf8_len(*pos_);
         return *this;
     }
 

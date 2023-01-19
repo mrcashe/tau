@@ -24,12 +24,14 @@
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ----------------------------------------------------------------------------
 
+#include <tau/exception.hh>
 #include <tau/locale.hh>
 #include <tau/string.hh>
 #include <tau/sys.hh>
 #include "fileinfo-posix.hh"
 #include <sys/stat.h>
 #include <errno.h>
+#include <unistd.h>
 #include <iostream>
 
 namespace tau {
@@ -94,6 +96,12 @@ bool Fileinfo_posix::is_removable() {
     }
 
     return false;
+}
+
+// Overrides pure Fileinfo_impl.
+void Fileinfo_posix::rm(int opts, slot<void(int)> slot_async) {
+    int result = unlink(Locale().encode_filename(uri_).c_str());
+    if (-1 == result) { throw sys_error(); }
 }
 
 } // namespace tau

@@ -36,7 +36,7 @@ namespace tau {
 
 /// %Font selection widget.
 ///
-/// This class is a wrapper around its implementation shared pointer.
+/// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup widget_group
 class Fontsel: public Widget {
@@ -105,7 +105,7 @@ public:
     /// ~~~~~~~~~~~~~~~
     /// void on_font_selected(const ustring & spec);
     /// ~~~~~~~~~~~~~~~
-    signal<void(ustring)> & signal_font_selected();
+    signal<void(const ustring &)> & signal_font_selected();
 
     /// Signal "Font Activated".
     /// Emits when font family of font face double clicked or font size changed or "Apply" button pressed.
@@ -113,7 +113,7 @@ public:
     /// ~~~~~~~~~~~~~~~
     /// void on_font_activated(const ustring & spec);
     /// ~~~~~~~~~~~~~~~
-    signal<void(ustring)> & signal_font_activated();
+    signal<void(const ustring &)> & signal_font_activated();
 };
 
 } // namespace tau

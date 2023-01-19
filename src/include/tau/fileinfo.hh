@@ -37,7 +37,7 @@ namespace tau {
 
 /// Information about certain file.
 ///
-/// This class is a wrapper around its implementation shared pointer.
+/// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup file_group
 class Fileinfo {
@@ -108,6 +108,12 @@ public:
     /// Get file last modification time.
     Timeval mtime() const;
 
+    /// Remove file (unlink).
+    /// @param opts the options (reserved but not yet impelmented).
+    /// @param slot_async if not pure, remove file asynchronously (reserved but not yet implemented).
+    /// @throw sys_error in case of operating system error.
+    void rm(int opts=0, slot<void(int)> slot_async=slot<void(int)>());
+
     /// Signal watch.
     /// Used for file event monitoring.
     /// Slot prototype:
@@ -117,7 +123,7 @@ public:
     /// The meaning of @b event_mask bits can be found in
     /// #File_flags enum (enums.hh header file).
     /// @param event_mask same meaning as above.
-    signal<void(int, ustring)> & signal_watch(int event_mask);
+    signal<void(int, const ustring &)> & signal_watch(int event_mask);
 
 private:
 

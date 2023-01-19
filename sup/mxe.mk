@@ -27,7 +27,7 @@
 export mxe_aname = libtau-$(Major_).$(Minor_)-mxe.a
 export mxe_adir = $(bindir)
 export mxe_a = $(mxe_adir)/$(mxe_aname)
-export mxe_a_dest = $(lib_prefix)/$(mxe_target)-$(mxe_aname)
+export mxe_a_dest = $(lib_prefix)/libtau-$(Major_).$(Minor_)-$(mxe_target)-mxe.a
 
 export mxe_soname = libtau-$(Major_).$(Minor_)-$(mxe_target)-mxe.dll
 export mxe_sodir = $(bindir)

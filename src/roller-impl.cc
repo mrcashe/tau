@@ -43,7 +43,7 @@ Roller_impl::Roller_impl(Orientation orient, bool autohide):
     set_start(std::make_shared<Button_impl>(start_icon, 12));
     ustring end_icon = horizontal() ? "picto-right" : "picto-down";
     set_end(std::make_shared<Button_impl>(end_icon, 12));
-    scroller_->signal_offset_changed().connect(fun(this, &Roller_impl::update_buttons));
+    scroller_->signal_pan_changed().connect(fun(this, &Roller_impl::update_buttons));
     scroller_->signal_size_changed().connect(fun(this, &Roller_impl::update_buttons));
     scroller_->signal_size_changed().connect(fun(this, &Roller_impl::update_roll));
     scroller_->signal_logical_size_changed().connect(fun(this, &Roller_impl::update_buttons));
@@ -59,7 +59,7 @@ void Roller_impl::clear() {
 }
 
 int Roller_impl::offset() const {
-    Point pt = scroller_->offset();
+    Point pt = scroller_->pan();
     return horizontal() ? pt.x() : pt.y();
 }
 
@@ -117,7 +117,7 @@ void Roller_impl::update_roll() {
 void Roller_impl::update_buttons() {
     if (autohide_) {
         Size lsize = scroller_->logical_size(), size = scroller_->size(), max = lsize-size;
-        Point offset = scroller_->offset();
+        Point offset = scroller_->pan();
 
         if (horizontal()) {
             if (offset.x() > 0) {

@@ -32,6 +32,7 @@ clean: clean-build
 include conf/conf.mk
 
 export hh_src = $(srcdir)/include
+export srcdirs = $(srcdir) $(confdir)
 export hh_option = -I$(hh_src)
 export hh_impl_options = $(hh_option) -I$(srcdir)
 

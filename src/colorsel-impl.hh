@@ -40,7 +40,7 @@ public:
 
     signal<void()> & signal_apply() { return signal_apply_; }
     signal<void()> & signal_cancel() { return signal_cancel_; }
-    signal<void(Color)> & signal_color_changed() { return signal_color_changed_; }
+    signal<void(const Color &)> & signal_color_changed() { return signal_color_changed_; }
 
 private:
 
@@ -75,7 +75,7 @@ private:
 
     signal<void()>      signal_apply_;
     signal<void()>      signal_cancel_;
-    signal<void(Color)> signal_color_changed_;
+    signal<void(const Color &)> signal_color_changed_;
     connection          html_cx_;
 
 private:

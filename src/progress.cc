@@ -36,6 +36,11 @@ Progress::Progress(bool vertical):
 {
 }
 
+Progress::Progress(Widget_ptr wp):
+    Widget(std::dynamic_pointer_cast<Progress_impl>(wp))
+{
+}
+
 void Progress::set_border_style(Border_style bs) {
     PROGRESS_IMPL->set_border_style(bs);
 }

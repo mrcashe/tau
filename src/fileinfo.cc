@@ -89,7 +89,11 @@ Timeval Fileinfo::mtime() const {
     return impl->mtime();
 }
 
-signal<void(int, ustring)> & Fileinfo::signal_watch(int event_mask) {
+void Fileinfo::rm(int opts, slot<void(int)> slot_async) {
+    impl->rm(opts, slot_async);
+}
+
+signal<void(int, const ustring &)> & Fileinfo::signal_watch(int event_mask) {
     return impl->signal_watch(event_mask);
 }
 

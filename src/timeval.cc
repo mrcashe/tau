@@ -303,6 +303,20 @@ Timeval::Timeval(uint64_t usec):
     tz_set();
 }
 
+// static
+Timeval Timeval::future(uint64_t us) {
+    return Timeval(now()+us);
+}
+
+Timeval & Timeval::operator=(uint64_t value_us) {
+    usec_ = value_us;
+    return *this;
+}
+
+Timeval::operator uint64_t() const {
+    return usec_;
+}
+
 Timeval Timeval::now() {
     ::timeval tv;
     ::gettimeofday(&tv, nullptr);

@@ -977,7 +977,7 @@ int Text_impl::baseline(std::size_t ri) const {
     return 0;
 }
 
-void Text_impl::get_row_bounds(std::size_t ln, int & top, int & bottom) const {
+void Text_impl::get_line_bounds(std::size_t ln, int & top, int & bottom) const {
     if (ln < lines_.size()) {
         const Line & line = lines_[ln];
         top = oy_+line.ybase-line.ascent;
@@ -1124,7 +1124,7 @@ void Text_impl::redraw(const Rect & r, Painter pr) {
 }
 
 bool Text_impl::on_paint(Painter pr, const Rect & r) {
-    redraw(r.translated(scroll_position()), pr);
+    redraw(r, pr);
     return true;
 }
 

@@ -37,12 +37,29 @@
 namespace tau {
 
 /// %Theme engine.
+///
+/// @note This class is a wrapper around its implementation shared pointer.
+///
 /// @ingroup sys_group
 class Theme {
 public:
 
     /// Default constructor.
     Theme();
+
+    /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Theme(const Theme & other) = default;
+
+    /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Theme & operator=(const Theme & other) = default;
 
     /// Add icon directory.
     void add_icon_dir(const ustring & dir);

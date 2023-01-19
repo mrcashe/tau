@@ -68,7 +68,6 @@
 #include <tau/menu.hh>
 #include <tau/navigator.hh>
 #include <tau/notebook.hh>
-#include <tau/sys.hh>
 #include <tau/painter.hh>
 #include <tau/pen.hh>
 #include <tau/pixmap.hh>
@@ -79,6 +78,8 @@
 #include <tau/separator.hh>
 #include <tau/slider.hh>
 #include <tau/style.hh>
+#include <tau/sys.hh>
+#include <tau/sysinfo.hh>
 #include <tau/table.hh>
 #include <tau/text.hh>
 #include <tau/theme.hh>

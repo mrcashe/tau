@@ -64,7 +64,7 @@ bool Card_impl::empty() const {
 
 Widget_impl * Card_impl::current() {
     for (auto i = holders_.begin(); i != holders_.end(); ++i) {
-        if (!i->wp->hidden()) {
+        if (!i->wp->hidden() && i->wp != hiding_) {
             return i->wp;
         }
     }
@@ -146,10 +146,10 @@ void Card_impl::on_child_hide(Widget_impl * wi) {
     wi->update_size(0, 0);
 
     if (!destroy_) {
-        if (holders_.size() > 1) {
-            in_hide_ = true;
+        hiding_ = wi;
 
-            if (!in_show_) {
+        if (holders_.size() > 1) {
+            if (!showing_) {
                 for (auto i = holders_.begin(); i != holders_.end(); ++i) {
                     if (i->wp == wi) {
                         auto j = i++;    // keep iter.
@@ -167,30 +167,29 @@ void Card_impl::on_child_hide(Widget_impl * wi) {
                     }
                 }
             }
-
-            in_hide_ = false;
         }
 
-        if (!in_show_) { arrange(); }
+        if (!showing_) { arrange(); }
+        hiding_ = nullptr;
     }
 }
 
 void Card_impl::on_child_show(Widget_impl * wi) {
     if (!destroy_) {
-        if (holders_.size() > 1) {
-            in_show_ = true;
+        showing_ = wi;
 
-            if (!in_hide_) {
+        if (holders_.size() > 1) {
+            if (!hiding_) {
                 for (auto i = holders_.begin(); i != holders_.end(); ++i) {
                     if (i->wp != wi) { i->wp->hide(); }
                 }
             }
 
-            in_show_ = false;
         }
 
-        if (!in_hide_) { arrange(); }
+        if (!hiding_) { arrange(); }
         if (focused()) { wi->take_focus(); }
+        showing_ = nullptr;
     }
 }
 

@@ -35,9 +35,15 @@
 namespace tau {
 
 /// %Toplevel window.
+///
+/// @note This class is a wrapper around its implementation shared pointer.
+///
 /// @ingroup window_group
 class Toplevel: public Window {
 public:
+
+    /// @name Constructor and operators
+    /// @{
 
     /// Default constructor.
     Toplevel(const Rect & bounds=Rect());
@@ -45,16 +51,44 @@ public:
     /// Constructor with title (caption).
     Toplevel(const ustring & title, const Rect & bounds=Rect());
 
-    /// Sets the window title (caption).
+    /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Toplevel(const Toplevel & other) = default;
+
+    /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Toplevel & operator=(const Toplevel & other) = default;
+
+    /// Constructor with implementation pointer.
+    ///
+    /// @warning Unlike some other classes (Painter as an example), the whole
+    /// @ref widget_group "widget stack" is unable to run with pure implementation
+    /// pointer, so attempting to construct widget from a pure (@b nullptr) pointer
+    /// will cause throwing an user_error exception!
+    /// That exception also will be thrown if user tries to construct the object
+    /// from incompatible implementation shared pointer.
+    ///
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Toplevel(Widget_ptr wp);
+
+    /// @}
+    /// Sets window title (caption).
     void set_title(const ustring & title);
 
-    /// Sets the window icon.
+    /// Sets window icon.
     void set_icon(Pixmap pix);
 
-    /// Sets the window icon.
-    void set_icon(const ustring & icon_name, unsigned icon_size=MEDIUM_ICON);
+    /// Sets window icon.
+    void set_icon(const ustring & icon_name, int icon_size=MEDIUM_ICON);
 
-    /// Sets the window icon from file.
+    /// Sets window icon from file.
     void set_icon_from_file(const ustring & path);
 
     /// Close window.
@@ -72,7 +106,7 @@ public:
     /// Deoccupy the screen.
     void unfullscreen();
 
-    /// Retrieves the current fullscreen state of window.
+    /// Test if fullscreened.
     bool fullscreened() const;
 
     /// Maximize (zoom) window.
@@ -164,11 +198,14 @@ public:
 
     /// Emits when user clicks [x] window button or presses Alt+F4 or similar.
     /// Return true to prevent window close, false to allow.
-    signal<bool()> & signal_can_close();
+    signal<bool()> & signal_about_close();
 
     signal<void()> & signal_maximize();
+
     signal<void()> & signal_minimize();
+
     signal<void()> & signal_restore();
+
     signal<void(bool)> & signal_fullscreen();
 
     /// Emits when MENU key pressed, typically F10.
@@ -180,9 +217,6 @@ public:
     signal<bool()> & signal_help();
 
 protected:
-
-    /// @private
-    Toplevel(Widget_ptr wp);
 
     /// @private
     Toplevel(std::nullptr_t);

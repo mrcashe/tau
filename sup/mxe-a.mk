@@ -25,14 +25,14 @@
 # -----------------------------------------------------------------------------
 
 mxe_a_builddir = mxe-a
-src_dirs = $(srcdir) $(srcdir)/Windows $(confdir)
-sources = $(foreach dir, $(src_dirs), $(wildcard $(dir)/*.cc))
+srcdirs += $(srcdir)/Windows $(confdir)/Windows
+VPATH = $(srcdirs)
+sources = $(foreach dir, $(srcdirs), $(wildcard $(dir)/*.cc))
 objects = $(addprefix $(mxe_a_builddir)/, $(sort $(addsuffix .o, $(basename $(notdir $(sources))))))
 CXXFLAGS += -O2 -Wall $(hh_impl_options)
 MXE_CXX = $(mxe_prefix)/bin/$(mxe_target)-g++
 MXE_AR = $(mxe_prefix)/bin/$(mxe_target)-ar
 MXE_STRIP = $(mxe_prefix)/bin/$(mxe_target)-strip
-VPATH = $(src_dirs)
 
 all: $(mxe_adir) $(mxe_a_builddir) $(objects)
 

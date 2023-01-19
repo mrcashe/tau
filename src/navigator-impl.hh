@@ -86,19 +86,19 @@ public:
         return str_implode(filters_, ',');
     }
 
-    signal<void(ustring)> & signal_file_select() {
+    signal<void(const ustring &)> & signal_file_select() {
         return signal_file_select_;
     }
 
-    signal<void(ustring)> & signal_file_unselect() {
+    signal<void(const ustring &)> & signal_file_unselect() {
         return signal_file_unselect_;
     }
 
-    signal<void(ustring)> & signal_file_activate() {
+    signal<void(const ustring &)> & signal_file_activate() {
         return signal_file_activate_;
     }
 
-    signal<void(ustring)> & signal_dir_changed() {
+    signal<void(const ustring &)> & signal_dir_changed() {
         return signal_dir_changed_;
     }
 
@@ -148,10 +148,10 @@ private:
 
     connection                  paint_cx_;
 
-    signal<void(ustring)>       signal_file_select_;
-    signal<void(ustring)>       signal_file_unselect_;
-    signal<void(ustring)>       signal_file_activate_;
-    signal<void(ustring)>       signal_dir_changed_;
+    signal<void(const ustring &)> signal_file_select_;
+    signal<void(const ustring &)> signal_file_unselect_;
+    signal<void(const ustring &)> signal_file_activate_;
+    signal<void(const ustring &)> signal_dir_changed_;
 
 private:
 

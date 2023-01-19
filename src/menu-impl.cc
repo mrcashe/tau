@@ -323,6 +323,7 @@ void Menu_impl::quit() {
     close_submenu();
     unselect_current();
     unset_parent_menu();
+    signal_quit_();
 }
 
 void Menu_impl::close_submenu() {

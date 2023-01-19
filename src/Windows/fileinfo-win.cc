@@ -24,6 +24,7 @@
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ----------------------------------------------------------------------------
 
+#include <tau/exception.hh>
 #include <tau/locale.hh>
 #include <tau/sys.hh>
 #include <fileinfo-impl.hh>
@@ -75,7 +76,7 @@ struct Fileinfo_win: public Fileinfo_impl {
     }
 
     // Overrides pure Fileinfo_impl.
-    signal<void(int, ustring)> & signal_watch(int event_mask) override {
+    signal<void(int, const ustring &)> & signal_watch(int event_mask) override {
         if (!loop_) {
             loop_ = Loop_win::this_win_loop();
         }
@@ -133,8 +134,14 @@ struct Fileinfo_win: public Fileinfo_impl {
         return false;
     }
 
+    // Overrides pure Fileinfo_impl.
+    void rm(int opts=0, slot<void(int)> slot_async=slot<void(int)>()) override {
+        std::wstring ws = str_to_wstring(uri_);
+        if (!DeleteFileW(ws.c_str())) { throw sys_error(); }
+    }
+
     bool noacc_ = false;         // Access denied.
-    signal<void(int, ustring)> signal_watch_;
+    signal<void(int, const ustring &)> signal_watch_;
     Loop_win_ptr     loop_;
     File_monitor_ptr mon_;
 };

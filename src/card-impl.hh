@@ -44,6 +44,7 @@ public:
     bool empty() const;
     void show_next();
     void show_previous();
+    Widget_impl * current();
 
 private:
 
@@ -58,8 +59,8 @@ private:
     using Holders = std::list<Holder>;
 
     Holders             holders_;
-    bool                in_show_ = false;       // mutual blocking.
-    bool                in_hide_ = false;       // mutual blocking.
+    Widget_impl *       showing_ = nullptr;
+    Widget_impl *       hiding_  = nullptr;
 
 private:
 
@@ -67,7 +68,6 @@ private:
     void arrange();
     void update_requisition();
     bool on_take_focus();
-    Widget_impl * current();
     void rm_child(Holder & hol);
 
     void on_child_hide(Widget_impl * wi);

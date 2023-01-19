@@ -124,7 +124,7 @@ void Cycle_text::remove(Widget & w) {
     CYCLE_IMPL->remove(w.ptr());
 }
 
-signal<void(ustring)> & Cycle_text::signal_selection_changed() {
+signal<void(const ustring &)> & Cycle_text::signal_selection_changed() {
     return CYCLE_TEXT_IMPL->signal_selection_changed();
 }
 

@@ -93,6 +93,9 @@ public:
     virtual bool handle_key_up(char32_t kc, int km);
 
     // Overriden by Container_impl.
+    virtual bool handle_input(const ustring & s);
+
+    // Overriden by Container_impl.
     virtual void handle_paint(Painter pr, const Rect & inval);
 
     // Overriden by Container_impl.
@@ -303,6 +306,7 @@ public:
     signal<bool(Painter, Rect)> & signal_backpaint() { return signal_backpaint_; }
     signal<bool(char32_t, int)> & signal_key_down() { return signal_key_down_; }
     signal<bool(char32_t, int)> & signal_key_up() { return signal_key_up_; }
+    signal<bool(const ustring &)> & signal_input() { return signal_input_; }
     signal<bool(char32_t, int)> & signal_accel() { return signal_accel_; }
     signal<bool(int, int, Point)> & signal_mouse_down() { return signal_mouse_down_; }
     signal<bool(int, int, Point)> & signal_mouse_double_click() { return signal_mouse_double_click_; }
@@ -347,6 +351,7 @@ protected:
     signal<bool(Painter, Rect)> signal_backpaint_;
     signal<bool(char32_t, int)> signal_key_down_;
     signal<bool(char32_t, int)> signal_key_up_;
+    signal<bool(const ustring &)> signal_input_;
     signal<bool(char32_t, int)> signal_accel_;
     signal<bool(int, int, Point)> signal_mouse_down_;
     signal<bool(int, int, Point)> signal_mouse_double_click_;

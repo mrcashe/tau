@@ -35,7 +35,7 @@ namespace tau {
 
 /// %Dialog window.
 ///
-/// This class is a wrapper around its implementation shared pointer.
+/// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup window_group
 /// @ingroup container_group

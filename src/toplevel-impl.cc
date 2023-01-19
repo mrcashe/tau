@@ -89,7 +89,7 @@ void Toplevel_impl::set_icon_from_file(const ustring & path) {
 
 // From window system: [x] button or Alt-F4 pressed.
 void Toplevel_impl::handle_close() {
-    if (!signal_can_close_()) { close(); }
+    if (!signal_about_close_()) { close(); }
 }
 
 void Toplevel_impl::handle_minimize() {

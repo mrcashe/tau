@@ -156,9 +156,20 @@ void Theme_posix::boot() {
     init_font_dir("/usr/share/fonts");
     init_font_dir("/usr/local/share/fonts");
 
-    for (const ustring & s: str_explode("Ubuntu:Droid Sans:DejaVu Sans:Noto Sans:Free Sans", ':')) {
+    const ustring nice_fonts = "Ubuntu:Droid Sans:DejaVu Sans:Noto Sans:Free Sans"; // FIXME add more nice fonts.
+
+    for (const ustring & s: str_explode(nice_fonts, ':')) {
         if (auto facep = create_font_face(s)) {
             font_normal_ = font_size_change(s, 10);
+            break;
+        }
+    }
+
+    for (const ustring & s: str_explode(nice_fonts, ':')) {
+        ustring ms = font_face_add(s, "Mono");
+
+        if (auto facep = create_font_face(ms)) {
+            font_mono_ = font_size_change(ms, 10);
             break;
         }
     }

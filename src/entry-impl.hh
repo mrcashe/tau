@@ -71,9 +71,9 @@ public:
 
     Action & cancel_action() { return edit_->cancel_action(); }
 
-    signal<void(ustring)> & signal_activate() { return signal_activate_; }
-    signal<void(ustring)> & signal_changed() { return signal_changed_; }
-    signal<bool(ustring)> & signal_validate() { return signal_validate_; }
+    signal<void(const ustring &)> & signal_activate() { return signal_activate_; }
+    signal<void(const ustring &)> & signal_changed() { return signal_changed_; }
+    signal<bool(const ustring &)> & signal_validate() { return signal_validate_; }
 
 private:
 
@@ -85,9 +85,9 @@ private:
     Action          enter_action_ { KC_ENTER, KM_NONE, fun(this, &Entry_impl::on_enter) };
     connection      changed_cx_;
 
-    signal<void(ustring)> signal_changed_;
-    signal<bool(ustring)> signal_validate_;
-    signal<void(ustring)> signal_activate_;
+    signal<void(const ustring &)> signal_changed_;
+    signal<bool(const ustring &)> signal_validate_;
+    signal<void(const ustring &)> signal_activate_;
 
 private:
 

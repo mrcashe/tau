@@ -88,7 +88,9 @@ public:
     Key_section & root();
 
     /// Get specified section.
-    Key_section & section(const ustring & sect);
+    /// @param sect_name section name.
+    /// @param similar if @b true, use str_similar() for lookup (case insensitive), else compare byte-to-byte.
+    Key_section & section(const ustring & sect, bool similar=false);
 
     /// Gets a list of all sections in the Key_file.
     std::vector<ustring> list_sections() const;
@@ -100,13 +102,24 @@ public:
     bool empty() const;
 
     /// Looks whether the key file has the section sect_name.
-    bool has_section(const ustring & sect_name) const;
+    /// @param sect_name section name.
+    /// @param similar if @b true, use str_similar() for lookup (case insensitive), else compare byte-to-byte.
+    bool has_section(const ustring & sect_name, bool similar=false) const;
 
     /// Looks whether the key file has the key key_name in the section named sect_name.
-    bool has_key(const ustring & sect_name, const ustring & key_name) const;
+    /// @param sect_name section name.
+    /// @param key_name key name.
+    /// @param similar if @b true, use str_similar() for lookup (case insensitive), else compare byte-to-byte.
+    bool has_key(const ustring & sect_name, const ustring & key_name, bool similar=false) const;
 
     /// Looks whether the key file has the key key_name in the section sect.
-    bool has_key(const Key_section & sect, const ustring & key_name) const;
+    /// @param sect section.
+    /// @param key_name key name.
+    /// @param similar if @b true, use str_similar() for lookup (case insensitive), else compare byte-to-byte.
+    bool has_key(const Key_section & sect, const ustring & key_name, bool similar=false) const;
+
+    /// Gets exact key name by similar name.
+    ustring key_name(const Key_section & sect, const ustring similar_name) const;
 
     /// Places comment above sect.
     void set_comment(Key_section & sect, const ustring & comment);
@@ -171,10 +184,15 @@ public:
     std::vector<double> get_doubles(Key_section & sect, const ustring & key);
 
     /// Remove key key form the section sect.
-    void remove_key(Key_section & sect, const ustring & key);
+    /// @param sect section.
+    /// @param key_name key name.
+    /// @param similar if @b true, use str_similar() for lookup (case insensitive), else compare byte-to-byte.
+    void remove_key(Key_section & sect, const ustring & key, bool similar=false);
 
     /// Remove section.
-    void remove_section(const ustring & sect_name);
+    /// @param sect_name section name.
+    /// @param similar if @b true, use str_similar() for lookup (case insensitive), else compare byte-to-byte.
+    void remove_section(const ustring & sect_name, bool similar=false);
 
     /// Remove all sections.
     void clear();

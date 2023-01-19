@@ -27,19 +27,11 @@
 #include <tau/timeval.hh>
 #include <glyph-impl.hh>
 #include "font-win.hh"
+#include "theme-win.hh"
 #include <cstring>
 #include <iostream>
-#include <mutex>
 
 namespace {
-
-using Mutex = std::recursive_mutex;
-using Lock = std::lock_guard<Mutex>;
-
-Mutex                     mx_;
-std::vector<tau::ustring> families_;
-tau::ustring              normal_;
-double                    normal_pts_ = 10.0;
 
 inline uint32_t u32(const char * b) {
     return uint8_t(b[3])|(uint32_t(uint8_t(b[2])) << 8)|(uint32_t(uint8_t(b[1])) << 16)|(uint32_t(uint8_t(b[0])) << 24);
@@ -80,108 +72,9 @@ tau::ustring read_utf16(const char * p, std::size_t nbytes) {
     return s;
 }
 
-int CALLBACK lister(const LOGFONTW * lf, const TEXTMETRICW * tm, DWORD ftype, LPARAM lp) {
-    if (TRUETYPE_FONTTYPE == ftype) {
-        tau::ustring fam = tau::str_from_wstring(std::wstring(lf->lfFaceName));
-        auto * v = reinterpret_cast<std::vector<tau::ustring> *>(lp);
-        if (v->end() == std::find(v->begin(), v->end(), fam)) { v->push_back(fam); }
-    }
-
-    return 1;
-}
-
-void load_families() {
-    LOGFONTW lf;
-    std::memset(&lf, 0, sizeof(lf));
-    lf.lfCharSet = DEFAULT_CHARSET;
-    lf.lfOutPrecision = OUT_TT_ONLY_PRECIS;
-    lf.lfQuality = DEFAULT_QUALITY;
-    lf.lfPitchAndFamily = FF_DONTCARE;
-
-    if (HDC hdc = CreateDC("DISPLAY", NULL, NULL, NULL)) {
-        EnumFontFamiliesExW(hdc, &lf, lister, LPARAM(&families_), 0);
-        DeleteDC(hdc);
-    }
-}
-
-tau::ustring font_spec_from_logfont(const LOGFONT & lf) {
-    tau::ustring spec;
-
-    if (HFONT hfont = CreateFontIndirect(&lf)) {
-        if (HDC hdc = CreateDC("DISPLAY", NULL, NULL, NULL)) {
-            HFONT old_font = SelectFont(hdc, hfont);
-            TEXTMETRIC tm;
-
-            if (GetTextMetrics(hdc, &tm)) {
-                int pt = 0;
-                if (lf.lfHeight < 0) { pt = -MulDiv(lf.lfHeight+tm.tmInternalLeading, 72, GetDeviceCaps(hdc, LOGPIXELSY)); }
-                else if (lf.lfHeight > 0) { pt = MulDiv(lf.lfHeight, 72, GetDeviceCaps(hdc, LOGPIXELSY)); }
-                spec = tau::font_spec_build(lf.lfFaceName, "Regular", pt);
-            }
-
-            SelectFont(hdc, old_font);
-            DeleteDC(hdc);
-        }
-
-        DeleteFont(hfont);
-    }
-
-    return spec;
-}
-
 } // anonymous namespace
 
 namespace tau {
-
-// ----------------------------------------------------------------------------
-// Font class static methods.
-// ----------------------------------------------------------------------------
-
-ustring Font::normal() {
-    Lock lk(mx_);
-
-    if (normal_.empty()) {
-        if (families_.empty()) { load_families(); }
-        ustring good_fonts = "Trebuchet MS:Tahoma:Times New Roman:Arial:Noto Sans:Droid Sans:DejaVu Sans";
-
-        NONCLIENTMETRICS ncm;
-        std::memset(&ncm, 0, sizeof ncm);
-        ncm.cbSize = sizeof ncm;
-
-        if (SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof ncm, &ncm, FALSE)) {
-            ustring spec = font_spec_from_logfont(ncm.lfMessageFont);
-
-            if (!spec.empty()) {
-                ustring fam = font_family_from_spec(spec);
-
-                if (str_similar(fam, families_)) {
-                    good_fonts.insert(0, fam+":");
-                    double pts = font_size_from_spec(spec);
-                    if (pts > 10.0) { normal_pts_ = pts; }
-                }
-            }
-        }
-
-        for (const ustring & s: str_explode(good_fonts, ':')) {
-            if (str_similar(s, families_)) {
-                normal_ = s;
-                break;
-            }
-        }
-
-        if (normal_.empty() && !families_.empty()) {
-            normal_ = families_.front();
-        }
-    }
-
-    return font_spec_build(normal_, "Regular", normal_pts_);
-}
-
-std::vector<ustring> Font::list_families() {
-    Lock lk(mx_);
-    if (families_.empty()) { load_families(); }
-    return families_;
-}
 
 // ----------------------------------------------------------------------------
 // Font_win class methods.
@@ -189,62 +82,33 @@ std::vector<ustring> Font::list_families() {
 
 Font_win::Font_win(HDC hdc, unsigned dpi, const ustring & spec):
     hdc_(hdc),
-    dpi_(dpi)
+    dpi_(dpi),
+    spec_(spec)
 {
-    sz_ = font_size_from_spec(spec);
-    if (sz_ < 1.0) { sz_ = 10; }
-    spec_ = font_size_change(spec, sz_);
-
+    if (font_size_from_spec(spec_) < 1.0) { spec_ = font_size_at_least(spec_, 10); }
+    auto specv = font_spec_explode(spec_);
     LOGFONT lf;
     memset(&lf, 0, sizeof(lf));
-    lf.lfHeight = -((sz_*dpi)/72);
+    lf.lfHeight = -((font_size_from_spec(spec_)*dpi)/72);
     lf.lfOutPrecision = OUT_OUTLINE_PRECIS;
     lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
     lf.lfQuality = DEFAULT_QUALITY;
     lf.lfPitchAndFamily = DEFAULT_PITCH|FF_DONTCARE;
-    ustring fam = font_family_from_spec(spec);
+    lf.lfWeight = FW_NORMAL;
+    ustring fam = font_family_from_spec(specv);
     std::size_t len = std::min(std::size_t(LF_FACESIZE), fam.bytes());
     memcpy(lf.lfFaceName, fam.c_str(), len);
     lf.lfFaceName[len < LF_FACESIZE ? len : LF_FACESIZE-1] = '\0';
-
-    ustring face = str_tolower(font_face_from_spec(spec));
-    lf.lfItalic = (ustring::npos != face.find("italic") || ustring::npos != face.find("oblique"));
-
-    if (ustring::npos != face.find("thin")) {
-        lf.lfWeight = FW_THIN;
-    }
-
-    else if (ustring::npos != face.find("extralight") || ustring::npos != face.find("ultralight")) {
-        lf.lfWeight = FW_EXTRALIGHT;
-    }
-
-    else if (ustring::npos != face.find("light")) {
-        lf.lfWeight = FW_LIGHT;
-    }
-
-    else if (ustring::npos != face.find("medium")) {
-        lf.lfWeight = FW_MEDIUM;
-    }
-
-    else if (ustring::npos != face.find("semibold") || ustring::npos != face.find("demibold")) {
-        lf.lfWeight = FW_SEMIBOLD;
-    }
-
-    else if (ustring::npos != face.find("extrabold") || ustring::npos != face.find("ultrabold") || ustring::npos != face.find("superbold")) {
-        lf.lfWeight = FW_EXTRABOLD;
-    }
-
-    else if (ustring::npos != face.find("bold")) {
-        lf.lfWeight = FW_BOLD;
-    }
-
-    else if (ustring::npos != face.find("heavy") || ustring::npos != face.find("black")) {
-        lf.lfWeight = FW_HEAVY;
-    }
-
-    else {
-        lf.lfWeight = FW_NORMAL;
-    }
+    lf.lfItalic = str_similar("Italic", specv) || str_similar("Oblique", specv);
+    if (str_similar("Mono", specv)) { lf.lfPitchAndFamily |= FIXED_PITCH; }
+    if (str_similar("Thin", specv)) { lf.lfWeight = FW_THIN; }
+    else if (str_similar("ExtraLight", specv) || str_similar("UltraLight", specv)) { lf.lfWeight = FW_EXTRALIGHT; }
+    else if (str_similar("Light", specv)) { lf.lfWeight = FW_LIGHT; }
+    else if (str_similar("Medium", specv)) { lf.lfWeight = FW_MEDIUM; }
+    else if (str_similar("SemiBold", specv) || str_similar("DemiBold", specv)) { lf.lfWeight = FW_SEMIBOLD; }
+    else if (str_similar("ExtraBold", specv) || str_similar("UltraBold", specv) || str_similar("SuperBold", specv)) { lf.lfWeight = FW_EXTRABOLD; }
+    else if (str_similar("Bold", specv)) { lf.lfWeight = FW_BOLD; }
+    else if (str_similar("Heavy", specv) || str_similar("Black", specv)) { lf.lfWeight = FW_HEAVY; }
 
     hfont_ = CreateFontIndirectA(&lf);
     HFONT old_font = SelectFont(hdc, hfont_);
@@ -306,18 +170,6 @@ void Font_win::invalidate() {
     hdc_ = NULL;
     if (hfont_) { DeleteFont(hfont_); }
     hfont_ = NULL;
-}
-
-// Overrides pure Font_impl.
-std::vector<ustring> Font::list_faces(const ustring & font_family) {
-    std::vector<ustring> v;
-
-    v.push_back("Regular");
-    v.push_back("Italic");
-    v.push_back("Bold");
-    v.push_back("Bold Italic");
-
-    return v;
 }
 
 Glyph_ptr Font_win::glyph(char32_t wc) {
@@ -419,6 +271,26 @@ Glyph_ptr Font_win::glyph(char32_t wc) {
 
     SelectFont(hdc_, old_font);
     return glyph;
+}
+
+// static
+std::vector<ustring> Font::list_families() {
+    return Theme_win::root_win()->font_families();
+}
+
+// static
+std::vector<ustring> Font::list_faces(const ustring & font_family) {
+    static const char * weights = "ExtraLight:Light:Medium:SemiBold:ExtraBold:Bold:Heavy";
+    std::vector<ustring> v;
+
+    for (const ustring & s: str_explode(weights, ':')) {
+        v.push_back(s);
+        v.push_back("Mono "+s);
+        v.push_back(s+" Italic");
+        v.push_back("Mono "+s+" Italic");
+    }
+
+    return v;
 }
 
 } // namespace tau

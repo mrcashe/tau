@@ -35,7 +35,11 @@
 namespace tau {
 
 /// Single dimension scrolling container with autohiding scrolling arrows.
+///
+/// @note This class is a wrapper around its implementation shared pointer.
+///
 /// @ingroup container_group
+/// @ingroup widget_group
 class Roller: public Widget {
 public:
 
@@ -44,8 +48,36 @@ public:
     /// @param autohide Automatically show or hide scroll buttons.
     Roller(Orientation orient, bool autohide=true);
 
+    /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Roller(const Roller & other) = default;
+
+    /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Roller & operator=(const Roller & other) = default;
+
+    /// Constructor with implementation pointer.
+    ///
+    /// @warning Unlike some other classes (Painter as an example), the whole
+    /// @ref widget_group "widget stack" is unable to run with pure implementation
+    /// pointer, so attempting to construct widget from a pure (@b nullptr) pointer
+    /// will cause throwing an user_error exception!
+    /// That exception also will be thrown if user tries to construct the object
+    /// from incompatible implementation shared pointer.
+    ///
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Roller(Widget_ptr wp);
+
     /// Insert child.
     /// @throw user_error if widget already inserted into another container.
+    /// @throw internal_error if w has pure implementation pointer.
     void insert(Widget & w);
 
     /// Remove child.

@@ -41,14 +41,14 @@ static char32_t * utf8_to_ucs4_fast(const char * str, long len, long * items_wri
 
     if (len < 0) {
         while (*p) {
-            p = str8_next(p);
+            p = utf8_next(p);
             ++n_chars;
         }
     }
 
     else {
         while (p < str+len && *p) {
-            p = str8_next(p);
+            p = utf8_next(p);
             ++n_chars;
         }
     }
@@ -101,7 +101,7 @@ static long utf8_pointer_to_offset(const char * str, const char * pos) {
 
     else {
         while (s < pos) {
-            s = str8_next(s);
+            s = utf8_next(s);
             offset++;
         }
     }
@@ -114,7 +114,7 @@ static char * utf8_offset_to_pointer(const char * str, long offset) {
 
     if (offset >= 0) {
         while (offset--) {
-            s = str8_next(s);
+            s = utf8_next(s);
         }
     }
 
@@ -137,7 +137,7 @@ static ustring::size_type utf8_byte_offset(const char * str, ustring::size_type 
 
     for (p = str; 0 != offset; --offset) {
         if ('\0' == *p) { return ustring::npos; }
-        p += char8_len(*p);
+        p += utf8_len(*p);
     }
 
     return p-str;
@@ -152,7 +152,7 @@ static ustring::size_type utf8_byte_offset(const char * str, ustring::size_type 
 
     for (p = str; offset != 0; --offset) {
         if (p >= pend) { return ustring::npos; }
-        p += char8_len(*p);
+        p += utf8_len(*p);
     }
 
     return p-str;
@@ -198,7 +198,7 @@ static ustring::size_type utf8_find_first_of(const std::string & str,
     const char * const str_begin = str.data();
     const char * const str_end = str_begin+str.size();
 
-    for (const char * pstr = str_begin+byte_offset; pstr < str_end; pstr = str8_next(pstr)) {
+    for (const char * pstr = str_begin+byte_offset; pstr < str_end; pstr = utf8_next(pstr)) {
         const char32_t * const pfound = std::find(match_begin, match_end, char32_from_pointer(pstr));
         if ((pfound != match_end) != find_not_of) return offset;
         ++offset;
@@ -870,7 +870,7 @@ ustring::size_type ustring::find_first_not_of(char32_t uc, size_type i) const {
         const char * const pbegin = str_.data();
         const char * const pend = pbegin+str_.size();
 
-        for (const char * p = pbegin+bi; p < pend; p = str8_next(p), ++i) {
+        for (const char * p = pbegin+bi; p < pend; p = utf8_next(p), ++i) {
             if (char32_from_pointer(p) != uc) { return i; }
         }
     }
@@ -886,7 +886,7 @@ ustring::size_type ustring::find_first_not_of(char c, size_type i) const {
     if (bi != npos) {
         const char * pend = pbegin+str_.size();
 
-        for (const char * p = pbegin+bi; p < pend; p = str8_next(p), ++i) {
+        for (const char * p = pbegin+bi; p < pend; p = utf8_next(p), ++i) {
             if (*p != c) { return i; }
         }
     }
@@ -912,7 +912,7 @@ ustring::size_type ustring::find_last_not_of(char32_t uc, size_type i) const {
     size_type i_cur = 0;
     size_type i_found = npos;
 
-    for (const char * p = pbegin; p < pend && i_cur <= i; p = str8_next(p), ++i_cur) {
+    for (const char * p = pbegin; p < pend && i_cur <= i; p = utf8_next(p), ++i_cur) {
         if (char32_from_pointer(p) != uc) {
             i_found = i_cur;
         }
@@ -927,7 +927,7 @@ ustring::size_type ustring::find_last_not_of(char c, size_type i) const {
     size_type i_cur = 0;
     size_type i_found = npos;
 
-    for (const char * p = pbegin; p < pend && i_cur <= i; p = str8_next(p), ++i_cur) {
+    for (const char * p = pbegin; p < pend && i_cur <= i; p = utf8_next(p), ++i_cur) {
         if (*p != c) {
             i_found = i_cur;
         }
@@ -1013,7 +1013,7 @@ ustring::size_type ustring::copy(char * dest, size_type n, size_type i) const {
 ustring::operator std::u16string() const {
     std::u16string ws;
 
-    for (const char * p = str_.c_str(); '\0' != *p; p = str8_next(p)) {
+    for (const char * p = str_.c_str(); '\0' != *p; p = utf8_next(p)) {
         char32_t wc = char32_from_pointer(p);
         char16_t c1, c2;
         char32_to_surrogate(wc, c1, c2);
@@ -1027,7 +1027,7 @@ ustring::operator std::u16string() const {
 ustring::operator std::u32string() const {
     std::u32string ws;
 
-    for (const char * p = str_.c_str(); '\0' != *p; p = str8_next(p)) {
+    for (const char * p = str_.c_str(); '\0' != *p; p = utf8_next(p)) {
         ws.push_back(char32_from_pointer(p));
     }
 

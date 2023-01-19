@@ -35,18 +35,53 @@
 namespace tau {
 
 /// %Container which shows one of its children at a time, in tabbed windows.
+///
+/// @note This class is a wrapper around its implementation shared pointer.
+///
 /// The %Notebook widget is a Container whose children are pages that can be
 /// switched between using tab labels along one gravity.
 /// The gravity at which the tabs for switching pages in the notebook are drawn
 /// is set in the class constructor.
 /// @ingroup container_group
+/// @ingroup widget_group
 class Notebook: public Widget {
 public:
+
+    /// @name Constructors, operators
+    /// @{
 
     /// Default constructor.
     /// @param tab_pos the tab position.
     Notebook(Tab_pos tab_pos=TAB_TOP);
 
+    /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Notebook(const Notebook & other) = default;
+
+    /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Notebook & operator=(const Notebook & other) = default;
+
+    /// Constructor with implementation pointer.
+    ///
+    /// @warning Unlike some other classes (Painter as an example), the whole
+    /// @ref widget_group "widget stack" is unable to run with pure implementation
+    /// pointer, so attempting to construct widget from a pure (@b nullptr) pointer
+    /// will cause throwing an user_error exception!
+    /// That exception also will be thrown if user tries to construct the object
+    /// from incompatible implementation shared pointer.
+    ///
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Notebook(Widget_ptr wp);
+
+    /// @}
     /// Appends a page to notebook.
     /// @param w the widget to be appended.
     /// @return a number of added page.
@@ -180,16 +215,16 @@ public:
 
     /// Show next page.
     /// @return page number of the shown page.
-    /// @see allow_rollover().
-    /// @see disallow_rollover().
-    /// @see rollover_allowed().
+    /// @sa allow_rollover().
+    /// @sa disallow_rollover().
+    /// @sa rollover_allowed().
     int show_next();
 
     /// Show previous page.
     /// @return page number of the shown page.
-    /// @see allow_rollover().
-    /// @see disallow_rollover().
-    /// @see rollover_allowed().
+    /// @sa allow_rollover().
+    /// @sa disallow_rollover().
+    /// @sa rollover_allowed().
     int show_previous();
 
     /// Show specified page.
@@ -197,20 +232,20 @@ public:
     int show_page(int nth_page);
 
     /// Allow page reordering by user using mouse.
-    /// @see disallow_reorder().
-    /// @see reorder_allowed().
+    /// @sa disallow_reorder().
+    /// @sa reorder_allowed().
     /// @note allowed by default.
     void allow_reorder();
 
     /// Disallow page reordering by user using mouse.
-    /// @see allow_reorder().
-    /// @see reorder_allowed().
+    /// @sa allow_reorder().
+    /// @sa reorder_allowed().
     /// @note allowed by default.
     void disallow_reorder();
 
     /// Determines whether reordering enabled.
-    /// @see allow_reorder().
-    /// @see disallow_reorder().
+    /// @sa allow_reorder().
+    /// @sa disallow_reorder().
     /// @note allowed by default.
     bool reorder_allowed() const;
 
@@ -221,38 +256,38 @@ public:
     /// When disallowed, show_next() and show_previous() will do nothing on first and
     /// last pages.
     /// @note allowed by default.
-    /// @see show_next().
-    /// @see show_previous().
-    /// @see disallow_rollover().
-    /// @see rollover_allowed().
+    /// @sa show_next().
+    /// @sa show_previous().
+    /// @sa disallow_rollover().
+    /// @sa rollover_allowed().
     void allow_rollover();
 
     /// Disallow tabs rollover.
     /// @note allowed by default.
-    /// @see show_next().
-    /// @see show_previous().
-    /// @see allow_rollover().
-    /// @see rollover_allowed().
+    /// @sa show_next().
+    /// @sa show_previous().
+    /// @sa allow_rollover().
+    /// @sa rollover_allowed().
     void disallow_rollover();
 
     /// Test if rollover allowed.
-    /// @see show_next().
-    /// @see show_previous().
-    /// @see allow_rollover().
-    /// @see disallow_rollover().
+    /// @sa show_next().
+    /// @sa show_previous().
+    /// @sa allow_rollover().
+    /// @sa disallow_rollover().
     /// @note allowed by default.
     bool rollover_allowed() const;
 
     /// Reorders the page containing w, so that it appears in page nth_page.
-    /// @see allow_reorder().
-    /// @see disallow_reorder().
-    /// @see reorder_allowed().
+    /// @sa allow_reorder().
+    /// @sa disallow_reorder().
+    /// @sa reorder_allowed().
     void reorder_page(Widget & w, int nth_page);
 
     /// Reorders the page old_page, so that it appears in page new_page.
-    /// @see allow_reorder().
-    /// @see disallow_reorder().
-    /// @see reorder_allowed().
+    /// @sa allow_reorder().
+    /// @sa disallow_reorder().
+    /// @sa reorder_allowed().
     void reorder_page(int old_page, int new_page);
 
     /// Shows tabs.

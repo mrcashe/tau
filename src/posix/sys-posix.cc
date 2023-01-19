@@ -148,7 +148,7 @@ ustring path_user_data_dir() {
         return path_build(dir, ".local", "share");
     }
 
-    return path_build(path_build(path_tmp_dir(), user_name()), ".local", "share");
+    return path_build(path_build(path_tmp(), user_name()), ".local", "share");
 }
 
 ustring path_user_config_dir() {
@@ -165,7 +165,7 @@ ustring path_user_config_dir() {
         return path_build(dir, ".config");
     }
 
-    return path_build(path_tmp_dir(), user_name(), ".config");
+    return path_build(path_tmp(), user_name(), ".config");
 }
 
 ustring path_user_cache_dir() {
@@ -182,7 +182,7 @@ ustring path_user_cache_dir() {
         return path_build(dir, ".cache");
     }
 
-    return path_build(path_tmp_dir(), user_name(), ".cache");
+    return path_build(path_tmp(), user_name(), ".cache");
 }
 
 ustring path_user_runtime_dir() {
@@ -196,7 +196,7 @@ ustring path_user_runtime_dir() {
     return path_user_cache_dir();
 }
 
-ustring path_tmp_dir() {
+ustring path_tmp() {
     const char * env = getenv("TMPDIR");
 
     if (env && '\0' != *env) {
@@ -317,11 +317,6 @@ std::vector<ustring> path_which(const ustring & cmd) {
     return v;
 }
 
-void file_unlink(const ustring & path) {
-    int result = ::unlink(Locale().encode_filename(path).c_str());
-    if (-1 == result) { throw sys_error(); }
-}
-
 void msleep(unsigned time_ms) {
     usleep(1000*time_ms);
 }
@@ -334,11 +329,6 @@ std::vector<ustring> Font::list_families() {
 // static
 std::vector<ustring> Font::list_faces(const ustring & family) {
     return Theme_posix::root_posix()->list_faces(family);
-}
-
-// static
-ustring Font::normal() {
-    return Theme_posix::root_posix()->font_normal();
 }
 
 } // namespace tau

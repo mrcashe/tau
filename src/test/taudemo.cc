@@ -36,7 +36,7 @@
 
 namespace {
 
-tau::Key_file kf_;
+tau::Key_file state_;
 std::vector<std::thread> threads_;
 tau::ustring conf_path_;
 
@@ -44,7 +44,7 @@ void save_state() {
     try {
         tau::path_mkdir(tau::path_dirname(conf_path_));
         std::ofstream os(tau::Locale().encode_filename(conf_path_).c_str());
-        kf_.save(os);
+        state_.save(os);
     }
 
     catch (tau::exception & x) {
@@ -67,12 +67,12 @@ void run();
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
 
-class Main: public tau::Toplevel {
+struct Main: tau::Toplevel {
     tau::Loop           loop_;
     tau::Notebook       notebook_ { tau::TAB_RIGHT };
 
     tau::Action         escape_action_ { "Escape", tau::fun(this, &Main::close) };
-    tau::Action         next_page_action_ { "<Alt>Down", tau::fun(this, &Main::new_threadext_page) };
+    tau::Action         next_page_action_ { "<Alt>Down", tau::fun(this, &Main::on_next_page) };
     tau::Action         prev_page_action_ { "<Alt>Up", tau::fun(this, &Main::on_prev_page) };
     tau::Action         n_action_ { "F12", tau::fun(this, &Main::new_thread) };
 
@@ -92,6 +92,17 @@ class Main: public tau::Toplevel {
     };
 
     std::vector<Color_widgets> color_widgets_;
+
+    int init_sysinfo_page(int pg) {
+        tau::List_text list;
+
+        for (auto & s: tau::str_explode(tau::str_sysinfo(), tau::str_newlines())) {
+            list.append(s);
+        }
+
+        list.style().font("font").set(tau::Font::mono());
+        return notebook_.append_page(list, pages_[pg].title);
+    }
 
     int init_list_page(int pg) {
         tau::List list;
@@ -202,10 +213,10 @@ class Main: public tau::Toplevel {
         {
             tau::Text label("tau::Counter", tau::ALIGN_START);
             table.put(label, 0, row);
-            tau::Counter counter(kf_.get_integer(kf_.root(), "counter"), 247, 1);
+            tau::Counter counter(state_.get_integer(state_.root(), "counter"), 247, 1);
             counter.append("rpm", 2, 2);
             table.put(counter, 7, row, 1, 1, true, true);
-            auto on_changed = [](double val) { kf_.set_integer(kf_.root(), "counter", val); };
+            auto on_changed = [](double val) { state_.set_integer(state_.root(), "counter", val); };
             counter.signal_value_changed().connect(tau::fun(std::function<void(double)>(on_changed)));
         }
 
@@ -213,9 +224,9 @@ class Main: public tau::Toplevel {
         {
             tau::Text label("tau::Check(tau::CHECK_XSTYLE)", tau::ALIGN_START);
             table.put(label, 0, row, 4, 1);
-            tau::Check check(tau::CHECK_XSTYLE, tau::BORDER_SOLID, kf_.get_boolean(kf_.root(), "xcheck"));
+            tau::Check check(tau::CHECK_XSTYLE, tau::BORDER_SOLID, state_.get_boolean(state_.root(), "xcheck"));
             table.put(check, 7, row, 1, 1, true, true);
-            auto on_changed = [](bool checked) { kf_.set_boolean(kf_.root(), "xcheck", checked); };
+            auto on_changed = [](bool checked) { state_.set_boolean(state_.root(), "xcheck", checked); };
             check.signal_check().connect(tau::bind(tau::fun(std::function<void(bool)>(on_changed)), true));
             check.signal_uncheck().connect(tau::bind(tau::fun(std::function<void(bool)>(on_changed)), false));
         }
@@ -224,9 +235,9 @@ class Main: public tau::Toplevel {
         {
             tau::Text label("tau::Check(tau::CHECK_VSTYLE)", tau::ALIGN_START);
             table.put(label, 0, row, 4, 1);
-            tau::Check check(tau::CHECK_VSTYLE, kf_.get_boolean(kf_.root(), "vcheck"));
+            tau::Check check(tau::CHECK_VSTYLE, state_.get_boolean(state_.root(), "vcheck"));
             table.put(check, 7, row, 1, 1, true, true);
-            auto on_changed = [](bool checked) { kf_.set_boolean(kf_.root(), "vcheck", checked); };
+            auto on_changed = [](bool checked) { state_.set_boolean(state_.root(), "vcheck", checked); };
             check.signal_check().connect(tau::bind(tau::fun(std::function<void(bool)>(on_changed)), true));
             check.signal_uncheck().connect(tau::bind(tau::fun(std::function<void(bool)>(on_changed)), false));
         }
@@ -368,11 +379,11 @@ class Main: public tau::Toplevel {
     }
 
     void on_colorsel(const tau::Color & c) {
-        kf_.set_string(kf_.root(), "colorsel", c.html());
+        state_.set_string(state_.root(), "colorsel", c.html());
     }
 
     int init_colorsel_page(int pg) {
-        tau::Colorsel colorsel(tau::Color(kf_.get_string(kf_.root(), "colorsel", "Blue")));
+        tau::Colorsel colorsel(tau::Color(state_.get_string(state_.root(), "colorsel", "Blue")));
         colorsel.hint_margin(4);
         colorsel.signal_color_changed().connect(tau::fun(this, &Main::on_colorsel));
         return notebook_.append_page(colorsel, pages_[pg].title);
@@ -390,21 +401,110 @@ class Main: public tau::Toplevel {
         { "Cursors",    2, tau::fun(this, &Main::init_cursors_page) },
         { "Colors",     3, tau::fun(this, &Main::init_colors_page) },
         { "Twins",      4, tau::fun(this, &Main::init_twins_page) },
-        { "Colorsel",   5, tau::fun(this, &Main::init_colorsel_page) }
+        { "Colorsel",   5, tau::fun(this, &Main::init_colorsel_page) },
+        { "Sysinfo",    6, tau::fun(this, &Main::init_sysinfo_page) }
     };
 
-public:
+    void new_thread() {
+        threads_.emplace_back(std::thread(run));
+    }
+
+    void save_pages() {
+        tau::Key_section & sect = state_.section("pages");
+
+        for (auto & pg: pages_) {
+            state_.set_integer(sect, pg.title, pg.page);
+            if (pg.page == notebook_.current_page()) { state_.set_string(sect, "current", pg.title); }
+        }
+    }
+
+    void on_page_reordered(int old_page, int new_page) {
+        for (auto & pg: pages_) {
+            if (pg.page == old_page) { pg.page = new_page; }
+            else if (pg.page == new_page) { pg.page = old_page; }
+        }
+
+        save_pages();
+    }
+
+    void on_page_changed(int n) {
+        save_pages();
+    }
+
+    void set_row_color(std::size_t row, const tau::ustring & cname) {
+        tau::Color c(cname);
+        color_widgets_[row].name.assign(cname);
+        color_widgets_[row].w.style().get("background").set(cname);
+        color_widgets_[row].value.assign(c.html());
+    }
+
+    void on_minmax_changed(double) {
+        unsigned xmin = xmin_.value(), ymin = ymin_.value(), xmax = xmax_.value(), ymax = ymax_.value();
+
+        if (xmin >= 200 && ymin >= 200) {
+            hint_min_size(xmin, ymin);
+            std::vector<long long> v = { xmin, ymin };
+            state_.set_integers(state_.section("main"), "min_size", v);
+        }
+
+        else {
+            state_.remove_key(state_.section("main"), "min_size");
+        }
+
+        if (xmax >= 300 && ymax >= 300) {
+            hint_max_size(xmax, ymax);
+            std::vector<long long> v = { xmax, ymax };
+            state_.set_integers(state_.section("main"), "max_size", v);
+        }
+
+        else {
+            state_.remove_key(state_.section("main"), "max_size");
+        }
+    }
+
+    void on_timer() {
+        static int div = 0;
+
+        if (progress_.visible() && 0 == div) {
+            double value = progress_.value();
+            value += 1.25;
+            if (value > progress_.max_value()) { value = 0.0; }
+            progress_.set_value(value);
+        }
+
+        std::size_t row = (double(rand())/RAND_MAX)*color_widgets_.size();
+        set_row_color(row, color_names_[prev_row_]);
+        prev_row_ = row;
+        if (++div == 8) { div = 0; }
+    }
+
+    void on_next_page() {
+        notebook_.show_next();
+    }
+
+    void on_prev_page() {
+        notebook_.show_previous();
+    }
+
+    void on_geometry_changed() {
+        std::vector<long long> v = { position().x(), position().y(), size().iwidth(), size().iheight() };
+        state_.set_integers(state_.section("main"), "geometry", v);
+    }
+
+    // ----------------------------------------------------------------------
+    // Constructor
+    // ----------------------------------------------------------------------
 
     Main(const tau::Rect & bounds):
         Toplevel(bounds)
     {
         {
-            auto v = kf_.get_integers(kf_.section("main"), "min_size");
+            auto v = state_.get_integers(state_.section("main"), "min_size");
             if (v.size() > 1) { hint_min_size(v[0], v[1]); }
         }
 
         {
-            auto v = kf_.get_integers(kf_.section("main"), "max_size");
+            auto v = state_.get_integers(state_.section("main"), "max_size");
             if (v.size() > 1) { hint_max_size(v[0], v[1]); }
         }
 
@@ -488,20 +588,20 @@ public:
         signal_size_changed().connect(tau::fun(this, &Main::on_geometry_changed));
         loop_.signal_alarm(107, true).connect(tau::fun(this, &Main::on_timer));
 
-        set_icon("tau-48");
-        tau::Key_section & sect = kf_.section("pages");
+        set_icon("tau", 48);
+        tau::Key_section & sect = state_.section("pages");
         std::map<int, int> m;
         int ifb = pages_.size();
 
         for (auto & pg: pages_) {
-            m[kf_.get_integer(sect, pg.title, ifb++)] = pg.page;
+            m[state_.get_integer(sect, pg.title, ifb++)] = pg.page;
         }
 
         for (auto & mp: m) {
             pages_[mp.second].page = pages_[mp.second].x(mp.second);
         }
 
-        tau::ustring ctitle = kf_.get_string(sect, "current", pages_[0].title);
+        tau::ustring ctitle = state_.get_string(sect, "current", pages_[0].title);
 
         for (auto & pg: pages_) {
             if (pg.title == ctitle) {
@@ -514,99 +614,11 @@ public:
         notebook_.signal_page_changed().connect(fun(this, &Main::on_page_changed));
         notebook_.signal_page_reordered().connect(fun(this, &Main::on_page_reordered));
     }
-
-private:
-
-    void new_thread() {
-        threads_.emplace_back(std::thread(run));
-    }
-
-    void save_pages() {
-        tau::Key_section & sect = kf_.section("pages");
-
-        for (auto & pg: pages_) {
-            kf_.set_integer(sect, pg.title, pg.page);
-            if (pg.page == notebook_.current_page()) { kf_.set_string(sect, "current", pg.title); }
-        }
-    }
-
-    void on_page_reordered(int old_page, int new_page) {
-        for (auto & pg: pages_) {
-            if (pg.page == old_page) { pg.page = new_page; }
-            else if (pg.page == new_page) { pg.page = old_page; }
-        }
-
-        save_pages();
-    }
-
-    void on_page_changed(int n) {
-        save_pages();
-    }
-
-    void set_row_color(std::size_t row, const tau::ustring & cname) {
-        tau::Color c(cname);
-        color_widgets_[row].name.assign(cname);
-        color_widgets_[row].w.style().get("background").set(cname);
-        color_widgets_[row].value.assign(c.html());
-    }
-
-    void on_minmax_changed(double) {
-        unsigned xmin = xmin_.value(), ymin = ymin_.value(), xmax = xmax_.value(), ymax = ymax_.value();
-
-        if (xmin >= 200 && ymin >= 200) {
-            hint_min_size(xmin, ymin);
-            std::vector<long long> v = { xmin, ymin };
-            kf_.set_integers(kf_.section("main"), "min_size", v);
-        }
-
-        else {
-            kf_.remove_key(kf_.section("main"), "min_size");
-        }
-
-        if (xmax >= 300 && ymax >= 300) {
-            hint_max_size(xmax, ymax);
-            std::vector<long long> v = { xmax, ymax };
-            kf_.set_integers(kf_.section("main"), "max_size", v);
-        }
-
-        else {
-            kf_.remove_key(kf_.section("main"), "max_size");
-        }
-    }
-
-    void on_timer() {
-        static int div = 0;
-
-        if (progress_.visible() && 0 == div) {
-            double value = progress_.value();
-            value += 1.25;
-            if (value > progress_.max_value()) { value = 0.0; }
-            progress_.set_value(value);
-        }
-
-        std::size_t row = (double(rand())/RAND_MAX)*color_widgets_.size();
-        set_row_color(row, color_names_[prev_row_]);
-        prev_row_ = row;
-        if (++div == 8) { div = 0; }
-    }
-
-    void new_threadext_page() {
-        notebook_.show_next();
-    }
-
-    void on_prev_page() {
-        notebook_.show_previous();
-    }
-
-    void on_geometry_changed() {
-        std::vector<long long> v = { position().x(), position().y(), size().iwidth(), size().iheight() };
-        kf_.set_integers(kf_.section("main"), "geometry", v);
-    }
 };
 
 void run() {
     try {
-        auto v = kf_.get_integers(kf_.section("main"), "geometry");
+        auto v = state_.get_integers(state_.section("main"), "geometry");
         tau::Rect bounds;
         if (v.size() > 3) { bounds.set(tau::Point(v[0], v[1]), tau::Size(v[2], v[3])); }
         Main wnd(bounds);
@@ -630,9 +642,9 @@ void run() {
 int main(int argc, char * argv[]) {
     conf_path_ = tau::path_build(tau::path_user_config_dir(), tau::program_name(), "state.ini");
     std::ifstream is(tau::Locale().encode_filename(conf_path_).c_str());
-    kf_.load(is);
+    state_.load(is);
     tau::Timer timer(tau::fun(save_state));
-    kf_.signal_changed().connect(tau::bind(tau::fun(timer, &tau::Timer::start), 6789, false));
+    state_.signal_changed().connect(tau::bind(tau::fun(timer, &tau::Timer::start), 6789, false));
     run();
     for (auto & thr: threads_) { thr.join(); }
     save_state();

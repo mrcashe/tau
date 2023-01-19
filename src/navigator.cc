@@ -125,19 +125,19 @@ ustring Navigator::filter() const {
     return NAVIGATOR_IMPL->filter();
 }
 
-signal<void(ustring)> & Navigator::signal_file_select() {
+signal<void(const ustring &)> & Navigator::signal_file_select() {
     return NAVIGATOR_IMPL->signal_file_select();
 }
 
-signal<void(ustring)> & Navigator::signal_file_unselect() {
+signal<void(const ustring &)> & Navigator::signal_file_unselect() {
     return NAVIGATOR_IMPL->signal_file_unselect();
 }
 
-signal<void(ustring)> & Navigator::signal_file_activate() {
+signal<void(const ustring &)> & Navigator::signal_file_activate() {
     return NAVIGATOR_IMPL->signal_file_activate();
 }
 
-signal<void(ustring)> & Navigator::signal_dir_changed() {
+signal<void(const ustring &)> & Navigator::signal_dir_changed() {
     return NAVIGATOR_IMPL->signal_dir_changed();
 }
 

@@ -165,7 +165,7 @@ plat=$(uname)
 echo "$arg0: configuring platform $plat..."
 chk_which 'bash' 'bash' 'MANDATORY'
 chk_which 'rm' 'rm' 'MANDATORY'
-rm -vf $confdir/*
+rm -vrf $confdir/*
 
 link='cp -vf'
 pkg_required=''
@@ -237,7 +237,6 @@ chk_which 'mkdir' 'mkdir' 'MANDATORY'
 chk_which 'mktemp' 'mktemp' 'MANDATORY'
 chk_which 'find' 'find' 'MANDATORY'
 chk_which 'tr' 'tr' 'MANDATORY'
-chk_which 'cmp' 'cmp' 'MANDATORY'
 chk_which 'grep' 'grep' 'MANDATORY'
 chk_which 'tar' 'tar' 'OPTIONAL'
 chk_which 'xz' 'xz' 'OPTIONAL'
@@ -427,6 +426,7 @@ share_prefix="$PREFIX/share/tau-$Major_.$Minor_"
 
 conf_mk="$confdir/conf.mk"
 cp "$supdir/LICENSE.mkt" $conf_mk
+echo "export plat = $plat" >>$conf_mk
 echo "export topdir = $topdir" >>$conf_mk
 echo "export builddir = $builddir" >>$conf_mk
 echo "export doxydir = $doxydir" >>$conf_mk
@@ -492,25 +492,73 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# Generate src/conf.cc file.
+# Generate cross-platform src/conf.cc file.
 # ---------------------------------------------------------------------------
 
-tmp=$(mktemp)
-cp "$supdir/LICENSE.cct" $tmp
-echo "#include <tau/sys.hh>">>$tmp
-echo "">>$tmp
-echo "namespace tau {">>$tmp
-echo "">>$tmp
-echo "const int Major_ = $Major_;">>$tmp
-echo "const int Minor_ = $Minor_;">>$tmp
-echo "const int Micro_ = $Micro_;">>$tmp
-echo "">>$tmp
-echo "} // namespace tau">>$tmp
-echo "">>$tmp
-echo "//END">>$tmp
-
 confcc="$confdir/conf.cc"
-cmp $tmp $confcc >/dev/null 2>&1 || cp -vf $tmp $confcc
-rm -f $tmp
+cp "$supdir/LICENSE.cct" $confcc
+echo "#include <tau/sys.hh>" >>$confcc
+echo "" >>$confcc
+echo "namespace tau {" >>$confcc
+echo "" >>$confcc
+echo "const int Major_ = $Major_;" >>$confcc
+echo "const int Minor_ = $Minor_;" >>$confcc
+echo "const int Micro_ = $Micro_;" >>$confcc
+echo "" >>$confcc
+echo "} // namespace tau" >>$confcc
+echo "" >>$confcc
+echo "//END" >>$confcc
+
+# ---------------------------------------------------------------------------
+# Generate platform dependent src/${plat}/conf-${plat}.cc file.
+# Sysinfo structure initialization.
+# ---------------------------------------------------------------------------
+
+mkdir -vp "$confdir/$plat"
+confcc="$confdir/$plat/conf-$plat.cc"
+cp "$supdir/LICENSE.cct" $confcc
+echo "#include <tau/sysinfo.hh>" >>$confcc
+echo "" >>$confcc
+echo "namespace tau {" >>$confcc
+echo "" >>$confcc
+echo "Sysinfo sysinfo_ = {" >>$confcc
+echo "    .Major    = $Major_,"     >>$confcc
+echo "    .Minor    = $Minor_,"     >>$confcc
+echo "    .Micro    = $Micro_,"     >>$confcc
+echo "    .plat     = \"$plat\","   >>$confcc
+echo "};" >>$confcc
+echo "" >>$confcc
+echo "} // namespace tau" >>$confcc
+echo "" >>$confcc
+echo "//END" >>$confcc
+
+# ---------------------------------------------------------------------------
+# Generate platform dependent src/Windows/conf-Windows.cc file.
+# Sysinfo structure initialization.
+# ---------------------------------------------------------------------------
+
+if test -n $mxe_prefix; then
+    mkdir -vp "$confdir/Windows"
+    confcc="$confdir/Windows/conf-Windows.cc"
+    cp "$supdir/LICENSE.cct" $confcc
+    echo "#include <tau/sysinfo.hh>" >>$confcc
+    echo "" >>$confcc
+    echo "namespace tau {" >>$confcc
+    echo "" >>$confcc
+    echo "Sysinfo sysinfo_ = {" >>$confcc
+    echo "    .Major    = $Major_,"     >>$confcc
+    echo "    .Minor    = $Minor_,"     >>$confcc
+    echo "    .Micro    = $Micro_,"     >>$confcc
+    echo "    .plat     = \"Windows\"," >>$confcc
+    echo "};" >>$confcc
+    echo "" >>$confcc
+    echo "} // namespace tau" >>$confcc
+    echo "" >>$confcc
+    echo "//END" >>$confcc
+fi
+
+# ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+
 [ ! -e Makefile ] && $link "$topdir/Makefile" Makefile
 exit 0

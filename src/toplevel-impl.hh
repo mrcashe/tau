@@ -85,7 +85,7 @@ public:
     void handle_maximize();
     void handle_restore();
 
-    signal<bool()> & signal_can_close() { return signal_can_close_; }
+    signal<bool()> & signal_about_close() { return signal_about_close_; }
     signal<void()> & signal_minimize() { return signal_minimize_; }
     signal<void()> & signal_maximize() { return signal_maximize_; }
     signal<void()> & signal_restore() { return signal_restore_; }
@@ -100,7 +100,7 @@ protected:
     bool                fullscreen_ = false;
     bool                frame_visible_ = true;
 
-    signal<bool()>      signal_can_close_;
+    signal<bool()>      signal_about_close_;
     signal<void()>      signal_minimize_;
     signal<void()>      signal_maximize_;
     signal<void()>      signal_restore_;

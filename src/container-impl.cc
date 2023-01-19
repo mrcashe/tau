@@ -182,6 +182,25 @@ bool Container_impl::handle_accel(char32_t kc, int km) {
 }
 
 // Overrides Widget_impl.
+bool Container_impl::handle_input(const ustring & s) {
+    if (enabled()) {
+        if (modal_child_) {
+            return modal_child_->handle_input(s);
+        }
+
+        if (focused_child_) {
+            if (focused_child_->handle_input(s)) {
+                return true;
+            }
+        }
+
+        return signal_input_(std::cref(s));
+    }
+
+    return false;
+}
+
+// Overrides Widget_impl.
 bool Container_impl::handle_key_down(char32_t kc, int km) {
     if (enabled()) {
         if (modal_child_ && !modal_child_->hidden()) {

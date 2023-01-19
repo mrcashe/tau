@@ -35,6 +35,9 @@
 namespace tau {
 
 /// Restartable timer.
+///
+/// @note This class is a wrapper around its implementation shared pointer.
+///
 /// @ingroup time_group
 class Timer {
 public:
@@ -42,21 +45,25 @@ public:
     /// Default constructor.
     Timer();
 
+    /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Timer(const Timer & other) = default;
+
+    /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Timer & operator=(const Timer & other) = default;
+
     /// Constructor with parameters.
     /// @param slot_alarm slot to be connected to signal_alarm().
     /// @param time_ms the time in milliseconds, timer will be stopped if vale of 0 specified.
     /// @param periodical if true, timer will autorestarts after signal emission.
     Timer(slot<void()> slot_alarm, int time_ms=0, bool periodical=false);
-
-    /// Copy constructor.
-    /// This class has implementation member placed into std::shared_ptr<> smart pointer,
-    /// so copying object of this class simply increases use count on implementation.
-    Timer(const Timer & other) = default;
-
-    /// Copy operator.
-    /// This class has implementation member placed into std::shared_ptr<> smart pointer,
-    /// so copying object of this class simply increases use count on implementation.
-    Timer & operator=(const Timer & other) = default;
 
     /// Start if not running.
     void start(int time_ms, bool periodical=false);

@@ -36,7 +36,7 @@ namespace tau {
 
 /// Single child container with border and optional text label.
 ///
-/// This class is a wrapper around its implementation shared pointer.
+/// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup widget_group
 /// @ingroup container_group

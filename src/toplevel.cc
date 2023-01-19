@@ -33,16 +33,6 @@ namespace tau {
 
 #define TOPLEVEL_IMPL (std::static_pointer_cast<Toplevel_impl>(impl))
 
-Toplevel::Toplevel(Widget_ptr wp):
-    Window(wp)
-{
-}
-
-Toplevel::Toplevel(std::nullptr_t):
-    Window(nullptr)
-{
-}
-
 Toplevel::Toplevel(const Rect & bounds):
     Window(nullptr)
 {
@@ -58,6 +48,16 @@ Toplevel::Toplevel(const ustring & title, const Rect & bounds):
     TOPLEVEL_IMPL->set_title(title);
 }
 
+Toplevel::Toplevel(Widget_ptr wp):
+    Window(std::dynamic_pointer_cast<Window_impl>(wp))
+{
+}
+
+Toplevel::Toplevel(std::nullptr_t):
+    Window(nullptr)
+{
+}
+
 void Toplevel::set_title(const ustring & title) {
     TOPLEVEL_IMPL->set_title(title);
 }
@@ -66,7 +66,7 @@ void Toplevel::set_icon(Pixmap pix) {
     TOPLEVEL_IMPL->set_icon(Pixmap_impl::strip(pix));
 }
 
-void Toplevel::set_icon(const ustring & icon_name, unsigned icon_size) {
+void Toplevel::set_icon(const ustring & icon_name, int icon_size) {
     TOPLEVEL_IMPL->set_icon(icon_name, icon_size);
 }
 
@@ -146,8 +146,8 @@ bool Toplevel::minimize_enabled() const {
     return TOPLEVEL_IMPL->minimize_enabled();
 }
 
-signal<bool()> & Toplevel::signal_can_close() {
-    return TOPLEVEL_IMPL->signal_can_close();
+signal<bool()> & Toplevel::signal_about_close() {
+    return TOPLEVEL_IMPL->signal_about_close();
 }
 
 signal<void()> & Toplevel::signal_minimize() {

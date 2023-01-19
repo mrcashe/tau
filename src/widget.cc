@@ -498,6 +498,10 @@ signal<bool(char32_t, int)> & Widget::signal_key_up() {
     return impl->signal_key_up();
 }
 
+signal<bool(const ustring &)> & Widget::signal_input() {
+    return impl->signal_input();
+}
+
 signal<bool(int, int, Point)> & Widget::signal_mouse_down() {
     return impl->signal_mouse_down();
 }

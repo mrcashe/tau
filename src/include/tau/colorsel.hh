@@ -36,7 +36,7 @@ namespace tau {
 
 /// %Color selection widget.
 ///
-/// This class is a wrapper around its implementation shared pointer.
+/// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup widget_group
 class Colorsel: public Widget {
@@ -101,7 +101,7 @@ public:
     /// ~~~~~~~~~~~~~~~
     /// void on_color_changed(const Color & color);
     /// ~~~~~~~~~~~~~~~
-    signal<void(Color)> & signal_color_changed();
+    signal<void(const Color &)> & signal_color_changed();
 };
 
 } // namespace tau

@@ -45,22 +45,16 @@ public:
     explicit Timeval(uint64_t usec);
 
     Timeval(const Timeval & other) = default;
+
     Timeval & operator=(const Timeval & other) = default;
 
-    static Timeval future(uint64_t us) {
-        return Timeval(now()+us);
-    }
+    static Timeval future(uint64_t us);
 
     static Timeval now();
 
-    Timeval & operator=(uint64_t value_us) {
-        usec_ = value_us;
-        return *this;
-    }
+    Timeval & operator=(uint64_t value_us);
 
-    operator uint64_t() const {
-        return usec_;
-    }
+    operator uint64_t() const;
 
     operator timeval() const;
 

@@ -50,7 +50,7 @@ List_impl::List_impl():
     table_->signal_column_bounds_changed().connect(fun(this, &List_impl::on_row_bounds_changed));
 
     scroller_ = std::make_shared<Scroller_impl>();
-    scroller_->signal_offset_changed().connect(fun(this, &List_impl::sync_scrollers_offset));
+    scroller_->signal_pan_changed().connect(fun(this, &List_impl::sync_scrollers_offset));
     scroller_->insert(table_);
     put(scroller_, 0, 1);
 
@@ -1125,7 +1125,7 @@ void List_impl::on_row_bounds_changed(int br) {
 }
 
 void List_impl::sync_scrollers_offset() {
-    Point ofs = scroller_->offset();
+    Point ofs = scroller_->pan();
     hdr_scroller_->pan_to(ofs.x(), 0);
 }
 

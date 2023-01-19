@@ -36,7 +36,7 @@ namespace tau {
 
 /// Single line text editor with decorations.
 ///
-/// This class is a wrapper around its implementation shared pointer.
+/// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup widget_group
 class Entry: public Widget {
@@ -168,7 +168,7 @@ public:
     /// ~~~~~~~~~~~~~~
     /// void on_changed(const ustring & text);
     /// ~~~~~~~~~~~~~~
-    signal<void(ustring)> & signal_changed();
+    signal<void(const ustring &)> & signal_changed();
 
     /// Signal emitted when user pressed "ENTER".
     ///
@@ -176,7 +176,7 @@ public:
     /// ~~~~~~~~~~~~~~
     /// void on_activate(const ustring & text);
     /// ~~~~~~~~~~~~~~
-    signal<void(ustring)> & signal_activate();
+    signal<void(const ustring &)> & signal_activate();
 
     /// Signal emitted when validation enabled and new input pending.
     /// Return true from signal handler to decline changes.
@@ -184,7 +184,7 @@ public:
     /// ~~~~~~~~~~~~~~
     /// bool is_wrong_input(const ustring & text);
     /// ~~~~~~~~~~~~~~
-    signal<bool(ustring)> & signal_validate();
+    signal<bool(const ustring &)> & signal_validate();
 
 };
 

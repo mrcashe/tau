@@ -35,12 +35,45 @@
 namespace tau {
 
 /// %Text displaying widget.
+///
+/// @note This class is a wrapper around its implementation shared pointer.
+///
 /// @ingroup widget_group
 class Text: public Widget {
 public:
 
+    /// @name Constructor and operators
+    /// @{
+
     /// Default constructor.
     Text();
+
+    /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Text(const Text & other) = default;
+
+    /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Text & operator=(const Text & other) = default;
+
+    /// Constructor with implementation pointer.
+    ///
+    /// @warning Unlike some other classes (Painter as an example), the whole
+    /// @ref widget_group "widget stack" is unable to run with pure implementation
+    /// pointer, so attempting to construct widget from a pure (@b nullptr) pointer
+    /// will cause throwing an user_error exception!
+    /// That exception also will be thrown if user tries to construct the object
+    /// from incompatible implementation shared pointer.
+    ///
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Text(Widget_ptr wp);
 
     /// Constructor with text alignment.
     Text(Align halign, Align valign=ALIGN_CENTER);
@@ -51,6 +84,7 @@ public:
     /// Constructor with buffer and text alignment.
     Text(Buffer buf, Align halign=ALIGN_CENTER, Align valign=ALIGN_CENTER);
 
+    /// @}
     /// Assign text.
     void assign(const ustring & text);
 
@@ -63,7 +97,7 @@ public:
     /// Get buffer.
     const Buffer buffer() const;
 
-    /// Test empty.
+    /// Test if empty.
     bool empty() const;
 
     /// Clear buffer.
@@ -144,7 +178,7 @@ public:
     unsigned spacing() const;
 
     /// Set text align.
-    void set_text_align(Align halign, Align valign=ALIGN_CENTER);
+    void set_text_align(Align xalign, Align yalign=ALIGN_CENTER);
 
     /// Get horizontal align.
     Align horizontal_text_align() const;
@@ -213,7 +247,7 @@ public:
     /// @param top a reference to the returning top Y coordinate.
     /// @param bottom a reference to the returning bottom Y coordinate.
     /// If specified row does not exist, the returning value are equals to zero.
-    void get_row_bounds(std::size_t ri, int & top, int & bottom) const;
+    void get_line_bounds(std::size_t ri, int & top, int & bottom) const;
 
     /// @name Accessors to established actions.
     /// @{
@@ -325,11 +359,6 @@ public:
     signal<void()> & signal_click();
 
     /// @}
-
-protected:
-
-    Text(Widget_ptr wp);
-
 };
 
 } // namespace tau

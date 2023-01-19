@@ -38,6 +38,11 @@ Slider::Slider():
 {
 }
 
+Slider::Slider(Widget_ptr wp):
+    Widget(std::dynamic_pointer_cast<Slider_impl>(wp))
+{
+}
+
 Slider::Slider(Orientation orient, bool autohide):
     Widget(std::make_shared<Slider_impl>(orient, autohide))
 {

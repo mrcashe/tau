@@ -84,7 +84,7 @@ public:
     std::size_t col_at_x(std::size_t ri, int x) const;
     std::size_t row_at_y(int y) const;
     int baseline(std::size_t ri) const;
-    void get_row_bounds(std::size_t ri, int & top, int & bottom) const;
+    void get_line_bounds(std::size_t ri, int & top, int & bottom) const;
 
     Buffer buffer() { return buffer_; }
     const Buffer & buffer() const { return buffer_; }

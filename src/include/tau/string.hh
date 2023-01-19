@@ -85,14 +85,6 @@ char32_t char32_from_surrogate(char16_t c1, char16_t c2);
 /// @ingroup string_group
 void char32_to_surrogate(char32_t c32, char16_t & c1, char16_t & c2);
 
-/// Get leading character in UTF-8 sequence.
-/// @param nbytes number of bytes in sequence, 1...6.
-/// @return leading character.
-/// @ingroup string_group
-inline char char8_leader(std::size_t nbytes) {
-    return (nbytes > 1 && nbytes < 7) ? '\xfe' << (7-nbytes) : 0;
-}
-
 /// Calculate an UTF-8 sequence length for specified UTF-32 character.
 /// @ingroup string_group
 std::size_t char32_len(char32_t wc);
@@ -115,11 +107,19 @@ char32_t char32_from_pointer(const char * u);
 
 /// Calculate UTF-8 sequence length in bytes using UTF-8 leading character.
 /// @ingroup string_group
-std::size_t char8_len(char leader);
+std::size_t utf8_len(char leader);
 
 /// Get pointer to the next UTF-8 character.
 /// @ingroup string_group
-const char * str8_next(const char * u);
+const char * utf8_next(const char * u);
+
+/// Get leading character in UTF-8 sequence.
+/// @param nbytes number of bytes in sequence, 1...6.
+/// @return leading character.
+/// @ingroup string_group
+inline char utf8_leader(std::size_t nbytes) {
+    return (nbytes > 1 && nbytes < 7) ? '\xfe' << (7-nbytes) : 0;
+}
 
 template<typename  T>
 inline void __str_format_helper(std::ostream & os, const T & arg) {
@@ -163,15 +163,15 @@ ustring str_toupper(const ustring & str);
 /// @ingroup string_group
 ustring str_tolower(const ustring & str);
 
-/// Remove leading blanks.
+/// Remove leading blanks and newlines.
 /// @ingroup string_group
 ustring str_trimleft(const ustring & str);
 
-/// Remove trailing blanks.
+/// Remove trailing blanks and newlines.
 /// @ingroup string_group
 ustring str_trimright(const ustring & str);
 
-/// Remove consecutive, leading and trailing blanks.
+/// Remove consecutive, leading and trailing blanks and newlines.
 /// @ingroup string_group
 ustring str_trim(const ustring & str);
 
@@ -183,7 +183,7 @@ std::vector<ustring> str_explode(const ustring & str, char32_t wc);
 /// @ingroup string_group
 std::vector<ustring> str_explode(const ustring & str, const ustring & delimiters);
 
-/// Split a string by any end-of-line characters.
+/// Split a string by blanks and newlines.
 /// @ingroup string_group
 std::vector<ustring> str_explode(const ustring & str);
 

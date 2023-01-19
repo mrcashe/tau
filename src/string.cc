@@ -206,7 +206,7 @@ std::string char32_to_string(char32_t uc) {
     unsigned len = char32_len(uc);
     std::string s(len, ' ');
     for (unsigned i = len-1; i; --i) { s[i] = (uc & U'\x3f') | U'\x80'; uc >>= 6; }
-    s[0] = uc|char8_leader(len);
+    s[0] = uc|utf8_leader(len);
     return s;
 }
 
@@ -218,7 +218,7 @@ std::size_t char32_to_utf8(char32_t wc, char * buffer, std::size_t buffer_size) 
         wc >>= 6;
     }
 
-    buffer[0] = wc|char8_leader(len);
+    buffer[0] = wc|utf8_leader(len);
     if (len+1 < buffer_size) { buffer[len] = '\0'; }
     return std::min(len, buffer_size);
 }
@@ -229,20 +229,20 @@ std::size_t char32_to_utf8(char32_t wc, char * buffer, std::size_t buffer_size) 
 // (4) 1111 0xxx 10xx xxxx 10xx xxxx 10xx xxxx
 // (5) 1111 10xx 10xx xxxx 10xx xxxx 10xx xxxx 10xx xxxx
 // (6) 1111 110x 10xx xxxx 10xx xxxx 10xx xxxx 10xx xxxx 10xx xxxx
-std::size_t char8_len(char leader) {
+std::size_t utf8_len(char leader) {
     if (leader >= 0) return 1;
     std::size_t n;
     for (n = 0; leader < 0 && n != 6; leader <<= 1) { ++n; }
     return n;
 }
 
-const char * str8_next(const char * p) {
-    return p+char8_len(*p);
+const char * utf8_next(const char * p) {
+    return p+utf8_len(*p);
 }
 
 char32_t char32_from_pointer(const char * u) {
     if (*u >= 0) { return *u; }
-    unsigned n = char8_len(*u);
+    unsigned n = utf8_len(*u);
     if (!n) { return U'\0'; }
     char32_t w = static_cast<uint8_t>(*u++ & ('\x7f' >> n));
     while (--n) { w <<= 6; w |= static_cast<uint8_t>('\x3f' & *u++); }
@@ -262,7 +262,7 @@ ustring str_tolower(const ustring & s) {
 }
 
 ustring str_trim(const ustring & str) {
-    ustring tstr = str_trimright(str_trimleft(str)), res, blanks(str_blanks());
+    ustring tstr = str_trimright(str_trimleft(str)), res, blanks(str_blanks()+str_newlines());
     bool skip = true;
 
     for (auto wc: tstr) {
@@ -318,55 +318,11 @@ std::vector<ustring> str_explode(const ustring & str, const ustring & delimiters
 }
 
 std::vector<ustring> str_explode(const ustring & str, char32_t wc) {
-    std::vector<ustring> v;
-    ustring::size_type pos = 0, len = str.size();
-
-    while (pos < len) {
-        while (wc == str[pos]) { ++pos; }
-        ustring::size_type del = str.find(wc, pos);
-
-        if (ustring::npos != del) {
-            if (pos < del) {
-                v.push_back(str.substr(pos, del-pos));
-                pos = del;
-            }
-        }
-
-        else {
-            if (pos < len) {
-                v.push_back(str.substr(pos));
-                pos = len;
-            }
-        }
-    }
-
-    return v;
+    return str_explode(str, ustring(1, wc));
 }
 
 std::vector<ustring> str_explode(const ustring & str) {
-    std::vector<ustring> v;
-    ustring::size_type pos = 0, len = str.size();
-
-    while (pos < len) {
-        while (char32_is_newline(str[pos])) { ++pos; }
-        ustring::size_type del = str.find_first_of(str_newlines(), pos);
-
-        if (ustring::npos != del) {
-            if (pos < del) {
-                v.push_back(str.substr(pos, del-pos));
-                pos = del;
-            }
-        }
-
-        else {
-            if (pos < len) {
-                v.push_back(str.substr(pos));
-                pos = len;
-            }
-        }
-    }
-
-    return v;
+    return str_explode(str, str_newlines()+str_blanks());
 }
 
 ustring str_implode(const std::vector<ustring> & pieces, char32_t glue) {

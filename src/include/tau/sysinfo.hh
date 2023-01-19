@@ -24,27 +24,45 @@
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ----------------------------------------------------------------------------
 
-#ifndef TAU_THEME_WIN_HH
-#define TAU_THEME_WIN_HH
+#ifndef TAU_SYSINFO_HH
+#define TAU_SYSINFO_HH
 
-#include "types-win.hh"
-#include <theme-impl.hh>
+#include <tau/types.hh>
+#include <tau/ustring.hh>
 
 namespace tau {
 
-class Theme_win: public Theme_impl {
-public:
+/// System information structure.
+/// @ingroup sys_group
+struct Sysinfo {
 
-    static Theme_win_ptr root_win();
+/// Major version component, same as Major_.
+int         Major;
 
-    std::vector<ustring> font_families() const;
+/// Minor version component, same as Minor_.
+int         Minor;
 
-protected:
+/// Micro version component, same as Micro_.
+int         Micro;
 
-    void boot() override;
+/// Platform name.
+/// Possible values are:
+///
+/// - "Linux"
+/// - "FreeBSD"
+/// - "Windows"
+ustring     plat;
 
 };
 
+/// Sysinfo is accessible using function.
+/// @ingroup sys_group
+const Sysinfo & sysinfo();
+
+/// Get Sysinfo content as a text splited into lines.
+/// @ingroup string_group
+ustring str_sysinfo();
+
 } // namespace tau
 
-#endif // TAU_THEME_WIN_HH
+#endif // TAU_SYSINFO_HH

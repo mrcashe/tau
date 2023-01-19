@@ -32,13 +32,13 @@ namespace tau {
 
 #define TEXT_IMPL (std::static_pointer_cast<Text_impl>(impl))
 
-Text::Text(Widget_ptr wp):
-    Widget(wp)
+Text::Text():
+    Widget(std::make_shared<Text_impl>())
 {
 }
 
-Text::Text():
-    Widget(std::make_shared<Text_impl>())
+Text::Text(Widget_ptr wp):
+    Widget(std::dynamic_pointer_cast<Text_impl>(wp))
 {
 }
 
@@ -201,8 +201,8 @@ int Text::baseline(std::size_t ri) const {
     return TEXT_IMPL->baseline(ri);
 }
 
-void Text::get_row_bounds(std::size_t ri, int & top, int & bottom) const {
-    TEXT_IMPL->get_row_bounds(ri, top, bottom);
+void Text::get_line_bounds(std::size_t ri, int & top, int & bottom) const {
+    TEXT_IMPL->get_line_bounds(ri, top, bottom);
 }
 
 Action & Text::move_left_action() {

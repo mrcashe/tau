@@ -36,7 +36,7 @@ namespace tau {
 
 /// %Menu item base.
 ///
-/// This class is a wrapper around its implementation shared pointer.
+/// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup widget_group
 class Menu_item: public Widget {
@@ -91,7 +91,7 @@ public:
 
 /// %Menu item with Toggle_action.
 ///
-/// This class is a wrapper around its implementation shared pointer.
+/// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup widget_group
 class Toggle_menu_item: public Menu_item {
@@ -149,7 +149,7 @@ public:
 
 /// %Menu item with other menu.
 ///
-/// This class is a wrapper around its implementation shared pointer.
+/// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup widget_group
 class Submenu_item: public Menu_item {
@@ -194,7 +194,7 @@ public:
 
 /// %Menu item with slot.
 ///
-/// This class is a wrapper around its implementation shared pointer.
+/// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup widget_group
 class Slot_menu_item: public Menu_item {
@@ -239,7 +239,7 @@ public:
 
 /// %Menu item with Check.
 ///
-/// This class is a wrapper around its implementation shared pointer.
+/// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup widget_group
 class Check_menu_item: public Menu_item {
@@ -350,7 +350,7 @@ public:
 
 /// Basic menu class.
 ///
-/// This class is a wrapper around its implementation shared pointer.
+/// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup container_group
 /// @ingroup widget_group
@@ -447,6 +447,9 @@ public:
     /// Remove all widgets.
     void clear();
 
+    /// Emitted when menu quits.
+    signal<void()> & signal_quit();
+
 protected:
 
     Menu(Widget_ptr wp);
@@ -454,7 +457,7 @@ protected:
 
 /// %Popup menu.
 ///
-/// This class is a wrapper around its implementation shared pointer.
+/// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup container_group
 /// @ingroup widget_group
@@ -497,7 +500,7 @@ public:
 
 /// %Menu with items arranged horizontally.
 ///
-/// This class is a wrapper around its implementation shared pointer.
+/// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup container_group
 /// @ingroup widget_group

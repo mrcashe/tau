@@ -81,6 +81,9 @@ public:
     ustring cursor_theme() const;
     ustring icon_theme() const;
 
+    ustring font_normal() { return font_normal_; }
+    ustring font_mono() { return font_mono_; }
+
     Master_action * find_action(const std::string & name);
     void init_window_style(Style & st);
     void init_style(Style & st);
@@ -148,7 +151,9 @@ protected:
     std::atomic_int     icursor_ { -1 };
     std::atomic_int     iicon_ { -1 };
     unsigned            cursor_size_ = 24;
-    unsigned            icon_sizes_[1+LARGE_ICON-SMALL_ICON] = { 16, 22, 32, 48 };
+    unsigned            icon_sizes_[1+LARGEST_ICON-SMALLEST_ICON] = { 8, 12, 16, 22, 32, 48 };
+    ustring             font_normal_;
+    ustring             font_mono_;
 
 private:
 

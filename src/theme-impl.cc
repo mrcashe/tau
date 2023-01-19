@@ -1147,7 +1147,7 @@ Pixmap_ptr Theme_impl::find_icon(const ustring & names, int size, const ustring 
 Pixmap_ptr Theme_impl::find_picto(const ustring & names, ustring & ret_name) {
     ustring picto;
 
-    for (const ustring & s: str_explode(names)) {
+    for (const ustring & s: str_explode(names, ':')) {
         if (str_has_prefix(s, "picto-", true)) {
             picto = s;
             break;
@@ -1179,7 +1179,7 @@ Pixmap_ptr Theme_impl::get_icon(const ustring & names, int size, const ustring &
     if (auto pixmap = find_icon(names, size, context)) { return pixmap; }
     size = icon_pixels(size);
     Pixmap_ptr pixmap = Pixmap_impl::create(1, size);
-    cache_icon(pixmap, str_explode(names).front(), context, size);
+    cache_icon(pixmap, str_explode(names, ':').front(), context, size);
     return pixmap;
 }
 

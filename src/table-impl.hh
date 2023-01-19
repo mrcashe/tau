@@ -42,8 +42,9 @@ public:
 
     void put(Widget_ptr wp, int x, int y, unsigned xspan=1, unsigned yspan=1, bool xsh=false, bool ysh=false);
 
-    void set_column_spacing(unsigned spacing);
-    void set_row_spacing(unsigned spacing);
+    void set_column_spacing(unsigned xspacing);
+    void set_row_spacing(unsigned yspacing);
+    void set_spacing(unsigned xspacing, unsigned yspacing);
     unsigned column_spacing() const { return xspacing_; }
     unsigned row_spacing() const { return yspacing_; }
 
@@ -79,7 +80,7 @@ public:
     void set_max_row_height(int row, unsigned height);
     unsigned max_row_height(int row) const;
 
-    void align(Widget_impl * wp, Align xalign, Align yalign);
+    void align(Widget_impl * wp, Align xalign, Align yalign=ALIGN_CENTER);
     void get_align(const Widget_impl * wp, Align & xalign, Align & yalign) const;
     void unalign(Widget_impl * wp);
 

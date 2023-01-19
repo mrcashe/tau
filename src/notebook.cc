@@ -36,6 +36,11 @@ Notebook::Notebook(Tab_pos tab_pos):
 {
 }
 
+Notebook::Notebook(Widget_ptr wp):
+    Widget(std::dynamic_pointer_cast<Notebook_impl>(wp))
+{
+}
+
 int Notebook::append_page(Widget & w) {
     return NOTEBOOK_IMPL->append_page(w.ptr());
 }

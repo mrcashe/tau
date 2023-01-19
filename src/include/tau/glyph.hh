@@ -36,7 +36,7 @@ namespace tau {
 
 /// A glyph represents a unit of rendered content within a Font.
 ///
-/// This class is a wrapper around its implementation shared pointer.
+/// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// Often, there is a one-to-one correspondence between characters to be drawn and
 /// corresponding glyphs (e.g., often, the character "A" is rendered using a single glyph),

@@ -24,16 +24,16 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # -----------------------------------------------------------------------------
 
-src_dirs = $(cplat_srcdir) $(posix_srcdir) $(unix_srcdir) $(confdir)
-VPATH = $(src_dirs)
-sources = $(foreach dir, $(src_dirs), $(wildcard $(dir)/*.cc))
+srcdirs += $(posix_srcdir) $(unix_srcdir) $(confdir)/$(plat)
+VPATH = $(srcdirs)
+sources = $(foreach dir, $(srcdirs), $(wildcard $(dir)/*.cc))
 objects = $(addprefix $(unix_so_builddir)/, $(sort $(addsuffix .o, $(basename $(notdir $(sources))))))
 CXXFLAGS += -O2 $(unix_CXXFLAGS)
 
 all: $(unix_sodir) $(unix_so_builddir) $(unix_so)
 
-$(unix_so): $(objects)
-	$(CXX) -shared -o $@ $(unix_so_builddir)/*.o $(xcb_so_builddir)/*.o
+$(unix_so): $(objects) $(xcb_so_builddir)/*.o
+	$(CXX) -shared -o $@ $(unix_so_builddir)/*.o $(xcb_so_builddir)/*.o && chmod -x $@
 
 install: $(lib_prefix)
 	@if [ -f $(unix_so) ]; then \

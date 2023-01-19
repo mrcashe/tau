@@ -277,7 +277,7 @@ private:
 
 /// The text buffer.
 ///
-/// This class is a wrapper around its implementation shared pointer.
+/// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup text_group
 class Buffer {
@@ -446,7 +446,7 @@ public:
     /// ~~~~~~~~~~~~~~~
     /// void on_buffer_erase(Buffer_citer begin, Buffer_citer end, const std::u32string & erased_text);
     /// ~~~~~~~~~~~~~~~
-    signal<void(Buffer_citer, Buffer_citer, std::u32string)> & signal_erase();
+    signal<void(Buffer_citer, Buffer_citer, const std::u32string &)> & signal_erase();
 
     /// Signal emitted when text inserted.
     /// Slot prototype:
@@ -460,7 +460,7 @@ public:
     /// ~~~~~~~~~~~~~~~
     /// void on_buffer_replace(Buffer_citer begin, Buffer_citer end, const std::u32string & replaced_text);
     /// ~~~~~~~~~~~~~~~
-    signal<void(Buffer_citer, Buffer_citer, std::u32string)> & signal_replace();
+    signal<void(Buffer_citer, Buffer_citer, const std::u32string &)> & signal_replace();
 
     /// Signal emitted when buffer changes somehow.
     /// Slot prototype:

@@ -46,6 +46,10 @@ void Loop::quit() {
     impl->quit();
 }
 
+int Loop::id() const {
+    return impl->id();
+}
+
 bool Loop::running() const {
     return impl->running();
 }
@@ -70,7 +74,7 @@ signal<void()> & Loop::signal_quit() {
     return impl->signal_quit();
 }
 
-signal<void(int, ustring)> & Loop::signal_mount() {
+signal<void(int, const ustring &)> & Loop::signal_mount() {
     return impl->signal_mount();
 }
 

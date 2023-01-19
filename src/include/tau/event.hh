@@ -39,7 +39,7 @@ namespace tau {
 /// %Event can be emitted by non-GUI thread.
 /// After emission an event loop emits signal_activate().
 ///
-/// This class is a wrapper around its implementation shared pointer.
+/// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup sys_group
 class Event {

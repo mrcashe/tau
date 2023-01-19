@@ -36,12 +36,32 @@
 namespace tau {
 
 /// A pen used for drawing.
+///
+/// @note This class is a wrapper around its implementation shared pointer.
+///
 /// @ingroup paint_group
 class Pen {
 public:
 
     /// Constructor with default parameters.
     Pen();
+
+    /// Copy constructor.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Pen(const Pen & other) = default;
+
+    /// Copy operator.
+    ///
+    /// @note This class is a wrapper around its implementation shared pointer,
+    /// so copying it just increasing implementation pointer use count, but isn't
+    /// really copies the object. The underlying implementation is not copyable.
+    Pen & operator=(const Pen & other) = default;
+
+    /// Move constructor.
+    Pen(Pen && other);
 
     /// Construct cosmetic pen.
     ///
@@ -52,15 +72,6 @@ public:
 
     /// Constructor with parameters.
     Pen(const Color & color, double width, Line_style ls=SOLID_LINE, Cap_style caps=SQUARE_CAP, Join_style js=BEVEL_JOIN);
-
-    /// Copy constructor.
-    Pen(const Pen & other) = default;
-
-    /// Move constructor.
-    Pen(Pen && other);
-
-    /// Copy operator.
-    Pen & operator=(const Pen & other) = default;
 
     /// Set color.
     void set_color(const Color & color);

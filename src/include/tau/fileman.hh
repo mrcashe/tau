@@ -37,7 +37,7 @@ namespace tau {
 
 /// File navigation and selection widget.
 ///
-/// This class is a wrapper around its implementation shared pointer.
+/// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup widget_group
 class Fileman: public Widget {

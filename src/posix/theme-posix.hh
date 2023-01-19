@@ -42,7 +42,6 @@ public:
     Font_ptr uncache_font(const ustring & spec, unsigned dpi);
     std::vector<ustring> list_families();
     std::vector<ustring> list_faces(const ustring & family);
-    ustring font_normal() { return font_normal_; }
 
 protected:
 
@@ -51,10 +50,6 @@ protected:
 
     // Overrides Theme_impl.
     void sweep() override;
-
-private:
-
-    ustring     font_normal_;
 
 private:
 

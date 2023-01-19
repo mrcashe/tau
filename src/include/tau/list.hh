@@ -36,7 +36,7 @@ namespace tau {
 
 /// A container that allocates widgets along the Y axis.
 ///
-/// This class is a wrapper around its implementation shared pointer.
+/// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// One or more widgets form a row. Each row is identified by its coordinate
 /// on the Y axis. The coordinates in this case do not imply the

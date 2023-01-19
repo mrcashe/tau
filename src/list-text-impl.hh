@@ -67,19 +67,19 @@ public:
     int find(const ustring & str) const;
     bool contains(const ustring & str) const;
 
-    signal<void(int, ustring)> & signal_text_selected() {
+    signal<void(int, const ustring &)> & signal_text_selected() {
         return signal_text_selected_;
     }
 
-    signal<void(int, ustring)> & signal_text_activated() {
+    signal<void(int, const ustring &)> & signal_text_activated() {
         return signal_text_activated_;
     }
 
-    signal<void(int, ustring)> & signal_text_removed() {
+    signal<void(int, const ustring &)> & signal_text_removed() {
         return signal_text_removed_;
     }
 
-    signal<void(int, int, ustring)> & signal_text_moved() {
+    signal<void(int, int, const ustring &)> & signal_text_moved() {
         return signal_text_moved_;
     }
 
@@ -108,10 +108,10 @@ private:
     Holders             holders_;
     int                 selrow_ = INT_MIN;
 
-    signal<void(int, ustring)> signal_text_selected_;
-    signal<void(int, ustring)> signal_text_activated_;
-    signal<void(int, ustring)> signal_text_removed_;
-    signal<void(int, int, ustring)> signal_text_moved_;
+    signal<void(int, const ustring &)> signal_text_selected_;
+    signal<void(int, const ustring &)> signal_text_activated_;
+    signal<void(int, const ustring &)> signal_text_removed_;
+    signal<void(int, int, const ustring &)> signal_text_moved_;
 };
 
 } // namespace tau

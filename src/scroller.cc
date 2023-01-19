@@ -36,6 +36,11 @@ Scroller::Scroller():
 {
 }
 
+Scroller::Scroller(Widget_ptr wp):
+    Container(std::dynamic_pointer_cast<Scroller_impl>(wp))
+{
+}
+
 void Scroller::insert(Widget & w) {
     SCROLLER_IMPL->insert(w.ptr());
 }
@@ -64,8 +69,8 @@ void Scroller::pan_to(int x, int y) {
     SCROLLER_IMPL->pan_to(x, y);
 }
 
-Point Scroller::offset() const {
-    return SCROLLER_IMPL->offset();
+Point Scroller::pan() const {
+    return SCROLLER_IMPL->pan();
 }
 
 Action & Scroller::pan_left_action() {
@@ -112,8 +117,8 @@ Point Scroller::step() const {
     return SCROLLER_IMPL->step();
 }
 
-signal<void()> & Scroller::signal_offset_changed() {
-    return SCROLLER_IMPL->signal_offset_changed();
+signal<void()> & Scroller::signal_pan_changed() {
+    return SCROLLER_IMPL->signal_pan_changed();
 }
 
 signal<void()> & Scroller::signal_logical_size_changed() {

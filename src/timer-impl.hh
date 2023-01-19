@@ -34,9 +34,7 @@ namespace tau {
 class Loop_impl;
 class Timer;
 
-class Timer_impl: public trackable {
-public:
-
+struct Timer_impl: public trackable {
     Timer_impl();
     Timer_impl(const Timer_impl & other) = delete;
     Timer_impl & operator=(const Timer_impl & other) = delete;

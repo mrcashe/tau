@@ -727,7 +727,7 @@ void Doc_impl::save_element(Element_ptr elem, Buffer buf, int indent, int indent
     }
 
     else if (auto txt = std::dynamic_pointer_cast<Text_element>(elem)) {
-        auto v = str_explode(txt->text());
+        auto v = str_explode(txt->text(), str_newlines());
 
         if (!v.empty()) {
             buf.insert(buf.cend(), U' ', indent);

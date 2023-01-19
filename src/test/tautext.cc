@@ -51,7 +51,7 @@ void save_state() {
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
 
-class Main: public tau::Toplevel {
+struct Main: tau::Toplevel {
     struct Page {
         tau::Table      table;
         tau::Table      tab;
@@ -149,14 +149,11 @@ class Main: public tau::Toplevel {
 
     tau::Action         settings_action_ { U'P', tau::KM_CONTROL, "Settings", tau::fun(this, &Main::on_menu_settings) };
 
-public:
-
     Main(const tau::Rect & bounds=tau::Rect()):
         Toplevel(bounds)
     {
-        font_spec_ = state_.get_string(state_.root(), "font");
-        if (font_spec_.empty()) { font_spec_ = tau::font_size_remove(style().font("font")); }
-        font_size_ = state_.get_integer(state_.root(), "font-size", style().font("font").size());
+        font_spec_ = state_.get_string(state_.root(), "font", tau::Font::mono());
+        font_size_ = state_.get_integer(state_.root(), "font-size", 10);
 
         connect_action(escape_action_);
         connect_action(file_quit_action_);
@@ -277,7 +274,7 @@ public:
         }
 
         update_title();
-        set_icon("tau-48");
+        set_icon("tau", 48);
         show_cx_ = signal_show().connect(tau::fun(this, &Main::on_show));
     }
 
@@ -291,8 +288,6 @@ public:
         int page = open_file(path);
         if (page >= 0) { notebook_.show_page(page); }
     }
-
-private:
 
     void on_show() {
         show_cx_.disconnect();

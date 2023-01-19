@@ -26,13 +26,34 @@
 
 #include <tau/fileinfo.hh>
 #include <tau/locale.hh>
+#include <tau/string.hh>
 #include <tau/sys.hh>
+#include <tau/sysinfo.hh>
 #include <tau/string.hh>
 #include <errno.h>
 #include <cstdlib>
+#include <iomanip>
+#include <ostream>
 #include <mutex>
 
 namespace tau {
+
+const Sysinfo & sysinfo() {
+    extern Sysinfo sysinfo_;
+    return sysinfo_;
+}
+
+ustring str_sysinfo() {
+    ustring s;
+    const Sysinfo & si = sysinfo();
+
+    s += str_format("Major:     ", si.Major,    '\n');
+    s += str_format("Minor:     ", si.Minor,    '\n');
+    s += str_format("Micro:     ", si.Micro,    '\n');
+    s += str_format("Platform:  ", si.plat,     '\n');
+
+    return s;
+}
 
 ustring path_build(const ustring & s1, const ustring & s2) {
     const ustring dels = "/\\";

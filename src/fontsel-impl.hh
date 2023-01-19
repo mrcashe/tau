@@ -47,14 +47,8 @@ public:
     Action & focus_next_action() { return next_; }
     Action & focus_previous_action() { return prev_; }
     Action & cancel_action() { return cancel_; }
-
-    signal<void(ustring)> & signal_font_selected() {
-        return signal_font_selected_;
-    }
-
-    signal<void(ustring)> & signal_font_activated() {
-        return signal_font_activated_;
-    }
+    signal<void(const ustring &)> & signal_font_selected() { return signal_font_selected_; }
+    signal<void(const ustring &)> & signal_font_activated() { return signal_font_activated_; }
 
 private:
 
@@ -79,8 +73,8 @@ private:
     Action          prev_   { "<Shift>Tab <Shift>LeftTab", fun(this, &Fontsel_impl::focus_previous) }; // Focus previous action.
     Action          cancel_ { "Escape Cancel", "Cancel", ustring("dialog-cancel") };
 
-    signal<void(ustring)> signal_font_selected_;
-    signal<void(ustring)> signal_font_activated_;
+    signal<void(const ustring &)> signal_font_selected_;
+    signal<void(const ustring &)> signal_font_activated_;
 
 private:
 

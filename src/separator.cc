@@ -36,6 +36,11 @@ Separator::Separator(Separator_style separator_style):
 {
 }
 
+Separator::Separator(Widget_ptr wp):
+    Widget(std::dynamic_pointer_cast<Separator_impl>(wp))
+{
+}
+
 void Separator::set_separator_style(Separator_style separator_style) {
     SEPARATOR_IMPL->set_separator_style(separator_style);
 }

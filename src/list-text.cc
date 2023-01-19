@@ -241,19 +241,19 @@ bool List_text::contains(const ustring & str) const {
     return LIST_TEXT_IMPL->contains(str);
 }
 
-signal<void(int, ustring)> & List_text::signal_text_selected() {
+signal<void(int, const ustring &)> & List_text::signal_text_selected() {
     return LIST_TEXT_IMPL->signal_text_selected();
 }
 
-signal<void(int, ustring)> & List_text::signal_text_activated() {
+signal<void(int, const ustring &)> & List_text::signal_text_activated() {
     return LIST_TEXT_IMPL->signal_text_activated();
 }
 
-signal<void(int, ustring)> & List_text::signal_text_removed() {
+signal<void(int, const ustring &)> & List_text::signal_text_removed() {
     return LIST_TEXT_IMPL->signal_text_removed();
 }
 
-signal<void(int, int, ustring)> & List_text::signal_text_moved() {
+signal<void(int, int, const ustring &)> & List_text::signal_text_moved() {
     return LIST_TEXT_IMPL->signal_text_moved();
 }
 

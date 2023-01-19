@@ -392,7 +392,7 @@ void Notebook_impl::update_current() {
         Page & pg = pages_[i];
         Color c = style().color("button/background");
 
-        if (pg.wp->hidden()) {
+        if (pg.wp.get() != card_->current()) {
             pg.frame->style().color("background") = c;
         }
 

@@ -160,7 +160,7 @@ protected:
 
     /// Set size requisition.
     /// Tells parent container about widget size requisition.
-    /// @note This call may emit signal_requisition_changed().
+    /// @note This call might emit signal_requisition_changed().
     /// @param size required size, values of zero mean "don't care".
     /// @return @b true if changed.
     /// @sa hint_size()
@@ -174,7 +174,7 @@ protected:
 
     /// Set size requisition.
     /// Tells parent container about widget size requisition.
-    /// @note This call may emit signal_requisition_changed().
+    /// @note This call might emit signal_requisition_changed().
     /// @param width required width, value of zero mean "don't care".
     /// @param height required width, value of zero mean "don't care".
     /// @return @b true if changed.
@@ -211,29 +211,35 @@ public:
     signal<void()> & signal_requisition_changed();
 
     /// Translate coordinates to screen coordinate system.
+    ///
     /// @return point translated to screen coordinate system.
     Point to_screen(const Point & pt=Point()) const;
 
     /// Translate coordinates to root window coordinate system.
+    ///
     /// The root window is a window that have not parent.
     /// All child windows have that window as parent window.
     /// @return point translated to root window coordinate system.
     Point to_root(const Point & pt=Point()) const;
 
     /// Translate coordinates to owning window coordinate system.
+    ///
     /// @return point translated to owning window coordinate system.
     Point to_window(const Point & pt=Point()) const;
 
-    /// Translate coordinates to parent container coordinate system.
+    /// Translate coordinates to immediate parent container coordinate system.
+    ///
     /// @return point translated to parent container coordinate system.
     Point to_parent(const Point & pt=Point()) const;
 
-    /// Translate coordinates to known container coordinate system.
+    /// Translate coordinates to known parent container coordinate system.
+    ///
     /// @return point translated to known container coordinate system.
     Point to_parent(const Container & known_cont, const Point & pt=Point()) const;
 
     /// @}
     /// @name Hints
+    ///
     /// Widget can have different hints, such as:
     /// - Minimal size hint.
     /// - Maximal size hint.
@@ -249,11 +255,13 @@ public:
     /// support margins.
     ///
     /// Changing hints emits signal_hints_changed().
+    ///
     /// @{
 
     /// Set exact size hint.
     /// Tells parent container about preffered widget size.
-    /// @note This call may emit signal_hints_changed().
+    ///
+    /// @note This call might emit signal_hints_changed().
     /// @param size preffered size, values of zero mean "don't care".
     /// @return @b true if hint changed.
     /// @sa hint_min_size()
@@ -268,7 +276,7 @@ public:
 
     /// Set exact size hint.
     /// Tells parent container about preffered widget size.
-    /// @note This call may emit signal_hints_changed().
+    /// @note This call might emit signal_hints_changed().
     /// @param width preffered width, value of zero mean "don't care".
     /// @param height preffered width, value of zero mean "don't care".
     /// @return @b true if hint changed.
@@ -296,7 +304,7 @@ public:
 
     /// Set minimal size hint.
     /// Tells parent container about minimal widget size.
-    /// @note This call may emit signal_hints_changed().
+    /// @note This call might emit signal_hints_changed().
     /// @param size preffered minimal size in pixels, values of zero mean "don't care".
     /// @return @b true if hint changed.
     /// @sa hint_size()
@@ -310,7 +318,7 @@ public:
 
     /// Set minimal size hint.
     /// Tells parent container about minimal widget size.
-    /// @note This call may emit signal_hints_changed().
+    /// @note This call might emit signal_hints_changed().
     /// @param width preffered width, value of zero mean "don't care".
     /// @param height preffered width, value of zero mean "don't care".
     /// @return @b true if hint changed.
@@ -335,7 +343,7 @@ public:
 
     /// Set maximal size hint.
     /// Tells parent container about maximal widget size.
-    /// @note This call may emit signal_hints_changed().
+    /// @note This call might emit signal_hints_changed().
     /// @param size required maximal size in pixels, values of zero mean "don't care".
     /// @return @b true if hint changed.
     /// @sa hint_size()
@@ -350,7 +358,7 @@ public:
 
     /// Set maximal size hint.
     /// Tells parent container about maximal widget size.
-    /// @note This call may emit signal_hints_changed().
+    /// @note This call might emit signal_hints_changed().
     /// @param width prefferd maximal width, value of zero mean "don't care".
     /// @param height required maximal width, value of zero mean "don't care".
     /// @return @b true if hint changed.
@@ -376,32 +384,32 @@ public:
 
     /// Set left margin.
     /// @return @b true if hint changed.
-    /// @note This call may emit signal_hints_changed().
+    /// @note This call might emit signal_hints_changed().
     bool hint_margin_left(unsigned left);
 
     /// Set right margin.
     /// @return @b true if hint changed.
-    /// @note This call may emit signal_hints_changed().
+    /// @note This call might emit signal_hints_changed().
     bool hint_margin_right(unsigned right);
 
     /// Set top margin.
     /// @return @b true if hint changed.
-    /// @note This call may emit signal_hints_changed().
+    /// @note This call might emit signal_hints_changed().
     bool hint_margin_top(unsigned top);
 
     /// Set bottom margin.
     /// @return @b true if hint changed.
-    /// @note This call may emit signal_hints_changed().
+    /// @note This call might emit signal_hints_changed().
     bool hint_margin_bottom(unsigned bottom);
 
     /// Set all margins to the same value.
     /// @return @b true if hint changed.
-    /// @note This call may emit signal_hints_changed().
+    /// @note This call might emit signal_hints_changed().
     bool hint_margin(unsigned all);
 
     /// Set all margins.
     /// @return @b true if hint changed.
-    /// @note This call may emit signal_hints_changed().
+    /// @note This call might emit signal_hints_changed().
     bool hint_margin(unsigned left, unsigned right, unsigned top, unsigned bottom);
 
     /// Get left margin hint.
@@ -433,32 +441,53 @@ public:
 
     /// @}
     /// @name Scrolling (Panning)
-    /// Each widget has builtin scrolling capabilities. However, that possibilities
-    /// may be realized only when the widget inserted into special container
+    ///
+    /// Each widget has builtin scrolling capabilities. However, that capabilities
+    /// might be realized only when the widget inserted into special container
     /// named Scroller. If widget does not has Scroller as an immediate parent, the
     /// scrolling will not work.
+    ///
     /// @{
 
     /// Get current scroll position.
+    /// @sa scroll_to() scroll_to_x() scroll_to_y() signal_scroll_changed() Scroller
     Point scroll_position() const;
 
     /// Ask immediate parent to change scroll position.
+    ///
+    /// @note This call takes effect only when widget inserted into Scroller container.
+    ///
+    /// @sa scroll_position() signal_scroll_changed() Scroller
     void scroll_to(const Point & pt);
 
     /// Ask immediate parent to change scroll position.
+    ///
+    /// @note This call takes effect only when widget inserted into Scroller container.
+    ///
+    /// @sa scroll_position() signal_scroll_changed() Scroller
     void scroll_to(int x, int y);
 
     /// Ask immediate parent to change scroll position.
+    ///
+    /// @note This call takes effect only when widget inserted into Scroller container.
+    ///
+    /// @sa scroll_position() signal_scroll_changed() Scroller
     void scroll_to_x(int x);
 
     /// Ask immediate parent to change scroll position.
+    ///
+    /// @note This call takes effect only when widget inserted into Scroller container.
+    ///
+    /// @sa scroll_position() signal_scroll_changed() Scroller
     void scroll_to_y(int y);
 
     /// Signal is emitted after widget's scroll position had changed.
     /// Slot prototype:
-    /// ~~~~~~~~~~~~
+    /// ~~~~~~~~~~~~~~~
     /// void on_scroll_changed();
-    /// ~~~~~~~~~~~~
+    /// ~~~~~~~~~~~~~~~
+    ///
+    /// @sa scroll_to() scroll_to_x() scroll_to_y() Scroller::pan_to() Scroller::signal_pan_changed()
     signal<void()> & signal_scroll_changed();
 
     /// Test if widget inserted into Scroller.
@@ -569,6 +598,7 @@ public:
     bool hidden() const;
 
     /// Determines if widget and it's parent are visible.
+    ///
     /// The widget is visible, if:
     /// -   widget is not hidden by calling hide() or disappear().
     /// -   widget's owner is visible (if Container owns widget) or Display (in case widget is Window) allows window
@@ -623,7 +653,7 @@ public:
     /// void on_visible();
     /// ~~~~~~~~~~~~
     ///
-    /// The widget may become visible when:
+    /// The widget might become visible when:
     /// -   show() or appear() was called.
     /// -   Parent Container became visible.
     /// -   The widget just inserted into visible Container.
@@ -640,7 +670,7 @@ public:
     /// void on_invisible();
     /// ~~~~~~~~~~~~
     ///
-    /// The widget may become invisible when:
+    /// The widget might become invisible when:
     /// - hide() or disappear() was called.
     /// - Parent Container became invisible.
     /// - The widget will be removed from parent Container.
@@ -670,7 +700,9 @@ public:
     /// @{
 
     /// Enable widget sensitivity.
+    ///
     /// From the construction, the widget is enabled.
+    ///
     /// @sa disable()
     /// @sa freeze()
     /// @sa thaw()
@@ -679,7 +711,9 @@ public:
     void enable();
 
     /// Disable widget sensitivity.
+    ///
     /// From the construction, the widget is enabled.
+    ///
     /// @sa enable()
     /// @sa freeze()
     /// @sa thaw()
@@ -690,11 +724,13 @@ public:
 protected:
 
     /// Disable widget sensitivity.
+    ///
     /// Along with disable(), disables the widget sensitivity.
     /// In contrast to disable(), this method is protected and
     /// intended for internal widget realization. For example, the
     /// Menu_item uses this method to disable itself when menu item
     /// becomes disabled.
+    ///
     /// @sa enable()
     /// @sa disable()
     /// @sa thaw()
@@ -703,11 +739,13 @@ protected:
     void freeze();
 
     /// Enable widget sensitivity.
+    ///
     /// Along with enable(), disables the widget sensitivity.
     /// In contrast to enable(), this method is protected and
     /// intended to internal widget realization. For example, the
     /// Menu_item uses this method to enable itself when menu item
     /// becomes enabled.
+    ///
     /// @sa enable()
     /// @sa disable()
     /// @sa freeze()
@@ -778,7 +816,7 @@ public:
 
     /// Causes widget to have the keyboard focus.
     /// @return @b true on success.
-    /// This call may fail in the following cases:
+    /// This call might fail in the following cases:
     /// 1. The widget hierarchy is incomplete and has no Window at the top.
     /// 2. There are modal focus elsewhere.
     /// 3. The widget does not allowed to gain focus, ie allow_focus() was not called.
@@ -805,7 +843,7 @@ public:
     /// To make this call successful, you must allow focus by calling allow_focus().
     /// @return @b true on success.
     ///
-    /// This call may fail in the following cases:
+    /// This call might fail in the following cases:
     /// - The widget hierarchy is incomplete and has no Window at the top.
     /// - There are another modal focus elsewhere.
     /// - The widget does not allowed to gain focus, ie allow_focus() was not called.
@@ -1091,6 +1129,9 @@ public:
     /// -   @b pr    the Painter used for painting operations.
     /// -   @b inval the rectangle to be repainted (you can ignore it for simplicity).
     ///
+    /// @note the invalidated rectangle, @e inval, is translated by scroll_position() during
+    /// this signal emission, so coordinates shown by it, is logical, not physical.
+    ///
     /// @sa signal_paint()
     /// @sa painter()
     /// @sa invalidate()
@@ -1113,6 +1154,9 @@ public:
     /// Here is:
     /// -   @b pr    the Painter used for painting operations.
     /// -   @b inval the rectangle to be repainted (you can ignore it for simplicity).
+    ///
+    /// @note the invalidated rectangle, @e inval, is translated by scroll_position() during
+    /// this signal emission, so coordinates shown by it, is logical, not physical.
     ///
     /// @sa signal_backpaint()
     /// @sa painter()
@@ -1211,6 +1255,18 @@ public:
     /// @sa signal_key_down()
     signal<bool(char32_t, int)> & signal_key_up();
 
+    /// Signal is emitted when Unicode characters entered from keyboard or somehow.
+    /// Slot prototype:
+    /// ~~~~~~~~~~~~~~~
+    /// bool on_input(const ustring & s);
+    /// ~~~~~~~~~~~~~~~
+    ///
+    /// Here is:
+    /// - @b s is a Unicode string.
+    ///
+    /// Return @b true from signal handler if you done with input.
+    signal<bool(const ustring &)> & signal_input();
+
     /// Connect a keyboard accelerator.
     /// Connection is done by connecting accelerator to the internal implementation
     /// signal managing keyboard accelerators.
@@ -1255,15 +1311,13 @@ public:
     /// @{
 
     /// Get display.
-    /// Obtains a smart pointer to the Display object which widget belongs to.
-    /// The returning pointer may be empty if widget not yet inserted into hierarchy.
-    /// From the other hand, the Window class always has valid display pointer.
+    /// Obtains Display object which widget belongs to.
+    /// The returning object may be pure in case widget not yet inserted into hierarchy.
     Display display();
 
     /// Get display.
-    /// Obtains a smart pointer to the Display object which widget belongs to.
-    /// The returning pointer may be empty if widget not yet inserted into hierarchy.
-    /// From the other hand, the Window class always has valid display pointer.
+    /// Obtains Display object which widget belongs to.
+    /// The returning object may be pure in case widget not yet inserted into hierarchy.
     const Display display() const;
 
     /// Get style.
@@ -1272,7 +1326,7 @@ public:
     /// Get style.
     const Style & style() const;
 
-    /// Causes toplevel window closing, if that window is Dialog.
+    /// Causes toplevel window to close, if that window is Dialog.
     void quit_dialog();
 
     /// Test if widget has parent container.

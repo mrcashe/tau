@@ -493,7 +493,7 @@ bool Buffer_citer::find_first_of(const ustring & chars) {
         while (!eof()) {
             char32_t wc = operator*();
 
-            for (const char * p = chars.c_str(); '\0' != *p; p = str8_next(p)) {
+            for (const char * p = chars.c_str(); '\0' != *p; p = utf8_next(p)) {
                 if (char32_from_pointer(p) == wc) {
                     return true;
                 }
@@ -511,7 +511,7 @@ bool Buffer_citer::find_first_of(const ustring & chars, Buffer_citer other) {
         while (!eof() && operator<(other)) {
             char32_t wc = operator*();
 
-            for (const char * p = chars.c_str(); '\0' != *p; p = str8_next(p)) {
+            for (const char * p = chars.c_str(); '\0' != *p; p = utf8_next(p)) {
                 if (char32_from_pointer(p) == wc) {
                     return true;
                 }
@@ -565,7 +565,7 @@ bool Buffer_citer::find_first_not_of(const ustring & chars) {
         while (!eof()) {
             char32_t wc = operator*();
 
-            for (const char * p = chars.c_str(); '\0' != *p; p = str8_next(p)) {
+            for (const char * p = chars.c_str(); '\0' != *p; p = utf8_next(p)) {
                 if (char32_from_pointer(p) == wc) {
                     goto next;
                 }
@@ -586,7 +586,7 @@ bool Buffer_citer::find_first_not_of(const ustring & chars, Buffer_citer other) 
         while (!eof() && operator<(other)) {
             char32_t wc = operator*();
 
-            for (const char * p = chars.c_str(); '\0' != *p; p = str8_next(p)) {
+            for (const char * p = chars.c_str(); '\0' != *p; p = utf8_next(p)) {
                 if (char32_from_pointer(p) == wc) {
                     goto next;
                 }
@@ -999,7 +999,7 @@ Buffer_citer Buffer_impl::insert(Buffer_citer iter, std::istream & is) {
             if (!not8) {
                 // Incomplete sequence stored in acc.
                 if (!acc.empty()) {
-                    std::size_t u8len = char8_len(acc[0]), more = u8len-acc.size();
+                    std::size_t u8len = utf8_len(acc[0]), more = u8len-acc.size();
 
                     // Assume encoding is not UTF-8.
                     if (more > len) {
@@ -1026,7 +1026,7 @@ Buffer_citer Buffer_impl::insert(Buffer_citer iter, std::istream & is) {
                     if ('\xc0' == ('\xc0' & c)) {
 
                         // Has incomplete sequence within buffer?
-                        if (char8_len(c) > epos-pos) {
+                        if (utf8_len(c) > epos-pos) {
                             acc.assign(buffer+pos-1, epos-pos);
                             epos = pos;
                             // std::cout << "c0 " << " " << epos << " " << epos-pos << "\n";
@@ -1040,7 +1040,7 @@ Buffer_citer Buffer_impl::insert(Buffer_citer iter, std::istream & is) {
             }
 
             if (!not8) {
-                for (const char * p = buffer+offset; offset < epos; p = str8_next(p)) {
+                for (const char * p = buffer+offset; offset < epos; p = utf8_next(p)) {
                     char32_t wc = char32_from_pointer(p);
 
                     if (!wc) {
@@ -1052,7 +1052,7 @@ Buffer_citer Buffer_impl::insert(Buffer_citer iter, std::istream & is) {
                     }
 
                     *obp++ = wc;
-                    offset += char8_len(*p);
+                    offset += utf8_len(*p);
                 }
             }
 

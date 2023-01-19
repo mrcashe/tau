@@ -37,7 +37,7 @@ namespace tau {
 
 /// Cycle specification for text.
 ///
-/// This class is a wrapper around its implementation shared pointer.
+/// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup container_group
 /// @ingroup widget_group
@@ -156,7 +156,7 @@ public:
     void remove(Widget & w);
 
     /// Emits when selection changes.
-    signal<void(ustring)> & signal_selection_changed();
+    signal<void(const ustring &)> & signal_selection_changed();
 };
 
 } // namespace tau

@@ -51,7 +51,7 @@ Loop_win::Loop_win(std::thread::id tid):
     Loop_impl()
 {
     tid_ = tid;
-    loopid_ = loopcnt_;
+    id_ = loopcnt_;
     signal_quit_.connect(fun(this, &Loop_win::done));
     drives_ = list_drives();
 }

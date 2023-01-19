@@ -654,6 +654,11 @@ void Table_impl::set_row_spacing(unsigned spacing) {
     }
 }
 
+void Table_impl::set_spacing(unsigned xspacing, unsigned yspacing) {
+    set_column_spacing(xspacing);
+    set_row_spacing(yspacing);
+}
+
 std::vector<Widget_impl *> Table_impl::children_within_range(int xmin, int ymin, int xmax, int ymax) {
     std::vector<Widget_impl *> v;
 
@@ -1081,12 +1086,11 @@ void Table_impl::get_row_margin(int yy, unsigned & top, unsigned & bottom) const
 }
 
 bool Table_impl::on_backpaint(Painter pr, const Rect & inval) {
-    Point spos = scroll_position();
     Color c = style().color("select/background");
 
     for (Table::Span & m: marks_) {
         Rect rsel = range_bounds(m);
-        Rect r = rsel & inval.translated(spos);
+        Rect r = rsel & inval;
 
         if (r) {
             pr.move_to(r.left(), r.top());
@@ -1101,7 +1105,7 @@ bool Table_impl::on_backpaint(Painter pr, const Rect & inval) {
 
     if (sel_.xmax > sel_.xmin && sel_.ymax > sel_.ymin) {
         Rect rsel = range_bounds(sel_);
-        Rect r = rsel & inval.translated(spos);
+        Rect r = rsel & inval;
 
         if (r) {
             pr.move_to(r.left(), r.top());

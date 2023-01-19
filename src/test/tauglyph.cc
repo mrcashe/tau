@@ -269,7 +269,7 @@ public:
 
         insert(box0);
         update_glyph();
-        set_icon("tau-48");
+        set_icon("tau", 48);
     }
 
 private:
