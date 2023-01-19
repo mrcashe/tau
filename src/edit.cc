@@ -80,7 +80,15 @@ Action & Edit::cut_action() {
     return EDIT_IMPL->cut_action();
 }
 
+const Action & Edit::cut_action() const {
+    return EDIT_IMPL->cut_action();
+}
+
 Action & Edit::enter_action() {
+    return EDIT_IMPL->enter_action();
+}
+
+const Action & Edit::enter_action() const {
     return EDIT_IMPL->enter_action();
 }
 
@@ -88,7 +96,15 @@ Action & Edit::del_action() {
     return EDIT_IMPL->del_action();
 }
 
+const Action & Edit::del_action() const {
+    return EDIT_IMPL->del_action();
+}
+
 Action & Edit::backspace_action() {
+    return EDIT_IMPL->backspace_action();
+}
+
+const Action & Edit::backspace_action() const {
     return EDIT_IMPL->backspace_action();
 }
 
@@ -96,7 +112,15 @@ Action & Edit::paste_action() {
     return EDIT_IMPL->paste_action();
 }
 
+const Action & Edit::paste_action() const {
+    return EDIT_IMPL->paste_action();
+}
+
 Action & Edit::undo_action() {
+    return EDIT_IMPL->undo_action();
+}
+
+const Action & Edit::undo_action() const {
     return EDIT_IMPL->undo_action();
 }
 
@@ -104,11 +128,23 @@ Action & Edit::redo_action() {
     return EDIT_IMPL->redo_action();
 }
 
+const Action & Edit::redo_action() const {
+    return EDIT_IMPL->redo_action();
+}
+
 Action & Edit::tab_action() {
     return EDIT_IMPL->tab_action();
 }
 
+const Action & Edit::tab_action() const {
+    return EDIT_IMPL->tab_action();
+}
+
 Toggle_action & Edit::insert_action() {
+    return EDIT_IMPL->insert_action();
+}
+
+const Toggle_action & Edit::insert_action() const {
     return EDIT_IMPL->insert_action();
 }
 

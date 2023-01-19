@@ -96,32 +96,59 @@ public:
     bool caret_enabled() const { return caret_enabled_; }
 
     Action & move_left_action() { return move_left_action_; }
+    const Action & move_left_action() const { return move_left_action_; }
     Action & select_left_action() { return select_left_action_; }
+    const Action & select_left_action() const { return select_left_action_; }
     Action & move_right_action() { return move_right_action_; }
+    const Action & move_right_action() const { return move_right_action_; }
     Action & select_right_action() { return select_right_action_; }
+    const Action & select_right_action() const { return select_right_action_; }
     Action & move_up_action() { return move_up_action_; }
+    const Action & move_up_action() const { return move_up_action_; }
     Action & select_up_action() { return select_up_action_; }
+    const Action & select_up_action() const { return select_up_action_; }
     Action & move_down_action() { return move_down_action_; }
+    const Action & move_down_action() const { return move_down_action_; }
     Action & select_down_action() { return select_down_action_; }
+    const Action & select_down_action() const { return select_down_action_; }
     Action & move_word_left_action() { return move_word_left_action_; }
+    const Action & move_word_left_action() const { return move_word_left_action_; }
     Action & select_word_left_action() { return select_word_left_action_; }
+    const Action & select_word_left_action() const { return select_word_left_action_; }
     Action & move_word_right_action() { return move_word_right_action_; }
+    const Action & move_word_right_action() const { return move_word_right_action_; }
     Action & select_word_right_action() { return select_word_right_action_; }
+    const Action & select_word_right_action() const { return select_word_right_action_; }
     Action & move_home_action() { return move_home_action_; }
+    const Action & move_home_action() const { return move_home_action_; }
     Action & select_home_action() { return select_home_action_; }
+    const Action & select_home_action() const { return select_home_action_; }
     Action & move_to_eol_action() { return move_to_eol_action_; }
+    const Action & move_to_eol_action() const { return move_to_eol_action_; }
     Action & select_to_eol_action() { return select_to_eol_action_; }
+    const Action & select_to_eol_action() const { return select_to_eol_action_; }
     Action & move_to_sof_action() { return move_to_sof_action_; }
+    const Action & move_to_sof_action() const { return move_to_sof_action_; }
     Action & select_to_sof_action() { return select_to_sof_action_; }
+    const Action & select_to_sof_action() const { return select_to_sof_action_; }
     Action & move_to_eof_action() { return move_to_eof_action_; }
+    const Action & move_to_eof_action() const { return move_to_eof_action_; }
     Action & select_to_eof_action() { return select_to_eof_action_; }
+    const Action & select_to_eof_action() const { return select_to_eof_action_; }
     Action & move_page_up_action() { return move_page_up_action_; }
+    const Action & move_page_up_action() const { return move_page_up_action_; }
     Action & move_page_down_action() { return move_page_down_action_; }
+    const Action & move_page_down_action() const { return move_page_down_action_; }
     Action & select_page_up_action() { return select_page_up_action_; }
+    const Action & select_page_up_action() const { return select_page_up_action_; }
     Action & select_page_down_action() { return select_page_down_action_; }
+    const Action & select_page_down_action() const { return select_page_down_action_; }
     Action & select_all_action() { return select_all_action_; }
+    const Action & select_all_action() const { return select_all_action_; }
     Action & copy_action() { return copy_action_; }
+    const Action & copy_action() const { return copy_action_; }
     Action & cancel_action() { return cancel_action_; }
+    const Action & cancel_action() const { return cancel_action_; }
 
     signal<void()> & signal_caret_motion() { return signal_caret_motion_; }
     signal<void()> & signal_selection_changed() { return signal_selection_changed_; }

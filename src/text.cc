@@ -209,7 +209,15 @@ Action & Text::move_left_action() {
     return TEXT_IMPL->move_left_action();
 }
 
+const Action & Text::move_left_action() const {
+    return TEXT_IMPL->move_left_action();
+}
+
 Action & Text::select_left_action() {
+    return TEXT_IMPL->select_left_action();
+}
+
+const Action & Text::select_left_action() const {
     return TEXT_IMPL->select_left_action();
 }
 
@@ -217,7 +225,15 @@ Action & Text::move_right_action() {
     return TEXT_IMPL->move_right_action();
 }
 
+const Action & Text::move_right_action() const {
+    return TEXT_IMPL->move_right_action();
+}
+
 Action & Text::select_right_action() {
+    return TEXT_IMPL->select_right_action();
+}
+
+const Action & Text::select_right_action() const {
     return TEXT_IMPL->select_right_action();
 }
 
@@ -225,7 +241,15 @@ Action & Text::move_up_action() {
     return TEXT_IMPL->move_up_action();
 }
 
+const Action & Text::move_up_action() const {
+    return TEXT_IMPL->move_up_action();
+}
+
 Action & Text::select_up_action() {
+    return TEXT_IMPL->select_up_action();
+}
+
+const Action & Text::select_up_action() const {
     return TEXT_IMPL->select_up_action();
 }
 
@@ -233,7 +257,15 @@ Action & Text::move_down_action() {
     return TEXT_IMPL->move_down_action();
 }
 
+const Action & Text::move_down_action() const {
+    return TEXT_IMPL->move_down_action();
+}
+
 Action & Text::select_down_action() {
+    return TEXT_IMPL->select_down_action();
+}
+
+const Action & Text::select_down_action() const {
     return TEXT_IMPL->select_down_action();
 }
 
@@ -241,7 +273,15 @@ Action & Text::move_word_left_action() {
     return TEXT_IMPL->move_word_left_action();
 }
 
+const Action & Text::move_word_left_action() const {
+    return TEXT_IMPL->move_word_left_action();
+}
+
 Action & Text::select_word_left_action() {
+    return TEXT_IMPL->select_word_left_action();
+}
+
+const Action & Text::select_word_left_action() const {
     return TEXT_IMPL->select_word_left_action();
 }
 
@@ -249,7 +289,15 @@ Action & Text::move_word_right_action() {
     return TEXT_IMPL->move_word_right_action();
 }
 
+const Action & Text::move_word_right_action() const {
+    return TEXT_IMPL->move_word_right_action();
+}
+
 Action & Text::select_word_right_action() {
+    return TEXT_IMPL->select_word_right_action();
+}
+
+const Action & Text::select_word_right_action() const {
     return TEXT_IMPL->select_word_right_action();
 }
 
@@ -257,7 +305,15 @@ Action & Text::move_home_action() {
     return TEXT_IMPL->move_home_action();
 }
 
+const Action & Text::move_home_action() const {
+    return TEXT_IMPL->move_home_action();
+}
+
 Action & Text::select_home_action() {
+    return TEXT_IMPL->select_home_action();
+}
+
+const Action & Text::select_home_action() const {
     return TEXT_IMPL->select_home_action();
 }
 
@@ -265,7 +321,15 @@ Action & Text::move_to_eol_action() {
     return TEXT_IMPL->move_to_eol_action();
 }
 
+const Action & Text::move_to_eol_action() const {
+    return TEXT_IMPL->move_to_eol_action();
+}
+
 Action & Text::select_to_eol_action() {
+    return TEXT_IMPL->select_to_eol_action();
+}
+
+const Action & Text::select_to_eol_action() const {
     return TEXT_IMPL->select_to_eol_action();
 }
 
@@ -273,7 +337,15 @@ Action & Text::move_to_sof_action() {
     return TEXT_IMPL->move_to_sof_action();
 }
 
+const Action & Text::move_to_sof_action() const {
+    return TEXT_IMPL->move_to_sof_action();
+}
+
 Action & Text::select_to_sof_action() {
+    return TEXT_IMPL->select_to_sof_action();
+}
+
+const Action & Text::select_to_sof_action() const {
     return TEXT_IMPL->select_to_sof_action();
 }
 
@@ -281,7 +353,15 @@ Action & Text::move_to_eof_action() {
     return TEXT_IMPL->move_to_eof_action();
 }
 
+const Action & Text::move_to_eof_action() const {
+    return TEXT_IMPL->move_to_eof_action();
+}
+
 Action & Text::select_to_eof_action() {
+    return TEXT_IMPL->select_to_eof_action();
+}
+
+const Action & Text::select_to_eof_action() const {
     return TEXT_IMPL->select_to_eof_action();
 }
 
@@ -289,7 +369,15 @@ Action & Text::move_page_up_action() {
     return TEXT_IMPL->move_page_up_action();
 }
 
+const Action & Text::move_page_up_action() const {
+    return TEXT_IMPL->move_page_up_action();
+}
+
 Action & Text::move_page_down_action() {
+    return TEXT_IMPL->move_page_down_action();
+}
+
+const Action & Text::move_page_down_action() const {
     return TEXT_IMPL->move_page_down_action();
 }
 
@@ -297,7 +385,15 @@ Action & Text::select_page_up_action() {
     return TEXT_IMPL->select_page_up_action();
 }
 
+const Action & Text::select_page_up_action() const {
+    return TEXT_IMPL->select_page_up_action();
+}
+
 Action & Text::select_page_down_action() {
+    return TEXT_IMPL->select_page_down_action();
+}
+
+const Action & Text::select_page_down_action() const {
     return TEXT_IMPL->select_page_down_action();
 }
 
@@ -305,11 +401,23 @@ Action & Text::select_all_action() {
     return TEXT_IMPL->select_all_action();
 }
 
+const Action & Text::select_all_action() const {
+    return TEXT_IMPL->select_all_action();
+}
+
 Action & Text::copy_action() {
     return TEXT_IMPL->copy_action();
 }
 
+const Action & Text::copy_action() const {
+    return TEXT_IMPL->copy_action();
+}
+
 Action & Text::cancel_action() {
+    return TEXT_IMPL->cancel_action();
+}
+
+const Action & Text::cancel_action() const {
     return TEXT_IMPL->cancel_action();
 }
 

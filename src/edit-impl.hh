@@ -52,14 +52,23 @@ public:
     bool modified() const { return undo_index_ != flush_index_; }
 
     Action & enter_action() { return enter_action_; }
+    const Action & enter_action() const { return enter_action_; }
     Action & cut_action() { return cut_action_; }
+    const Action & cut_action() const { return cut_action_; }
     Action & paste_action() { return paste_action_; }
+    const Action & paste_action() const { return paste_action_; }
     Action & del_action() { return del_action_; }
+    const Action & del_action() const { return del_action_; }
     Action & backspace_action() { return backspace_action_; }
+    const Action & backspace_action() const { return backspace_action_; }
     Action & undo_action() { return undo_action_; }
+    const Action & undo_action() const { return undo_action_; }
     Action & redo_action() { return redo_action_; }
+    const Action & redo_action() const { return redo_action_; }
     Action & tab_action() { return tab_action_; }
+    const Action & tab_action() const { return tab_action_; }
     Toggle_action & insert_action() { return insert_action_; }
+    const Toggle_action & insert_action() const { return insert_action_; }
     signal<void(bool)> & signal_modified() { return signal_modified_; }
 
 protected:

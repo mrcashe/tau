@@ -45,8 +45,11 @@ namespace tau {
 class Event {
 public:
 
-    /// Constructs a pure %Event.
+    /// Default constructor.
     Event();
+
+    /// Constructor with slot.
+    Event(slot<void()> slot_ready);
 
     /// Copy constructor.
     ///
@@ -61,12 +64,6 @@ public:
     /// so copying it just increasing implementation pointer use count, but isn't
     /// really copies the object. The underlying implementation is not copyable.
     Event & operator=(const Event & other) = default;
-
-    /// Test if pure.
-    operator bool() const;
-
-    /// Reset implementation pointer.
-    void reset();
 
     /// Set event to signalled state.
     void emit();

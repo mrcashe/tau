@@ -105,29 +105,56 @@ public:
     /// Gets "Cut" action (Ctrl+X, Ctrl+Delete").
     Action & cut_action();
 
+    /// Gets "Cut" action (Ctrl+X, Ctrl+Delete").
+    const Action & cut_action() const;
+
     /// Gets "Paste" action (Ctrl+V, Shift+Insert).
     Action & paste_action();
+
+    /// Gets "Paste" action (Ctrl+V, Shift+Insert).
+    const Action & paste_action() const;
 
     /// Gets "Enter" action (Enter).
     Action & enter_action();
 
+    /// Gets "Enter" action (Enter).
+    const Action & enter_action() const;
+
     /// Gets "Delete" action (Delete).
     Action & del_action();
+
+    /// Gets "Delete" action (Delete).
+    const Action & del_action() const;
 
     /// Gets "BackSpace" action (Backspace).
     Action & backspace_action();
 
+    /// Gets "BackSpace" action (Backspace).
+    const Action & backspace_action() const;
+
     /// Gets "Undo" action (Alt+Backspace").
     Action & undo_action();
+
+    /// Gets "Undo" action (Alt+Backspace").
+    const Action & undo_action() const;
 
     /// Gets "Redo" action (Alt+Enter").
     Action & redo_action();
 
+    /// Gets "Redo" action (Alt+Enter").
+    const Action & redo_action() const;
+
     /// Gets "Tab" action (Alt+Enter").
     Action & tab_action();
 
+    /// Gets "Tab" action (Alt+Enter").
+    const Action & tab_action() const;
+
     /// Gets "Insert/Replace" action.
     Toggle_action & insert_action();
+
+    /// Gets "Insert/Replace" action.
+    const Toggle_action & insert_action() const;
 
     /// Gets "signal_modified".
     signal<void(bool)> & signal_modified();

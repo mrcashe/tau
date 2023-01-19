@@ -24,26 +24,26 @@
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ----------------------------------------------------------------------------
 
-#include <tau/exception.hh>
 #include <tau/event.hh>
 #include <event-impl.hh>
-#include <iostream>
+#include <loop-impl.hh>
 
 namespace tau {
 
-Event::Event() {}
+Event::Event() {
+    auto loop = Loop_impl::this_loop();
+    impl = loop->create_event();
+}
+
+Event::Event(slot<void()> slot_ready) {
+    auto loop = Loop_impl::this_loop();
+    impl = loop->create_event();
+    impl->signal_ready().connect(slot_ready);
+}
 
 Event::Event(Event_ptr evp):
     impl(evp)
 {
-}
-
-Event::operator bool() const {
-    return nullptr != impl;
-}
-
-void Event::reset() {
-    impl.reset();
 }
 
 void Event::emit() {
@@ -51,8 +51,7 @@ void Event::emit() {
 }
 
 signal<void()> & Event::signal_ready() {
-    if (impl) { return impl->signal_ready(); }
-    throw user_error("Event::signal_ready() called on pure Event");
+    return impl->signal_ready();
 }
 
 } // namespace tau
