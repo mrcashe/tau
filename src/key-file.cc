@@ -25,10 +25,12 @@
 // ----------------------------------------------------------------------------
 
 #include <tau/buffer.hh>
+#include <tau/locale.hh>
 #include <tau/sys.hh>
 #include <tau/key-file.hh>
 #include <tau/string.hh>
 #include <cstdlib>
+#include <fstream>
 #include <iostream>
 #include <list>
 
@@ -279,9 +281,24 @@ Key_file::~Key_file() {
 }
 
 void Key_file::save(std::ostream & os) {
-    ustring s;
-    impl_->stream_out(s);
-    os << s;
+    if (os.good()) {
+        ustring s;
+        impl_->stream_out(s);
+        os << s;
+    }
+}
+
+// static
+Key_file Key_file::load_from_file(const ustring & path) {
+    Key_file kf;
+    std::ifstream is(Locale().encode_filename(path));
+    kf.load(is);
+    return kf;
+}
+
+void Key_file::save_to_file(const ustring & path) {
+    std::ofstream os(Locale().encode_filename(path));
+    save(os);
 }
 
 void Key_file::set_comment_separator(char32_t comment_sep) {

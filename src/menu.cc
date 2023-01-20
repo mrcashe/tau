@@ -178,6 +178,10 @@ void Menu::clear() {
     MENU_IMPL->clear();
 }
 
+void Menu::quit() {
+    MENU_IMPL->quit();
+}
+
 signal<void()> & Menu::signal_quit() {
     return MENU_IMPL->signal_quit();
 }

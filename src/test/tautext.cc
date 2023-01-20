@@ -1171,7 +1171,7 @@ struct Main: tau::Toplevel {
             }
         }
 
-        if (path.empty()) { path = tau::path_user_home_dir(); }
+        if (path.empty()) { path = tau::path_home(); }
 
         if (fileop_in_dialogs_) {
             tau::Fileman fman(tau::FILEMAN_OPEN, path);
@@ -1183,7 +1183,7 @@ struct Main: tau::Toplevel {
             if (gv.size() > 3) { bounds.set(gv[0], gv[1], tau::Size(gv[2], gv[3])); }
             tau::Dialog dlg(*this, "Open a file", bounds);
             dlg.insert(fman);
-            fman.signal_apply().connect(tau::bind(fun(this, &Main::on_loader_apply), std::ref(fman)));
+            fman.apply_action().connect(tau::bind(fun(this, &Main::on_loader_apply), std::ref(fman)));
             fman.cancel_action().connect(tau::bind(fun(this, &Main::save_fileman), std::ref(fman)));
             dlg.show();
             fman.take_focus();
@@ -1203,8 +1203,8 @@ struct Main: tau::Toplevel {
             load_fileman(*fman);
             tau::Navigator navi(fman->navigator_ptr());
             navi.allow_multiple_select();
-            fman->signal_apply().connect(tau::bind(fun(this, &Main::on_loader_apply), std::ref(*fman)));
-            fman->signal_apply().connect(tau::fun(this, &Main::close_pop));
+            fman->apply_action().connect(tau::bind(fun(this, &Main::on_loader_apply), std::ref(*fman)));
+            fman->apply_action().connect(tau::fun(this, &Main::close_pop));
             fman->cancel_action().connect(tau::bind(fun(this, &Main::save_fileman), std::ref(*fman)));
             fman->cancel_action().connect(tau::fun(this, &Main::close_pop));
             set_title(tau::program_name()+": Open a File");
@@ -1238,9 +1238,9 @@ struct Main: tau::Toplevel {
                 }
             }
 
-            tau::Fileman * fman = new tau::Fileman(tau::FILEMAN_SAVE, path.empty() ? tau::path_user_home_dir() : path);
+            tau::Fileman * fman = new tau::Fileman(tau::FILEMAN_SAVE, path.empty() ? tau::path_home() : path);
             load_fileman(*fman);
-            fman->signal_apply().connect(tau::bind(fun(this, &Main::on_saver_apply), fman));
+            fman->apply_action().connect(tau::bind(fun(this, &Main::on_saver_apply), fman));
             fman->cancel_action().connect(tau::bind(fun(this, &Main::save_fileman), std::ref(*fman)));
             fman->cancel_action().connect(tau::fun(this, &Main::close_pop));
             set_title(tau::program_name()+": Save File As");

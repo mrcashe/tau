@@ -202,17 +202,17 @@ Colorsel_impl::Colorsel_impl(const Color & initial_color):
     ntable_->signal_size_changed().connect(fun(this, &Colorsel_impl::on_ntable_size_changed));
     scroller->insert(ntable_);
 
-    Button_ptr button = std::make_shared<Button_impl>("Apply", "dialog-ok", SMALL_ICON);
-    button->signal_click().connect(fun(button, &Widget_impl::quit_dialog));
-    button->signal_click().connect(fun(signal_apply_));
+    Button_ptr button = std::make_shared<Button_impl>(apply_action_, ACTION_ALL);
     put(button, 7, 6, 1, 1, true, true);
     align(button.get(), ALIGN_FILL, ALIGN_CENTER);
+    apply_action_.connect(fun(this, &Widget_impl::quit_dialog));
+    connect_action(apply_action_);
 
-    button = std::make_shared<Button_impl>("Cancel", "dialog-cancel", SMALL_ICON);
-    button->signal_click().connect(fun(button, &Widget_impl::quit_dialog));
-    button->signal_click().connect(fun(signal_cancel_));
+    button = std::make_shared<Button_impl>(cancel_action_, ACTION_ALL);
     put(button, 7, 7, 1, 1, true, true);
     align(button.get(), ALIGN_FILL, ALIGN_CENTER);
+    cancel_action_.connect(fun(this, &Widget_impl::quit_dialog));
+    connect_action(cancel_action_);
 }
 
 void Colorsel_impl::set_color(const Color & color) {

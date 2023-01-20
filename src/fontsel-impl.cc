@@ -134,13 +134,11 @@ void Fontsel_impl::init() {
 
     set_column_margin(2, 16, 0);
 
-    apply_ = std::make_shared<Button_impl>("Apply", "dialog-ok", MEDIUM_ICON);
-    apply_->signal_click().connect(fun(this, &Fontsel_impl::on_apply_clicked));
-    apply_->disable();
-    put(apply_, 4, 3, 1, 1, true, true);
-    align(apply_.get(), ALIGN_FILL, ALIGN_FILL);
+    Button_ptr btn = std::make_shared<Button_impl>(apply_, ACTION_ALL);
+    put(btn, 4, 3, 1, 1, true, true);
+    align(btn.get(), ALIGN_FILL, ALIGN_FILL);
 
-    auto btn = std::make_shared<Button_impl>(cancel_);
+    btn = std::make_shared<Button_impl>(cancel_, ACTION_ALL);
     put(btn, 4, 4, 1, 1, true, true);
     align(btn.get(), ALIGN_FILL, ALIGN_FILL);
 
@@ -151,6 +149,8 @@ void Fontsel_impl::init() {
     pa = theme->find_action(FOCUS_PREVIOUS_ACTION);
     if (pa) { prev_.connect_master_action(*pa); }
 
+    apply_.disable();
+    apply_.connect(tau::fun(this, &Fontsel_impl::on_apply));
     zin_.connect(fun(counter_, &Counter_impl::increase));
     zout_.connect(fun(counter_, &Counter_impl::decrease));
     cancel_.connect(fun(this, &Widget_impl::quit_dialog));
@@ -180,13 +180,11 @@ void Fontsel_impl::select(const ustring & spec) {
     update_font();
 }
 
-ustring Fontsel_impl::spec() const {
-    return font_spec_build(family_, face_, counter_->value());
-}
-
 void Fontsel_impl::set_sample(const ustring & sample) {
-    sample_ = sample;
-    if (!sample_.empty()) { entry_->assign(sample_); }
+    if (!sample.empty()) {
+        sample_ = sample;
+        entry_->assign(sample_);
+    }
 }
 
 void Fontsel_impl::on_display() {
@@ -194,7 +192,7 @@ void Fontsel_impl::on_display() {
     std::sort(v.begin(), v.end());
     for (auto & s: v) { families_->append(s); }
     ustring s = uspec_.empty() ? Font::normal() : uspec_;
-    aspec_ = s;
+    aspec_ = spec_ = s;
     select(s);
     update_tooltips();
 }
@@ -204,15 +202,21 @@ void Fontsel_impl::update_font() {
     try {
         if (!family_.empty() && !face_.empty() && counter_->value() >= 1) {
             ustring spc = font_spec_build(family_, face_, counter_->value());
-            fontspec_->assign(spc);
+            if (spc.empty()) { spc = Font::normal(); }
 
-            if (Painter pr = entry_->painter()) {
-                Font font = pr.select_font(spc);
-                ustring psname = font.psname();
-                psname_->assign(psname.empty() ? "Not available" : psname);
+            if (spec_ != spc) {
+                spec_ = spc;
+                signal_selection_changed_(spec_);
+                fontspec_->assign(spec_);
+
+                if (Painter pr = entry_->painter()) {
+                    Font font = pr.select_font(spec_);
+                    ustring psname = font.psname();
+                    psname_->assign(psname.empty() ? "Not available" : psname);
+                }
+
+                entry_->style().font("font") = spec_;
             }
-
-            entry_->style().font("font") = spc;
         }
     }
 
@@ -223,20 +227,19 @@ void Fontsel_impl::update_font() {
 
 void Fontsel_impl::on_face_selected(int row, const ustring & str) {
     face_ = str;
-    update_apply();
     update_font();
-    signal_font_selected_(spec());
+    apply_.disable();
+    if (!str_similar(spec_, aspec_)) { apply_.enable(); }
 }
 
 void Fontsel_impl::on_face_activated(int row, const ustring & str) {
     face_ = str;
-    ustring s = spec();
-
-    if (!s.empty()) {
-        aspec_ = s;
-        update_apply();
-        signal_font_activated_(s);
-    }
+    update_font();
+    apply_.disable();
+    if (!spec_.empty() && !str_similar(spec_, aspec_)) { aspec_ = spec_; apply_.enable(); }
+    signal_font_activated_(spec_);
+    apply_.exec();
+    apply_.disable();
 }
 
 void Fontsel_impl::on_family_selected(int row, const ustring & str) {
@@ -248,38 +251,25 @@ void Fontsel_impl::on_family_selected(int row, const ustring & str) {
     for (auto & s: v) { faces_->append(s); }
     if (str_similar(face, v)) { faces_->select(face, true); }
     else if (str_similar(uface_, v)) { faces_->select(uface_, true); }
-    else { faces_->select_first(); }
+    else { faces_->select_front(); }
 }
 
 void Fontsel_impl::on_family_activated(int row, const ustring & str) {
     family_ = str;
-    ustring s = spec();
-
-    if (!s.empty()) {
-        aspec_ = s;
-        update_font();
-        update_apply();
-        signal_font_activated_(s);
-    }
+    update_font();
+    apply_.disable();
+    if (!str_similar(spec_, aspec_)) { aspec_ = spec_; apply_.enable(); }
+    signal_font_activated_(spec_);
+    apply_.exec();
+    apply_.disable();
 }
 
 void Fontsel_impl::on_counter_value_changed(double value) {
     hsample_ = 0;
     entry_->hint_size(0, 0);
-
-    if (!spec().empty()) {
-        update_font();
-        update_apply();
-    }
-}
-
-void Fontsel_impl::on_apply_clicked() {
-    ustring s = spec();
-
-    if (!s.empty()) {
-        update_apply();
-        signal_font_activated_(s);
-    }
+    update_font();
+    apply_.disable();
+    if (!str_similar(spec_, aspec_)) { apply_.enable(); }
 }
 
 void Fontsel_impl::on_sample_requisition_changed() {
@@ -328,15 +318,6 @@ void Fontsel_impl::update_tooltips() {
     counter_->set_tooltip(table);
 }
 
-void Fontsel_impl::update_apply() {
-    ustring s = spec();
-
-    if (!s.empty()) {
-        if (s != aspec_) { apply_->enable(); }
-        else { apply_->disable(); }
-    }
-}
-
 void Fontsel_impl::on_entry_changed(const ustring & s) {
     sample_ = s;
 }
@@ -359,6 +340,12 @@ void Fontsel_impl::focus_previous() {
 
 void Fontsel_impl::on_entry_activate(const ustring & s) {
     families_->take_focus();
+}
+
+void Fontsel_impl::on_apply() {
+    signal_font_activated_(spec_);
+    aspec_ = spec_;
+    apply_.disable();
 }
 
 } // namespace tau

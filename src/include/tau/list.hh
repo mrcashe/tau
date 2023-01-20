@@ -182,15 +182,15 @@ public:
 
     /// Select specified row.
     /// @return INT_MIN if no selection available or row index.
-    int select_row(int br);
+    int select_row(int row);
 
     /// Select first row.
     /// @return INT_MIN if no selection available or row index.
-    int select_first();
+    int select_front();
 
     /// Select last row.
     /// @return INT_MIN if no selection available or row index.
-    int select_last();
+    int select_back();
 
     /// Get current selected row.
     /// @return INT_MIN if no selection available or row index.

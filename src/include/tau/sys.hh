@@ -98,11 +98,15 @@ ustring path_tmp();
 
 /// @ingroup path_group
 /// Get program installation prefix directory.
-ustring path_prefix_dir();
+ustring path_prefix();
+
+/// @ingroup path_group
+/// Get share directory path.
+ustring path_share();
 
 /// @ingroup path_group
 /// Get user home directory path.
-ustring path_user_home_dir();
+ustring path_home();
 
 /// @ingroup path_group
 /// Get user data directory path.

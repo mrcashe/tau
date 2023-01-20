@@ -24,9 +24,9 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # -----------------------------------------------------------------------------
 
-mxe_aname = libtau-$(Major_).$(Minor_)-mxe.a
+mxe_afile = libtau-$(Major_).$(Minor_)-mxe.a
 mxe_adir = $(bindir)
-mxe_a = $(mxe_adir)/$(mxe_aname)
+mxe_a = $(mxe_adir)/$(mxe_afile)
 mxe_test_a_builddir = mxe-test-a
 all_sources = $(basename $(notdir $(wildcard $(srcdir)/test/*.cc)))
 all_binaries = $(addprefix $(bindir)/, $(addsuffix .exe, $(all_sources)))

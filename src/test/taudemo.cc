@@ -334,7 +334,7 @@ struct Main: tau::Toplevel {
         xtable.put(vslider, 1, 0, 1, 1, true, false);
 
         xtable.put(scroller, 0, 0);
-        tau::ustring path = tau::path_build(tau::path_prefix_dir(), "share", "cursors");
+        tau::ustring path = tau::path_build(tau::path_share(), "cursors");
 
         if (tau::file_is_dir(path)) {
             for (auto & s: tau::path_glob(tau::path_build(path, "*"))) {

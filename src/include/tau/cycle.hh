@@ -38,6 +38,9 @@ namespace tau {
 ///
 /// @note This class is a wrapper around its implementation shared pointer.
 ///
+/// To obtain which child is selected now, connect to child Widget::signal_select()
+/// or (and) Widget::signal_unselect().
+///
 /// @ingroup container_group
 /// @ingroup widget_group
 class Cycle: public Widget {

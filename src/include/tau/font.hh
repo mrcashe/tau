@@ -177,13 +177,13 @@ ustring font_size_as_max(const ustring & spec, double max_size_pt);
 /// @ingroup font_group
 ustring font_size_remove(const ustring & spec);
 
-/// Build specification from components without size.
+/// Build specification from components.
 /// @ingroup font_group
-ustring font_spec_build(const ustring & family, const ustring & face);
+ustring font_spec_build(const ustring & family, const ustring & face, double size_pt=0.0);
 
-/// Build specification from components including size.
+/// Build specification from components.
 /// @ingroup font_group
-ustring font_spec_build(const ustring & family, const ustring & face, double size_pt);
+ustring font_spec_build(const std::vector<ustring> & specv);
 
 /// Add face modificator to the font.
 /// @ingroup font_group

@@ -117,12 +117,12 @@ int List::select_row(int br) {
     return LIST_IMPL->select_row(br);
 }
 
-int List::select_first() {
-    return LIST_IMPL->select_first();
+int List::select_front() {
+    return LIST_IMPL->select_front();
 }
 
-int List::select_last() {
-    return LIST_IMPL->select_last();
+int List::select_back() {
+    return LIST_IMPL->select_back();
 }
 
 int List::selected_row() const {

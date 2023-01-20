@@ -80,7 +80,7 @@ public:
     /// Select specified font.
     void select(const ustring & spec);
 
-    /// Get selected font.
+    /// Get selected font specification.
     ustring spec() const;
 
     /// Set sample text.
@@ -90,30 +90,36 @@ public:
     /// Get sample text.
     ustring sample() const;
 
-    /// Get focus_next action.
-    Action & focus_next_action();
+    /// Get "Apply" action.
+    Action & apply_action();
 
-    /// Get focus_previous action.
-    Action & focus_previous_action();
+    /// Get "Apply" action.
+    const Action & apply_action() const;
 
     /// Get "Cancel" action.
     Action & cancel_action();
 
-    /// Signal "Font Selected".
-    /// Emits when focus moved to the new font.
-    /// Slot prototype:
-    /// ~~~~~~~~~~~~~~~
-    /// void on_font_selected(const ustring & spec);
-    /// ~~~~~~~~~~~~~~~
-    signal<void(const ustring &)> & signal_font_selected();
+    /// Get "Cancel" action.
+    const Action & cancel_action() const;
 
-    /// Signal "Font Activated".
-    /// Emits when font family of font face double clicked or font size changed or "Apply" button pressed.
-    /// Slot prototype:
-    /// ~~~~~~~~~~~~~~~
-    /// void on_font_activated(const ustring & spec);
-    /// ~~~~~~~~~~~~~~~
+    /// Get focus_next action.
+    Action & focus_next_action();
+
+    /// Get focus_next action.
+    const Action & focus_next_action() const;
+
+    /// Get focus_previous action.
+    Action & focus_previous_action();
+
+    /// Get focus_previous action.
+    const Action & focus_previous_action() const;
+
+    /// Get signal "selection changed".
+    signal<void(const ustring &)> & signal_selection_changed();
+
+    /// Get signal "font activated".
     signal<void(const ustring &)> & signal_font_activated();
+
 };
 
 } // namespace tau

@@ -138,7 +138,7 @@ bool path_is_absolute(const ustring & path) {
     return false;
 }
 
-ustring path_user_home_dir() {
+ustring path_home() {
     ustring p = special_folder(CSIDL_PROFILE);
     return p;
 }
@@ -171,7 +171,7 @@ ustring path_user_data_dir() {
         return data_dir;
     }
 
-    return path_build(path_user_home_dir(), "Local Settings", "Application Data");
+    return path_build(path_home(), "Local Settings", "Application Data");
 }
 
 ustring path_user_config_dir() {
@@ -185,7 +185,7 @@ ustring path_user_cache_dir() {
         return data_dir;
     }
 
-    return path_build(path_user_home_dir(), "Local Settings", "Temporary Internet Files");
+    return path_build(path_home(), "Local Settings", "Temporary Internet Files");
 }
 
 ustring path_user_runtime_dir() {

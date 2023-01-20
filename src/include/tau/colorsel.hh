@@ -82,19 +82,17 @@ public:
     /// Get selected color.
     Color color() const;
 
-    /// Signal emitted when "Apply" button pressed.
-    /// Slot prototype:
-    /// ~~~~~~~~~~~~~~~
-    /// void on_apply();
-    /// ~~~~~~~~~~~~~~~
-    signal<void()> & signal_apply();
+    /// Get "Apply" action.
+    Action & apply_action();
 
-    /// Signal emitted when "Cancel" button pressed.
-    /// Slot prototype:
-    /// ~~~~~~~~~~~~~~~
-    /// void on_cancel();
-    /// ~~~~~~~~~~~~~~~
-    signal<void()> & signal_cancel();
+    /// Get "Apply" action.
+    const Action & apply_action() const;
+
+    /// Get "Cancel" action.
+    Action & cancel_action();
+
+    /// Get "Cancel" action.
+    const Action & cancel_action() const;
 
     /// Signal emitted when color changed.
     /// Slot prototype:

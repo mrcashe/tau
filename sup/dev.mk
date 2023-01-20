@@ -26,7 +26,7 @@
 
 dev_link = "$(builddir)/78-dev.mk"
 
-en-dev: en-doc
+en-dev: $(builddir) en-doc
 	@$(ln) "$(supdir)/dev-link.mk" $(dev_link)
 
 su-dev: su-doc

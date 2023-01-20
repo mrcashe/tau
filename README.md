@@ -128,7 +128,7 @@ separated packages for runtime and development files. But some others
 development files. In any case, the configure script will inform you if any
 package is missing.
 
--   libstdc++ (All platforms)
+-   libstdc++ (or libc++) (All platforms)
 
     Provided by C++ compiler, so if any of C++ compilers found, *libstdc++* accessible too.
 

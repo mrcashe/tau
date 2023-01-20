@@ -27,6 +27,7 @@
 #ifndef TAU_COLOR_SELECTOR_IMPL_HH
 #define TAU_COLOR_SELECTOR_IMPL_HH
 
+#include <tau/action.hh>
 #include <table-impl.hh>
 
 namespace tau {
@@ -38,8 +39,11 @@ public:
     void set_color(const Color & color);
     Color color() { return color_; }
 
-    signal<void()> & signal_apply() { return signal_apply_; }
-    signal<void()> & signal_cancel() { return signal_cancel_; }
+    Action & apply_action() { return apply_action_; }
+    const Action & apply_action() const { return apply_action_; }
+    Action & cancel_action() { return cancel_action_; }
+    const Action & cancel_action() const { return cancel_action_; }
+
     signal<void(const Color &)> & signal_color_changed() { return signal_color_changed_; }
 
 private:
@@ -73,8 +77,9 @@ private:
     Entry_ptr           html_;
     Table_ptr           ntable_;
 
-    signal<void()>      signal_apply_;
-    signal<void()>      signal_cancel_;
+    Action              apply_action_ { KC_NONE, KM_NONE, "Apply", ustring("dialog-ok") };
+    Action              cancel_action_ { "Escape Cancel", "Cancel", ustring("dialog-cancel") };
+
     signal<void(const Color &)> signal_color_changed_;
     connection          html_cx_;
 

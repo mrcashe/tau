@@ -301,7 +301,7 @@ void Fileman_impl::apply() {
                         Button_ptr yes = std::make_shared<Button_impl>("Yes", "dialog-ok", MEDIUM_ICON);
                         yes->signal_click().connect(fun(yes, &Widget_impl::quit_dialog));
                         yes->signal_click().connect(fun(this, &Widget_impl::quit_dialog));
-                        yes->signal_click().connect(fun(signal_apply_));
+                        yes->signal_click().connect(fun(user_apply_action_, &Action::exec));
                         bbox->append(yes, true);
 
                         Button_ptr no = std::make_shared<Button_impl>("No", "dialog-cancel", MEDIUM_ICON);
@@ -321,7 +321,7 @@ void Fileman_impl::apply() {
     }
 
     quit_dialog();
-    signal_apply_();
+    user_apply_action_.exec();
 }
 
 void Fileman_impl::on_apply() {

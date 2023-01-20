@@ -50,13 +50,21 @@ public:
     void pan_to(int x, int y);
 
     Action & pan_left_action() { return pan_left_action_; }
+    const Action & pan_left_action() const { return pan_left_action_; }
     Action & pan_right_action() { return pan_right_action_; }
+    const Action & pan_right_action() const { return pan_right_action_; }
     Action & pan_up_action() { return pan_up_action_; }
+    const Action & pan_up_action() const { return pan_up_action_; }
     Action & pan_down_action() { return pan_down_action_; }
+    const Action & pan_down_action() const { return pan_down_action_; }
     Action & page_up_action() { return page_up_action_; }
+    const Action & page_up_action() const { return page_up_action_; }
     Action & page_down_action() { return page_down_action_; }
+    const Action & page_down_action() const { return page_down_action_; }
     Action & home_action() { return home_action_; }
+    const Action & home_action() const { return home_action_; }
     Action & end_action() { return end_action_; }
+    const Action & end_action() const { return end_action_; }
 
     void set_step(const Point & step) { step_ = step; }
     void set_step(int xstep, int ystep) { step_.set(xstep, ystep); }

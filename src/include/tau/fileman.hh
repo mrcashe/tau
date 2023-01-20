@@ -159,19 +159,17 @@ public:
     /// Save state to the Key_file.
     void save_state(Key_file & kf, Key_section & sect);
 
+    /// Get "Apply" action.
+    Action & apply_action();
+
+    /// Get "Cancel" action.
+    const Action & apply_action() const;
+
     /// Get "Cancel" action.
     Action & cancel_action();
 
-    /// Signal emitted when:
-    /// - User double clicks on single file.
-    /// - User presses "Enter" on single file.
-    /// - "Apply" button has been clicked.
-    ///
-    /// Slot prototype:
-    /// ~~~~~~~~~~~~~~~
-    /// void on_apply();
-    /// ~~~~~~~~~~~~~~~
-    signal<void()> & signal_apply();
+    /// Get "Cancel" action.
+    const Action & cancel_action() const;
 };
 
 } // namespace tau

@@ -49,12 +49,21 @@ Color Colorsel::color() const {
     return COLORSEL_IMPL->color();
 }
 
-signal<void()> & Colorsel::signal_apply() {
-    return COLORSEL_IMPL->signal_apply();
+Action & Colorsel::apply_action() {
+    return COLORSEL_IMPL->apply_action();
 }
 
-signal<void()> & Colorsel::signal_cancel() {
-    return COLORSEL_IMPL->signal_cancel();
+const Action & Colorsel::apply_action() const {
+    return COLORSEL_IMPL->apply_action();
+}
+
+Action & Colorsel::cancel_action() {
+    return COLORSEL_IMPL->cancel_action();
+}
+
+/// Get "Cancel" action.
+const Action & Colorsel::cancel_action() const {
+    return COLORSEL_IMPL->cancel_action();
 }
 
 signal<void(const Color &)> & Colorsel::signal_color_changed() {

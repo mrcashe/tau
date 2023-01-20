@@ -36,6 +36,17 @@
 #include <ostream>
 #include <mutex>
 
+namespace {
+
+using Mutex = std::recursive_mutex;
+using Lock = std::lock_guard<Mutex>;
+
+Mutex           mx_;
+tau::ustring    prefix_;
+tau::ustring    share_;
+
+} // anonymous namespace
+
 namespace tau {
 
 const Sysinfo & sysinfo() {
@@ -119,25 +130,39 @@ ustring path_notdir(const ustring & path) {
     return path;
 }
 
-ustring path_prefix_dir() {
-    static ustring dir;
-    static std::mutex mx;
-    std::lock_guard<std::mutex> lock(mx);
+ustring path_prefix() {
+    Lock lock(mx_);
 
-    if (dir.empty()) {
+    if (prefix_.empty()) {
         ustring s = path_dirname(path_self());
         ustring name = str_tolower(path_notdir(s));
 
         if ("bin" == name || "lib" == name) {
-            dir = path_dirname(s);
+            prefix_ = path_dirname(s);
         }
 
         else {
-            dir = s;
+            prefix_ = s;
         }
     }
 
-    return dir;
+    return prefix_;
+}
+
+ustring path_share() {
+    Lock lock(mx_);
+
+    if (share_.empty()) {
+        ustring pfx = path_prefix(), s = path_build(pfx, "share", program_name());
+        if (file_is_dir(s)) { share_ = s; return share_; }
+        s = path_build(pfx, "share", str_format("tau-", Major_, '.', Minor_));
+        if (file_is_dir(s)) { share_ = s; return share_; }
+        s = path_build(pfx, "share");
+        if (file_is_dir(s)) { share_ = s; return share_; }
+        share_ = pfx;
+    }
+
+    return share_;
 }
 
 ustring program_name() {

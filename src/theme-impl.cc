@@ -293,7 +293,7 @@ void Theme_impl::boot() {
     auto tid = std::this_thread::get_id();
     update_this_thread();
 
-    ustring prefix = path_prefix_dir(), 
+    ustring prefix = path_prefix(),
         share = path_build(prefix, "share", program_name()), 
         lib_share = path_build(prefix, "share", str_format("tau-", Major_, '.', Minor_));
 
@@ -388,11 +388,13 @@ void Theme_impl::sweep() {
 }
 
 void Theme_impl::add_icon_dir(const ustring & dir) {
-    if (!file_is_dir(dir)) { return; }
-    Lock sl(mx_);
-    for (auto i = icon_dirs_.begin(); i != icon_dirs_.end(); ++i) { if (*i == dir) return; }
-    icon_dirs_.push_back(dir);
-    nicon_dirs_++;
+    if (file_is_dir(dir)) {
+        // std::cout << "icon: " << dir << '\n';
+        Lock sl(mx_);
+        for (auto i = icon_dirs_.begin(); i != icon_dirs_.end(); ++i) { if (*i == dir) return; }
+        icon_dirs_.push_back(dir);
+        nicon_dirs_++;
+    }
 }
 
 void Theme_impl::add_pixmap_dir(const ustring & dir) {

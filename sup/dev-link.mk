@@ -48,26 +48,24 @@ clean-hh:
 	    cd $(hh_prefix); \
 	    for file in $$hhs; do $(rm) $$file; done; \
 	    cd $$cwd; \
-	fi; \
-	if [ -z "$(shell ls $(hh_prefix)/tau/* 2>/dev/null)" ]; then $(rmr) $(hh_prefix)/tau; fi; \
-	if [ -z "$(shell ls $(hh_prefix)/* 2>/dev/null)" ]; then $(rmr) $(hh_prefix); fi
+	fi
 
 install-host:
-	@if [ -e $(unix_a_dest) -o -e $(unix_so_dest) ]; then \
+	@if [ -e $(unix_adest) -o -e $(unix_sodest) ]; then \
 	    $(mkdir) $(pc_prefix); \
 	    echo "++ dev.mk: writing $(unix_pc)..."; \
 	    echo "prefix=$(PREFIX)" >$(unix_pc); \
 	    echo "exec_prefix=$(PREFIX)" >>$(unix_pc); \
 	    echo "lib_prefix=$(PREFIX)/lib">>$(unix_pc); \
 	    echo "includedir=$(hh_prefix)">>$(unix_pc); \
-	    [ -e $(unix_a_dest) ] && echo "a=$(unix_a_dest)">>$(unix_pc); \
-	    echo "Name: libtau">>$(unix_pc); \
+	    [ -e $(unix_adest) ] && echo "a=$(unix_adest)">>$(unix_pc); \
+	    echo "Name: tau">>$(unix_pc); \
 	    echo "Description: C++ GUI toolkit">>$(unix_pc); \
 	    echo "Version: $(Major_).$(Minor_).$(Micro_)">>$(unix_pc); \
 	    echo "Requires: $(pkg_required)">>$(unix_pc); \
 	    echo -n "Libs: -L$$">>$(unix_pc); \
 	    echo -n "{lib_prefix} -lpthread $(unix_sys_shared)">>$(unix_pc); \
-	    [ -e $(unix_so_dest) ] && echo -n " -l$(unix_pkg)">>$(unix_pc); \
+	    [ -e $(unix_sodest) ] && echo -n " -ltau-$(Major_).$(Minor_)">>$(unix_pc); \
 	    echo "">>$(unix_pc); \
 	    echo -n "Cflags: -I$$">>$(unix_pc); \
 	    echo "{includedir}">>$(unix_pc); \

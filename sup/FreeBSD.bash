@@ -28,3 +28,4 @@
 PREFIX='/usr/local'
 link='ln -vsf'
 pkg_required+='libinotify libpng xkbcommon-x11 xcb xcb-cursor xcb-icccm xcb-renderutil xcb-screensaver xcb-sync xcb-xfixes'
+libdata='libdata'

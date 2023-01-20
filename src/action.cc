@@ -100,29 +100,29 @@ void Master_action::set_label(const ustring & label) {
 }
 
 void Master_action::enable() {
-    if (disabled_) {
-        disabled_ = false;
+    if (!enabled_) {
+        enabled_ = true;
         signal_enable_();
     }
 }
 
 void Master_action::disable() {
-    if (!disabled_) {
-        disabled_ = true;
+    if (enabled_) {
+        enabled_ = false;
         signal_disable_();
     }
 }
 
 void Master_action::show() {
-    if (hidden_) {
-        hidden_ = false;
+    if (!visible_) {
+        visible_ = true;
         signal_show_();
     }
 }
 
 void Master_action::hide() {
-    if (!hidden_) {
-        hidden_ = true;
+    if (visible_) {
+        visible_ = false;
         signal_hide_();
     }
 }

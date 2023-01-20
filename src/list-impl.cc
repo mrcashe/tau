@@ -452,7 +452,7 @@ void List_impl::page_down() {
         }
     }
 
-    select_last();
+    select_back();
 }
 
 int  List_impl::page_up_row() {
@@ -529,7 +529,7 @@ void List_impl::page_up() {
         }
     }
 
-    select_first();
+    select_front();
 }
 
 int List_impl::next_row() {
@@ -581,7 +581,7 @@ int List_impl::prev_row() {
     return INT_MIN;
 }
 
-int List_impl::select_first() {
+int List_impl::select_front() {
     if (!selectables_.empty()) {
         return select_row(selectables_.begin()->first);
     }
@@ -589,7 +589,7 @@ int List_impl::select_first() {
     return INT_MIN;
 }
 
-int List_impl::select_last() {
+int List_impl::select_back() {
     if (!selectables_.empty()) {
         return select_row(selectables_.rbegin()->first);
     }
@@ -780,12 +780,12 @@ void List_impl::on_shift_next_key() {
 
 void List_impl::on_home_key() {
     table_->unmark_all();
-    select_first();
+    select_front();
 }
 
 void List_impl::on_end_key() {
     table_->unmark_all();
-    select_last();
+    select_back();
 }
 
 void List_impl::on_page_down_key() {

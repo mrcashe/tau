@@ -162,6 +162,9 @@ public:
     /// Gets "Cancel" action.
     Action & cancel_action();
 
+    /// Gets "Cancel" action.
+    const Action & cancel_action() const;
+
     /// Signal emitted when entered text changed.
     ///
     /// Slot prototype:

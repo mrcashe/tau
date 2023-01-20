@@ -36,12 +36,16 @@ export srcdirs = $(srcdir) $(confdir)
 export hh_option = -I$(hh_src)
 export hh_impl_options = $(hh_option) -I$(srcdir)
 
-BUILD_TARGETS = all-build install-build uninstall-build clean-build
-.PHONY: $(BUILD_TARGETS) rm xz test-links lj
+ifneq ($(strip $(wildcard $(builddir)/*-a.mk)),)
+j1 = -j 1
+endif
 
-$(BUILD_TARGETS): $(builddir) lj
+BUILD_TARGETS = all-build install-build uninstall-build clean-build
+.PHONY: $(BUILD_TARGETS) rm xz test-links
+
+$(BUILD_TARGETS): $(builddir)
 	@target=`echo $@ | sed s/-build//`;\
-	$(MAKE) $(shell cat "$(confdir)/lj" 2>/dev/null) -C $$builddir $$target || exit 1
+	$(MAKE) $(j1) -C $$builddir $$target || exit 1
 
 conf/conf.mk:
 	@./configure || exit 1
@@ -49,23 +53,9 @@ conf/conf.mk:
 rm:
 	@rm -vrf $(builddir) $(bindir) $(confdir)
 
-lj:
-	@rm -f "$(confdir)/lj"; \
-	mks=`ls $(builddir)/*.mk 2>/dev/null`; \
-	for mk in $$mks; do \
-	    a=`echo $$mk | grep -- -a.mk$$`; \
-	    if [ -n "$$a" ]; then printf -- '-j 1' > "$(confdir)/lj"; fi; \
-	done; \
-	if [ -z "$$mks" ]; then \
-	    for target in $(conf_targets); do \
-		a=`echo $$target | grep -- -a$$`; \
-		if [ -n "$$a" ]; then printf -- '-j 1' > "$(confdir)/lj"; fi; \
-	    done;\
-	fi
-
 $(builddir):
 	@mkdir -vp $@
-	@$(link) "$(supdir)/build.mk" $@/Makefile
+	@$(ln) "$(supdir)/build.mk" $@/Makefile
 	@[ -z $(wildcard "$@/*.mk") ] && $(MAKE) $(conf_targets)
 
 test-links: $(builddir)
@@ -73,7 +63,7 @@ test-links: $(builddir)
 	    mkdir -vp "$(builddir)/test"; \
 	    for f in $(wildcard $(srcdir)/test/*.cc); do \
 		cc=`basename $$f`; \
-		$(link) "$(srcdir)/test/$$cc" "$(builddir)/test/$$cc"; \
+		$(ln) "$(srcdir)/test/$$cc" "$(builddir)/test/$$cc"; \
 	    done; \
 	fi
 
@@ -92,6 +82,8 @@ rm-host: rm-host-a rm-host-so rm-host-test
 en-a: 	 en-host-a en-mxe-a
 en-so:	 en-host-so en-mxe-so
 en-test: en-host-test en-mxe-test
+en-test-a: en-host-test-a en-mxe-test-a
+en-test-so: en-host-test-so en-mxe-test-so
 
 su-a:	 su-host-a su-mxe-a
 su-so:	 su-host-so su-mxe-so

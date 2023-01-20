@@ -24,18 +24,18 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # -----------------------------------------------------------------------------
 
-export unix_pkg = tau-$(Major_).$(Minor_)
-export unix_pc = $(pc_prefix)/$(unix_pkg).pc
-export unix_aname = lib$(unix_pkg).a
+export unix_pc = $(pc_prefix)/tau-$(Major_).$(Minor_).pc
+export unix_afile = libtau-$(Major_).$(Minor_).a
 export unix_adir = $(bindir)
-export unix_a = $(unix_adir)/$(unix_aname)
-export unix_a_dest = $(lib_prefix)/$(unix_aname)
+export unix_a = $(unix_adir)/$(unix_afile)
+export unix_adest = $(lib_prefix)/$(unix_afile)
 
-export unix_sobase = lib$(unix_pkg).so
-export unix_soname = $(unix_sobase).$(Major_).$(Minor_).$(Micro_)
+export unix_solink = libtau-$(Major_).$(Minor_).so
+export unix_soname = libtau.so.$(Major_).$(Minor_)
+export unix_sofile = libtau.so.$(Major_).$(Minor_).$(Micro_)
 export unix_sodir = $(bindir)
-export unix_so = $(unix_sodir)/$(unix_soname)
-export unix_so_dest = $(lib_prefix)/$(unix_soname)
+export unix_so = $(unix_sodir)/$(unix_sofile)
+export unix_sodest = $(lib_prefix)/$(unix_sofile)
 
 unix_a_mk = 00-unix-a.mk
 xcb_a_mk = 00-xcb-a.mk
@@ -68,23 +68,23 @@ rm-xcb-so:
 
 .PHONY: en-host-a su-host-a rm-host-a en-host-so su-host-so rm-host-so
 
-en-host-a: $(builddir) en-xcb-a lj
+en-host-a: $(builddir) en-xcb-a
 	@$(ln) "$(supdir)/unix-a.mk" "$(builddir)/$(unix_a_mk)"
 
-su-host-a: su-xcb-a su-host-test-a lj
+su-host-a: su-xcb-a su-host-test-a
 	@$(rm) "$(builddir)/$(unix_a_mk)"
 
-rm-host-a: rm-xcb-a rm-host-test-a lj
+rm-host-a: rm-xcb-a rm-host-test-a
 	@if [ -e "$(builddir)/$(unix_a_mk)" ]; then $(MAKE) -C $(builddir) -f $(unix_a_mk) rm; fi
 	@$(rm) "$(builddir)/$(unix_a_mk)"
 
-en-host-so: $(builddir) en-xcb-so lj
+en-host-so: $(builddir) en-xcb-so
 	@$(ln) "$(supdir)/unix-so.mk" "$(builddir)/$(unix_so_mk)"
 
-su-host-so: su-xcb-so su-host-test-so lj
+su-host-so: su-xcb-so su-host-test-so
 	@$(rm) "$(builddir)/$(unix_so_mk)"
 
-rm-host-so: rm-xcb-so rm-host-test-so lj
+rm-host-so: rm-xcb-so rm-host-test-so
 	@if [ -e "$(builddir)/$(unix_so_mk)" ]; then $(MAKE) -C $(builddir) -f $(unix_so_mk) rm; fi
 	@$(rm) "$(builddir)/$(unix_so_mk)"
 
@@ -95,20 +95,20 @@ rm-host-so: rm-xcb-so rm-host-test-so lj
 en-host-test-a: rm-host-test-so test-links en-host-a
 	@$(ln) "$(supdir)/unix-test-a.mk" "$(builddir)/$(unix_test_a_mk)"
 
-su-host-test-a: lj
+su-host-test-a:
 	@$(rm) "$(builddir)/$(unix_test_a_mk)"
 
-rm-host-test-a: lj
+rm-host-test-a:
 	@if [ -e "$(builddir)/$(unix_test_a_mk)" ]; then $(MAKE) -C $(builddir) -f $(unix_test_a_mk) rm; fi
 	@$(rm) $(builddir)/$(unix_test_a_mk)
 
 en-host-test-so: rm-host-test-a test-links en-host-so
 	@$(ln) "$(supdir)/unix-test-so.mk" "$(builddir)/$(unix_test_so_mk)"
 
-su-host-test-so: lj
+su-host-test-so:
 	@$(rm) $(builddir)/$(unix_test_so_mk)
 
-rm-host-test-so: lj
+rm-host-test-so:
 	@if [ -e "$(builddir)/$(unix_test_so_mk)" ]; then $(MAKE) -C $(builddir) -f $(unix_test_so_mk) rm; fi
 	@$(rm) "$(builddir)/$(unix_test_so_mk)"
 

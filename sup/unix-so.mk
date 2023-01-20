@@ -24,7 +24,7 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # -----------------------------------------------------------------------------
 
-srcdirs += $(posix_srcdir) $(unix_srcdir) $(confdir)/$(plat)
+srcdirs += $(posix_srcdir) $(posix_srcdir)/so $(unix_srcdir) $(confdir)/$(plat)
 VPATH = $(srcdirs)
 sources = $(foreach dir, $(srcdirs), $(wildcard $(dir)/*.cc))
 objects = $(addprefix $(unix_so_builddir)/, $(sort $(addsuffix .o, $(basename $(notdir $(sources))))))
@@ -33,22 +33,21 @@ CXXFLAGS += -O2 $(unix_CXXFLAGS)
 all: $(unix_sodir) $(unix_so_builddir) $(unix_so)
 
 $(unix_so): $(objects) $(xcb_so_builddir)/*.o
-	$(CXX) -shared -o $@ $(unix_so_builddir)/*.o $(xcb_so_builddir)/*.o && chmod -x $@
+	$(CXX) -shared -o $@ -fPIC $(unix_so_builddir)/*.o $(xcb_so_builddir)/*.o && chmod -x $@
 
 install: $(lib_prefix)
 	@if [ -f $(unix_so) ]; then \
-	    cp -vf $(unix_so) $(unix_so_dest); \
-	    chmod -x $(unix_so_dest); \
-	    strip --strip-unneeded $(unix_so_dest); \
-	    (cd $(lib_prefix) && ln -vsf $(unix_soname) $(unix_sobase)); \
-	    if [ $$USER = 'root' ]; then \
-		[ -x /sbin/ldconfig ] && /sbin/ldconfig $(lib_prefix); \
-	    fi; \
+	    echo "++ unix-so.mk: rebuilding shared library with -soname option..."; \
+	    $(CXX) -shared -o $(unix_sodest) -fPIC -Wl,-soname,$(unix_soname) $(unix_so_builddir)/*.o $(xcb_so_builddir)/*.o; \
+	    chmod -x $(unix_sodest); \
+	    strip --strip-unneeded $(unix_sodest); \
+	    (cd $(lib_prefix) && ln -vsf $(unix_sofile) $(unix_soname)); \
+	    (cd $(lib_prefix) && ln -vsf $(unix_soname) $(unix_solink)); \
+	    if [ $$USER = 'root' ]; then ldconfig; fi; \
 	fi
 
 uninstall:
-	@$(rm) $(lib_prefix)/$(unix_sobase)*
-	@if [ $$USER = 'root' ]; then ldconfig $(lib_prefix); fi; \
+	@$(rm) $(lib_prefix)/$(unix_solink) $(lib_prefix)/$(unix_soname) $(lib_prefix)/$(unix_sofile)
 
 $(lib_prefix):
 	@$(mkdir) $@

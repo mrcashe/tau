@@ -24,9 +24,9 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # -----------------------------------------------------------------------------
 
-mxe_soname = libtau-$(Major_).$(Minor_)-$(mxe_target)-mxe.dll
+mxe_sofile = libtau-$(Major_).$(Minor_)-$(mxe_target)-mxe.dll
 mxe_sodir = $(bindir)
-mxe_so = $(mxe_sodir)/$(mxe_soname)
+mxe_so = $(mxe_sodir)/$(mxe_sofile)
 mxe_test_so_builddir = mxe-test-so
 all_sources = $(basename $(notdir $(wildcard $(srcdir)/test/*.cc)))
 all_binaries = $(addprefix $(bindir)/, $(addsuffix .exe, $(all_sources)))

@@ -64,11 +64,17 @@ public:
     /// Destructor.
    ~Key_file();
 
+    /// Create from file.
+    static Key_file load_from_file(const ustring & path);
+
     /// Load from stream.
     void load(std::istream & is);
 
     /// Save to stream.
     void save(std::ostream & os);
+
+    /// Save to file.
+    void save_to_file(const ustring & path);
 
     /// Set comment separator.
     /// @note By default, the comment separator is a '#'.

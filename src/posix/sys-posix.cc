@@ -96,7 +96,7 @@ bool path_is_absolute(const ustring & path) {
     return '/' == *path.begin();
 }
 
-ustring path_user_home_dir() {
+ustring path_home() {
     const char * home = getenv("HOME");
 
     if (!home || '\0' == *home) {
@@ -142,7 +142,7 @@ ustring path_user_data_dir() {
         if (path_is_absolute(dir)) { return dir; }
     }
 
-    ustring dir = path_user_home_dir();
+    ustring dir = path_home();
 
     if (!dir.empty()) {
         return path_build(dir, ".local", "share");
@@ -159,7 +159,7 @@ ustring path_user_config_dir() {
         if (path_is_absolute(dir)) { return dir; }
     }
 
-    ustring dir = path_user_home_dir();
+    ustring dir = path_home();
 
     if (!dir.empty()) {
         return path_build(dir, ".config");
@@ -176,7 +176,7 @@ ustring path_user_cache_dir() {
         if (path_is_absolute(dir)) { return dir; }
     }
 
-    ustring dir = path_user_home_dir();
+    ustring dir = path_home();
 
     if (!dir.empty()) {
         return path_build(dir, ".cache");

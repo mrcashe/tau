@@ -77,12 +77,12 @@ void List_text::select(const ustring & str, bool similar) {
     LIST_TEXT_IMPL->select(str, similar);
 }
 
-int List_text::select_first() {
-    return LIST_TEXT_IMPL->select_first();
+int List_text::select_front() {
+    return LIST_TEXT_IMPL->select_front();
 }
 
-int List_text::select_last() {
-    return LIST_TEXT_IMPL->select_last();
+int List_text::select_back() {
+    return LIST_TEXT_IMPL->select_back();
 }
 
 void List_text::remove(int row) {

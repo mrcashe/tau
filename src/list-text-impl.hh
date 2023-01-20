@@ -61,7 +61,7 @@ public:
     }
 
     ustring selection() const {
-        return selected_;
+        return selection_;
     }
 
     int find(const ustring & str) const;
@@ -104,7 +104,7 @@ private:
     using Holders = std::vector<Holder>;
 
     Align               align_;
-    ustring             selected_;
+    ustring             selection_;
     Holders             holders_;
     int                 selrow_ = INT_MIN;
 

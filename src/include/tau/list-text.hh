@@ -101,10 +101,10 @@ public:
     void select(const ustring & str, bool similar=false);
 
     /// Select top row.
-    int select_first();
+    int select_front();
 
     /// Select bottom row.
-    int select_last();
+    int select_back();
 
     /// Get selected text.
     /// @return text at current row or empty string if there are no selection.

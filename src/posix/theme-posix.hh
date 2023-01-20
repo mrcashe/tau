@@ -55,6 +55,11 @@ private:
 
     void init_font_dir(const ustring & dir);
     void cleanup_font_cache();
+    void add_share(const ustring & path);
+
+    // Linkage dependent method: shared (so) or static (a).
+    void boot_linkage();
+
 };
 
 } // namespace tau

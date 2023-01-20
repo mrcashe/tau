@@ -447,6 +447,9 @@ public:
     /// Remove all widgets.
     void clear();
 
+    /// Quit menu.
+    void quit();
+
     /// Emitted when menu quits.
     signal<void()> & signal_quit();
 

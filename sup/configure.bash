@@ -43,7 +43,7 @@ chk_which() {
     p=''
 
     for cmd in $2; do
-        p=$(which $cmd 2>/dev/null)
+        p=$(which $cmd)
         [ -n $p ] && break;
     done;
 
@@ -51,12 +51,12 @@ chk_which() {
         if [ 'MANDATORY' == $3 ]; then
             printf "$red_color NOT FOUND\n"
             echo "$arg0: existance of '${arr[0]}' is mandatory, configure failed, exitting with status 1" 1>&2
-            printf $no_color
+            printf "$no_color"
             exit 1
         else
             printf "$yellow_color NOT FOUND\n"
             echo "$arg0: existance of '${arr[0]}' is optional, corresponding feature will be disabled"
-            printf $no_color
+            printf "$no_color"
             eval which_$1=''
         fi
     else
@@ -118,13 +118,6 @@ for opt in $opts; do
     esac
 done
 
-which which >/dev/null 2>&1
-
-if [ $? -ne 0 ]; then
-    echo "$arg0: FATAL: 'which' not found, configure failed, exitting with status 1" 1>&2
-    exit 1
-fi
-
 cwdir=$(pwd)
 builddir="$cwdir/build"
 bindir="$cwdir/bin"
@@ -170,6 +163,7 @@ rm -vrf $confdir/*
 link='cp -vf'
 pkg_required=''
 headers_required=''
+libdata=''
 plat_script="$supdir/$plat.bash"
 
 if [ -x $plat_script ]; then
@@ -262,6 +256,11 @@ version="$Major_.$Minor_.$Micro_"
 echo "$arg0: API version is '$version'"
 
 echo "$arg0: install prefix is '$PREFIX'"
+bin_prefix="$PREFIX/bin"
+lib_prefix="$PREFIX/lib"
+pc_prefix="$PREFIX/$libdata/pkgconfig"
+hh_prefix="$PREFIX/include/tau-$Major_.$Minor_"
+share_prefix="$PREFIX/share/tau-$Major_.$Minor_"
 
 # ---------------------------------------------------------------------------
 # Compilers, archivers and other binutils checking.
@@ -313,24 +312,26 @@ fi
 # Headers searching.
 # ---------------------------------------------------------------------------
 
-echo ""
-echo "$arg0: checking for header files existance..."
+if test -n "$headers_required"; then
+    echo ""
+    echo "$arg0: checking for header files existance..."
 
-for h in $headers_required; do
-    echo -n "  searching for header file '$h'..."
-    paths=`find /usr -name "$h" 2>/dev/null`
+    for h in $headers_required; do
+        echo -n "  searching for header file '$h'..."
+        paths=$(find /usr -name "$h")
 
-    if test -z "$paths"; then
-        printf "$red_color NOT FOUND\n"
-        echo "  $arg0: header file '$h' not found, exitting with status 1" 1>&2
-        printf $no_color
-        exit 1
-    fi
+        if test -z "$paths"; then
+            printf "$red_color NOT FOUND\n"
+            echo "  $arg0: header file '$h' not found, exitting with status 1" 1>&2
+            printf $no_color
+            exit 1
+        fi
 
-    printf "$green_color OK$no_color\n"
-    echo "    header file '$h' found within the following directories:"
-    for d in $paths; do echo "      - $d"; done
-done
+        printf "$green_color OK$no_color\n"
+        echo "    header file '$h' found within the following directories:"
+        for d in $paths; do echo "      - $d"; done
+    done
+fi
 
 # ---------------------------------------------------------------------------
 # MXE (optional) checking.
@@ -343,7 +344,7 @@ if [ 'YES' != "$disable_mxe" ]; then
     echo -n "$arg0: checking for optional M cross environment existance..."
 
     if test -z $mxe_prefix; then
-        mxe_prefix=$(which "$mxe_target-g++" 2>/dev/null)
+        mxe_prefix=$(which "$mxe_target-g++")
 
         if test -z "$mxe_prefix"; then
             printf "$yellow_color NOT FOUND\n"
@@ -414,11 +415,6 @@ fi
 echo ""
 echo "$arg0: configuration OK, writing files..."
 mkdir -vp $confdir
-bin_prefix="$PREFIX/bin"
-lib_prefix="$PREFIX/lib"
-pc_prefix="$lib_prefix/pkgconfig"
-hh_prefix="$PREFIX/include/tau-$Major_.$Minor_"
-share_prefix="$PREFIX/share/tau-$Major_.$Minor_"
 
 # ---------------------------------------------------------------------------
 # Generating conf.mk
@@ -461,7 +457,7 @@ echo "export doxygen = $which_doxygen" >>$conf_mk
 [ 'YES' == "$enable_devel" ] && conf_targets+=' en-dev'
 echo "conf_targets = $conf_targets" >>$conf_mk
 
-if test -n $mxe_prefix; then
+if test -n "$mxe_prefix"; then
     echo "export mxe_prefix = $mxe_prefix" >>$conf_mk
     echo "export mxe_target = $mxe_target" >>$conf_mk
     echo "export mxe_syslibs = $mxe_syslibs" >>$conf_mk
@@ -470,7 +466,7 @@ fi
 echo "" >>$conf_mk
 echo "include $supdir/$plat.mk" >>$conf_mk
 echo "include $supdir/dev.mk" >>$conf_mk
-if test -z $mxe_prefix; then echo "include $supdir/mxe-empty.mk" >>$conf_mk
+if test -z "$mxe_prefix"; then echo "include $supdir/mxe-empty.mk" >>$conf_mk
 else echo "include $supdir/mxe.mk" >>$conf_mk; fi
 
 # ---------------------------------------------------------------------------
@@ -537,7 +533,7 @@ echo "//END" >>$confcc
 # Sysinfo structure initialization.
 # ---------------------------------------------------------------------------
 
-if test -n $mxe_prefix; then
+if test -n "$mxe_prefix"; then
     mkdir -vp "$confdir/Windows"
     confcc="$confdir/Windows/conf-Windows.cc"
     cp "$supdir/LICENSE.cct" $confcc

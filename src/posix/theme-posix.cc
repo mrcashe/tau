@@ -137,7 +137,7 @@ Theme_ptr Theme_impl::root() {
 
 // Overrides Theme_impl.
 void Theme_posix::boot() {
-    Theme_impl::boot();
+    boot_linkage();
 
     add_pixmap_dir("/usr/share/pixmaps");
     add_pixmap_dir("/usr/share/icons");
@@ -151,16 +151,16 @@ void Theme_posix::boot() {
     boot_cursor_themes("Oxygen Blue:Oxygen Yellow:Breeze:KDE Classic:Adwaita");
     boot_fallback_theme("Hicolor");
 
-    init_font_dir(path_build(path_prefix_dir(), "fonts"));
-    init_font_dir(path_build(path_user_home_dir(), ".fonts"));
+    init_font_dir(path_build(path_prefix(), "fonts"));
+    init_font_dir(path_build(path_home(), ".fonts"));
     init_font_dir("/usr/share/fonts");
     init_font_dir("/usr/local/share/fonts");
 
-    const ustring nice_fonts = "Ubuntu:Droid Sans:DejaVu Sans:Noto Sans:Free Sans"; // FIXME add more nice fonts.
+    const ustring nice_fonts = "Ubuntu:Droid Sans:DejaVu Sans Book:Noto Sans:Free Sans"; // FIXME add more nice fonts.
 
     for (const ustring & s: str_explode(nice_fonts, ':')) {
         if (auto facep = create_font_face(s)) {
-            font_normal_ = font_size_change(s, 10);
+            font_mono_ = font_normal_ = font_size_change(s, 10);
             break;
         }
     }
@@ -173,6 +173,8 @@ void Theme_posix::boot() {
             break;
         }
     }
+
+    Theme_impl::boot();
 }
 
 // Overrides Theme_impl.
@@ -307,6 +309,12 @@ void Theme_posix::init_font_dir(const ustring & dir) {
             }
         }
     }
+}
+
+void Theme_posix::add_share(const ustring & sh) {
+    add_cursor_dir(path_build(sh, "cursors"));
+    add_pixmap_dir(path_build(sh, "pixmaps"));
+    add_icon_dir(path_build(sh, "icons"));
 }
 
 } // namespace tau

@@ -95,7 +95,7 @@ public:
 
     /// Determines whether action enabled or not.
     /// %Master_action is enabled (sensitive) by default.
-    bool enabled() const { return !disabled_; }
+    bool enabled() const { return enabled_; }
 
     /// Show action.
     /// %Master_action is shown by default.
@@ -107,7 +107,7 @@ public:
 
     /// Determines whether action visible or not.
     /// %Master_action is visible by default.
-    bool visible() const { return !hidden_; }
+    bool visible() const { return visible_; }
 
     /// Assign an icon name.
     void set_icon_name(const ustring & icon_name);
@@ -181,8 +181,8 @@ private:
     ustring     label_;
     ustring     icon_name_;
     ustring     tooltip_;
-    bool        hidden_ = false;
-    bool        disabled_ = false;
+    bool        visible_ = true;
+    bool        enabled_ = true;
     Accels      accels_;
 
     signal<void()>  signal_disable_;

@@ -109,12 +109,20 @@ void Fileman::save_state(Key_file & kf, Key_section & sect) {
     FILEMAN_IMPL->save_state(kf, sect);
 }
 
+Action & Fileman::apply_action() {
+    return FILEMAN_IMPL->apply_action();
+}
+
+const Action & Fileman::apply_action() const {
+    return FILEMAN_IMPL->apply_action();
+}
+
 Action & Fileman::cancel_action() {
     return FILEMAN_IMPL->cancel_action();
 }
 
-signal<void()> & Fileman::signal_apply() {
-    return FILEMAN_IMPL->signal_apply();
+const Action & Fileman::cancel_action() const {
+    return FILEMAN_IMPL->cancel_action();
 }
 
 } // namespace tau

@@ -24,6 +24,8 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # -----------------------------------------------------------------------------
 
+export mxe_pc = /dev/zero
+
 en-mxe-a:
 su-mxe-a:
 rm-mxe-a:

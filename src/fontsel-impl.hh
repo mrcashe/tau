@@ -39,15 +39,20 @@ public:
     explicit Fontsel_impl(const ustring & spec, const ustring & sample=ustring());
 
     void select(const ustring & spec);
-    ustring spec() const;
+    ustring spec() const { return spec_; }
 
     void set_sample(const ustring & sample);
     ustring sample() const { return sample_; }
 
-    Action & focus_next_action() { return next_; }
-    Action & focus_previous_action() { return prev_; }
+    Action & apply_action() { return apply_; }
+    const Action & apply_action() const { return apply_; }
     Action & cancel_action() { return cancel_; }
-    signal<void(const ustring &)> & signal_font_selected() { return signal_font_selected_; }
+    const Action & cancel_action() const { return cancel_; }
+    Action & focus_next_action() { return next_; }
+    const Action & focus_next_action() const { return next_; }
+    Action & focus_previous_action() { return prev_; }
+    const Action & focus_previous_action() const { return prev_; }
+    signal<void(const ustring &)> & signal_selection_changed() { return signal_selection_changed_; }
     signal<void(const ustring &)> & signal_font_activated() { return signal_font_activated_; }
 
 private:
@@ -58,7 +63,6 @@ private:
     Text_ptr        fontspec_;
     Text_ptr        psname_;
     Entry_ptr       entry_;
-    Button_ptr      apply_;
     unsigned        hsample_ = 0;
     ustring         sample_;    // User defined sample string.
     ustring         family_;
@@ -66,21 +70,22 @@ private:
     ustring         aspec_;     // Spec which was applied.
     ustring         uspec_;     // Font specification defined by user.
     ustring         uface_;     // Font face defined by user.
+    ustring         spec_;      // Currenttly selected specification.
 
     Action          zin_    { ustring("<Ctrl>= <Ctrl>+") }; // Increase font size action.
     Action          zout_   { ustring("<Ctrl>-") }; // Decrease size action.
     Action          next_   { "Tab", fun(this, &Fontsel_impl::focus_next) }; // Focus next action.
     Action          prev_   { "<Shift>Tab <Shift>LeftTab", fun(this, &Fontsel_impl::focus_previous) }; // Focus previous action.
     Action          cancel_ { "Escape Cancel", "Cancel", ustring("dialog-cancel") };
+    Action          apply_  { KC_NONE, KM_NONE, "Apply", ustring("dialog-ok") };
 
-    signal<void(const ustring &)> signal_font_selected_;
+    signal<void(const ustring &)> signal_selection_changed_;
     signal<void(const ustring &)> signal_font_activated_;
 
 private:
 
     void init();
     void update_font();
-    void update_apply();
     void update_tooltips();
 
     void on_display();
@@ -90,11 +95,12 @@ private:
     void on_face_activated(int row, const ustring & str);
     void on_counter_value_changed(double value);
     void on_sample_requisition_changed();
-    void on_apply_clicked();
     void on_zin();
     void on_zout();
     void on_entry_changed(const ustring & s);
     void on_entry_activate(const ustring & s);
+    void on_apply();
+
     void focus_next();
     void focus_previous();
 };

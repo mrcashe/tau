@@ -65,8 +65,10 @@ public:
     void load_state(Key_file & kf, Key_section & sect);
     void save_state(Key_file & kf, Key_section & sect);
 
+    Action & apply_action() { return user_apply_action_; }
+    const Action & apply_action() const { return user_apply_action_; }
     Action & cancel_action() { return cancel_action_; }
-    signal<void()> & signal_apply() { return signal_apply_; }
+    const Action & cancel_action() const { return cancel_action_; }
 
 protected:
 
@@ -78,8 +80,6 @@ protected:
     bool                    dir_creation_allowed_;  // Directory creation allowed.
     bool                    overwrite_allowed_ = false; // Allow overwrite without a prompt.
     std::vector<ustring>    removables_;
-
-    signal<void()>          signal_apply_;
 
 protected:
 
@@ -101,8 +101,9 @@ private:
     Button_ptr              conf_button_;
     Button_ptr              mkdir_ok_button_;
 
-    Action                  configure_action_ { KC_NONE, KM_NONE, "Configure", "configure", "Configure file open widget", fun(this, &Fileman_impl::on_configure) };
+    Action                  user_apply_action_ { KC_NONE, KM_NONE };
     Action                  apply_action_ { KC_NONE, KM_NONE, "Apply", "dialog-ok", fun(this, &Fileman_impl::on_apply) };
+    Action                  configure_action_ { KC_NONE, KM_NONE, "Configure", "configure", "Configure file open widget", fun(this, &Fileman_impl::on_configure) };
     Action                  cancel_action_ { "Escape Cancel", "Cancel", "dialog-cancel", fun(this, &Fileman_impl::on_cancel) };
     Action                  next_action_ { KC_RIGHT, KM_ALT, "Next Folder", "go-next:go-right", "Go to next folder", fun(this, &Fileman_impl::next) };
     Action                  prev_action_ { KC_LEFT, KM_ALT, "Previous Folder", "go-previous:go-left", "Go to previous folder", fun(this, &Fileman_impl::prev) };

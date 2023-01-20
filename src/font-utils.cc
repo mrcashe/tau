@@ -34,7 +34,7 @@ namespace {
 
 const std::vector<tau::ustring> faces_  = {
     "Regular", "Normal", "Book", "Italic", "Oblique", "Roman", "Medium", "Thin",
-    "Bold", "Light", "Heavy", "Plain", "Initials", "Demi", "Condensed",
+    "Bold", "ExtraLight", "Light", "Heavy", "Plain", "Initials", "Demi", "Condensed",
     "SemiBold", "ExtraBold", "BoldItalic", "BoldOblique", "LightOblique", "Mono"
 };
 
@@ -90,31 +90,23 @@ double font_size_from_spec(const ustring & spec, double fallback) {
 
 ustring font_face_from_spec(const std::vector<ustring> & specv) {
     std::vector<ustring> rv;
-    bool eq = false;
+    bool mono = false;
+    std::size_t pos;
 
     for (const ustring & s: specv) {
         if (is_face(s)) {
-            if (U'=' == s[0]) {
-                eq = true;
-                break;
-            }
+            for (pos = 0; pos < s.size() && U'=' == s[pos]; ++pos) {}
+            if (str_similar("Mono", s.substr(pos))) { mono = true; }
         }
     }
 
+    if (mono) { rv.push_back("Mono"); }
+
     for (const ustring & s: specv) {
         if (is_face(s)) {
-            if (eq) {
-                if (U'=' == s[0]) {
-                    std::size_t n = 0;
-                    for (n = 0; U'=' == s[n]; ++n) {}
-                    ustring t = s.substr(n);
-                    if (!str_similar(t, rv)) { rv.push_back(t); }
-                }
-            }
-
-            else if (!str_similar(s, rv)) {
-                rv.push_back(s);
-            }
+            for (pos = 0; pos < s.size() && U'=' == s[pos]; ++pos) {}
+            ustring t(s.substr(pos));
+            if (!str_similar("Mono", t) && !str_similar(t, rv)) { rv.push_back(t); }
         }
     }
 
@@ -135,38 +127,17 @@ ustring font_family_from_spec(const ustring & spec) {
     return font_family_from_spec(font_spec_explode(spec));
 }
 
-ustring font_spec_build(const ustring & family, const ustring & face, double pt) {
-    ustring spec;
-
-    if (!family.empty()) {
-        spec += family;
-
-        if (!face.empty() && !str_similar(face, faces_[0])) {
-            spec += ' ';
-            spec += face;
-        }
-
-        if (pt > 0.0) {
-            spec += str_format(' ', pt);
-        }
-    }
-
-    return spec;
+ustring font_spec_build(const std::vector<ustring> & specv) {
+    double pts = font_size_from_spec(specv);
+    return font_family_from_spec(specv)+" "+font_face_from_spec(specv)+(pts >= 0.0 ? str_format(' ', pts) : "");
 }
 
-ustring font_spec_build(const ustring & family, const ustring & face) {
-    ustring spec;
-
-    if (!family.empty()) {
-        spec += family;
-
-        if (!face.empty() && !str_similar(face, faces_[0])) {
-            spec += ' ';
-            spec += face;
-        }
-    }
-
-    return spec;
+ustring font_spec_build(const ustring & family, const ustring & face, double pt) {
+    std::vector<ustring> v;
+    v.push_back(family);
+    for (auto & s: str_explode(font_face_from_spec(face))) { v.push_back(s); }
+    if (pt >= 0) { v.push_back(str_format(pt)); }
+    return font_spec_build(v);
 }
 
 ustring font_size_change(const ustring & font_spec, double pts) {
@@ -189,32 +160,9 @@ ustring font_size_remove(const ustring & spec) {
 }
 
 ustring font_face_add(const ustring & spec, const ustring & face_elements) {
-    double pt = font_size_from_spec(spec);
-    ustring family = font_family_from_spec(spec);
-    auto v = str_explode(face_elements, str_blanks());
-    auto w = str_explode(font_face_from_spec(spec), str_blanks());
-
-    for (auto & s: v) {
-        if (!str_similar(s, w)) {
-            w.push_back(s);
-        }
-    }
-
-    bool y;
-
-    do {
-        y = false;
-
-        for (auto i = w.begin(); i != w.end(); ++i) {
-            if (str_similar(*i, "Regular:Book", ':')) {
-                y = true;
-                w.erase(i);
-                break;
-            }
-        }
-    } while (y);
-
-    return font_spec_build(family, str_implode(w, ' '), pt);
+    auto specv = font_spec_explode(spec);
+    for (auto & s: str_explode(face_elements)) { specv.push_back(s); }
+    return font_spec_build(specv);
 }
 
 ustring font_face_set(const ustring & spec, const ustring & face) {

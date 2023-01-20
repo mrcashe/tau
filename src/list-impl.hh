@@ -63,8 +63,8 @@ public:
     void remove(int br);
 
     int select_row(int br);
-    int select_first();
-    int select_last();
+    int select_front();
+    int select_back();
     int selected_row() const;
     void unselect();
 

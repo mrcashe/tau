@@ -35,7 +35,7 @@ export posix_srcdir = $(srcdir)/posix
 export unix_srcdir = $(srcdir)/FreeBSD
 
 export unix_sys_headers = $(shell pkg-config --cflags $(pkg_required))
-export unix_sys_shared = -lintl
+export unix_sys_shared =
 
 export unix_CXXFLAGS = -O2 -g -Wall -fPIC $(unix_sys_headers) $(hh_impl_options)
 export unix_AR = ar

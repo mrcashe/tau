@@ -134,7 +134,15 @@ Action & Box::focus_next_action() {
     return BOX_IMPL->focus_next_action();
 }
 
+const Action & Box::focus_next_action() const {
+    return BOX_IMPL->focus_next_action();
+}
+
 Action & Box::focus_previous_action() {
+    return BOX_IMPL->focus_previous_action();
+}
+
+const Action & Box::focus_previous_action() const {
     return BOX_IMPL->focus_previous_action();
 }
 
