@@ -263,7 +263,7 @@ void Fileman_impl::on_dir_changed(const ustring & path) {
 
         for (;;) {
             Button_ptr button = std::make_shared<Button_impl>(path_notdir(p));
-            button->hint_min_size(Size(14, 0));
+            button->hint_min_size(14, 0);
             button->signal_click().connect(tau::bind(fun(this, &Fileman_impl::set_uri), p));
             button->hide_relief();
             pathbox_->prepend(button, true);

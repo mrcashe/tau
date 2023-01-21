@@ -897,10 +897,6 @@ std::string locale_territory() {
     return locale_territory(locale_spec());
 }
 
-std::string locale_encoding() {
-    return locale_encoding(locale_spec());
-}
-
 std::string locale_modifier() {
     return locale_modifier(locale_spec());
 }

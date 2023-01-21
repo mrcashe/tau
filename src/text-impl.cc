@@ -183,8 +183,9 @@ void Text_impl::update_painter() {
 bool Text_impl::on_mouse_down(int mbt, int mm, const Point & pt) {
     if (MBT_LEFT == mbt) {
         unselect();
-        if (caret_enabled_) { move_to(iter_from_point(pt)); }
-        if (select_allowed_) { enable_caret(); msel_ = iter_from_point(pt); }
+        auto i = iter_from_point(pt);
+        if (select_allowed_) { enable_caret(); msel_ = i; }
+        if (caret_enabled_) { move_to(i); }
         grab_focus();
         signal_click_();
     }

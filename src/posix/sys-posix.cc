@@ -73,16 +73,16 @@ struct tm Timeval::localtime() const {
 std::string locale_spec() {
     const char * s;
 
-    s = getenv("LC_ALL");
-    if (s && '\0' != *s) { return s; }
-
-    s = getenv("LC_MESSAGES");
+    s = getenv("LANG");
     if (s && '\0' != *s) { return s; }
 
     s = getenv("LANGUAGE");
     if (s && '\0' != *s) { return s; }
 
-    s = getenv("LANG");
+    s = getenv("LC_ALL");
+    if (s && '\0' != *s) { return s; }
+
+    s = getenv("LC_MESSAGES");
     if (s && '\0' != *s) { return s; }
 
     return "C";
@@ -377,6 +377,11 @@ void setup_sysinfo_posix() {
 
     sysinfo_.locale = Locale().code();
     sysinfo_.iocharset = Locale().filename_encoding().name();
+}
+
+std::string locale_encoding() {
+    std::string e = locale_encoding(locale_spec());
+    return e.empty() ? "UTF-8" : e;
 }
 
 } // namespace tau

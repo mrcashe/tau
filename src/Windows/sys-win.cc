@@ -30,6 +30,7 @@
 #include <tau/locale.hh>
 #include <tau/string.hh>
 #include <tau/timeval.hh>
+#include <locale-impl.hh>
 #include <sys-impl.hh>
 #include <sys/stat.h>
 #include <shlobj.h>
@@ -485,6 +486,55 @@ void setup_sysinfo_win() {
 
     sysinfo_.locale = Locale().code();
     sysinfo_.iocharset = Locale().filename_encoding().name();
+}
+
+std::string locale_spec() {
+    LCID lcid = GetThreadLocale();
+    char iso639[10];
+    if (!GetLocaleInfo (lcid, LOCALE_SISO639LANGNAME, iso639, sizeof (iso639))) { return "C"; }
+    char iso3166[10];
+    if (!GetLocaleInfo (lcid, LOCALE_SISO3166CTRYNAME, iso3166, sizeof (iso3166))) { return "C"; }
+    LANGID langid = LANGIDFROMLCID(lcid);
+    std::string s;
+
+    switch (PRIMARYLANGID(langid)) {
+        case LANG_AZERI:
+            switch (SUBLANGID(langid)) {
+                case SUBLANG_AZERI_LATIN: s = "@Latn"; break;
+                case SUBLANG_AZERI_CYRILLIC: s = "@Cyrl"; break;
+            }
+
+            break;
+
+        case LANG_SERBIAN: // LANG_CROATIAN == LANG_SERBIAN
+            switch (SUBLANGID(langid)) {
+                case SUBLANG_SERBIAN_LATIN:
+                case 0x06: // Serbian (Latin) - Bosnia and Herzegovina
+                    s = "@Latn";
+                break;
+            }
+
+        break;
+
+        case LANG_UZBEK:
+            switch (SUBLANGID(langid)) {
+                case SUBLANG_UZBEK_LATIN: s = "@Latn"; break;
+                case SUBLANG_UZBEK_CYRILLIC: s = "@Cyrl"; break;
+            }
+
+        break;
+    }
+
+    return str_format(iso639, '_', iso3166, ".CP", GetACP(), s);
+}
+
+std::string filename_encoding() {
+    return str_format("CP", GetOEMCP());
+}
+
+std::string locale_encoding() {
+    std::string e = locale_encoding(locale_spec());
+    return e.empty() ? "ASCII" : e;
 }
 
 } // namespace tau

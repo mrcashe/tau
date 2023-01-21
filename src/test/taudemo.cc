@@ -73,14 +73,24 @@ struct Main: tau::Toplevel {
     std::vector<Color_widgets> color_widgets_;
 
     int init_sysinfo_page(int pg) {
-        tau::List list;
-        list.style().font("font").set(tau::Font::mono());
-        int page = notebook_.append_page(list, pages_[pg].title);
+        tau::Table table;
+        table.style().font("font").set(tau::Font::mono());
+        table.style().redirect("whitespace/background",  "background");
+        int page = notebook_.append_page(table, pages_[pg].title);
+
         tau::Scroller scr;
-        list.append(scr);
+        table.put(scr,  0, 0, 1, 1);
+
+        tau::Slider vs(scr, tau::ORIENTATION_DOWN, true);
+        table.put(vs,  1,  0, 1, 1,  true, false);
+
+        tau::Slider hs(scr, tau::ORIENTATION_EAST, true);
+        table.put(hs,  0,  1, 1, 1,  false, true);
+
         tau::Text text(tau::str_sysinfo(), tau::ALIGN_START, tau::ALIGN_START);
         text.allow_select();
         scr.insert(text);
+
         return page;
     }
 
