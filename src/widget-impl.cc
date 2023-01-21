@@ -1060,6 +1060,10 @@ Painter Widget_impl::wrap_painter(Painter_ptr pp) {
     return Painter(pp);
 }
 
+Painter_ptr Widget_impl::strip(Painter pr) {
+    return pr.impl;
+}
+
 } // namespace tau
 
 //END

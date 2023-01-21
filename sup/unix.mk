@@ -35,7 +35,7 @@ export unix_soname = libtau.so.$(Major_).$(Minor_)
 export unix_sofile = libtau.so.$(Major_).$(Minor_).$(Micro_)
 export unix_sodir = $(bindir)
 export unix_so = $(unix_sodir)/$(unix_sofile)
-export unix_sodest = $(lib_prefix)/$(unix_sofile)
+export unix_sopath = $(lib_prefix)/$(unix_sofile)
 
 unix_a_mk = 00-unix-a.mk
 xcb_a_mk = 00-xcb-a.mk

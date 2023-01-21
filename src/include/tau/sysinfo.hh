@@ -46,21 +46,81 @@ int         Minor;
 int         Micro;
 
 /// Platform name.
-/// Possible values are:
 ///
-/// - "Linux"
-/// - "FreeBSD"
-/// - "Windows"
-ustring     plat;
+/// Possible values are:
+/// - Linux
+/// - FreeBSD
+/// - Windows
+std::string plat;
+
+/// Target name.
+///
+/// Possible values are:
+/// - x86_64-linux-gnu (g++)
+/// - x86_64-pc-linux-gnu (clang++)
+/// - i686-w64-mingw32.static
+/// - i686-w64-mingw32.shared
+/// - x86_64-w64-mingw32.static
+/// - x86_64-w64-mingw32.shared
+std::string target;
+
+/// Address size, in bits.
+///
+/// Possible values are:
+/// - 32
+/// - 64
+int         abits;
+
+/// int type size, in bits.
+///
+/// Possible values are:
+/// - 32
+/// - 64
+int         ibits;
+
+/// long type size, in bits.
+///
+/// Possible values are:
+/// - 32
+/// - 64
+int         lbits;
+
+/// long long type size, in bits.
+///
+/// Possible values are:
+/// - 32
+/// - 64
+int         llbits;
+
+/// intmax_t, uintmax_t type size, in bits.
+///
+/// Possible values are:
+/// - 32
+/// - 64
+int         mbits;
+
+/// Linkage type
+///
+/// Possible values are:
+///  - @b true if shared linkage;
+///  - @b false if static linkage.
+bool        shared;
+
+/// Shared library path.
+/// When .shared is @b false, this field is empty.
+/// Else it @e must containg path to the shared library but it is possible it not.
+ustring     sopath;
 
 };
 
 /// Sysinfo is accessible using function.
 /// @ingroup sys_group
+//  Definition in $(confdir)/$(plat)/conf-$(plat).cc
 const Sysinfo & sysinfo();
 
 /// Get Sysinfo content as a text splited into lines.
 /// @ingroup string_group
+//  implementation in $(srcdir)/sys.cc
 ustring str_sysinfo();
 
 } // namespace tau

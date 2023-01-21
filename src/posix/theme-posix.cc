@@ -137,7 +137,7 @@ Theme_ptr Theme_impl::root() {
 
 // Overrides Theme_impl.
 void Theme_posix::boot() {
-    boot_linkage();
+    Theme_impl::boot();
 
     add_pixmap_dir("/usr/share/pixmaps");
     add_pixmap_dir("/usr/share/icons");
@@ -173,8 +173,6 @@ void Theme_posix::boot() {
             break;
         }
     }
-
-    Theme_impl::boot();
 }
 
 // Overrides Theme_impl.
@@ -309,12 +307,6 @@ void Theme_posix::init_font_dir(const ustring & dir) {
             }
         }
     }
-}
-
-void Theme_posix::add_share(const ustring & sh) {
-    add_cursor_dir(path_build(sh, "cursors"));
-    add_pixmap_dir(path_build(sh, "pixmaps"));
-    add_icon_dir(path_build(sh, "icons"));
 }
 
 } // namespace tau

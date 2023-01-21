@@ -24,11 +24,14 @@
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ----------------------------------------------------------------------------
 
-#include <posix/theme-posix.hh>
+#include <sys-impl.hh>
 
 namespace tau {
 
-void Theme_posix::boot_linkage() {
+void Loop_impl::boot_linkage() {
+    sysinfo_.shared = false;
 }
 
 } // namespace tau {
+
+//END

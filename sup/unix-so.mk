@@ -24,7 +24,7 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # -----------------------------------------------------------------------------
 
-srcdirs += $(posix_srcdir) $(posix_srcdir)/so $(unix_srcdir) $(confdir)/$(plat)
+srcdirs += $(srcdir)/so $(posix_srcdir) $(posix_srcdir)/so $(unix_srcdir) $(confdir)/$(plat)
 VPATH = $(srcdirs)
 sources = $(foreach dir, $(srcdirs), $(wildcard $(dir)/*.cc))
 objects = $(addprefix $(unix_so_builddir)/, $(sort $(addsuffix .o, $(basename $(notdir $(sources))))))
@@ -38,9 +38,9 @@ $(unix_so): $(objects) $(xcb_so_builddir)/*.o
 install: $(lib_prefix)
 	@if [ -f $(unix_so) ]; then \
 	    echo "++ unix-so.mk: rebuilding shared library with -soname option..."; \
-	    $(CXX) -shared -o $(unix_sodest) -fPIC -Wl,-soname,$(unix_soname) $(unix_so_builddir)/*.o $(xcb_so_builddir)/*.o; \
-	    chmod -x $(unix_sodest); \
-	    strip --strip-unneeded $(unix_sodest); \
+	    $(CXX) -shared -o $(unix_sopath) -fPIC -Wl,-soname,$(unix_soname) $(unix_so_builddir)/*.o $(xcb_so_builddir)/*.o; \
+	    chmod -x $(unix_sopath); \
+	    strip --strip-unneeded $(unix_sopath); \
 	    (cd $(lib_prefix) && ln -vsf $(unix_sofile) $(unix_soname)); \
 	    (cd $(lib_prefix) && ln -vsf $(unix_soname) $(unix_solink)); \
 	    if [ $$USER = 'root' ]; then ldconfig; fi; \

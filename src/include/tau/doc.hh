@@ -405,6 +405,9 @@ public:
     /// Create an XML document with corresponding declaration.
     static Doc create_xml(bool standalone, const ustring & encoding=ustring("UTF-8"), int version_major=1, int version_minor=0);
 
+    /// @name Input/Output
+    /// @{
+
     /// Load document from file.
     static Doc load_from_file(const ustring & path);
 
@@ -423,6 +426,18 @@ public:
     /// @param indent_size number of spaces to be added for node indentation.
     void save_to_file(const ustring & path, int indent_size=0) const;
 
+    /// Special form of save_to_file() method.
+    ///
+    /// If document was created using load_from_file() method, this call will
+    /// save it back. If document was not loaded from file that way, the user_error
+    /// will be trown.
+    ///
+    /// @param indent_size number of spaces to be added for node indentation.
+    ///
+    /// @throw user_error if document wasn't created using load_from_file.
+    void save(int indent_size=0);
+
+    /// @}
     /// Get document declaration element.
     Decl_element decl();
 

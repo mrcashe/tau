@@ -301,6 +301,7 @@ public:
     Rect visible_area() const;
 
     static Painter wrap_painter(Painter_ptr pp);
+    static Painter_ptr strip(Painter pr);
 
     signal<bool(Painter, Rect)> & signal_paint() { return signal_paint_; }
     signal<bool(Painter, Rect)> & signal_backpaint() { return signal_backpaint_; }

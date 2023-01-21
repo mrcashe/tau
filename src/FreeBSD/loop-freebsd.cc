@@ -188,6 +188,7 @@ Loop_freebsd_ptr Loop_freebsd::this_freebsd_loop() {
     auto lp = std::make_shared<Loop_freebsd>(tid);
     smx_.lock();
     loops_[tid] = lp;
+    if (0 == loopcnt_) { lp->boot(); }
     ++loopcnt_;
     return lp;
 }

@@ -25,7 +25,7 @@
 # -----------------------------------------------------------------------------
 
 mxe_a_builddir = mxe-a
-srcdirs += $(srcdir)/Windows $(confdir)/Windows
+srcdirs += $(srcdir)/a $(srcdir)/Windows $(srcdir)/Windows/a $(confdir)/Windows
 VPATH = $(srcdirs)
 sources = $(foreach dir, $(srcdirs), $(wildcard $(dir)/*.cc))
 objects = $(addprefix $(mxe_a_builddir)/, $(sort $(addsuffix .o, $(basename $(notdir $(sources))))))

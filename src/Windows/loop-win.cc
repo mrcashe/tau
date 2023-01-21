@@ -193,6 +193,7 @@ Loop_win_ptr Loop_win::this_win_loop() {
     auto lp = std::make_shared<Loop_win>(tid);
     smx_.lock();
     loops_[tid] = lp;
+    if (0 == loopcnt_) { lp->boot(); }
     ++loopcnt_;
     return lp;
 }

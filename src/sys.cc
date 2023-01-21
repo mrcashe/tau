@@ -27,9 +27,8 @@
 #include <tau/fileinfo.hh>
 #include <tau/locale.hh>
 #include <tau/string.hh>
-#include <tau/sys.hh>
-#include <tau/sysinfo.hh>
 #include <tau/string.hh>
+#include <sys-impl.hh>
 #include <errno.h>
 #include <cstdlib>
 #include <iomanip>
@@ -50,7 +49,6 @@ tau::ustring    share_;
 namespace tau {
 
 const Sysinfo & sysinfo() {
-    extern Sysinfo sysinfo_;
     return sysinfo_;
 }
 
@@ -58,10 +56,18 @@ ustring str_sysinfo() {
     ustring s;
     const Sysinfo & si = sysinfo();
 
-    s += str_format("Major:     ", si.Major,    '\n');
-    s += str_format("Minor:     ", si.Minor,    '\n');
-    s += str_format("Micro:     ", si.Micro,    '\n');
-    s += str_format("Platform:  ", si.plat,     '\n');
+    s += str_format("Major:          ", si.Major,    '\n');
+    s += str_format("Minor:          ", si.Minor,    '\n');
+    s += str_format("Micro:          ", si.Micro,    '\n');
+    s += str_format("Platform:       ", si.plat,     '\n');
+    s += str_format("Target:         ", si.target,   '\n');
+    s += str_format("Address Bits:   ", si.abits,    '\n');
+    s += str_format("int Bits:       ", si.ibits,    '\n');
+    s += str_format("long Bits:      ", si.lbits,    '\n');
+    s += str_format("long long Bits: ", si.llbits,   '\n');
+    s += str_format("intmax_t Bits:  ", si.mbits,    '\n');
+    s += str_format("Linkage:        ", (si.shared ? "shared" : "static"), '\n');
+    if (si.shared) { s += str_format("Shared path:    ", (si.sopath.empty() ? "NOT FOUND" : si.sopath), '\n'); }
 
     return s;
 }
@@ -70,7 +76,7 @@ ustring path_build(const ustring & s1, const ustring & s2) {
     const ustring dels = "/\\";
     char32_t sep = '/';
 
-    ustring::size_type spos = s1.find_first_of(dels);
+    std::size_t spos = s1.find_first_of(dels);
     if (spos != ustring::npos) { sep = s1[spos]; }
     else { spos = s2.find_first_of(dels); if (spos != ustring::npos) sep = s2[spos]; }
     std::vector<ustring> v1 = str_explode(s1, dels), v2 = str_explode(s2, dels), v3;
@@ -98,7 +104,7 @@ ustring path_build(const ustring & s1, const ustring & s2, const ustring & s3) {
 }
 
 ustring path_basename(const ustring & path) {
-    ustring::size_type begin, end;
+    std::size_t begin, end;
     begin = path.find_last_of("/\\");
     if (ustring::npos == begin) { begin = 0; }
     else { ++begin; }
@@ -109,12 +115,12 @@ ustring path_basename(const ustring & path) {
 
 ustring path_suffix(const ustring & path) {
     ustring fn = path_notdir(path);
-    ustring::size_type pos = fn.find_last_of(".");
+    std::size_t pos = fn.find_last_of(".");
     return pos != ustring::npos ? fn.substr(pos+1) : ustring();
 }
 
 ustring path_notdir(const ustring & path) {
-    ustring::size_type size = path.size();
+    std::size_t size = path.size();
 
     if (size > 1) {
         if (3 == size && ':' == path[1] && ('\\' == path[2] || '/' == path[2])) {

@@ -70,6 +70,7 @@ struct Buffer_impl {
     bool empty() const;
     void enable_bom();
     void disable_bom();
+    void save();
 
     struct Holder {
         std::u32string  s;
@@ -80,27 +81,28 @@ struct Buffer_impl {
 
     using Rows = std::vector<Holder>;
 
-    Rows                rows;
-    bool                lock = false;
-    bool                bom = false;
-    bool                changed = false;
-    Encoding            encoding { "UTF-8" };
-    Encoding            utf8    { "UTF-8" };
-    Encoding            utf16be { "UTF-16BE" };
-    Encoding            utf16le { "UTF-16LE" };
-    Encoding            utf32be { "UTF-32BE" };
-    Encoding            utf32le { "UTF-32LE" };
-    std::u32string      newlines;
+    Rows                rows_;
+    bool                lock_ = false;
+    bool                bom_ = false;
+    bool                changed_ = false;
+    Encoding            encoding_ { "UTF-8" };
+    Encoding            utf8_    { "UTF-8" };
+    Encoding            utf16be_ { "UTF-16BE" };
+    Encoding            utf16le_ { "UTF-16LE" };
+    Encoding            utf32be_ { "UTF-32BE" };
+    Encoding            utf32le_ { "UTF-32LE" };
+    std::u32string      newlines_;
+    ustring             path_;
 
-    signal<void(Buffer_citer, Buffer_citer, const std::u32string &)> signal_erase;
-    signal<void(Buffer_citer, Buffer_citer)> signal_insert;
-    signal<void(Buffer_citer, Buffer_citer, const std::u32string &)> signal_replace;
-    signal<void()> signal_changed;
-    signal<void()> signal_flush;
-    signal<void()> signal_lock;
-    signal<void()> signal_unlock;
-    signal<void(const Encoding &)> signal_encoding_changed;
-    signal<void()> signal_bom_changed;
+    signal<void(Buffer_citer, Buffer_citer, const std::u32string &)> signal_erase_;
+    signal<void(Buffer_citer, Buffer_citer)> signal_insert_;
+    signal<void(Buffer_citer, Buffer_citer, const std::u32string &)> signal_replace_;
+    signal<void()> signal_changed_;
+    signal<void()> signal_flush_;
+    signal<void()> signal_lock_;
+    signal<void()> signal_unlock_;
+    signal<void(const Encoding &)> signal_encoding_changed_;
+    signal<void()> signal_bom_changed_;
 };
 
 } // namespace tau

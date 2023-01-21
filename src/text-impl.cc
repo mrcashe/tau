@@ -30,6 +30,7 @@
 #include <tau/painter.hh>
 #include <tau/string.hh>
 #include <display-impl.hh>
+#include <painter-impl.hh>
 #include <scroller-impl.hh>
 #include <text-impl.hh>
 #include <iostream>
@@ -183,7 +184,7 @@ bool Text_impl::on_mouse_down(int mbt, int mm, const Point & pt) {
     if (MBT_LEFT == mbt) {
         unselect();
         if (caret_enabled_) { move_to(iter_from_point(pt)); }
-        if (select_allowed_) { msel_ = iter_from_point(pt); }
+        if (select_allowed_) { enable_caret(); msel_ = iter_from_point(pt); }
         grab_focus();
         signal_click_();
     }
@@ -1075,10 +1076,10 @@ void Text_impl::paint_line(const Line & line, std::size_t ln, std::size_t pos, P
 
                     if (U'\x0009' != s[col]) {
                         Color c = enabled() ? style_.color("foreground") : style_.color("background").get().inactive();
-                        pr.move_to(x1, ybase);
-                        pr.text(s.substr(col-col0, col2-col), c);
-                        // std::cout << "&&&&& " << s.substr(col-col0, col2-col) << " " << ecol << " " << line.ox << '\n';
-                        pr.stroke();
+                        auto ppr = strip(pr);
+                        ppr->move_to(x1, ybase);
+                        ppr->text(s.substr(col-col0, col2-col), c);
+                        ppr->stroke();
                         col += col2-col;
                     }
 

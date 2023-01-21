@@ -130,16 +130,6 @@ void Painter::text(const std::u32string & s, const Color & c, Orientation orient
     }
 }
 
-void Painter::text(std::u32string && s, const Color & c, Orientation orient) {
-    if (impl) {
-        impl->text(std::move(s), c);
-    }
-
-    else {
-        log("text");
-    }
-}
-
 void Painter::glyph(Glyph glyph) {
     if (impl) {
         impl->glyph(Glyph_impl::strip(glyph));

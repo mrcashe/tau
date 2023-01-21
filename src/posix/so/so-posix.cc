@@ -25,23 +25,34 @@
 // ----------------------------------------------------------------------------
 
 #include <tau/string.hh>
-#include <tau/sys.hh>
-#include <posix/theme-posix.hh>
+#include <theme-impl.hh>
+#include <sys-impl.hh>
 #include <iostream>
 
 namespace tau {
 
-void Theme_posix::boot_linkage() {
+void Loop_impl::boot_linkage() {
+    sysinfo_.shared = true;
+
     static const char * pfxs = "/usr/lib:/usr/local/lib";
-    const ustring solink = str_format("libtau.so.", Major_, '.', Minor_, '.', Micro_), sh = str_format("tau-", Major_, '.', Minor_);
+    const ustring solink = str_format("libtau.so.", Major_, '.', Minor_, '.', Micro_);
     auto v = str_explode(pfxs, ':');
+    v.insert(v.begin(), path_dirname(path_self()));
+
+    for (auto & s: str_explode(pfxs, ':')) {
+        v.push_back(path_build(s, sysinfo().target));
+        v.push_back(str_format(s, sysinfo().abits));
+    }
+
+    v.push_back(path_build("/opt", program_name(), "lib"));
     v.push_back(path_build(path_prefix(), "lib"));
 
     for (auto & s: v) {
-        if (file_exists(path_build(s, solink))) {
-            add_share(path_build(path_dirname(s), "share", sh));
-        }
+        ustring sopath = path_build(s, solink);
+        if (file_exists(sopath)) { sysinfo_.sopath = sopath; break; }
     }
 }
 
-} // namespace tau {
+} // namespace tau
+
+//END

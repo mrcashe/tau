@@ -290,6 +290,8 @@ namespace tau {
 // Overriden by Theme_posix.
 // Overriden by Theme_win.
 void Theme_impl::boot() {
+    boot_linkage();
+
     auto tid = std::this_thread::get_id();
     update_this_thread();
 
@@ -389,26 +391,33 @@ void Theme_impl::sweep() {
 
 void Theme_impl::add_icon_dir(const ustring & dir) {
     if (file_is_dir(dir)) {
-        // std::cout << "icon: " << dir << '\n';
         Lock sl(mx_);
-        for (auto i = icon_dirs_.begin(); i != icon_dirs_.end(); ++i) { if (*i == dir) return; }
-        icon_dirs_.push_back(dir);
-        nicon_dirs_++;
+
+        if (icon_dirs_.end() == std::find(icon_dirs_.begin(), icon_dirs_.end(), dir)) {
+            icon_dirs_.push_back(dir);
+            nicon_dirs_++;
+        }
     }
 }
 
 void Theme_impl::add_pixmap_dir(const ustring & dir) {
-    if (!file_is_dir(dir)) { return; }
-    Lock sl(mx_);
-    for (auto i = pixmap_dirs_.begin(); i != pixmap_dirs_.end(); ++i) { if (*i == dir) return; }
-    pixmap_dirs_.push_back(dir);
+    if (file_is_dir(dir)) {
+        Lock sl(mx_);
+
+        if (pixmap_dirs_.end() == std::find(pixmap_dirs_.begin(), pixmap_dirs_.end(), dir)) {
+            pixmap_dirs_.push_back(dir);
+        }
+    }
 }
 
 void Theme_impl::add_cursor_dir(const ustring & dir) {
-    if (!file_is_dir(dir)) { return; }
-    Lock sl(mx_);
-    for (auto i = cursor_dirs_.begin(); i != cursor_dirs_.end(); ++i) { if (*i == dir) return; }
-    cursor_dirs_.push_back(dir);
+    if (file_is_dir(dir)) {
+        Lock sl(mx_);
+
+        if (cursor_dirs_.end() == std::find(cursor_dirs_.begin(), cursor_dirs_.end(), dir)) {
+            cursor_dirs_.push_back(dir);
+        }
+    }
 }
 
 bool Theme_impl::feed_icon_root(const ustring & root, const ustring & stop_after) const {
@@ -494,7 +503,7 @@ bool Theme_impl::feed_icon_root(const ustring & root, const ustring & stop_after
 
                 // Update icon_theme_names_.
                 if (!iref.hidden) {
-                    auto v = str_explode(icon_theme_names_, ':');
+                    auto v = str_explode(icon_theme_names_, ":;");
                     if (v.end() == std::find(v.begin(), v.end(), theme_name)) { v.push_back(theme_name); }
                     icon_theme_names_ = str_implode(v, ':');
                 }
@@ -541,7 +550,7 @@ bool Theme_impl::feed_icon_root(const ustring & root, const ustring & stop_after
     }
 
     if (itheme >= 0 || ctheme >= 0) {
-        if (str_similar(theme_name, str_explode(stop_after, ':'))) {
+        if (str_similar(theme_name, str_explode(stop_after, ":;"))) {
             return true;
         }
     }
@@ -587,7 +596,7 @@ int Theme_impl::find_cursor_theme(const tau::ustring & name) const {
 }
 
 int Theme_impl::find_cursor_theme_nolock(const tau::ustring & names) const {
-    auto v = str_explode(names, ':');
+    auto v = str_explode(names, ":;");
     Cursor_theme * p = cursor_themes_.data();
     for (std::size_t n = 0; n < cursor_themes_.size(); n++, p++) { if (str_similar(p->name, v)) return n; }
     return -1;
@@ -664,7 +673,7 @@ Cursor_ptr Theme_impl::find_cursor(const ustring & names, int size) {
     auto tid = std::this_thread::get_id();
     if (0 == size) { size = cursor_size_; }
     std::vector<ustring> unames;
-    for (const ustring & s: str_explode(names, ':')) { unames.push_back(str_trim(str_toupper(s))); }
+    for (const ustring & s: str_explode(names, ":;")) { unames.push_back(str_trim(str_toupper(s))); }
 
     {
         Lock ml(mmx_);
@@ -772,7 +781,7 @@ Cursor_ptr Theme_impl::find_cursor(const ustring & names, int size) {
             Thread & thr = i->second;
 
             // Display_xcb uses case sensitive cursor lookup, so don't uppercase cursor name here!
-            for (const ustring & s: str_explode(names, ':')) {
+            for (const ustring & s: str_explode(names, ":;")) {
                 if (auto cursor = thr.lookup(s)) {
                     cache_cursor(thr.cursor_cache, cursor, str_trim(str_toupper(s)), size);
                     return cursor;
@@ -805,7 +814,7 @@ Cursor_ptr Theme_impl::uncache_cursor(Cursor_cache & cache, const ustring & name
 }
 
 Pixmap_ptr Theme_impl::find_pixmap(const ustring & names) {
-    auto v = str_explode(names, ':');
+    auto v = str_explode(names, ":;");
 
     for (const ustring & name: v) {
         auto pixmap = uncache_pixmap(name);
@@ -910,7 +919,7 @@ int Theme_impl::find_icon_theme(const ustring & names) const {
 }
 
 int Theme_impl::find_icon_theme_nolock(const ustring & names) const {
-    auto v = str_explode(names, ':');
+    auto v = str_explode(names, ":;");
     Icon_theme * p = icon_themes_.data();
 
     for (std::size_t n = 0; n != icon_themes_.size(); n++, p++) {
@@ -943,12 +952,16 @@ void Theme_impl::set_icon_theme(const ustring & names) {
 std::vector<ustring> Theme_impl::list_icon_themes() const {
     while (0 != nicon_dirs_) { feed_icon_dir(); }
     ustring names; { Lock lock(mx_); names = icon_theme_names_; }
-    return str_explode(names, ':');
+    return str_explode(names, ":;");
 }
 
 int Theme_impl::icon_pixels(int icon_size) const {
-    if (icon_size >= SMALL_ICON && icon_size <= LARGE_ICON) {
-        return icon_sizes_[icon_size];
+    if (icon_size >= SMALLEST_ICON && icon_size <= LARGEST_ICON) {
+        return icon_sizes_[icon_size-SMALLEST_ICON];
+    }
+
+    else if (DEFAULT_ICON == icon_size) {
+        return def_icon_;
     }
 
     return std::max(0, icon_size);
@@ -983,7 +996,7 @@ Pixmap_ptr Theme_impl::find_icon_in_dir(Icon_dir & dir, const std::vector<ustrin
                 if (Fileinfo(path_build(dir.path, file)).is_regular()) {
                     ustring suf = path_suffix(file);
 
-                    if (str_similar(suf, str_explode(Pixmap_impl::list_file_suffixes(), ':'))) {
+                    if (str_similar(suf, str_explode(Pixmap_impl::list_file_suffixes(), ":;"))) {
                         dir.files.push_back(file);
                     }
                 }
@@ -1095,7 +1108,7 @@ Pixmap_ptr Theme_impl::find_icon(const ustring & names, int size, const ustring 
     size = icon_pixels(size);
     std::vector<ustring> unames;
 
-    for (const ustring & s: str_explode(names, ':')) {
+    for (const ustring & s: str_explode(names, ":;")) {
         unames.push_back(str_trim(str_toupper(s)));
     }
 
@@ -1149,7 +1162,7 @@ Pixmap_ptr Theme_impl::find_icon(const ustring & names, int size, const ustring 
 Pixmap_ptr Theme_impl::find_picto(const ustring & names, ustring & ret_name) {
     ustring picto;
 
-    for (const ustring & s: str_explode(names, ':')) {
+    for (const ustring & s: str_explode(names, ":;")) {
         if (str_has_prefix(s, "picto-", true)) {
             picto = s;
             break;
@@ -1181,7 +1194,7 @@ Pixmap_ptr Theme_impl::get_icon(const ustring & names, int size, const ustring &
     if (auto pixmap = find_icon(names, size, context)) { return pixmap; }
     size = icon_pixels(size);
     Pixmap_ptr pixmap = Pixmap_impl::create(1, size);
-    cache_icon(pixmap, str_explode(names, ':').front(), context, size);
+    cache_icon(pixmap, str_explode(names, ":;").front(), context, size);
     return pixmap;
 }
 

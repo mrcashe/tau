@@ -143,17 +143,18 @@ enum Oper {
     OPER_SET
 };
 
-/// %Icon sizes used when getting icons.
+/// %Icon sizes (in pixels) used when getting icons.
 /// @ingroup enum_group
 enum Icon_size {
-    SMALLEST_ICON   = 0,    ///< Smallest icon.
-    NANO_ICON       = 0,    ///< Default icon size is  8 pixels.
-    TINY_ICON       = 1,    ///< Default icon size is 12 pixels.
-    SMALL_ICON      = 2,    ///< Default icon size is 16 pixels.
-    MEDIUM_ICON     = 3,    ///< Default icon size is 22 pixels.
-    NORMAL_ICON     = 4,    ///< Default icon size is 32 pixels.
-    LARGE_ICON      = 5,    ///< Default icon size is 48 pixels.
-    LARGEST_ICON    = 5     ///< Largest icon.
+    DEFAULT_ICON    = 0,    ///< Default icon size.
+    SMALLEST_ICON   = 1,    ///< Smallest icon.
+    NANO_ICON       = 1,    ///< Default icon size is  8 pixels.
+    TINY_ICON       = 2,    ///< Default icon size is 12 pixels.
+    SMALL_ICON      = 3,    ///< Default icon size is 16 pixels.
+    MEDIUM_ICON     = 4,    ///< Default icon size is 22 pixels.
+    LARGE_ICON      = 5,    ///< Default icon size is 32 pixels.
+    HUGE_ICON       = 6,    ///< Default icon size is 48 pixels.
+    LARGEST_ICON    = 6     ///< Largest icon.
 };
 
 /// Check style.

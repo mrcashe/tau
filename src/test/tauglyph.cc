@@ -673,10 +673,13 @@ private:
 int main(int argc, char * argv[]) {
     try {
         tau::ustring conf_path = tau::path_build(tau::path_user_config_dir(), tau::program_name(), "state.ini");
-        std::ifstream is(conf_path.c_str(), std::ios::in);
-        tau::Key_file kf(is);
+        tau::path_mkdir(tau::path_dirname(conf_path));
+        tau::Key_file kf = tau::Key_file::load_from_file(conf_path);
+        tau::Timer timer(tau::fun(kf, static_cast<void (tau::Key_file::*)()>(&tau::Key_file::save)));
+        kf.signal_changed().connect(tau::bind(tau::fun(timer, &tau::Timer::start), 7738, false));
 
         auto v = kf.get_integers(kf.section("main"), "geometry");
+
         if (v.size() > 3) {
             pos_.set(v[0], v[1]);
             sz_.update(v[2], v[3]);
@@ -689,9 +692,7 @@ int main(int argc, char * argv[]) {
         std::vector<long long> iv = { pos_.x(), pos_.y(), sz_.iwidth(), sz_.iheight() };
         kf.set_integers(kf.section("main"), "geometry", iv);
 
-        path_mkdir(path_dirname(conf_path));
-        std::ofstream os(conf_path.c_str(), std::ios::out);
-        kf.save(os);
+        kf.save();
     }
 
     catch (tau::exception & x) {
@@ -700,6 +701,5 @@ int main(int argc, char * argv[]) {
 
     return 0;
 }
-
 
 //END

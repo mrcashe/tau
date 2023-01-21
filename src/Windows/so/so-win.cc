@@ -24,39 +24,40 @@
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ----------------------------------------------------------------------------
 
-#ifndef TAU_THEME_POSIX_HH
-#define TAU_THEME_POSIX_HH
-
-#include "types-posix.hh"
-#include <theme-impl.hh>
+#include <tau/string.hh>
+#include <sys-impl.hh>
+#include <Windows/loop-win.hh>
+#include <iostream>
+#include <shlobj.h>
 
 namespace tau {
 
-class Theme_posix: public Theme_impl {
-public:
+void Loop_impl::boot_linkage() {
+    sysinfo_.shared = true;
+    std::list<ustring> v;
+    wchar_t ws[2048];
 
-    static Theme_posix_ptr root_posix();
+    if (S_OK == SHGetFolderPathW(NULL, CSIDL_WINDOWS, NULL, 0, ws)) {
+        ustring s = str_from_wstring(std::wstring(ws));
+        v.push_back(s);
+        v.push_back(path_build(s, "System"));
+    }
 
-    Font_face_ptr create_font_face(const ustring & spec);
-    void cache_font(Font_ptr font, const ustring & spec);
-    Font_ptr uncache_font(const ustring & spec, unsigned dpi);
-    std::vector<ustring> list_families();
-    std::vector<ustring> list_faces(const ustring & family);
+    if (S_OK == SHGetFolderPathW(NULL, CSIDL_SYSTEM, NULL, 0, ws)) {
+        v.push_back(str_from_wstring(std::wstring(ws)));
+    }
 
-protected:
+    v.insert(v.begin(), path_dirname(path_self()));
 
-    // Overrides Theme_impl.
-    void boot() override;
+    const ustring solink = str_format("libtau-", Major_, '.', Minor_, '-', sysinfo_.target, "-mxe.dll");
 
-    // Overrides Theme_impl.
-    void sweep() override;
-
-private:
-
-    void init_font_dir(const ustring & dir);
-    void cleanup_font_cache();
-};
+    for (auto & s: v) {
+        ustring sopath = path_build(s, solink);
+        std::cout << sopath << '\n';
+        if (file_exists(sopath)) { sysinfo_.sopath = sopath; break; }
+    }
+}
 
 } // namespace tau
 
-#endif // TAU_THEME_POSIX_HH
+//END

@@ -64,6 +64,9 @@ public:
     /// Destructor.
    ~Key_file();
 
+    /// @name Input/Output
+    /// @{
+
     /// Create from file.
     static Key_file load_from_file(const ustring & path);
 
@@ -76,6 +79,17 @@ public:
     /// Save to file.
     void save_to_file(const ustring & path);
 
+    /// Special form of save_to_file() method.
+    ///
+    /// If key file was created using load_from_file() method, this call will
+    /// save it back. If key file wasn't loaded from file that way, the user_error
+    /// will be trown. If file specified for load_from_file() does not exist, save()
+    /// anyway should try to perform write operation.
+    ///
+    /// @throw user_error if key file wasn't created using load_from_file.
+    void save();
+
+    /// @}
     /// Set comment separator.
     /// @note By default, the comment separator is a '#'.
     void set_comment_separator(char32_t comment_sep);
@@ -208,7 +222,7 @@ public:
 
 private:
 
-    Key_file_impl * impl_;
+    Key_file_impl * impl;
 };
 
 } // namespace tau

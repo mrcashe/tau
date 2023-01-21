@@ -38,27 +38,6 @@ namespace {
 
 tau::Key_file state_;
 std::vector<std::thread> threads_;
-tau::ustring conf_path_;
-
-void save_state() {
-    try {
-        tau::path_mkdir(tau::path_dirname(conf_path_));
-        std::ofstream os(tau::Locale().encode_filename(conf_path_).c_str());
-        state_.save(os);
-    }
-
-    catch (tau::exception & x) {
-        std::cerr << "** taudemo: save_state(): tau::exception thrown: " << x.what() << std::endl;
-    }
-
-    catch (std::exception & x) {
-        std::cerr << "** taudemo: save_state(): std::exception thrown: " << x.what() << std::endl;
-    }
-
-    catch (...) {
-        std::cerr << "** taudemo: save_state(): unknown exception thrown: " << std::endl;
-    }
-}
 
 } // anonymous namespace
 
@@ -94,14 +73,13 @@ struct Main: tau::Toplevel {
     std::vector<Color_widgets> color_widgets_;
 
     int init_sysinfo_page(int pg) {
-        tau::List_text list;
-
-        for (auto & s: tau::str_explode(tau::str_sysinfo(), tau::str_newlines())) {
-            list.append(s);
-        }
-
+        tau::List list;
         list.style().font("font").set(tau::Font::mono());
-        return notebook_.append_page(list, pages_[pg].title);
+        int page = notebook_.append_page(list, pages_[pg].title);
+        tau::Text text(tau::str_sysinfo(), tau::ALIGN_START, tau::ALIGN_START);
+        text.allow_select();
+        list.append(text);
+        return page;
     }
 
     int init_list_page(int pg) {
@@ -384,6 +362,7 @@ struct Main: tau::Toplevel {
 
     int init_colorsel_page(int pg) {
         tau::Colorsel colorsel(tau::Color(state_.get_string(state_.root(), "colorsel", "Blue")));
+        colorsel.cancel_action().disable();
         colorsel.hint_margin(4);
         colorsel.signal_color_changed().connect(tau::fun(this, &Main::on_colorsel));
         return notebook_.append_page(colorsel, pages_[pg].title);
@@ -640,14 +619,14 @@ void run() {
 }
 
 int main(int argc, char * argv[]) {
-    conf_path_ = tau::path_build(tau::path_user_config_dir(), tau::program_name(), "state.ini");
-    std::ifstream is(tau::Locale().encode_filename(conf_path_).c_str());
-    state_.load(is);
-    tau::Timer timer(tau::fun(save_state));
+    auto p = tau::path_build(tau::path_user_config_dir(), tau::program_name(), "state.ini");
+    tau::path_mkdir(tau::path_dirname(p));
+    state_ = tau::Key_file::load_from_file(p);
+    tau::Timer timer(tau::fun(state_, static_cast<void (tau::Key_file::*)()>(&tau::Key_file::save)));
     state_.signal_changed().connect(tau::bind(tau::fun(timer, &tau::Timer::start), 6789, false));
     run();
     for (auto & thr: threads_) { thr.join(); }
-    save_state();
+    state_.save();
     return 0;
 }
 

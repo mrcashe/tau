@@ -108,14 +108,6 @@ public:
     /// @note Check %Painter is not pure before using it!
     void text(const std::u32string & s, const Color & c, Orientation orient=ORIENTATION_RIGHT);
 
-    /// Draw text at current position.
-    /// @param s text to be drawn.
-    /// @param c color that will be used.
-    /// @param orient text orientation (reserved, but not yet implemented).
-    /// @note This method does not work on pure %Painter.
-    /// @note Check %Painter is not pure before using it!
-    void text(std::u32string && s, const Color & c, Orientation orient=ORIENTATION_RIGHT);
-
     /// Draw glyph at current position.
     /// @note This method does not work on pure %Painter.
     /// @note Check %Painter is not pure before using it!

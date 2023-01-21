@@ -306,6 +306,9 @@ public:
     /// Constructor with UTF-32 text.
     Buffer(const std::u32string & str);
 
+    /// @name Input/Output
+    /// @{
+
     /// Constructor with stream.
     Buffer(std::istream & is);
 
@@ -319,6 +322,16 @@ public:
     /// Save to file.
     void save_to_file(const ustring & path);
 
+    /// Special form of save_to_file() method.
+    ///
+    /// If buffer was created using load_from_file() method, this call will
+    /// save it back. If buffer was not loaded from file that way, the user_error
+    /// will be trown.
+    ///
+    /// @throw user_error if buffer wasn't created using load_from_file.
+    void save();
+
+    /// @}
     /// Replace buffer content from an UTF-8 string.
     void assign(const ustring & str);
 

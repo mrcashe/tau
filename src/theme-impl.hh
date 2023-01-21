@@ -150,8 +150,9 @@ protected:
     Mutex               mmx_;   // Member mutex.
     std::atomic_int     icursor_ { -1 };
     std::atomic_int     iicon_ { -1 };
-    unsigned            cursor_size_ = 24;
-    unsigned            icon_sizes_[1+LARGEST_ICON-SMALLEST_ICON] = { 8, 12, 16, 22, 32, 48 };
+    int                 cursor_size_ = 24;
+    int                 icon_sizes_[1+LARGEST_ICON-SMALLEST_ICON] = { 8, 12, 16, 22, 32, 48 };
+    int                 def_icon_ = MEDIUM_ICON;
     ustring             font_normal_;
     ustring             font_mono_;
 
@@ -203,6 +204,7 @@ private:
 
     void update_this_thread();
     void on_loop_quit(Loop_impl * loop);
+    void boot_linkage(); // Linkage dependent method: shared (posix/so/so-posix.cc) or static (posix/a/a-posix.cc).
 };
 
 } // namespace tau

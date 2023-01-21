@@ -780,7 +780,16 @@ Doc_ptr Doc_impl::load_from_file(const ustring & path) {
     Buffer buf = Buffer::load_from_file(path);
     auto doc = std::make_shared<Doc_impl>();
     doc->load(buf);
+    doc->path_ = path;
     return doc;
+}
+
+void Doc_impl::save(int indent_size) {
+    if (path_.empty()) {
+        throw user_error("Doc_impl::save(): wasn't loaded using load_from_file()");
+    }
+
+    save_to_file(path_, indent_size);
 }
 
 } // namespace tau

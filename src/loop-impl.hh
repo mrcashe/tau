@@ -92,6 +92,14 @@ protected:
     /// @param timeout_ms the timeout in milliseconds.
     /// @return true if some event was handled or false if timeout has been expired.
     virtual bool iterate(int timeout_ms) = 0;
+
+    /// Run once.
+    void boot();
+
+private:
+
+    /// Linkage specific boot.
+    void boot_linkage();
 };
 
 } // namespace tau

@@ -25,6 +25,7 @@
 // ----------------------------------------------------------------------------
 
 #include <tau/buffer.hh>
+#include <tau/exception.hh>
 #include <tau/locale.hh>
 #include <tau/sys.hh>
 #include <tau/key-file.hh>
@@ -130,6 +131,7 @@ struct Key_file_impl {
     using Pair = std::pair<ustring, Key_section>;
     using Storage = std::list<Pair>;
     Storage sections_;
+    ustring path_;
     signal<void()> signal_changed_;
 
     Key_file_impl() = default;
@@ -138,6 +140,7 @@ struct Key_file_impl {
         csep_ = other.csep_;
         root_ = other.root_;
         sections_ = other.sections_;
+        path_ = other.path_;
     }
 
     void stream_out(ustring & os) {
@@ -204,14 +207,14 @@ struct Key_file_impl {
 
 Key_file::Key_file(char32_t list_sep, char32_t comment_sep):
     trackable(),
-    impl_(new Key_file_impl)
+    impl(new Key_file_impl)
 {
     set_list_separator(list_sep);
     set_comment_separator(comment_sep);
 }
 
 Key_file::Key_file(std::istream & is, char32_t list_sep, char32_t comment_sep):
-    impl_(new Key_file_impl)
+    impl(new Key_file_impl)
 {
     set_list_separator(list_sep);
     set_comment_separator(comment_sep);
@@ -251,39 +254,39 @@ void Key_file::load(std::istream & is) {
                     ustring name = str_trim(s.substr(0, pos)), val  = str_trim(s.substr(pos+1));
 
                     if (!name.empty() && !val.empty()) {
-                        Key_section & sct = sect.empty() ? impl_->root_ : impl_->section(sect, false);
-                        if (sct.set_value(name, val)) { impl_->signal_changed_(); }
+                        Key_section & sct = sect.empty() ? impl->root_ : impl->section(sect, false);
+                        if (sct.set_value(name, val)) { impl->signal_changed_(); }
                     }
                 }
             }
         }
 
-        impl_->csep_ = csep;
+        impl->csep_ = csep;
     }
 }
 
 Key_file::Key_file(const Key_file & other):
-    impl_(new Key_file_impl)
+    impl(new Key_file_impl)
 {
-    impl_->copy(*other.impl_);
+    impl->copy(*other.impl);
 }
 
 Key_file & Key_file::operator=(const Key_file & other) {
     if (this != &other) {
-        impl_->copy(*other.impl_);
+        impl->copy(*other.impl);
     }
 
     return *this;
 }
 
 Key_file::~Key_file() {
-    delete impl_;
+    delete impl;
 }
 
 void Key_file::save(std::ostream & os) {
     if (os.good()) {
         ustring s;
-        impl_->stream_out(s);
+        impl->stream_out(s);
         os << s;
     }
 }
@@ -293,6 +296,7 @@ Key_file Key_file::load_from_file(const ustring & path) {
     Key_file kf;
     std::ifstream is(Locale().encode_filename(path));
     kf.load(is);
+    kf.impl->path_ = path;
     return kf;
 }
 
@@ -301,29 +305,37 @@ void Key_file::save_to_file(const ustring & path) {
     save(os);
 }
 
+void Key_file::save() {
+    if (impl->path_.empty()) {
+        throw user_error("Key_file::save(): was not created by load_from_file()");
+    }
+
+    save_to_file(impl->path_);
+}
+
 void Key_file::set_comment_separator(char32_t comment_sep) {
     if (0 != comment_sep) {
-        impl_->csep_ = comment_sep;
+        impl->csep_ = comment_sep;
     }
 }
 
 void Key_file::set_list_separator(char32_t list_sep) {
     if (0 != list_sep) {
-        impl_->lsep_ = list_sep;
+        impl->lsep_ = list_sep;
     }
 }
 
 char32_t Key_file::list_separator() const {
-    return impl_->lsep_;
+    return impl->lsep_;
 }
 
 char32_t Key_file::comment_separator() const {
-    return impl_->csep_;
+    return impl->csep_;
 }
 
 std::vector<ustring> Key_file::list_sections() const {
     std::vector<ustring> v;
-    for (auto & p: impl_->sections_) { v.push_back(p.first); }
+    for (auto & p: impl->sections_) { v.push_back(p.first); }
     return v;
 }
 
@@ -334,11 +346,11 @@ std::vector<ustring> Key_file::list_keys(const Key_section & sect) const {
 }
 
 bool Key_file::has_section(const ustring & sect_name, bool similar) const {
-    return impl_->has_section(sect_name, similar);
+    return impl->has_section(sect_name, similar);
 }
 
 bool Key_file::has_key(const ustring & sect_name, const ustring & key_name, bool similar) const {
-    return impl_->has_key(sect_name, key_name, similar);
+    return impl->has_key(sect_name, key_name, similar);
 }
 
 bool Key_file::has_key(const Key_section & sect, const ustring & key_name, bool similar) const {
@@ -350,11 +362,11 @@ ustring Key_file::key_name(const Key_section & sect, const ustring similar_name)
 }
 
 Key_section & Key_file::root() {
-    return impl_->root_;
+    return impl->root_;
 }
 
 Key_section & Key_file::section(const ustring & sect, bool similar) {
-    return impl_->section(sect, similar);
+    return impl->section(sect, similar);
 }
 
 void Key_file::set_comment(Key_section & sect, const ustring & comment) {
@@ -362,41 +374,41 @@ void Key_file::set_comment(Key_section & sect, const ustring & comment) {
 }
 
 void Key_file::set_string(Key_section & sect, const ustring & key, const ustring & value) {
-    if (sect.set_value(key, value)) { impl_->signal_changed_(); }
+    if (sect.set_value(key, value)) { impl->signal_changed_(); }
 }
 
 void Key_file::set_strings(Key_section & sect, const ustring & key, const std::vector<ustring> & vec) {
-    if (sect.set_value(key, str_implode(vec, impl_->lsep_))) { impl_->signal_changed_(); }
+    if (sect.set_value(key, str_implode(vec, impl->lsep_))) { impl->signal_changed_(); }
 }
 
 void Key_file::set_boolean(Key_section & sect, const ustring & key, bool value) {
-    if (sect.set_value(key, value ? "true" : "false")) { impl_->signal_changed_(); }
+    if (sect.set_value(key, value ? "true" : "false")) { impl->signal_changed_(); }
 }
 
 void Key_file::set_booleans(Key_section & sect, const ustring & key, const std::vector<bool> & vec) {
     std::vector<ustring> sv;
     for (auto i: vec) { sv.push_back(i ? "true" : "false"); }
-    if (sect.set_value(key, str_implode(sv, impl_->lsep_))) { impl_->signal_changed_(); }
+    if (sect.set_value(key, str_implode(sv, impl->lsep_))) { impl->signal_changed_(); }
 }
 
 void Key_file::set_integer(Key_section & sect, const ustring & key, long long value) {
-    if (sect.set_value(key, str_format(value))) { impl_->signal_changed_(); }
+    if (sect.set_value(key, str_format(value))) { impl->signal_changed_(); }
 }
 
 void Key_file::set_integers(Key_section & sect, const ustring & key, const std::vector<long long> & vec) {
     std::vector<ustring> sv;
     for (auto i: vec) { sv.push_back(str_format(i)); }
-    if (sect.set_value(key, str_implode(sv, impl_->lsep_))) { impl_->signal_changed_(); }
+    if (sect.set_value(key, str_implode(sv, impl->lsep_))) { impl->signal_changed_(); }
 }
 
 void Key_file::set_double(Key_section & sect, const ustring & key, double value) {
-    if (sect.set_value(key, str_format(value))) { impl_->signal_changed_(); }
+    if (sect.set_value(key, str_format(value))) { impl->signal_changed_(); }
 }
 
 void Key_file::set_doubles(Key_section & sect, const ustring & key, const std::vector<double> & vec) {
     std::vector<ustring> sv;
     for (auto i: vec) { sv.push_back(str_format(i)); }
-    if (sect.set_value(key, str_implode(sv, impl_->lsep_))) { impl_->signal_changed_(); }
+    if (sect.set_value(key, str_implode(sv, impl->lsep_))) { impl->signal_changed_(); }
 }
 
 ustring Key_file::comment(Key_section & sect) {
@@ -413,7 +425,7 @@ std::vector<ustring> Key_file::get_strings(Key_section & sect, const ustring & k
     auto iter = sect.find(key);
 
     if (iter != sect.elems_.end()) {
-        v = str_explode(iter->second, impl_->lsep_);
+        v = str_explode(iter->second, impl->lsep_);
     }
 
     return v;
@@ -431,7 +443,7 @@ std::vector<bool> Key_file::get_booleans(Key_section & sect, const ustring & key
 
     auto iter = sect.find(key);
     if (iter != sect.elems_.end()) {
-        for (auto s: str_explode(iter->second, impl_->lsep_)) {
+        for (auto s: str_explode(iter->second, impl->lsep_)) {
             try { v.push_back(0 != std::stoll(s, nullptr, 0)); } catch (...) {}
             v.push_back(str_similar(s, "true yes y on", ' '));
         }
@@ -456,7 +468,7 @@ std::vector<long long> Key_file::get_integers(Key_section & sect, const ustring 
 
     auto iter = sect.find(key);
     if (iter != sect.elems_.end()) {
-        for (const ustring & s: str_explode(iter->second, impl_->lsep_)) {
+        for (const ustring & s: str_explode(iter->second, impl->lsep_)) {
             try { v.push_back(std::stoll(s, nullptr, 0)); }
             catch (std::exception & x) { std::cerr << "** Key_file::get_integer(): an exception caught: " << x.what() << std::endl; }
         }
@@ -479,7 +491,7 @@ std::vector<double> Key_file::get_doubles(Key_section & sect, const ustring & ke
 
     auto iter = sect.find(key);
     if (iter != sect.elems_.end()) {
-        for (std::string s: str_explode(iter->second, impl_->lsep_)) {
+        for (std::string s: str_explode(iter->second, impl->lsep_)) {
             for (std::size_t pos = s.find(','); ustring::npos != pos; pos = s.find(',')) { s[pos] = '.'; }
             double d; std::istringstream is(s); is >> d;
             v.push_back(d);
@@ -491,32 +503,32 @@ std::vector<double> Key_file::get_doubles(Key_section & sect, const ustring & ke
 
 void Key_file::remove_key(Key_section & sect, const ustring & key, bool similar) {
     auto iter = sect.find(key, similar);
-    if (iter != sect.elems_.end()) { sect.elems_.erase(iter); impl_->signal_changed_(); }
+    if (iter != sect.elems_.end()) { sect.elems_.erase(iter); impl->signal_changed_(); }
 }
 
 void Key_file::remove_section(const ustring & sect_name, bool similar) {
     if (similar) {
-        auto i = std::find_if(impl_->sections_.begin(), impl_->sections_.end(), [&sect_name](auto & p) { return str_similar(sect_name, p.first); } );
-        if (i != impl_->sections_.end()) { impl_->sections_.erase(i); impl_->signal_changed_(); }
+        auto i = std::find_if(impl->sections_.begin(), impl->sections_.end(), [&sect_name](auto & p) { return str_similar(sect_name, p.first); } );
+        if (i != impl->sections_.end()) { impl->sections_.erase(i); impl->signal_changed_(); }
     }
 
     else {
-        auto i = impl_->find(sect_name);
-        if (i != impl_->sections_.end()) { impl_->sections_.erase(i); impl_->signal_changed_(); }
+        auto i = impl->find(sect_name);
+        if (i != impl->sections_.end()) { impl->sections_.erase(i); impl->signal_changed_(); }
     }
 }
 
 void Key_file::clear() {
-    if (!impl_->root_.empty()) { impl_->root_.clear(); impl_->signal_changed_(); }
-    if (!impl_->sections_.empty()) { impl_->sections_.clear(); impl_->signal_changed_(); }
+    if (!impl->root_.empty()) { impl->root_.clear(); impl->signal_changed_(); }
+    if (!impl->sections_.empty()) { impl->sections_.clear(); impl->signal_changed_(); }
 }
 
 bool Key_file::empty() const {
-    return impl_->root_.empty() && impl_->sections_.empty();
+    return impl->root_.empty() && impl->sections_.empty();
 }
 
 signal<void()> & Key_file::signal_changed() {
-    return impl_->signal_changed_;
+    return impl->signal_changed_;
 }
 
 } // namespace tau

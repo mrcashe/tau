@@ -35,16 +35,9 @@
 namespace {
 
 tau::Key_file               state_;
-tau::ustring                state_path_;
 std::vector<tau::ustring>   args_;
 int                         line_ = -1;
 int                         col_ = -1;
-
-void save_state() {
-    tau::path_mkdir(tau::path_dirname(state_path_));
-    std::ofstream os(state_path_.c_str());
-    state_.save(os);
-}
 
 } // anonymous namespace
 
@@ -1572,10 +1565,10 @@ int main(int argc, char * argv[]) {
     }
 
     try {
-        state_path_ = tau::path_build(tau::path_user_config_dir(), tau::program_name(), "state.ini");
-        std::ifstream is(state_path_.c_str());
-        state_.load(is);
-        tau::Timer timer(tau::fun(save_state));
+        auto state_path = tau::path_build(tau::path_user_config_dir(), tau::program_name(), "state.ini");
+        tau::path_mkdir(tau::path_dirname(state_path));
+        state_ = tau::Key_file::load_from_file(state_path);
+        tau::Timer timer(tau::fun(state_, static_cast<void (tau::Key_file::*)()>(&tau::Key_file::save)));
         state_.signal_changed().connect(tau::bind(tau::fun(timer, &tau::Timer::start), 7401, false));
         auto v = state_.get_integers(state_.root(), "geometry");
         tau::Rect bounds;
@@ -1584,7 +1577,7 @@ int main(int argc, char * argv[]) {
         tau::Loop().run();
         std::vector<long long> iv = { w.position().x(), w.position().y(), w.size().iwidth(), w.size().iheight() };
         state_.set_integers(state_.root(), "geometry", iv);
-        save_state();
+        state_.save();
     }
 
     catch (tau::exception & x) {

@@ -267,6 +267,7 @@ share_prefix="$PREFIX/share/tau-$Major_.$Minor_"
 # ---------------------------------------------------------------------------
 
 chk_which 'cxx' 'c++ g++ clang++' 'MANDATORY'
+target=$($which_cxx -dumpmachine)
 chk_which 'ar' 'ar' 'MANDATORY'
 chk_which 'strip' 'strip' 'MANDATORY'
 chk_which 'pkgconfig' 'pkg-config' 'MANDATORY'
@@ -422,7 +423,9 @@ mkdir -vp $confdir
 
 conf_mk="$confdir/conf.mk"
 cp "$supdir/LICENSE.mkt" $conf_mk
+echo "export SHELL = $which_bash" >>$conf_mk
 echo "export plat = $plat" >>$conf_mk
+echo "export target = $target" >>$conf_mk
 echo "export topdir = $topdir" >>$conf_mk
 echo "export builddir = $builddir" >>$conf_mk
 echo "export doxydir = $doxydir" >>$conf_mk
@@ -513,20 +516,21 @@ echo "//END" >>$confcc
 mkdir -vp "$confdir/$plat"
 confcc="$confdir/$plat/conf-$plat.cc"
 cp "$supdir/LICENSE.cct" $confcc
-echo "#include <tau/sysinfo.hh>" >>$confcc
-echo "" >>$confcc
-echo "namespace tau {" >>$confcc
-echo "" >>$confcc
-echo "Sysinfo sysinfo_ = {" >>$confcc
-echo "    .Major    = $Major_,"     >>$confcc
-echo "    .Minor    = $Minor_,"     >>$confcc
-echo "    .Micro    = $Micro_,"     >>$confcc
-echo "    .plat     = \"$plat\","   >>$confcc
-echo "};" >>$confcc
-echo "" >>$confcc
-echo "} // namespace tau" >>$confcc
-echo "" >>$confcc
-echo "//END" >>$confcc
+echo "#include <tau/sysinfo.hh>"            >>$confcc
+echo ""                                     >>$confcc
+echo "namespace tau {"                      >>$confcc
+echo ""                                     >>$confcc
+echo "Sysinfo sysinfo_ = {"                 >>$confcc
+echo "    .Major    = $Major_,"             >>$confcc
+echo "    .Minor    = $Minor_,"             >>$confcc
+echo "    .Micro    = $Micro_,"             >>$confcc
+echo "    .plat     = \"$plat\","           >>$confcc
+echo "    .target   = \"$target\","         >>$confcc
+echo "};"                                   >>$confcc
+echo ""                                     >>$confcc
+echo "} // namespace tau"                   >>$confcc
+echo ""                                     >>$confcc
+echo "//END"                                >>$confcc
 
 # ---------------------------------------------------------------------------
 # Generate platform dependent src/Windows/conf-Windows.cc file.
@@ -537,20 +541,21 @@ if test -n "$mxe_prefix"; then
     mkdir -vp "$confdir/Windows"
     confcc="$confdir/Windows/conf-Windows.cc"
     cp "$supdir/LICENSE.cct" $confcc
-    echo "#include <tau/sysinfo.hh>" >>$confcc
-    echo "" >>$confcc
-    echo "namespace tau {" >>$confcc
-    echo "" >>$confcc
-    echo "Sysinfo sysinfo_ = {" >>$confcc
-    echo "    .Major    = $Major_,"     >>$confcc
-    echo "    .Minor    = $Minor_,"     >>$confcc
-    echo "    .Micro    = $Micro_,"     >>$confcc
-    echo "    .plat     = \"Windows\"," >>$confcc
-    echo "};" >>$confcc
-    echo "" >>$confcc
-    echo "} // namespace tau" >>$confcc
-    echo "" >>$confcc
-    echo "//END" >>$confcc
+    echo "#include <tau/sysinfo.hh>"        >>$confcc
+    echo ""                                 >>$confcc
+    echo "namespace tau {"                  >>$confcc
+    echo ""                                 >>$confcc
+    echo "Sysinfo sysinfo_ = {"             >>$confcc
+    echo "    .Major    = $Major_,"         >>$confcc
+    echo "    .Minor    = $Minor_,"         >>$confcc
+    echo "    .Micro    = $Micro_,"         >>$confcc
+    echo "    .plat     = \"Windows\","     >>$confcc
+    echo "    .target   = \"$mxe_target\"," >>$confcc
+    echo "};"                               >>$confcc
+    echo ""                                 >>$confcc
+    echo "} // namespace tau"               >>$confcc
+    echo ""                                 >>$confcc
+    echo "//END"                            >>$confcc
 fi
 
 # ---------------------------------------------------------------------------

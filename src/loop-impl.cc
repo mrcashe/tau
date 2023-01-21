@@ -31,10 +31,20 @@
 #include <event-impl.hh>
 #include <loop-impl.hh>
 #include <timer-impl.hh>
+#include <sys-impl.hh>
 #include <iomanip>
 #include <iostream>
 
 namespace tau {
+
+void Loop_impl::boot() {
+    sysinfo_.abits = 8*sizeof(void*);
+    sysinfo_.ibits = 8*sizeof(int);
+    sysinfo_.lbits = 8*sizeof(long);
+    sysinfo_.llbits = 8*sizeof(long long);
+    sysinfo_.mbits = 8*sizeof(intmax_t);
+    boot_linkage();
+}
 
 void Loop_impl::start_timer(Timer_ptr tp) {
     if (runlevel_ >= 0) {

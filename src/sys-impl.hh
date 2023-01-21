@@ -24,39 +24,16 @@
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ----------------------------------------------------------------------------
 
-#ifndef TAU_THEME_POSIX_HH
-#define TAU_THEME_POSIX_HH
+#ifndef TAU_SYS_IMPL_HH
+#define TAU_SYS_IMPL_HH
 
-#include "types-posix.hh"
-#include <theme-impl.hh>
+#include <tau/sys.hh>
+#include <tau/sysinfo.hh>
 
 namespace tau {
 
-class Theme_posix: public Theme_impl {
-public:
+extern Sysinfo sysinfo_;
 
-    static Theme_posix_ptr root_posix();
+}
 
-    Font_face_ptr create_font_face(const ustring & spec);
-    void cache_font(Font_ptr font, const ustring & spec);
-    Font_ptr uncache_font(const ustring & spec, unsigned dpi);
-    std::vector<ustring> list_families();
-    std::vector<ustring> list_faces(const ustring & family);
-
-protected:
-
-    // Overrides Theme_impl.
-    void boot() override;
-
-    // Overrides Theme_impl.
-    void sweep() override;
-
-private:
-
-    void init_font_dir(const ustring & dir);
-    void cleanup_font_cache();
-};
-
-} // namespace tau
-
-#endif // TAU_THEME_POSIX_HH
+#endif // TAU_SYS_IMPL_HH

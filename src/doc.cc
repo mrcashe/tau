@@ -324,6 +324,10 @@ void Doc::save(Buffer buf, int indent_size) const {
     if (impl) { impl->save(buf, indent_size); }
 }
 
+void Doc::save(int indent_size) {
+    if (impl) { impl->save(indent_size); }
+}
+
 void Doc::save_to_file(const ustring & path, int indent_size) const {
     if (impl) { impl->save_to_file(path, indent_size); }
 }

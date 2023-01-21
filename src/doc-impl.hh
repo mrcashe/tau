@@ -155,6 +155,7 @@ public:
     bool has_entity(const ustring & name) const;
     void save(Buffer buf, int indent_size) const;
     void save_to_file(const ustring & path, int indent_size) const;
+    void save(int indent_size);
 
     Decl_element_ptr decl() { return decl_; }
     Doctype_ptr doctype() { return doctype_; }
@@ -171,6 +172,7 @@ protected:
     Doctype_ptr                 doctype_;
     std::vector<Inst_element_ptr> inst_;
     std::map<ustring, ustring>  entities_;
+    ustring                     path_;      // Path to the file which was used by load_from_file().
 
 private:
 

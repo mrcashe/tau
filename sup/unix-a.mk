@@ -24,7 +24,7 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # -----------------------------------------------------------------------------
 
-srcdirs += $(posix_srcdir)  $(posix_srcdir)/a $(unix_srcdir) $(confdir)/$(plat)
+srcdirs += $(srcdir)/a $(posix_srcdir) $(posix_srcdir)/a $(unix_srcdir) $(confdir)/$(plat)
 VPATH = $(srcdirs)
 sources = $(foreach dir, $(srcdirs), $(wildcard $(dir)/*.cc))
 objects = $(addprefix $(unix_a_builddir)/, $(sort $(addsuffix .o, $(basename $(notdir $(sources))))))

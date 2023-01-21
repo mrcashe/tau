@@ -51,7 +51,7 @@ clean-hh:
 	fi
 
 install-host:
-	@if [ -e $(unix_adest) -o -e $(unix_sodest) ]; then \
+	@if [ -e $(unix_adest) -o -e $(unix_sopath) ]; then \
 	    $(mkdir) $(pc_prefix); \
 	    echo "++ dev.mk: writing $(unix_pc)..."; \
 	    echo "prefix=$(PREFIX)" >$(unix_pc); \
@@ -65,7 +65,7 @@ install-host:
 	    echo "Requires: $(pkg_required)">>$(unix_pc); \
 	    echo -n "Libs: -L$$">>$(unix_pc); \
 	    echo -n "{lib_prefix} -lpthread $(unix_sys_shared)">>$(unix_pc); \
-	    [ -e $(unix_sodest) ] && echo -n " -ltau-$(Major_).$(Minor_)">>$(unix_pc); \
+	    [ -e $(unix_sopath) ] && echo -n " -ltau-$(Major_).$(Minor_)">>$(unix_pc); \
 	    echo "">>$(unix_pc); \
 	    echo -n "Cflags: -I$$">>$(unix_pc); \
 	    echo "{includedir}">>$(unix_pc); \
