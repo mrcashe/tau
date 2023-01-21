@@ -54,20 +54,19 @@ const Sysinfo & sysinfo() {
 
 ustring str_sysinfo() {
     ustring s;
-    const Sysinfo & si = sysinfo();
 
-    s += str_format("Major:          ", si.Major,    '\n');
-    s += str_format("Minor:          ", si.Minor,    '\n');
-    s += str_format("Micro:          ", si.Micro,    '\n');
-    s += str_format("Platform:       ", si.plat,     '\n');
-    s += str_format("Target:         ", si.target,   '\n');
-    s += str_format("Address Bits:   ", si.abits,    '\n');
-    s += str_format("int Bits:       ", si.ibits,    '\n');
-    s += str_format("long Bits:      ", si.lbits,    '\n');
-    s += str_format("long long Bits: ", si.llbits,   '\n');
-    s += str_format("intmax_t Bits:  ", si.mbits,    '\n');
-    s += str_format("Linkage:        ", (si.shared ? "shared" : "static"), '\n');
-    if (si.shared) { s += str_format("Shared path:    ", (si.sopath.empty() ? "NOT FOUND" : si.sopath), '\n'); }
+    s += str_format("Major:          ", sysinfo_.Major,    '\n');
+    s += str_format("Minor:          ", sysinfo_.Minor,    '\n');
+    s += str_format("Micro:          ", sysinfo_.Micro,    '\n');
+    s += str_format("Platform:       ", sysinfo_.plat,     '\n');
+    s += str_format("Target:         ", sysinfo_.target,   '\n');
+    s += str_format("Address Bits:   ", sysinfo_.abits,    '\n');
+    s += str_format("int Bits:       ", sysinfo_.ibits,    '\n');
+    s += str_format("long Bits:      ", sysinfo_.lbits,    '\n');
+    s += str_format("long long Bits: ", sysinfo_.llbits,   '\n');
+    s += str_format("intmax_t Bits:  ", sysinfo_.mbits,    '\n');
+    s += str_format("Linkage:        ", (sysinfo_.shared ? "shared" : "static"), '\n');
+    if (sysinfo_.shared) { s += str_format("Shared path:    ", (sysinfo_.sopath.empty() ? "NOT FOUND" : sysinfo_.sopath), '\n'); }
 
     return s;
 }

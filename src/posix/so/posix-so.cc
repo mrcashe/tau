@@ -40,8 +40,8 @@ void Loop_impl::boot_linkage() {
     v.insert(v.begin(), path_dirname(path_self()));
 
     for (auto & s: str_explode(pfxs, ':')) {
-        v.push_back(path_build(s, sysinfo().target));
-        v.push_back(str_format(s, sysinfo().abits));
+        v.push_back(path_build(s, sysinfo_.target));
+        v.push_back(str_format(s, sysinfo_.abits));
     }
 
     v.push_back(path_build("/opt", program_name(), "lib"));

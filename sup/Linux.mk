@@ -24,12 +24,12 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # -----------------------------------------------------------------------------
 
-export unix_a_builddir = linux-a
-export unix_so_builddir = linux-so
-export xcb_a_builddir = linux-xcb-a
-export xcb_so_builddir = linux-xcb-so
-export unix_test_a_builddir = linux-test-a
-export unix_test_so_builddir = linux-test-so
+export unix_a_builddir = $(builddir)/linux-a
+export unix_so_builddir = $(builddir)/linux-so
+export xcb_a_builddir = $(builddir)/linux-xcb-a
+export xcb_so_builddir = $(builddir)/linux-xcb-so
+export unix_test_a_builddir = $(builddir)/linux-test-a
+export unix_test_so_builddir = $(builddir)/linux-test-so
 
 export posix_srcdir = $(srcdir)/posix
 export unix_srcdir = $(srcdir)/Linux

@@ -24,12 +24,12 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # -----------------------------------------------------------------------------
 
-export unix_a_builddir = freebsd-a
-export unix_so_builddir = freebsd-so
-export xcb_a_builddir = freebsd-xcb-a
-export xcb_so_builddir = freebsd-xcb-so
-export unix_test_a_builddir = freebsd-test-a
-export unix_test_so_builddir = freebsd-test-so
+export unix_a_builddir = $(builddir)/freebsd-a
+export unix_so_builddir = $(builddir)/freebsd-so
+export xcb_a_builddir = $(builddir)/freebsd-xcb-a
+export xcb_so_builddir = $(builddir)/freebsd-xcb-so
+export unix_test_a_builddir = $(builddir)/freebsd-test-a
+export unix_test_so_builddir = $(builddir)/freebsd-test-so
 
 export posix_srcdir = $(srcdir)/posix
 export unix_srcdir = $(srcdir)/FreeBSD

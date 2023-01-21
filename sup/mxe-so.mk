@@ -24,8 +24,8 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # -----------------------------------------------------------------------------
 
-mxe_so_builddir = mxe-so
-srcdirs += $(srcdir)/so $(srcdir)/Windows $(srcdir)/Windows/so $(confdir)/Windows
+mxe_so_builddir = $(builddir)/mxe-so
+srcdirs += $(srcdir)/so $(srcdir)/Windows $(srcdir)/Windows/mxe-so $(confdir)/Windows
 VPATH = $(srcdirs)
 sources = $(foreach dir, $(srcdirs), $(wildcard $(dir)/*.cc))
 objects = $(addprefix $(mxe_so_builddir)/, $(sort $(addsuffix .o, $(basename $(notdir $(sources))))))

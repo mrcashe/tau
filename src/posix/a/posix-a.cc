@@ -24,6 +24,7 @@
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ----------------------------------------------------------------------------
 
+#include <loop-impl.hh>
 #include <sys-impl.hh>
 
 namespace tau {

@@ -24,8 +24,8 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # -----------------------------------------------------------------------------
 
-mxe_a_builddir = mxe-a
-srcdirs += $(srcdir)/a $(srcdir)/Windows $(srcdir)/Windows/a $(confdir)/Windows
+mxe_a_builddir = $(builddir)/mxe-a
+srcdirs += $(srcdir)/a $(srcdir)/Windows $(srcdir)/Windows/mxe-a $(confdir)/Windows
 VPATH = $(srcdirs)
 sources = $(foreach dir, $(srcdirs), $(wildcard $(dir)/*.cc))
 objects = $(addprefix $(mxe_a_builddir)/, $(sort $(addsuffix .o, $(basename $(notdir $(sources))))))
@@ -34,10 +34,10 @@ MXE_CXX = $(mxe_prefix)/bin/$(mxe_target)-g++
 MXE_AR = $(mxe_prefix)/bin/$(mxe_target)-ar
 MXE_STRIP = $(mxe_prefix)/bin/$(mxe_target)-strip
 
-all: $(mxe_adir) $(mxe_a_builddir) $(objects)
+all: $(mxe_a_builddir) $(mxe_adir) $(objects)
 
 clean:
-	@$(rm) $(mxe_a_builddir)/*.o $(mxe_a_builddir)/*.dep $(mxe_a)
+	@$(rm) $(mxe_a_builddir)/* $(mxe_a)
 
 rm: clean
 	@$(rmr) $(mxe_a_builddir)
