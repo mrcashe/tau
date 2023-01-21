@@ -94,7 +94,8 @@ protected:
     virtual bool iterate(int timeout_ms) = 0;
 
     /// Run once.
-    void boot();
+    /// Overriden by Loop_linux.
+    virtual void boot();
 
 private:
 

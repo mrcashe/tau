@@ -27,7 +27,7 @@
 all:
 
 install:
-	@if [ -d $(doxydir) ]; then $(cpr) $(doxydir) $(doc_prefix); fi
+	@if [ -d $(doxydir) ]; then $(cpr) $(doxydir)/html $(doc_prefix); fi
 
 uninstall:
 	@$(rmr) "$(doc_prefix)/html/"

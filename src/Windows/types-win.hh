@@ -88,6 +88,7 @@ int winrop(Oper op);
 std::vector<ustring> enum_dc_fonts(HDC hdc);
 Vector pointfx_to_vector(const POINTFX & pfx);
 bool operator!=(const POINTFX & pfx1, const POINTFX & pfx2);
+void setup_sysinfo_win();
 
 } // namespace tau
 

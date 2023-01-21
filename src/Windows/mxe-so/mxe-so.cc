@@ -34,7 +34,7 @@ namespace tau {
 
 void Loop_impl::boot_linkage() {
     sysinfo_.shared = true;
-    std::list<ustring> v;
+    std::list<ustring> v(1, path_dirname(path_self()));
     wchar_t ws[2048];
 
     if (S_OK == SHGetFolderPathW(NULL, CSIDL_WINDOWS, NULL, 0, ws)) {
@@ -47,15 +47,14 @@ void Loop_impl::boot_linkage() {
         v.push_back(str_from_wstring(std::wstring(ws)));
     }
 
-    v.insert(v.begin(), path_dirname(path_self()));
-
     const ustring solink = str_format("libtau-", Major_, '.', Minor_, '-', sysinfo_.target, "-mxe.dll");
 
     for (auto & s: v) {
         ustring sopath = path_build(s, solink);
-        std::cout << sopath << '\n';
         if (file_exists(sopath)) { sysinfo_.sopath = sopath; break; }
     }
+
+    setup_sysinfo_win();
 }
 
 } // namespace tau

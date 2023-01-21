@@ -55,18 +55,33 @@ const Sysinfo & sysinfo() {
 ustring str_sysinfo() {
     ustring s;
 
-    s += str_format("Major:          ", sysinfo_.Major,    '\n');
-    s += str_format("Minor:          ", sysinfo_.Minor,    '\n');
-    s += str_format("Micro:          ", sysinfo_.Micro,    '\n');
-    s += str_format("Platform:       ", sysinfo_.plat,     '\n');
-    s += str_format("Target:         ", sysinfo_.target,   '\n');
-    s += str_format("Address Bits:   ", sysinfo_.abits,    '\n');
-    s += str_format("int Bits:       ", sysinfo_.ibits,    '\n');
-    s += str_format("long Bits:      ", sysinfo_.lbits,    '\n');
-    s += str_format("long long Bits: ", sysinfo_.llbits,   '\n');
-    s += str_format("intmax_t Bits:  ", sysinfo_.mbits,    '\n');
+    s += str_format("tau Major:      ", sysinfo_.Major,     '\n');
+    s += str_format("tau Minor:      ", sysinfo_.Minor,     '\n');
+    s += str_format("tau Micro:      ", sysinfo_.Micro,     '\n');
+    s += str_format("Platform:       ", sysinfo_.plat,      '\n');
+    s += str_format("System:         ", sysinfo_.uname,     '\n');
+    s += str_format("System Major:   ", sysinfo_.osmajor,   '\n');
+    s += str_format("System Minor:   ", sysinfo_.osminor,   '\n');
+
+    if (!sysinfo_.distrib.empty()) {
+        s += str_format("Distrib:        ", sysinfo_.distrib, '\n');
+        s += str_format("Distrib Major:  ", sysinfo_.distrib_major, '\n');
+        s += str_format("Distrib Minor:  ", sysinfo_.distrib_minor, '\n');
+        if (!sysinfo_.distrib_codename.empty()) { s += str_format("Codename:       ", sysinfo_.distrib_codename, '\n'); }
+        if (!sysinfo_.distrib_description.empty()) { s += str_format("Description:    ", sysinfo_.distrib_description, '\n'); }
+    }
+
+    s += str_format("Target:         ", sysinfo_.target,    '\n');
+    s += str_format("Address Bits:   ", sysinfo_.abits,     '\n');
+    s += str_format("int Bits:       ", sysinfo_.ibits,     '\n');
+    s += str_format("long Bits:      ", sysinfo_.lbits,     '\n');
+    s += str_format("long long Bits: ", sysinfo_.llbits,    '\n');
+    s += str_format("intmax_t Bits:  ", sysinfo_.mbits,     '\n');
+    s += str_format("wchar_t Bits:   ", sysinfo_.wcbits,    '\n');
     s += str_format("Linkage:        ", (sysinfo_.shared ? "shared" : "static"), '\n');
     if (sysinfo_.shared) { s += str_format("Shared path:    ", (sysinfo_.sopath.empty() ? "NOT FOUND" : sysinfo_.sopath), '\n'); }
+    s += str_format("Locale:         ", sysinfo_.locale,    '\n');
+    s += str_format("I/O charset:    ", sysinfo_.iocharset, '\n');
 
     return s;
 }

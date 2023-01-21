@@ -31,6 +31,9 @@
 
 namespace tau {
 
+void setup_sysinfo_posix();
+ustring usystem(const ustring & cmd);
+
 class Font_face;
 using Font_face_ptr = std::shared_ptr<Font_face>;
 using Font_face_cptr = std::shared_ptr<const Font_face>;

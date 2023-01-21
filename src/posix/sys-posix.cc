@@ -29,9 +29,9 @@
 #include <tau/font.hh>
 #include <tau/locale.hh>
 #include <tau/timeval.hh>
-#include <tau/sys.hh>
 #include <tau/string.hh>
 #include <locale-impl.hh>
+#include <sys-impl.hh>
 #include "theme-posix.hh"
 #include <sys/stat.h>
 #include <dirent.h>
@@ -329,6 +329,54 @@ std::vector<ustring> Font::list_families() {
 // static
 std::vector<ustring> Font::list_faces(const ustring & family) {
     return Theme_posix::root_posix()->list_faces(family);
+}
+
+ustring usystem(const ustring & cmd) {
+    ustring os, utmp =  path_build(path_tmp(), "tau-XXXXXX");
+    char tmp[1+utmp.bytes()];
+    std::strcpy(tmp, utmp.c_str());
+
+    try {
+        int fd = mkstemp(tmp);
+
+        if (fd > 2) {
+            if (-1 < std::system(Locale().encode(str_format(cmd, " > ", &tmp[0])).c_str())) {
+                if (std::size_t bytes = Fileinfo(tmp).bytes()) {
+                    char out[bytes];
+                    ssize_t nread = read(fd, out, bytes);
+                    if (0 < nread) { os = str_trim(Locale().decode(std::string(out, nread))); }
+                }
+            }
+
+            close(fd);
+            unlink(tmp);
+        }
+    }
+
+    catch (std::exception & x) {
+        std::cerr << "** tau::usystem(" << cmd << "): " << x.what() << std::endl;
+    }
+
+    catch (...) {
+        std::cerr << "** tau::usystem(" << cmd << "): unknown exception caught" << std::endl;
+    }
+
+    return os;
+}
+
+void setup_sysinfo_posix() {
+    ustring os = usystem("uname -a");
+    sysinfo_.uname = os;
+    auto v = str_explode(os);
+
+    if (v.size() > 2) {
+        auto w = str_explode(v[2], '.');
+        if (w.size() > 0) { sysinfo_.osmajor = std::atoi(w[0].c_str()); }
+        if (w.size() > 1) { sysinfo_.osminor = std::atoi(w[1].c_str()); }
+    }
+
+    sysinfo_.locale = Locale().code();
+    sysinfo_.iocharset = Locale().filename_encoding().name();
 }
 
 } // namespace tau

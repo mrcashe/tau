@@ -26,11 +26,13 @@
 
 #include <loop-impl.hh>
 #include <sys-impl.hh>
+#include <posix/types-posix.hh>
 
 namespace tau {
 
 void Loop_impl::boot_linkage() {
     sysinfo_.shared = false;
+    setup_sysinfo_posix();
 }
 
 } // namespace tau {

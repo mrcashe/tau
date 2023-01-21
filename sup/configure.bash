@@ -525,6 +525,7 @@ echo "    .Major    = $Major_,"             >>$confcc
 echo "    .Minor    = $Minor_,"             >>$confcc
 echo "    .Micro    = $Micro_,"             >>$confcc
 echo "    .plat     = \"$plat\","           >>$confcc
+echo "    .uname    = \"$plat\","           >>$confcc
 echo "    .target   = \"$target\","         >>$confcc
 echo "};"                                   >>$confcc
 echo ""                                     >>$confcc
@@ -550,6 +551,7 @@ if test -n "$mxe_prefix"; then
     echo "    .Minor    = $Minor_,"         >>$confcc
     echo "    .Micro    = $Micro_,"         >>$confcc
     echo "    .plat     = \"Windows\","     >>$confcc
+    echo "    .uname    = \"Windows\","     >>$confcc
     echo "    .target   = \"$mxe_target\"," >>$confcc
     echo "};"                               >>$confcc
     echo ""                                 >>$confcc

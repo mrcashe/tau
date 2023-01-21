@@ -28,14 +28,15 @@
 #include <tau/exception.hh>
 #include <tau/fileinfo.hh>
 #include <tau/locale.hh>
-#include <tau/sys.hh>
 #include <tau/string.hh>
 #include <tau/timeval.hh>
+#include <sys-impl.hh>
 #include <sys/stat.h>
 #include <shlobj.h>
 #include <shlwapi.h>
 #include <lmcons.h>
 #include <cctype>
+#include <cstring>
 
 namespace {
 
@@ -469,6 +470,21 @@ int winrop(Oper op) {
     }
 
     return R2_COPYPEN;
+}
+
+void setup_sysinfo_win() {
+    OSVERSIONINFOW ov;
+    std::memset(&ov, 0, sizeof ov);
+    ov.dwOSVersionInfoSize = sizeof ov;
+
+    if (GetVersionExW(&ov)) {
+        sysinfo_.uname += str_format(' ', ov.dwMajorVersion, '.', ov.dwMinorVersion, '-', ov.dwBuildNumber);
+        sysinfo_.osmajor = ov.dwMajorVersion, sysinfo_.osminor = ov.dwMinorVersion;
+        if (L'\0' != *ov.szCSDVersion) { sysinfo_.uname += " "+str_from_wstring(std::wstring(ov.szCSDVersion)); }
+    }
+
+    sysinfo_.locale = Locale().code();
+    sysinfo_.iocharset = Locale().filename_encoding().name();
 }
 
 } // namespace tau

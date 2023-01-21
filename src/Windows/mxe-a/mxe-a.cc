@@ -32,7 +32,8 @@
 namespace tau {
 
 void Loop_impl::boot_linkage() {
-    sysinfo_.shared = true;
+    sysinfo_.shared = false;
+    setup_sysinfo_win();
 }
 
 } // namespace tau {

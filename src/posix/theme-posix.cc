@@ -151,6 +151,8 @@ void Theme_posix::boot() {
     boot_cursor_themes("Oxygen Blue:Oxygen Yellow:Breeze:KDE Classic:Adwaita");
     boot_fallback_theme("Hicolor");
 
+    // Setup fonts.
+
     init_font_dir(path_build(path_prefix(), "fonts"));
     init_font_dir(path_build(path_home(), ".fonts"));
     init_font_dir("/usr/share/fonts");
@@ -173,6 +175,16 @@ void Theme_posix::boot() {
             break;
         }
     }
+
+    // Trying to obtain cursor size from environment.
+
+    if (const char * xcursor_size = getenv("XCURSOR_SIZE")) {
+        int sz = atoi(xcursor_size);
+        if (sz >= 12) { cursor_size_ = sz; }
+    }
+
+    // TODO Add support for "XCURSOR_THEME" environment variable here.
+
 }
 
 // Overrides Theme_impl.

@@ -53,6 +53,33 @@ int         Micro;
 /// - Windows
 std::string plat;
 
+/// Operating system name.
+///
+/// This is what uname(1) outputs on POSIX.
+/// On Windows, so far GetVersionInfoExW() used.
+ustring uname;
+
+/// Operating system version numbers: major and minor.
+/// Differ on various OSes.
+int osmajor = 0, osminor = 0;
+
+/// @name Distributive related info (actual for Linux only).
+/// @{
+
+/// Distributive name, such as "Ubuntu", "Mageia" etc.
+ustring distrib;
+
+/// Distributive major and ninor release numbers.
+int distrib_major = 0, distrib_minor = 0;
+
+/// Distributive codename.
+ustring distrib_codename;
+
+/// Distributive description.
+ustring distrib_description;
+
+/// @}
+///
 /// Target name.
 ///
 /// Possible values are:
@@ -99,6 +126,13 @@ int         llbits;
 /// - 64
 int         mbits;
 
+/// wchar_t type size, in bits.
+///
+/// Possible values are:
+/// - 16
+/// - 32
+int         wcbits;
+
 /// Linkage type
 ///
 /// Possible values are:
@@ -110,6 +144,12 @@ bool        shared;
 /// When .shared is @b false, this field is empty.
 /// Else it @e must containg path to the shared library but it is possible it not.
 ustring     sopath;
+
+/// System locale.
+std::string locale = "C";
+
+/// Encoding for file i/o.
+std::string iocharset;
 
 };
 

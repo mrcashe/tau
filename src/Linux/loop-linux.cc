@@ -26,9 +26,10 @@
 
 #include <tau/enums.hh>
 #include <tau/exception.hh>
+#include <tau/key-file.hh>
 #include <tau/locale.hh>
-#include <tau/sys.hh>
 #include <tau/string.hh>
+#include <sys-impl.hh>
 #include "loop-linux.hh"
 #include <unistd.h>
 #include <sys/inotify.h>
@@ -290,6 +291,21 @@ void Loop_linux::on_mounts() {
                 }
             }
         } while (umount);
+    }
+}
+
+void Loop_linux::boot() {
+    Loop_impl::boot();
+    ustring p = "/etc/lsb-release";
+
+    if (file_exists(p)) {
+        Key_file k = Key_file::load_from_file(p);
+        sysinfo_.distrib = k.get_string(k.root(), "DISTRIB_ID", "Linux");
+        auto v = str_explode(k.get_string(k.root(), "DISTRIB_RELEASE"), '.');
+        if (v.size() > 0) { sysinfo_.distrib_major = std::atoi(v[0].c_str()); }
+        if (v.size() > 1) { sysinfo_.distrib_minor = std::atoi(v[1].c_str()); }
+        sysinfo_.distrib_codename = k.get_string(k.root(), "DISTRIB_CODENAME");
+        sysinfo_.distrib_description = k.get_string(k.root(), "DISTRIB_DESCRIPTION");
     }
 }
 

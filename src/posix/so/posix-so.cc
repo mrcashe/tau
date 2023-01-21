@@ -24,22 +24,24 @@
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ----------------------------------------------------------------------------
 
+#include <tau/locale.hh>
 #include <tau/string.hh>
-#include <theme-impl.hh>
 #include <sys-impl.hh>
+#include <posix/loop-posix.hh>
 #include <iostream>
 
 namespace tau {
 
 void Loop_impl::boot_linkage() {
     sysinfo_.shared = true;
-
-    static const char * pfxs = "/usr/lib:/usr/local/lib";
-    const ustring solink = str_format("libtau.so.", Major_, '.', Minor_, '.', Micro_);
-    auto v = str_explode(pfxs, ':');
+    const char * ld = getenv("LD_LIBRARY_PATH");
+    ustring uld = ld ? Locale().decode(ld) : "";
+    auto v = str_explode(uld, ':');
     v.insert(v.begin(), path_dirname(path_self()));
 
+    static const char * pfxs = "/usr/lib:/usr/local/lib";
     for (auto & s: str_explode(pfxs, ':')) {
+        v.push_back(s);
         v.push_back(path_build(s, sysinfo_.target));
         v.push_back(str_format(s, sysinfo_.abits));
     }
@@ -47,10 +49,13 @@ void Loop_impl::boot_linkage() {
     v.push_back(path_build("/opt", program_name(), "lib"));
     v.push_back(path_build(path_prefix(), "lib"));
 
+    const ustring solink = str_format("libtau.so.", Major_, '.', Minor_, '.', Micro_);
     for (auto & s: v) {
         ustring sopath = path_build(s, solink);
         if (file_exists(sopath)) { sysinfo_.sopath = sopath; break; }
     }
+
+    setup_sysinfo_posix();
 }
 
 } // namespace tau

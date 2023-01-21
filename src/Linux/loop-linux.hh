@@ -91,6 +91,11 @@ public:
     // Overrides pure Loop_impl.
     std::vector<ustring> mounts() override;
 
+protected:
+
+    // Overrides Loop_impl.
+    void boot() override;
+
 private:
 
     int             infd_ = -1;

@@ -76,9 +76,11 @@ struct Main: tau::Toplevel {
         tau::List list;
         list.style().font("font").set(tau::Font::mono());
         int page = notebook_.append_page(list, pages_[pg].title);
+        tau::Scroller scr;
+        list.append(scr);
         tau::Text text(tau::str_sysinfo(), tau::ALIGN_START, tau::ALIGN_START);
         text.allow_select();
-        list.append(text);
+        scr.insert(text);
         return page;
     }
 
