@@ -134,8 +134,8 @@ private:
     ustring                     user_path_;
     std::vector<ustring>        filters_;
     Timer                       timer_ { fun(this, &Navigator_impl::on_timer) };
-    Pixmap_ptr                  dir_icon_;
-    Pixmap_ptr                  unknown_icon_;
+    Pixmap_cptr                 dir_icon_;
+    Pixmap_cptr                 unknown_icon_;
 
     ustring                     sort_by_ = "name";
     bool                        sort_backward_ = false;

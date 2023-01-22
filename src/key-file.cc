@@ -35,6 +35,16 @@
 #include <iostream>
 #include <list>
 
+namespace {
+
+const char * true_words_  = "true yes y on";
+const char * bool_words_  = "true yes y on false no n off none";
+
+} // anonymous namespace
+
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+
 namespace tau {
 
 struct Key_section {
@@ -45,11 +55,13 @@ struct Key_section {
 
     Key_section() = default;
     Key_section(const Key_section & other) = default;
+    Key_section(Key_section && other) = default;
     Key_section & operator=(const Key_section & other) = default;
+    Key_section & operator=(Key_section && other) = default;
 
     // Return true if changed.
     bool set_value(const ustring & name, const ustring & val) {
-        auto i = std::find_if(elems_.begin(), elems_.end(), [name](const Pair & pair) { return name == pair.first; });
+        auto i = std::find_if(elems_.begin(), elems_.end(), [name](const Pair & pair) { return name == pair.first; } );
 
         if (i == elems_.end()) {
             elems_.emplace_back(name, val);
@@ -135,13 +147,10 @@ struct Key_file_impl {
     signal<void()> signal_changed_;
 
     Key_file_impl() = default;
-
-    void copy(const Key_file_impl & other) {
-        csep_ = other.csep_;
-        root_ = other.root_;
-        sections_ = other.sections_;
-        path_ = other.path_;
-    }
+    Key_file_impl(const Key_file_impl & other) = default;
+    Key_file_impl(Key_file_impl && other) = default;
+    Key_file_impl & operator=(const Key_file_impl & other) = default;
+    Key_file_impl & operator=(Key_file_impl && other) = default;
 
     void stream_out(ustring & os) {
         root_.stream_out(os, csep_);
@@ -205,20 +214,58 @@ struct Key_file_impl {
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
 
-Key_file::Key_file(char32_t list_sep, char32_t comment_sep):
+Key_file::Key_file(char32_t lsep, char32_t csep):
     trackable(),
     impl(new Key_file_impl)
 {
-    set_list_separator(list_sep);
-    set_comment_separator(comment_sep);
+    set_list_separator(lsep);
+    set_comment_separator(csep);
 }
 
-Key_file::Key_file(std::istream & is, char32_t list_sep, char32_t comment_sep):
+Key_file::Key_file(std::istream & is, char32_t lsep, char32_t csep):
+    trackable(),
     impl(new Key_file_impl)
 {
-    set_list_separator(list_sep);
-    set_comment_separator(comment_sep);
-    load(is);
+    set_list_separator(lsep);
+    set_comment_separator(csep);
+    try { load(is); } catch (...) {}
+}
+
+Key_file::Key_file(const ustring & path, char32_t lsep, char32_t csep):
+    trackable(),
+    impl(new Key_file_impl)
+{
+    set_list_separator(lsep);
+    set_comment_separator(csep);
+    impl->path_ = path;
+    try { std::ifstream is(Locale().io_encode(path)); load(is); } catch (...) {}
+}
+
+Key_file::Key_file(const Key_file & other):
+    impl(new Key_file_impl(*other.impl))
+{
+}
+
+Key_file & Key_file::operator=(const Key_file & other) {
+    if (this != &other) {
+        impl = new Key_file_impl(*other.impl);
+    }
+
+    return *this;
+}
+
+Key_file::Key_file(Key_file && other):
+    impl(new Key_file_impl(std::move(*other.impl)))
+{
+}
+
+Key_file & Key_file::operator=(Key_file && other) {
+    *impl = std::move(*other.impl);
+    return *this;
+}
+
+Key_file::~Key_file() {
+    delete impl;
 }
 
 void Key_file::load(std::istream & is) {
@@ -250,6 +297,7 @@ void Key_file::load(std::istream & is) {
                 }
 
                 pos = s.find('=');
+
                 if (ustring::npos != pos) {
                     ustring name = str_trim(s.substr(0, pos)), val  = str_trim(s.substr(pos+1));
 
@@ -265,22 +313,10 @@ void Key_file::load(std::istream & is) {
     }
 }
 
-Key_file::Key_file(const Key_file & other):
-    impl(new Key_file_impl)
-{
-    impl->copy(*other.impl);
-}
-
-Key_file & Key_file::operator=(const Key_file & other) {
-    if (this != &other) {
-        impl->copy(*other.impl);
-    }
-
-    return *this;
-}
-
-Key_file::~Key_file() {
-    delete impl;
+void Key_file::load(const ustring & path) {
+    std::ifstream is(Locale().io_encode(path));
+    load(is);
+    impl->path_ = path;
 }
 
 void Key_file::save(std::ostream & os) {
@@ -291,26 +327,14 @@ void Key_file::save(std::ostream & os) {
     }
 }
 
-// static
-Key_file Key_file::load_from_file(const ustring & path) {
-    Key_file kf;
-    std::ifstream is(Locale().encode_filename(path));
-    kf.load(is);
-    kf.impl->path_ = path;
-    return kf;
-}
-
-void Key_file::save_to_file(const ustring & path) {
-    std::ofstream os(Locale().encode_filename(path));
+void Key_file::save(const ustring & path) {
+    std::ofstream os(Locale().io_encode(path));
     save(os);
 }
 
 void Key_file::save() {
-    if (impl->path_.empty()) {
-        throw user_error("Key_file::save(): was not created by load_from_file()");
-    }
-
-    save_to_file(impl->path_);
+    if (impl->path_.empty()) { throw user_error("Key_file::save(): was not loaded from file"); }
+    save(impl->path_);
 }
 
 void Key_file::set_comment_separator(char32_t comment_sep) {
@@ -387,7 +411,7 @@ void Key_file::set_boolean(Key_section & sect, const ustring & key, bool value) 
 
 void Key_file::set_booleans(Key_section & sect, const ustring & key, const std::vector<bool> & vec) {
     std::vector<ustring> sv;
-    for (auto i: vec) { sv.push_back(i ? "true" : "false"); }
+    for (bool b: vec) { sv.push_back(b ? "true" : "false"); }
     if (sect.set_value(key, str_implode(sv, impl->lsep_))) { impl->signal_changed_(); }
 }
 
@@ -397,7 +421,7 @@ void Key_file::set_integer(Key_section & sect, const ustring & key, long long va
 
 void Key_file::set_integers(Key_section & sect, const ustring & key, const std::vector<long long> & vec) {
     std::vector<ustring> sv;
-    for (auto i: vec) { sv.push_back(str_format(i)); }
+    for (long long ll: vec) { sv.push_back(str_format(ll)); }
     if (sect.set_value(key, str_implode(sv, impl->lsep_))) { impl->signal_changed_(); }
 }
 
@@ -407,7 +431,7 @@ void Key_file::set_double(Key_section & sect, const ustring & key, double value)
 
 void Key_file::set_doubles(Key_section & sect, const ustring & key, const std::vector<double> & vec) {
     std::vector<ustring> sv;
-    for (auto i: vec) { sv.push_back(str_format(i)); }
+    for (double d: vec) { sv.push_back(str_format(d)); }
     if (sect.set_value(key, str_implode(sv, impl->lsep_))) { impl->signal_changed_(); }
 }
 
@@ -434,18 +458,31 @@ std::vector<ustring> Key_file::get_strings(Key_section & sect, const ustring & k
 bool Key_file::get_boolean(Key_section & sect, const ustring & key, bool fallback) {
     auto iter = sect.find(key);
     if (iter == sect.elems_.end()) { return fallback; }
-    try { return 0 != std::stoll(iter->second, nullptr, 0); } catch (...) {}
-    return str_similar(iter->second, "true yes y on", ' ');
+
+    if (!str_similar(iter->second, bool_words_, U' ')) {
+        try { return 0 != std::stoll(iter->second, nullptr, 0); }
+        catch (...) { return false; }
+    }
+
+    return str_similar(iter->second, true_words_, U' ');
 }
 
 std::vector<bool> Key_file::get_booleans(Key_section & sect, const ustring & key) {
     std::vector<bool> v;
 
     auto iter = sect.find(key);
+
     if (iter != sect.elems_.end()) {
-        for (auto s: str_explode(iter->second, impl->lsep_)) {
-            try { v.push_back(0 != std::stoll(s, nullptr, 0)); } catch (...) {}
-            v.push_back(str_similar(s, "true yes y on", ' '));
+        for (const ustring & s: str_explode(iter->second, impl->lsep_)) {
+            if (!str_similar(s, bool_words_, U' ')) {
+                bool y = false;
+                try { y = 0 != std::stoll(s, nullptr, 0); } catch (...) {}
+                v.push_back(y);
+            }
+
+            else {
+                v.push_back(str_similar(s, true_words_, U' '));
+            }
         }
     }
 

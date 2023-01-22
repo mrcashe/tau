@@ -46,8 +46,8 @@ Icon::Icon(const ustring & icon_name, int icon_size):
 {
 }
 
-Icon::Icon(Action_base & action, int icon_size):
-    Widget(std::make_shared<Icon_impl>(action, icon_size))
+Icon::Icon(Action_base & action, int icon_size, Action_items items):
+    Widget(std::make_shared<Icon_impl>(action, icon_size, items))
 {
 }
 

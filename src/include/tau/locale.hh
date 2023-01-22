@@ -37,7 +37,7 @@
 
 namespace tau {
 
-class Locale_data;
+struct Locale_data;
 class Territory_data;
 
 /// Represents territory based on ISO territory/country codes.
@@ -132,7 +132,7 @@ public:
     const Encoding & encoding() const;
 
     /// Get encoding used for file names.
-    const Encoding & filename_encoding() const;
+    const Encoding & iocharset() const;
 
     /// Get modifier.
     std::string modifier() const;
@@ -154,10 +154,10 @@ public:
     std::string encode(const ustring & s) const;
 
     /// Convert file name to UTF-8.
-    ustring decode_filename(const std::string & s) const;
+    ustring io_decode(const std::string & s) const;
 
     /// Convert file name from UTF-8 to encoding used for filenames.
-    std::string encode_filename(const ustring & s) const;
+    std::string io_encode(const ustring & s) const;
 
     /// Get international currency symbol.
     ustring int_curr_symbol() const;
@@ -314,6 +314,7 @@ public:
 private:
 
     Locale_data * data;
+    const Locale_data & sys_data();
 };
 
 } // namespace tau

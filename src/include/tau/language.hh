@@ -35,7 +35,7 @@
 
 namespace tau {
 
-class Language_data;
+struct Language_data;
 
 /// ISO language.
 /// @ingroup i18n_group

@@ -53,11 +53,13 @@ Cursor Theme::find_cursor(const ustring & names, int size) {
 }
 
 Pixmap Theme::find_pixmap(const ustring & names) {
-    return Pixmap_impl::wrap(impl->find_pixmap(names));
+    auto pix = impl->find_pixmap(names);
+    return pix ? Pixmap_impl::wrap(pix->dup()) : Pixmap();
 }
 
 Pixmap Theme::find_icon(const ustring & names, int icon_size, const ustring & context) {
-    return Pixmap_impl::wrap(impl->find_icon(names, icon_size, context));
+    auto icon = impl->find_icon(names, icon_size, context);
+    return icon ? Pixmap_impl::wrap(icon->dup()) : Pixmap();
 }
 
 Pixmap Theme::get_icon(const ustring & names, int icon_size, const ustring & context) {

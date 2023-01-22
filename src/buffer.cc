@@ -189,7 +189,7 @@ void Buffer::save(std::ostream & os) {
 
 void Buffer::save_to_file(const ustring & path) {
     tau::Locale lc;
-    std::ofstream os(lc.encode_filename(path));
+    std::ofstream os(lc.io_encode(path));
     if (!os.good()) { throw sys_error(); }
     save(os);
     os.close();

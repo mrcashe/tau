@@ -67,10 +67,10 @@ public:
     void add_pixmap_dir(const ustring & dir);
     void add_cursor_dir(const ustring & dir);
 
-    Cursor_ptr find_cursor(const ustring & names, int size);
-    Pixmap_ptr find_pixmap(const ustring & names);
-    Pixmap_ptr find_icon(const ustring & names, int icon_size, const ustring & context=ustring());
-    Pixmap_ptr get_icon(const ustring & names, int icon_size, const ustring & context=ustring());
+    Cursor_ptr  find_cursor(const ustring & names, int size);
+    Pixmap_cptr find_pixmap(const ustring & names);
+    Pixmap_cptr find_icon(const ustring & names, int icon_size, const ustring & context=ustring());
+    Pixmap_ptr  get_icon(const ustring & names, int icon_size, const ustring & context=ustring());
 
     std::vector<ustring> list_icon_themes() const;
     std::vector<ustring> list_cursor_themes() const;
@@ -190,10 +190,11 @@ private:
     Cursor_ptr find_cursor_in_theme(int ctheme, const std::vector<ustring> & unames, std::vector<int> & seen, int size);
 
     void cache_pixmap(Pixmap_ptr pixmap, const ustring & name);
-    Pixmap_ptr uncache_pixmap(const ustring & name);
+    Pixmap_cptr uncache_pixmap(const ustring & name);
 
     void cache_icon(Pixmap_ptr icon, const ustring & name, const ustring & context, int size);
-    Pixmap_ptr uncache_icon(const ustring & name, const ustring & context, int size);
+    Pixmap_cptr uncache_icon(const ustring & name, const ustring & context, int size);
+
     int find_icon_theme(const ustring & name) const;
     int find_icon_theme_nolock(const ustring & name) const;
     Pixmap_ptr find_icon_in_dir(Icon_dir & dir, const std::vector<ustring> & unames, const ustring & context, int size);

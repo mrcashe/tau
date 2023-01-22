@@ -142,7 +142,7 @@ void Master_action::set_tooltip(const ustring & tooltip) {
 }
 
 void Master_action::unset_tooltip() {
-    if (has_tooltip()) {
+    if (!tooltip_.empty()) {
         tooltip_.clear();
         signal_tooltip_changed_(tooltip_);
     }
@@ -187,10 +187,6 @@ void Master_action::remove_accels(const ustring & key_specs) {
 void Master_action::clear_accels() {
     for (auto & accel: accels_) { signal_accel_removed_(accel); }
     accels_.clear();
-}
-
-bool Master_action::has_tooltip() const {
-    return !tooltip_.empty();
 }
 
 // ----------------------------------------------------------------------------
@@ -340,10 +336,6 @@ void Action_base::set_icon_name(const ustring & icon_name) {
     }
 }
 
-bool Action_base::has_tooltip() const {
-    return !tooltip_.empty();
-}
-
 void Action_base::set_tooltip(const ustring & tooltip) {
     if (tooltip_ != tooltip) {
         tooltip_ = tooltip;
@@ -352,7 +344,7 @@ void Action_base::set_tooltip(const ustring & tooltip) {
 }
 
 void Action_base::unset_tooltip() {
-    if (has_tooltip()) {
+    if (!tooltip_.empty()) {
         tooltip_.clear();
         signal_tooltip_changed_(tooltip_);
     }

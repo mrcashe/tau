@@ -67,10 +67,7 @@ public:
     /// Create pixmap with specified depth and size.
     Pixmap(int depth, unsigned width, unsigned height);
 
-    /// Duplicate pixmap.
-    Pixmap dup(const Pixmap & other);
-
-    /// Test if empty.
+    /// Test if pure.
     operator bool() const;
 
     /// Reset underlying implementation.
@@ -147,6 +144,9 @@ public:
 
     /// Load content from other pixmap.
     void copy(const Pixmap other);
+
+    /// Duplicate pixmap.
+    Pixmap dup() const;
 
     /// Load content from a file.
     static Pixmap load_from_file(const ustring & path);

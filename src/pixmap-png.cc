@@ -35,7 +35,7 @@
 namespace tau {
 
 Pixmap_ptr Pixmap_impl::load_png_from_file(const ustring & path) {
-    std::string lfp = Locale().encode_filename(path);
+    std::string lfp = Locale().io_encode(path);
     FILE * is = std::fopen(lfp.c_str(), "rb");
     if (!is) { throw sys_error(); }
     uint8_t header[8];

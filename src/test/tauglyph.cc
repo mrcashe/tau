@@ -674,7 +674,7 @@ int main(int argc, char * argv[]) {
     try {
         tau::ustring conf_path = tau::path_build(tau::path_user_config_dir(), tau::program_name(), "state.ini");
         tau::path_mkdir(tau::path_dirname(conf_path));
-        tau::Key_file kf = tau::Key_file::load_from_file(conf_path);
+        tau::Key_file kf(conf_path);
         tau::Timer timer(tau::fun(kf, static_cast<void (tau::Key_file::*)()>(&tau::Key_file::save)));
         kf.signal_changed().connect(tau::bind(tau::fun(timer, &tau::Timer::start), 7738, false));
 

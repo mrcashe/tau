@@ -31,9 +31,7 @@
 
 namespace tau {
 
-class Language_data {
-public:
-
+struct Language_data {
     const char * code;
     const char * ename;
     const char * scr;

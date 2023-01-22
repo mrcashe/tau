@@ -32,6 +32,7 @@
 #include <image-impl.hh>
 #include <list-impl.hh>
 #include <navigator-impl.hh>
+#include <pixmap-impl.hh>
 #include <text-impl.hh>
 #include <theme-impl.hh>
 #include <window-impl.hh>
@@ -143,7 +144,7 @@ void Navigator_impl::show_record(Rec & rec) {
         txt->signal_unselect().connect(tau::bind(fun(this, &Navigator_impl::on_file_unselect), rec.name));
         rec.br = list_->append_row(txt);
         list_->align(txt, ALIGN_START, ALIGN_CENTER);
-        Pixmap_ptr ico;
+        Pixmap_cptr ico;
 
         // Show modify date/time.
         if (date_visible_) {
@@ -170,7 +171,7 @@ void Navigator_impl::show_record(Rec & rec) {
         }
 
         if (ico) {
-            Image_ptr img = std::make_shared<Image_impl>(ico, true);
+            Image_ptr img = std::make_shared<Image_impl>(ico->dup(), true);
             list_->insert(rec.br, img, -1, true);
             list_->align(img, ALIGN_START, ALIGN_CENTER);
         }

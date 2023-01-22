@@ -121,12 +121,12 @@ public:
 
     /// Constructor with Action.
     /// Suitable for tool buttons. Uses @b MEDIUM_ICON size (see #Icon_size enum).
-    /// @param action the Action to be used.
+    /// @param action the action to be used.
     /// @param items action items to be used, see #Action_items enum.
     Button(Action & action, Action_items items=ACTION_ALL);
 
     /// Constructor with Action and icon size.
-    /// @param action the Action to be used.
+    /// @param action the action to be used.
     /// @param icon_size the icon size.
     /// @param items action items to be used, see #Action_items enum.
     Button(Action & action, int icon_size, Action_items items=ACTION_ALL);
@@ -216,12 +216,12 @@ public:
 
     /// Constructor with Action.
     /// Suitable for tool buttons. Uses @b MEDIUM_ICON size (see #Icon_size enum).
-    /// @param action the Action to be used.
+    /// @param action the action to be used.
     /// @param items action items to be used, see #Action_items enum.
     Toggle(Toggle_action & action, Action_items items=ACTION_ALL);
 
     /// Constructor with Action and icon size.
-    /// @param action the Action to be used.
+    /// @param action the action to be used.
     /// @param icon_size the icon size.
     /// @param items action items to be used, see #Action_items enum.
     Toggle(Toggle_action & action, int icon_size, Action_items items=ACTION_ALL);

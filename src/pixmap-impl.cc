@@ -32,7 +32,7 @@
 
 namespace tau {
 
-void Pixmap_impl::copy(Pixmap_cptr other) {
+void Pixmap_impl::copy(const Pixmap_impl * other) {
     int iwidth = other->size().width(), iheight = other->size().height();
 
     for (int y = 0; y < iheight; ++y) {
@@ -47,10 +47,9 @@ void Pixmap_impl::put_pixel(const Point & pt, const Color & c) {
     fill_rectangles(&r, 1, c);
 }
 
-// static
-Pixmap_ptr Pixmap_impl::dup(Pixmap_cptr other) {
-    Pixmap_ptr pix = create(other->depth(), other->size());
-    pix->copy(other);
+Pixmap_ptr Pixmap_impl::dup() const {
+    Pixmap_ptr pix = create(depth(), size());
+    pix->copy(this);
     return pix;
 }
 

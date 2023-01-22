@@ -121,7 +121,7 @@ public:
     Font_file_impl(const ustring & fp):
         path_(fp)
     {
-        std::ifstream is(Locale().encode_filename(path_), std::ios::binary);
+        std::ifstream is(Locale().io_encode(path_), std::ios::binary);
 
         char hdr[12];
         is.read(hdr, 12);
@@ -172,7 +172,7 @@ public:
     }
 
     Font_face_ptr face(Font_file_ptr file, const ustring & family, const ustring & face) override {
-        std::ifstream is(Locale().encode_filename(path_), std::ios::binary);
+        std::ifstream is(Locale().io_encode(path_), std::ios::binary);
         preload(is);
         auto zero = std::make_shared<Master_glyph>();
         load_glyph(is, 0, zero);
@@ -200,7 +200,7 @@ public:
         std::vector<Master_glyph_ptr> gs;
 
         if (family == family_ && face == facename_ && !str.empty()) {
-            std::ifstream is(Locale().encode_filename(path_), std::ios::binary);
+            std::ifstream is(Locale().io_encode(path_), std::ios::binary);
             preload(is);
 
             for (char32_t wc: str) {
@@ -223,7 +223,7 @@ public:
 
     Master_glyph_ptr glyph(const ustring & family, const ustring & face, char32_t wc) override {
         if (family == family_ && face == facename_) {
-            std::ifstream is(Locale().encode_filename(path_), std::ios::binary);
+            std::ifstream is(Locale().io_encode(path_), std::ios::binary);
             preload(is);
             uint16_t gindex = glyph_index(wc);
 

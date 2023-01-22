@@ -214,6 +214,13 @@ bool str_similar(const ustring & test, const std::vector<ustring> & vars);
 /// @ingroup string_group
 bool str_similar(const ustring & test, const ustring & vars, char32_t delimiter);
 
+/// Test strings are similar.
+/// @param test testing string.
+/// @param vars variant(s) for compare against to.
+/// @param delimiters variant delimiter characters for use with str_explode().
+/// @ingroup string_group
+bool str_similar(const ustring & test, const ustring & vars, const ustring & delimiters);
+
 /// Get newline characters.
 /// @ingroup string_group
 const ustring & str_newlines();

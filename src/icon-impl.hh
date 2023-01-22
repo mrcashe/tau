@@ -37,27 +37,24 @@ class Icon_impl: public Image_impl {
 public:
 
     Icon_impl();
-    Icon_impl(const ustring & icon_name, unsigned icon_size);
-    Icon_impl(Action_base & action, unsigned icon_size);
+    Icon_impl(const ustring & icon_name, int icon_size);
+    Icon_impl(Action_base & action, int icon_size, Action_items items=ACTION_ALL);
 
-    void assign(const ustring & icon_name, unsigned icon_size);
+    void assign(const ustring & icon_name, int icon_size);
     void set_icon_name(const ustring & icon_name);
     ustring icon_name() const;
-    void set_icon_size(unsigned icon_size);
-    unsigned icon_size() const;
+    void set_icon_size(int icon_size);
+    int icon_size() const { return icon_size_; }
 
 private:
 
-    void init();
-    void init_action(Action_base & action);
     void on_display();
     void update_pixmap();
-    void on_action_tooltip(const ustring & tooltip);
 
 private:
 
-    ustring     icon_name_;
-    unsigned   icon_size_;
+    ustring icon_name_;
+    int     icon_size_;
 };
 
 } // namespace tau

@@ -360,13 +360,17 @@ bool str_similar(const ustring & test, const std::vector<ustring> & vars) {
 }
 
 bool str_similar(const ustring & test, const ustring & vars, char32_t delimiter) {
-    if (0 == delimiter) {
+    if (U'\0' == delimiter) {
         return str_similar(test, vars);
     }
 
     else {
         return str_similar(test, str_explode(vars, delimiter));
     }
+}
+
+bool str_similar(const ustring & test, const ustring & vars, const ustring & delimiters) {
+    return str_similar(test, str_explode(vars, delimiters));
 }
 
 ustring str_bytes(uintmax_t nbytes, bool si) {

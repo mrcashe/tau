@@ -484,9 +484,7 @@ const Static_data * find_sdata(const tau::Language & lang, const tau::Territory 
 
 namespace tau {
 
-class Locale_data {
-public:
-
+struct Locale_data {
     Language            lang;
     Territory           terr;
     Encoding            enc;            // System encoding.
@@ -496,31 +494,6 @@ public:
 };
 
 } // namespace tau
-
-// ----------------------------------------------------------------------------
-// ----------------------------------------------------------------------------
-
-namespace {
-
-const tau::Locale_data & sys_data() {
-    static tau::Locale_data sd;
-    static bool init = false;
-
-    if (!init) {
-        init = true;
-        std::string spec = tau::locale_spec();
-        sd.lang = tau::Language(tau::locale_language(spec));
-        sd.terr = tau::Territory(tau::locale_territory(spec));
-        sd.enc = tau::Encoding(tau::locale_encoding(spec));
-        sd.fenc = tau::Encoding(tau::filename_encoding());
-        sd.mod = tau::locale_modifier(spec);
-        sd.sdata = find_sdata(sd.lang, sd.terr);
-    }
-
-    return sd;
-}
-
-} // anonymous namespace
 
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
@@ -542,7 +515,7 @@ Locale::Locale(const std::string & spec) {
         data->lang = Language(locale_language(spec));
         data->terr = Territory(locale_territory(spec));
         data->enc = Encoding(locale_encoding(spec));
-        data->fenc = Encoding(tau::filename_encoding());
+        data->fenc = Encoding(tau::iocharset());
         data->mod = locale_modifier(spec);
         data->sdata = find_sdata(data->lang, data->terr);
     }
@@ -552,13 +525,31 @@ Locale::Locale(const std::string & spec) {
     }
 }
 
+const tau::Locale_data & Locale::sys_data() {
+    static tau::Locale_data sd;
+    static bool init = false;
+
+    if (!init) {
+        init = true;
+        std::string spec = tau::locale_spec();
+        sd.lang = tau::Language(tau::locale_language(spec));
+        sd.terr = tau::Territory(tau::locale_territory(spec));
+        sd.enc = tau::Encoding(tau::locale_encoding(spec));
+        sd.fenc = tau::Encoding(tau::iocharset());
+        sd.mod = tau::locale_modifier(spec);
+        sd.sdata = find_sdata(sd.lang, sd.terr);
+    }
+
+    return sd;
+}
+
 Locale::Locale(const Language & lang, const Territory & terr, const std::string & modifier):
     data(new Locale_data)
 {
     data->lang = lang;
     data->terr = terr;
     data->mod = modifier;
-    data->fenc = Encoding(tau::filename_encoding());
+    data->fenc = Encoding(tau::iocharset());
     data->sdata = find_sdata(data->lang, data->terr);
 }
 
@@ -568,7 +559,7 @@ Locale::Locale(const Language & lang, const Territory & terr, const Encoding & e
     data->lang = lang;
     data->terr = terr;
     data->enc = enc;
-    data->fenc = Encoding(tau::filename_encoding());
+    data->fenc = Encoding(tau::iocharset());
     data->mod = modifier;
     data->sdata = find_sdata(data->lang, data->terr);
 }
@@ -579,7 +570,7 @@ Locale::Locale(const Locale & other):
     data->lang = other.data->lang;
     data->terr = other.data->terr;
     data->enc = other.data->enc;
-    data->fenc = Encoding(tau::filename_encoding());
+    data->fenc = Encoding(tau::iocharset());
     data->mod = other.data->mod;
     data->sdata = other.data->sdata;
 }
@@ -589,7 +580,7 @@ Locale & Locale::operator=(const Locale & other) {
         data->lang = other.data->lang;
         data->terr = other.data->terr;
         data->enc = other.data->enc;
-        data->fenc = Encoding(tau::filename_encoding());
+        data->fenc = Encoding(tau::iocharset());
         data->mod = other.data->mod;
         data->sdata = other.data->sdata;
     }
@@ -635,7 +626,7 @@ const Encoding & Locale::encoding() const {
     return data->enc;
 }
 
-const Encoding & Locale::filename_encoding() const {
+const Encoding & Locale::iocharset() const {
     return data->fenc;
 }
 
@@ -679,11 +670,11 @@ std::string Locale::encode(const ustring & s) const {
     return data->enc.encode(s);
 }
 
-ustring Locale::decode_filename(const std::string & s) const {
+ustring Locale::io_decode(const std::string & s) const {
     return data->fenc.decode(s);
 }
 
-std::string Locale::encode_filename(const ustring & s) const {
+std::string Locale::io_encode(const ustring & s) const {
     return data->fenc.encode(s);
 }
 

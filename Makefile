@@ -71,7 +71,8 @@ xz:
 	@cd ../; \
 	tar -cJf tau-$(shell date +%Y%m%d).tar.xz \
 	    tau/share tau/doc tau/src tau/sup \
-	    `find tau -maxdepth 1 ! -type d`
+	    tau/AUTHORS* tau/configure tau/COPYING* tau/Makefile* \
+	    tau/README* tau/VERSION
 
 .PHONY: en-host su-host rm-host en-a en-so en-test su-a su-so su-test rm-a rm-so rm-test
 

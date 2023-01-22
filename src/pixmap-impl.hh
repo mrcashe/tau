@@ -60,7 +60,7 @@ public:
 
     signal<void()> & signal_changed() { return signal_changed_; }
 
-    void copy(Pixmap_cptr other);
+    void copy(const Pixmap_impl * other);
 
     void put_pixel(const Point & pt, const Color & c);
     void put_pixel(int x, int y, const Color & c) { put_pixel(Point(x, y), c); }
@@ -74,11 +74,9 @@ public:
 
     static Pixmap_ptr create(int depth, Pixmap_cptr other) {
         Pixmap_ptr pix = create(depth, other->size());
-        pix->copy(other);
+        pix->copy(other.get());
         return pix;
     }
-
-    static Pixmap_ptr dup(Pixmap_cptr other);
 
     static Pixmap_ptr load_xpm_from_file(const ustring & path);
     static Pixmap_ptr load_xpm_from_string(const ustring & s);
@@ -87,6 +85,8 @@ public:
     static Pixmap_ptr load_png_from_file(const ustring & path);
     static Pixmap_ptr load_ico_from_file(const ustring & path);
     static Pixmap_ptr load_from_file(const ustring & path);
+
+    Pixmap_ptr dup() const;
 
     // Overriden by Pixmap_xcb.
     // Overriden by Pixmap_win.

@@ -58,7 +58,7 @@ void Toplevel_impl::set_icon(Pixmap_ptr icon) {
 
 void Toplevel_impl::set_icon(const ustring & icon_name, unsigned icon_size) {
     if (auto pix = Theme_impl::root()->find_icon(icon_name, icon_size)) {
-        winface_->set_icon(pix);
+        winface_->set_icon(pix->dup());
         icon_name_ = icon_name;
         icon_size_ = icon_size;
 
@@ -70,7 +70,7 @@ void Toplevel_impl::set_icon(const ustring & icon_name, unsigned icon_size) {
 
 void Toplevel_impl::on_icon_theme_changed() {
     if (auto pix = Theme_impl::root()->find_icon(icon_name_, icon_size_)) {
-        winface_->set_icon(pix);
+        winface_->set_icon(pix->dup());
     }
 }
 

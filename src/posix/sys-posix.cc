@@ -88,7 +88,7 @@ std::string locale_spec() {
     return "C";
 }
 
-std::string filename_encoding() {
+std::string iocharset() {
     return locale_encoding();
 }
 
@@ -217,21 +217,21 @@ ustring path_cwd() {
     char wd[1+PATH_MAX];
 
     if (getcwd(wd, PATH_MAX)) { return
-        Locale().decode_filename(wd);
+        Locale().io_decode(wd);
     }
 
     return ustring();
 }
 
 std::vector<ustring> path_list(const ustring & path) {
-    DIR * d = opendir(Locale().encode_filename(path).c_str());
+    DIR * d = opendir(Locale().io_encode(path).c_str());
     if (!d) { throw sys_error(); }
     struct dirent * de;
     std::vector<ustring> v;
 
     do {
         de = readdir(d);
-        if (de) { v.push_back(Locale().decode_filename(de->d_name)); }
+        if (de) { v.push_back(Locale().io_decode(de->d_name)); }
     } while (de);
 
     closedir(d);
@@ -242,7 +242,7 @@ std::vector<ustring> path_glob(const ustring & mask) {
     std::vector<ustring> v;
 
     glob_t gl;
-    int result = glob(Locale().encode_filename(mask).c_str(), GLOB_NOSORT|GLOB_TILDE, 0, &gl);
+    int result = glob(Locale().io_encode(mask).c_str(), GLOB_NOSORT|GLOB_TILDE, 0, &gl);
 
     if (GLOB_NOSPACE == result) {
         throw std::bad_alloc();
@@ -254,7 +254,7 @@ std::vector<ustring> path_glob(const ustring & mask) {
 
     else if (0 == result) {
         for (std::size_t i = 0; i < gl.gl_pathc; ++i) {
-            v.push_back(Locale().decode_filename(gl.gl_pathv[i]));
+            v.push_back(Locale().io_decode(gl.gl_pathv[i]));
         }
     }
 
@@ -270,7 +270,7 @@ void path_mkdir(const ustring & path) {
     if (!file_is_dir(path)) {
         ustring parent = path_dirname(path);
         if (!file_exists(parent)) { path_mkdir(parent); }
-        if (0 != mkdir(Locale().encode_filename(path).c_str(), 0755)) { throw sys_error(path); }
+        if (0 != mkdir(Locale().io_encode(path).c_str(), 0755)) { throw sys_error(path); }
     }
 }
 
@@ -282,10 +282,10 @@ ustring path_dirname(const ustring & path) {
 
 ustring path_real(const ustring & path) {
     Locale loc;
-    char * res_path = realpath(loc.encode_filename(path).c_str(), nullptr);
+    char * res_path = realpath(loc.io_encode(path).c_str(), nullptr);
 
     if (res_path) {
-        ustring res = loc.decode_filename(res_path);
+        ustring res = loc.io_decode(res_path);
         std::free(res_path);
         return res;
     }
@@ -295,7 +295,7 @@ ustring path_real(const ustring & path) {
 
 bool path_match(const ustring & pattern, const ustring & path) {
     Locale loc;
-    return 0 == fnmatch(loc.encode_filename(pattern).c_str(), loc.encode_filename(path).c_str(), FNM_PATHNAME|FNM_PERIOD);
+    return 0 == fnmatch(loc.io_encode(pattern).c_str(), loc.io_encode(path).c_str(), FNM_PATHNAME|FNM_PERIOD);
 }
 
 std::vector<ustring> path_which(const ustring & cmd) {
@@ -305,7 +305,7 @@ std::vector<ustring> path_which(const ustring & cmd) {
         char * env = getenv("PATH");
 
         if (env) {
-            auto vv = str_explode(Locale().decode_filename(env), ':');
+            auto vv = str_explode(Locale().io_decode(env), ':');
 
             for (const ustring & s: vv) {
                 ustring path = path_build(s, cmd);
@@ -376,7 +376,7 @@ void setup_sysinfo_posix() {
     }
 
     sysinfo_.locale = Locale().code();
-    sysinfo_.iocharset = Locale().filename_encoding().name();
+    sysinfo_.iocharset = Locale().iocharset().name();
 }
 
 std::string locale_encoding() {

@@ -306,7 +306,7 @@ std::vector<ustring> path_which(const ustring & cmd) {
         char * env = getenv("PATH");
 
         if (env) {
-            auto vv = str_explode(Locale().decode_filename(env), ':');
+            auto vv = str_explode(Locale().io_decode(env), ':');
 
             for (const ustring & s: vv) {
                 ustring path = path_build(s, cmd);
@@ -485,7 +485,7 @@ void setup_sysinfo_win() {
     }
 
     sysinfo_.locale = Locale().code();
-    sysinfo_.iocharset = Locale().filename_encoding().name();
+    sysinfo_.iocharset = Locale().iocharset().name();
 }
 
 std::string locale_spec() {
@@ -528,7 +528,7 @@ std::string locale_spec() {
     return str_format(iso639, '_', iso3166, ".CP", GetACP(), s);
 }
 
-std::string filename_encoding() {
+std::string iocharset() {
     return str_format("CP", GetOEMCP());
 }
 

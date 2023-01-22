@@ -39,39 +39,38 @@ Icon_impl::Icon_impl():
     set_transparent();
 }
 
-Icon_impl::Icon_impl(const ustring & icon_name, unsigned icon_size):
+Icon_impl::Icon_impl(const ustring & icon_name, int icon_size):
     Image_impl(),
     icon_name_(icon_name),
     icon_size_(icon_size)
 {
-    init();
+    signal_display().connect(fun(this, &Icon_impl::on_display));
     set_transparent();
 }
 
-Icon_impl::Icon_impl(Action_base & action, unsigned icon_size):
-    Image_impl()
+Icon_impl::Icon_impl(Action_base & action, int icon_size, Action_items items):
+    Image_impl(),
+    icon_size_(icon_size)
 {
-    icon_size_ = icon_size;
-    init();
+    signal_display().connect(fun(this, &Icon_impl::on_display));
     set_transparent();
-    init_action(action);
-}
-
-void Icon_impl::init_action(Action_base & action) {
     icon_name_ = action.icon_name();
     if (!action.enabled()) { freeze(); }
     if (!action.visible()) { disappear(); }
-    if (action.has_tooltip()) { set_tooltip(action.tooltip()); }
     action.signal_disable().connect(fun(this, &Icon_impl::freeze));
     action.signal_enable().connect(fun(this, &Icon_impl::thaw));
     action.signal_hide().connect(fun(this, &Icon_impl::disappear));
     action.signal_show().connect(fun(this, &Icon_impl::appear));
-    action.signal_icon_changed().connect(fun(this, &Icon_impl::set_icon_name));
-    action.signal_tooltip_changed().connect(fun(this, &Icon_impl::on_action_tooltip));
-}
 
-void Icon_impl::init() {
-    signal_display().connect(fun(this, &Icon_impl::on_display));
+    if (items & ACTION_TOOLTIP) {
+        set_tooltip(action.tooltip());
+        action.signal_tooltip_changed().connect(fun(this, static_cast<void(Widget_impl::*)(const ustring &)>(&Widget_impl::set_tooltip)));
+    }
+
+    if (items & ACTION_ICON) {
+        assign(action.icon_name(), icon_size_);
+        action.signal_icon_changed().connect(fun(this, &Icon_impl::set_icon_name));
+    }
 }
 
 void Icon_impl::on_display() {
@@ -85,7 +84,7 @@ void Icon_impl::update_pixmap() {
     set_pixmap(Theme_impl::root()->get_icon(icon_name_, icon_size_), true);
 }
 
-void Icon_impl::assign(const ustring & icon_name, unsigned icon_size) {
+void Icon_impl::assign(const ustring & icon_name, int icon_size) {
     if (icon_name_ != icon_name || icon_size_ != icon_size) {
         icon_name_ = icon_name;
         icon_size_ = icon_size;
@@ -104,20 +103,11 @@ ustring Icon_impl::icon_name() const {
     return icon_name_;
 }
 
-void Icon_impl::set_icon_size(unsigned icon_size) {
+void Icon_impl::set_icon_size(int icon_size) {
     if (icon_size_ != icon_size) {
         icon_size_ = icon_size;
         update_pixmap();
     }
-}
-
-unsigned Icon_impl::icon_size() const {
-    return icon_size_;
-}
-
-void Icon_impl::on_action_tooltip(const ustring & tooltip) {
-    if (tooltip.empty()) { unset_tooltip(); }
-    else { set_tooltip(tooltip); }
 }
 
 } // namespace tau

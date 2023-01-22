@@ -65,7 +65,7 @@ bool locale_is_utf8(const std::string & locale);
 bool locale_is_utf8();
 
 // Get encoding used for file names.
-std::string filename_encoding();
+std::string iocharset();
 
 } // namespace tau
 

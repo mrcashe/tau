@@ -198,7 +198,7 @@ void Image_impl::start_timer_if_needed() {
 void Image_impl::on_parent() {
     if (film_.empty() && !pixmap_name_.empty()) {
         if (auto pix = Theme_impl::root()->find_pixmap(pixmap_name_)) {
-            set_pixmap(pix, transparent_);
+            set_pixmap(pix->dup(), transparent_);
         }
     }
 }

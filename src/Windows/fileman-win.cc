@@ -77,7 +77,7 @@ protected:
                         UINT dtype = GetDriveType(buf+i);
 
                         if (DRIVE_UNKNOWN != dtype && DRIVE_NO_ROOT_DIR != dtype) {
-                            ustring name = loc.encode_filename(buf+i);
+                            ustring name = loc.io_encode(buf+i);
                             if (DRIVE_REMOVABLE == dtype) { removables.push_back(name); }
                             else if (DRIVE_CDROM == dtype) { cdroms.push_back(name); }
                             else if (DRIVE_REMOTE == dtype) { remotes.push_back(name); }

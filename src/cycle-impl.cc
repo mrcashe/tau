@@ -28,6 +28,7 @@
 #include <button-impl.hh>
 #include <cycle-impl.hh>
 #include <image-impl.hh>
+#include <pixmap-impl.hh>
 #include <table-impl.hh>
 #include <text-impl.hh>
 #include <theme-impl.hh>
@@ -75,11 +76,11 @@ Cycle_impl::Cycle_impl(Border_style bs):
     auto theme = Theme_impl::root();
 
     auto pixmap = theme->find_pixmap("picto-dec");
-    if (pixmap) { down_->set_image(std::make_shared<Image_impl>(pixmap, true)); }
+    if (pixmap) { down_->set_image(std::make_shared<Image_impl>(pixmap->dup(), true)); }
     else { down_->hint_size(8, 4); }
 
     pixmap = theme->find_pixmap("picto-inc");
-    if (pixmap) { up_->set_image(std::make_shared<Image_impl>(pixmap, true)); }
+    if (pixmap) { up_->set_image(std::make_shared<Image_impl>(pixmap->dup(), true)); }
     else { up_->hint_size(8, 4); }
 
     up_action_.connect(fun(card_, &Card_impl::show_next));

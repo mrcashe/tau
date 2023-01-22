@@ -48,7 +48,7 @@ void Fileinfo_posix::update_stat() {
     bytes_ = 0;
 
     if (!uri_.empty()) {
-        std::string path = Locale().encode_filename(path_real(uri_));
+        std::string path = Locale().io_encode(path_real(uri_));
         struct stat st;
 
         if (0 > lstat(path.c_str(), &st)) {
@@ -100,7 +100,7 @@ bool Fileinfo_posix::is_removable() {
 
 // Overrides pure Fileinfo_impl.
 void Fileinfo_posix::rm(int opts, slot<void(int)> slot_async) {
-    int result = unlink(Locale().encode_filename(uri_).c_str());
+    int result = unlink(Locale().io_encode(uri_).c_str());
     if (-1 == result) { throw sys_error(); }
 }
 

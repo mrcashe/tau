@@ -195,7 +195,7 @@ for opt in $opts; do
             targets=$(echo -n $opt |sed s/--conf-targets=//)
             [ -n "$targets" ] && conf_targets+=" $targets"
         ;;
-        
+
         --disable-doc)
             disable_doc='YES'
         ;;
@@ -388,14 +388,14 @@ if test -n "$mxe_prefix"; then
     # Checking for MXE libraries existance
     echo ""
     echo "$arg0: checking for MXE libraries existance..."
-    
+
     if [ 'YES' != "$CHK_FILE" ]; then
         mxe_syslibs='libgdi32.a libmsimg32.a libole32.a libshlwapi.a'
         mxe_sysbase='libpng libz libpthread'
         mxe_libtype='.a'
         [ -n "$(echo -n $mxe_target | grep shared)" ] && mxe_libtype='.dll.a'
         for sb in $mxe_sysbase; do mxe_syslibs+=" $sb$mxe_libtype"; done
-    
+
         for lib in $mxe_syslibs; do
             printf "  - "; chk_file "$mxe_prefix/$mxe_target/lib/$lib" 'OPTIONAL'
         done
@@ -516,22 +516,39 @@ echo "//END" >>$confcc
 mkdir -vp "$confdir/$plat"
 confcc="$confdir/$plat/conf-$plat.cc"
 cp "$supdir/LICENSE.cct" $confcc
-echo "#include <tau/sysinfo.hh>"            >>$confcc
-echo ""                                     >>$confcc
-echo "namespace tau {"                      >>$confcc
-echo ""                                     >>$confcc
-echo "Sysinfo sysinfo_ = {"                 >>$confcc
-echo "    .Major    = $Major_,"             >>$confcc
-echo "    .Minor    = $Minor_,"             >>$confcc
-echo "    .Micro    = $Micro_,"             >>$confcc
-echo "    .plat     = \"$plat\","           >>$confcc
-echo "    .uname    = \"$plat\","           >>$confcc
-echo "    .target   = \"$target\","         >>$confcc
-echo "};"                                   >>$confcc
-echo ""                                     >>$confcc
-echo "} // namespace tau"                   >>$confcc
-echo ""                                     >>$confcc
-echo "//END"                                >>$confcc
+echo "#include <tau/sysinfo.hh>"             >>$confcc
+echo ""                                      >>$confcc
+echo "namespace tau {"                       >>$confcc
+echo ""                                      >>$confcc
+echo "Sysinfo sysinfo_ = {"                  >>$confcc
+echo "    .Major    = $Major_,"              >>$confcc
+echo "    .Minor    = $Minor_,"              >>$confcc
+echo "    .Micro    = $Micro_,"              >>$confcc
+echo "    .plat     = \"$plat\","            >>$confcc
+echo "    .uname    = \"$plat\","            >>$confcc
+echo "    .osmajor  = 0,"                    >>$confcc
+echo "    .osminor  = 0,"                    >>$confcc
+echo "    .distrib  = \"\","                 >>$confcc
+echo "    .distrib_major = 0,"               >>$confcc
+echo "    .distrib_minor = 0,"               >>$confcc
+echo "    .distrib_codename = \"\","         >>$confcc
+echo "    .distrib_description = \"\","      >>$confcc
+echo "    .target    = \"$target\","         >>$confcc
+echo "    .abits     = 0,"                   >>$confcc
+echo "    .ibits     = 0,"                   >>$confcc
+echo "    .lbits     = 0,"                   >>$confcc
+echo "    .llbits    = 0,"                   >>$confcc
+echo "    .mbits     = 0,"                   >>$confcc
+echo "    .wcbits    = 0,"                   >>$confcc
+echo "    .shared    = false,"               >>$confcc
+echo "    .sopath    = \"\","                >>$confcc
+echo "    .locale    = \"C\","               >>$confcc
+echo "    .iocharset = \"\""                 >>$confcc
+echo "};"                                    >>$confcc
+echo ""                                      >>$confcc
+echo "} // namespace tau"                    >>$confcc
+echo ""                                      >>$confcc
+echo "//END"                                 >>$confcc
 
 # ---------------------------------------------------------------------------
 # Generate platform dependent src/Windows/conf-Windows.cc file.
@@ -542,22 +559,39 @@ if test -n "$mxe_prefix"; then
     mkdir -vp "$confdir/Windows"
     confcc="$confdir/Windows/conf-Windows.cc"
     cp "$supdir/LICENSE.cct" $confcc
-    echo "#include <tau/sysinfo.hh>"        >>$confcc
-    echo ""                                 >>$confcc
-    echo "namespace tau {"                  >>$confcc
-    echo ""                                 >>$confcc
-    echo "Sysinfo sysinfo_ = {"             >>$confcc
-    echo "    .Major    = $Major_,"         >>$confcc
-    echo "    .Minor    = $Minor_,"         >>$confcc
-    echo "    .Micro    = $Micro_,"         >>$confcc
-    echo "    .plat     = \"Windows\","     >>$confcc
-    echo "    .uname    = \"Windows\","     >>$confcc
-    echo "    .target   = \"$mxe_target\"," >>$confcc
-    echo "};"                               >>$confcc
-    echo ""                                 >>$confcc
-    echo "} // namespace tau"               >>$confcc
-    echo ""                                 >>$confcc
-    echo "//END"                            >>$confcc
+    echo "#include <tau/sysinfo.hh>"         >>$confcc
+    echo ""                                  >>$confcc
+    echo "namespace tau {"                   >>$confcc
+    echo ""                                  >>$confcc
+    echo "Sysinfo sysinfo_ = {"              >>$confcc
+    echo "    .Major     = $Major_,"         >>$confcc
+    echo "    .Minor     = $Minor_,"         >>$confcc
+    echo "    .Micro     = $Micro_,"         >>$confcc
+    echo "    .plat      = \"Windows\","     >>$confcc
+    echo "    .uname     = \"Windows\","     >>$confcc
+    echo "    .osmajor   = 0,"               >>$confcc
+    echo "    .osminor   = 0,"               >>$confcc
+    echo "    .distrib   = \"\","            >>$confcc
+    echo "    .distrib_major = 0,"           >>$confcc
+    echo "    .distrib_minor = 0,"           >>$confcc
+    echo "    .distrib_codename = \"\","     >>$confcc
+    echo "    .distrib_description = \"\","  >>$confcc
+    echo "    .target    = \"$mxe_target\"," >>$confcc
+    echo "    .abits     = 0,"               >>$confcc
+    echo "    .ibits     = 0,"               >>$confcc
+    echo "    .lbits     = 0,"               >>$confcc
+    echo "    .llbits    = 0,"               >>$confcc
+    echo "    .mbits     = 0,"               >>$confcc
+    echo "    .wcbits    = 0,"               >>$confcc
+    echo "    .shared    = false,"           >>$confcc
+    echo "    .sopath    = \"\","            >>$confcc
+    echo "    .locale    = \"C\","           >>$confcc
+    echo "    .iocharset = \"\""             >>$confcc
+    echo "};"                                >>$confcc
+    echo ""                                  >>$confcc
+    echo "} // namespace tau"                >>$confcc
+    echo ""                                  >>$confcc
+    echo "//END"                             >>$confcc
 fi
 
 # ---------------------------------------------------------------------------

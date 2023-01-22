@@ -43,17 +43,33 @@ namespace tau {
 class Key_file: public trackable {
 public:
 
+    /// @name Constructors and operators
+    /// @{
+
     /// Default constructor.
+    ///
     /// @param list_sep list separator character.
     /// @param comment_sep list separator character.
-    Key_file(char32_t list_sep=0, char32_t comment_sep=0);
+    Key_file(char32_t list_sep=U'\0', char32_t comment_sep=U'\0');
 
     /// Constructor with stream.
+    ///
+    /// If the input stream isn't good(), the constructor does nothing.
+    ///
     /// @param is the input stream.
     /// @param list_sep list separator character.
     /// @param comment_sep list separator character.
-    /// If the input stream is isn't good, the constructor does not do anything.
-    Key_file(std::istream & is, char32_t list_sep=0, char32_t comment_sep=0);
+    Key_file(std::istream & is, char32_t list_sep=U'\0', char32_t comment_sep=U'\0');
+
+    /// Constructor with file name.
+    ///
+    /// Given path saved and can be used later to save content using
+    /// save() method (without arguments).
+    ///
+    /// @param path path to the file.
+    /// @param list_sep list separator character.
+    /// @param comment_sep list separator character.
+    Key_file(const ustring & path, char32_t list_sep=U'\0', char32_t comment_sep=U'\0');
 
     /// Copy constructor.
     Key_file(const Key_file & other);
@@ -61,23 +77,38 @@ public:
     /// Copy operator,
     Key_file & operator=(const Key_file & other);
 
+    /// Move constructor.
+    Key_file(Key_file && other);
+
+    /// Move operator,
+    Key_file & operator=(Key_file && other);
+
     /// Destructor.
    ~Key_file();
 
+    /// @}
     /// @name Input/Output
     /// @{
 
-    /// Create from file.
-    static Key_file load_from_file(const ustring & path);
-
     /// Load from stream.
+    /// @throw sys_error in case of OS error.
     void load(std::istream & is);
 
+    /// Load from file.
+    ///
+    /// If file was successfuly loaded, given path stored and can be used later
+    /// to save file using save() method (without arguments).
+    ///
+    /// @throw sys_error in case of OS error.
+    void load(const ustring & path);
+
     /// Save to stream.
+    /// @throw sys_error in case of OS error.
     void save(std::ostream & os);
 
     /// Save to file.
-    void save_to_file(const ustring & path);
+    /// @throw sys_error in case of OS error.
+    void save(const ustring & path);
 
     /// Special form of save_to_file() method.
     ///
@@ -87,15 +118,133 @@ public:
     /// anyway should try to perform write operation.
     ///
     /// @throw user_error if key file wasn't created using load_from_file.
+    /// @throw sys_error in case of OS error.
     void save();
 
     /// @}
+    /// @name Getters
+    /// @{
+
+    /// Gets string value associated with key key under sect section.
+    /// @param sect section.
+    /// @param key key name.
+    /// @param fallback value to be returned if key not found.
+    /// @return key value or fallback value if key not found.
+    ustring get_string(Key_section & sect, const ustring & key, const ustring & fallback=ustring());
+
+    /// Gets a list of strings associated with key key under sect section.
+    /// @param sect section.
+    /// @param key key name.
+    /// @return list of values or empty list if not found.
+    std::vector<ustring> get_strings(Key_section & sect, const ustring & key);
+
+    /// Gets boolean value associated with key key under sect section.
+    /// @param sect section.
+    /// @param key key name.
+    /// @param fallback value to be returned if key not found.
+    /// @return key value or fallback if key not found.
+    bool get_boolean(Key_section & sect, const ustring & key, bool fallback=false);
+
+    /// Gets a list of booleans associated with key key under sect section.
+    /// @param sect section.
+    /// @param key key name.
+    /// @return list of values or empty list if not found.
+    std::vector<bool> get_booleans(Key_section & sect, const ustring & key);
+
+    /// Gets integer value associated with key key under sect section.
+    /// @param sect section.
+    /// @param key key name.
+    /// @param fallback value to be returned if key not found.
+    /// @return key value or fallback if key not found.
+    long long get_integer(Key_section & sect, const ustring & key, long long fallback=0);
+
+    /// Gets a list of integers associated with key key under sect section.
+    /// @param sect section.
+    /// @param key key name.
+    /// @return list of values or empty list if not found.
+    std::vector<long long> get_integers(Key_section & sect, const ustring & key);
+
+    /// Gets double value associated with key key under sect section.
+    /// @param sect section.
+    /// @param key key name.
+    /// @param fallback value to be returned if key not found.
+    /// @return key value or fallback if key not found.
+    double get_double(Key_section & sect, const ustring & key, double fallback=0.0);
+
+    /// Gets a list of doubles associated with key key under sect section.
+    /// @param sect section.
+    /// @param key key name.
+    /// @return list of values or empty list if not found.
+    std::vector<double> get_doubles(Key_section & sect, const ustring & key);
+
+    /// Get comment above section sect.
+    ustring comment(Key_section & sect);
+
+    /// @}
+    /// @name Setters
+    /// @{
+
+    /// Places comment above sect.
+    void set_comment(Key_section & sect, const ustring & comment);
+
+    /// Associates a new string value with key key under sect.
+    /// @param sect section.
+    /// @param key key name.
+    /// @param value value to be saved.
+    void set_string(Key_section & sect, const ustring & key, const ustring & value);
+
+    /// Sets a list of string values for key key under sect.
+    /// @param sect section.
+    /// @param key key name.
+    /// @param vec vector of values.
+    void set_strings(Key_section & sect, const ustring & key, const std::vector<ustring> & vec);
+
+    /// Associates a new boolean value with key key under sect.
+    /// @param sect section.
+    /// @param key key name.
+    /// @param value value to be saved.
+    void set_boolean(Key_section & sect, const ustring & key, bool value);
+
+    /// Sets a list of booleans for the key key under sect.
+    /// @param sect section.
+    /// @param key key name.
+    /// @param vec vector of values.
+    void set_booleans(Key_section & sect, const ustring & key, const std::vector<bool> & vec);
+
+    /// Associates a new integer value with key key under sect.
+    /// @param sect section.
+    /// @param key key name.
+    /// @param value value to be saved.
+    void set_integer(Key_section & sect, const ustring & key, long long value);
+
+    /// Sets a list of integers for the key key under sect.
+    /// @param sect section.
+    /// @param key key name.
+    /// @param vec vector of values.
+    void set_integers(Key_section & sect, const ustring & key, const std::vector<long long> & vec);
+
+    /// Associates a new double value with key key under sect.
+    /// @param sect section.
+    /// @param key key name.
+    /// @param value value to be saved.
+    void set_double(Key_section & sect, const ustring & key, double value);
+
+    /// Sets a list of doubles for the key under sect.
+    /// @param sect section.
+    /// @param key key name.
+    /// @param vec vector of values.
+    void set_doubles(Key_section & sect, const ustring & key, const std::vector<double> & vec);
+
+    /// @{
+    /// @name Controls
+    /// @{
+
     /// Set comment separator.
     /// @note By default, the comment separator is a '#'.
     void set_comment_separator(char32_t comment_sep);
 
     /// Sets the character which is used to separate values in lists.
-    /// @note By default, the list separator is a ':' (colon).
+    /// @note By default, the list separator is path_sep_.
     void set_list_separator(char32_t list_sep);
 
     /// Gets list separator.
@@ -109,8 +258,8 @@ public:
 
     /// Get specified section.
     /// @param sect_name section name.
-    /// @param similar if @b true, use str_similar() for lookup (case insensitive), else compare byte-to-byte.
-    Key_section & section(const ustring & sect, bool similar=false);
+    /// @param similar if @b true, use str_similar() for lookup (case insensitive), else compare sect_name byte-to-byte.
+    Key_section & section(const ustring & sect_name, bool similar=false);
 
     /// Gets a list of all sections in the Key_file.
     std::vector<ustring> list_sections() const;
@@ -122,96 +271,39 @@ public:
     bool empty() const;
 
     /// Looks whether the key file has the section sect_name.
+    ///
     /// @param sect_name section name.
-    /// @param similar if @b true, use str_similar() for lookup (case insensitive), else compare byte-to-byte.
+    /// @param similar if @b true, use str_similar() for lookup (case insensitive), else compare sect_name byte-to-byte.
     bool has_section(const ustring & sect_name, bool similar=false) const;
 
     /// Looks whether the key file has the key key_name in the section named sect_name.
+    ///
     /// @param sect_name section name.
     /// @param key_name key name.
-    /// @param similar if @b true, use str_similar() for lookup (case insensitive), else compare byte-to-byte.
+    /// @param similar if @b true, use str_similar() for lookup (case insensitive), else compare both names byte-to-byte.
     bool has_key(const ustring & sect_name, const ustring & key_name, bool similar=false) const;
 
     /// Looks whether the key file has the key key_name in the section sect.
+    ///
     /// @param sect section.
     /// @param key_name key name.
-    /// @param similar if @b true, use str_similar() for lookup (case insensitive), else compare byte-to-byte.
+    /// @param similar if @b true, use str_similar() for lookup (case insensitive), else compare key_name byte-to-byte.
     bool has_key(const Key_section & sect, const ustring & key_name, bool similar=false) const;
 
     /// Gets exact key name by similar name.
     ustring key_name(const Key_section & sect, const ustring similar_name) const;
 
-    /// Places comment above sect.
-    void set_comment(Key_section & sect, const ustring & comment);
-
-    /// Get comment above section sect.
-    ustring comment(Key_section & sect);
-
-    /// Associates a new string value with key key under sect.
-    void set_string(Key_section & sect, const ustring & key, const ustring & value);
-
-    /// Sets a list of string values for key key under sect.
-    void set_strings(Key_section & sect, const ustring & key, const std::vector<ustring> & vec);
-
-    /// Associates a new boolean value with key key under sect.
-    void set_boolean(Key_section & sect, const ustring & key, bool value);
-
-    /// Sets a list of booleans for the key key under sect.
-    void set_booleans(Key_section & sect, const ustring & key, const std::vector<bool> & vec);
-
-    /// Associates a new integer value with key key under sect.
-    void set_integer(Key_section & sect, const ustring & key, long long value);
-
-    /// Sets a list of integers for the key key under sect.
-    void set_integers(Key_section & sect, const ustring & key, const std::vector<long long> & vec);
-
-    /// Associates a new double value with key key under sect.
-    void set_double(Key_section & sect, const ustring & key, double value);
-
-    /// Sets a list of doubles for the key under sect.
-    void set_doubles(Key_section & sect, const ustring & key, const std::vector<double> & vec);
-
-    /// Gets string value associated with key key under sect section.
-    /// @return key value or fallback value if key not found.
-    ustring get_string(Key_section & sect, const ustring & key, const ustring & fallback=ustring());
-
-    /// Gets a list of strings associated with key key under sect section.
-    /// @return list of values or empty list if not found.
-    std::vector<ustring> get_strings(Key_section & sect, const ustring & key);
-
-    /// Gets boolean value associated with key key under sect section.
-    /// @return key value or fallback if key not found.
-    bool get_boolean(Key_section & sect, const ustring & key, bool fallback=false);
-
-    /// Gets a list of booleans associated with key key under sect section.
-    /// @return list of values or empty list if not found.
-    std::vector<bool> get_booleans(Key_section & sect, const ustring & key);
-
-    /// Gets integer value associated with key key under sect section.
-    /// @return key value or fallback if key not found.
-    long long get_integer(Key_section & sect, const ustring & key, long long fallback=0);
-
-    /// Gets a list of integers associated with key key under sect section.
-    /// @return list of values or empty list if not found.
-    std::vector<long long> get_integers(Key_section & sect, const ustring & key);
-
-    /// Gets double value associated with key key under sect section.
-    /// @return key value or fallback if key not found.
-    double get_double(Key_section & sect, const ustring & key, double fallback=0.0);
-
-    /// Gets a list of doubles associated with key key under sect section.
-    /// @return list of values or empty list if not found.
-    std::vector<double> get_doubles(Key_section & sect, const ustring & key);
-
     /// Remove key key form the section sect.
+    ///
     /// @param sect section.
     /// @param key_name key name.
-    /// @param similar if @b true, use str_similar() for lookup (case insensitive), else compare byte-to-byte.
-    void remove_key(Key_section & sect, const ustring & key, bool similar=false);
+    /// @param similar if @b true, use str_similar() for lookup (case insensitive), else compare key_name byte-to-byte.
+    void remove_key(Key_section & sect, const ustring & key_name, bool similar=false);
 
     /// Remove section.
+    ///
     /// @param sect_name section name.
-    /// @param similar if @b true, use str_similar() for lookup (case insensitive), else compare byte-to-byte.
+    /// @param similar if @b true, use str_similar() for lookup (case insensitive), else compare sect_name byte-to-byte.
     void remove_section(const ustring & sect_name, bool similar=false);
 
     /// Remove all sections.
@@ -219,6 +311,8 @@ public:
 
     /// Gets "signal_changed".
     signal<void()> & signal_changed();
+
+    /// @}
 
 private:
 

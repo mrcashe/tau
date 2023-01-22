@@ -118,14 +118,11 @@ public:
     /// Set tooltip.
     void set_tooltip(const ustring & tooltip);
 
-    /// Get tooltip.
-    ustring tooltip() const { return tooltip_; }
-
-    /// Test if tooltip set.
-    bool has_tooltip() const;
-
     /// Unset tooltip.
     void unset_tooltip();
+
+    /// Get tooltip.
+    ustring tooltip() const { return tooltip_; }
 
     /// Add accelerator.
     void add_accel(char32_t kc, int km=0);
@@ -314,14 +311,11 @@ public:
     /// Set tooltip.
     void set_tooltip(const ustring & tooltip_text);
 
-    /// Get tooltip.
-    ustring tooltip() const { return tooltip_; }
-
-    /// Test if tooltip set.
-    bool has_tooltip() const;
-
     /// Unset tooltip.
     void unset_tooltip();
+
+    /// Get tooltip.
+    ustring tooltip() const { return tooltip_; }
 
     /// Add accelerator.
     void add_accel(char32_t kc, int km=0);

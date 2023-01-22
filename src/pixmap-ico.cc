@@ -47,7 +47,7 @@ inline uint16_t u16(const char * b) {
 namespace tau {
 
 Pixmap_ptr Pixmap_impl::load_ico_from_file(const ustring & path) {
-    std::string lfp = Locale().encode_filename(path);
+    std::string lfp = Locale().io_encode(path);
     std::ifstream is(lfp, std::ios::binary);
     if (!is.good()) { throw sys_error(path); }
 

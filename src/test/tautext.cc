@@ -108,7 +108,7 @@ struct Main: tau::Toplevel {
     tau::Widget *       wpop_ = nullptr;
 
     tau::Action         escape_action_ { "Escape", tau::fun(this, &Main::on_escape) };
-    tau::Action         file_quit_action_ { "<Ctrl>Q", "Quit", tau::fun(this, &Main::on_menu_file_quit) };
+    tau::Action         file_quit_action_ { "<Ctrl>Q", "Quit", "application-exit;window-close", tau::fun(this, &Main::on_menu_file_quit) };
 
     tau::Action         file_new_action_ { "<Ctrl>N", "New", "document-new", tau::fun(this, &Main::on_menu_file_new) };
     tau::Action         file_open_action_ { "<Ctrl>O", "Open", "document-open", "Open a File", tau::fun(this, &Main::on_menu_file_open) };
@@ -133,9 +133,9 @@ struct Main: tau::Toplevel {
     tau::Master_action  edit_paste_master_action_ { "<Ctrl>V <Shift>Insert", "Paste", "edit-paste" };
     tau::Action         edit_paste_action_ { edit_paste_master_action_, tau::fun(this, &Main::on_menu_edit_paste) };
 
-    tau::Master_action  view_increase_font_master_action_ { "<Ctrl>+ <Ctrl>=", "Increase Font" };
+    tau::Master_action  view_increase_font_master_action_ { "<Ctrl>+ <Ctrl>=", "Increase Font", "zoom-in" };
     tau::Action         view_zin_action_ { view_increase_font_master_action_, tau::fun(this, &Main::on_menu_increase_font) };
-    tau::Master_action  view_decrease_font_master_action_ { "<Ctrl>-", "Decrease Font" };
+    tau::Master_action  view_decrease_font_master_action_ { "<Ctrl>-", "Decrease Font", "zoom-out" };
     tau::Action         view_zout_action_ { view_decrease_font_master_action_ , tau::fun(this, &Main::on_menu_decrease_font) };
     tau::Action         view_next_page_action_ { tau::KC_RIGHT, tau::KM_ALT, "Next Page", "go-next", tau::fun(this, &Main::on_menu_next_doc) };
     tau::Action         view_prev_page_action_ { tau::KC_LEFT, tau::KM_ALT, "Previous Page", "go-previous", tau::fun(this, &Main::on_menu_prev_doc) };
@@ -341,7 +341,7 @@ struct Main: tau::Toplevel {
             else {
                 const tau::ustring name = tau::str_format(pg.metaid, ".ini");
                 const tau::ustring mpath = tau::path_build(tau::path_build(tau::path_user_data_dir(), tau::program_name(), "meta"), name);
-                std::ifstream is(tau::Locale().encode_filename(mpath));
+                std::ifstream is(tau::Locale().io_encode(mpath));
                 tau::Key_file kf(is);
                 std::size_t row = kf.get_integer(kf.section("pos"), "row");
                 std::size_t col = kf.get_integer(kf.section("pos"), "col");
@@ -465,7 +465,7 @@ struct Main: tau::Toplevel {
 
     void load_session() {
         tau::ustring path = tau::path_build(tau::path_user_data_dir(), tau::program_name(), "session.ini");
-        std::ifstream is(tau::Locale().encode_filename(path));
+        std::ifstream is(tau::Locale().io_encode(path));
         tau::Key_file kf(is);
         std::vector<int> v;
 
@@ -511,7 +511,7 @@ struct Main: tau::Toplevel {
         if (metas_.empty()) {
             try {
                 const tau::ustring path = tau::path_build(tau::path_user_data_dir(), tau::program_name(), "metas.ini");
-                std::ifstream is(tau::Locale().encode_filename(path));
+                std::ifstream is(tau::Locale().io_encode(path));
                 tau::Key_file kf(is);
 
                 for (const tau::ustring & s: kf.list_sections()) {
@@ -758,7 +758,7 @@ struct Main: tau::Toplevel {
                 tau::path_mkdir(dir);
                 tau::ustring name = tau::str_format(pg.metaid, ".ini");
                 tau::ustring path = tau::path_build(dir, name);
-                std::ofstream os(tau::Locale().encode_filename(path));
+                std::ofstream os(tau::Locale().io_encode(path));
                 kf.save(os);
                 // std::cout << "save_metadata " << path << '\n';
             }
@@ -797,7 +797,7 @@ struct Main: tau::Toplevel {
                 const tau::ustring dir = tau::path_build(tau::path_user_data_dir(), tau::program_name());
                 tau::path_mkdir(dir);
                 const tau::ustring path = tau::path_build(dir, "metas.ini");
-                std::ofstream os(tau::Locale().encode_filename(path));
+                std::ofstream os(tau::Locale().io_encode(path));
                 kf.save(os);
                 // std::cout << "save_metas() -> " << path << '\n';
             }
@@ -840,7 +840,7 @@ struct Main: tau::Toplevel {
             tau::ustring path = tau::path_build(tau::path_user_data_dir(), tau::program_name());
             tau::path_mkdir(path);
             path = tau::path_build(path, "session.ini");
-            std::ofstream os(tau::Locale().encode_filename(path));
+            std::ofstream os(tau::Locale().io_encode(path));
             kf.save(os);
             // std::cout << "save_session() -> " << path << '\n';
         }
@@ -1445,7 +1445,7 @@ struct Main: tau::Toplevel {
         file_menu.prepend(file_new_action_);
         file_menu.append_separator();
         file_menu.append(file_open_action_);
-        tau::Submenu_item recent_item("Open Recent", recent_menu_);
+        tau::Submenu_item recent_item("Open Recent", recent_menu_, "document-open-recent:document-open");
         update_recent_menu();
         file_menu.append(recent_item);
         file_menu.append_separator();
@@ -1567,13 +1567,13 @@ int main(int argc, char * argv[]) {
     try {
         auto state_path = tau::path_build(tau::path_user_config_dir(), tau::program_name(), "state.ini");
         tau::path_mkdir(tau::path_dirname(state_path));
-        state_ = tau::Key_file::load_from_file(state_path);
-        tau::Timer timer(tau::fun(state_, static_cast<void (tau::Key_file::*)()>(&tau::Key_file::save)));
-        state_.signal_changed().connect(tau::bind(tau::fun(timer, &tau::Timer::start), 7401, false));
+        state_.load(state_path);
         auto v = state_.get_integers(state_.root(), "geometry");
         tau::Rect bounds;
         if (v.size() > 3) { bounds.set(tau::Point(v[0], v[1]), tau::Size(v[2], v[3])); }
         Main w(bounds);
+        tau::Timer timer(tau::fun(state_, static_cast<void (tau::Key_file::*)()>(&tau::Key_file::save)));
+        state_.signal_changed().connect(tau::bind(tau::fun(timer, &tau::Timer::start), 7401, false));
         tau::Loop().run();
         std::vector<long long> iv = { w.position().x(), w.position().y(), w.size().iwidth(), w.size().iheight() };
         state_.set_integers(state_.root(), "geometry", iv);

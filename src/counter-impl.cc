@@ -28,6 +28,7 @@
 #include <button-impl.hh>
 #include <counter-impl.hh>
 #include <image-impl.hh>
+#include <pixmap-impl.hh>
 #include <table-impl.hh>
 #include <theme-impl.hh>
 #include <iomanip>
@@ -86,12 +87,12 @@ void Counter_impl::init(double value, double max_value, double min_value) {
 
     auto theme = Theme_impl::root();
 
-    Pixmap_ptr pixmap = theme->find_pixmap("picto-dec");
-    if (pixmap) { down_->set_image(std::make_shared<Image_impl>(pixmap, true)); }
+    Pixmap_cptr pixmap = theme->find_pixmap("picto-dec");
+    if (pixmap) { down_->set_image(std::make_shared<Image_impl>(pixmap->dup(), true)); }
     else { down_->hint_size(8, 4); }
 
     pixmap = theme->find_pixmap("picto-inc");
-    if (pixmap) { up_->set_image(std::make_shared<Image_impl>(pixmap, true)); }
+    if (pixmap) { up_->set_image(std::make_shared<Image_impl>(pixmap->dup(), true)); }
     else { up_->hint_size(8, 4); }
 
     set_max_value(max_value);

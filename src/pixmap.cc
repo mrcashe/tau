@@ -52,7 +52,7 @@ Pixmap::operator bool() const { return nullptr != impl; }
 void Pixmap::reset() { impl.reset(); }
 
 bool Pixmap::empty() const {
-    return impl ? impl->size().empty() : true;
+    return !impl || impl->size().empty();
 }
 
 Size Pixmap::size() const {
@@ -97,7 +97,7 @@ void Pixmap::put_pixel(const Point & pt, const Color & c) {
 
 signal<void()> & Pixmap::signal_changed() {
     if (impl) { return impl->signal_changed(); }
-    throw user_error("Pixmap::signal_changed(): unable to return reference to the signal_changed_ due to empty Pixmap");
+    throw user_error("Pixmap::signal_changed(): unable to return reference to the signal_changed_ due to pure Pixmap");
 }
 
 Color Pixmap::get_pixel(int x, int y) const {
@@ -109,7 +109,11 @@ Color Pixmap::get_pixel(const Point & pt) const {
 }
 
 void Pixmap::copy(const Pixmap other) {
-    if (impl) { impl->copy(other.impl); }
+    if (impl) { impl->copy(other.impl.get()); }
+}
+
+Pixmap Pixmap::dup() const {
+    return impl ? impl->dup() : Pixmap();
 }
 
 void Pixmap::set_argb32(int x, int y, const uint8_t * buffer, std::size_t nbytes) {

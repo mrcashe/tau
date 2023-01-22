@@ -123,7 +123,7 @@ void Loop_linux::on_inotify() {
 
                 if (0 != kevent->len) {
                     std::string s(kevent->name, kevent->len);
-                    name = Locale().decode_filename(s);
+                    name = Locale().io_decode(s);
                 }
 
                 signal_chain_notify_(kevent->wd, name, mask);
@@ -156,7 +156,7 @@ File_monitor_ptr Loop_linux::create_file_monitor(const ustring & path, int mask)
         if (fd < 0) { throw sys_error("inotify_init1(): "+path); }
     }
 
-    int wd = inotify_add_watch(fd, Locale().encode_filename(path).c_str(), umask);
+    int wd = inotify_add_watch(fd, Locale().io_encode(path).c_str(), umask);
 
     if (wd < 0) {
         sys_error x("inotify_add_watch(): "+path);
@@ -296,17 +296,14 @@ void Loop_linux::on_mounts() {
 
 void Loop_linux::boot() {
     Loop_impl::boot();
-    ustring p = "/etc/lsb-release";
 
-    if (file_exists(p)) {
-        Key_file k = Key_file::load_from_file(p);
-        sysinfo_.distrib = k.get_string(k.root(), "DISTRIB_ID", "Linux");
-        auto v = str_explode(k.get_string(k.root(), "DISTRIB_RELEASE"), '.');
-        if (v.size() > 0) { sysinfo_.distrib_major = std::atoi(v[0].c_str()); }
-        if (v.size() > 1) { sysinfo_.distrib_minor = std::atoi(v[1].c_str()); }
-        sysinfo_.distrib_codename = k.get_string(k.root(), "DISTRIB_CODENAME");
-        sysinfo_.distrib_description = k.get_string(k.root(), "DISTRIB_DESCRIPTION");
-    }
+    Key_file k("/etc/lsb-release");
+    sysinfo_.distrib = k.get_string(k.root(), "DISTRIB_ID", "Linux");
+    auto v = str_explode(k.get_string(k.root(), "DISTRIB_RELEASE"), '.');
+    if (v.size() > 0) { sysinfo_.distrib_major = std::atoi(v[0].c_str()); }
+    if (v.size() > 1) { sysinfo_.distrib_minor = std::atoi(v[1].c_str()); }
+    sysinfo_.distrib_codename = k.get_string(k.root(), "DISTRIB_CODENAME");
+    sysinfo_.distrib_description = k.get_string(k.root(), "DISTRIB_DESCRIPTION");
 }
 
 // ----------------------------------------------------------------------------

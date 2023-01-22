@@ -78,8 +78,10 @@ public:
     /// Constructor with icon_name and icon size.
     Icon(const ustring & icon_name, int icon_size);
 
-    /// Constructor with Action_base and icon size.
-    Icon(Action_base & action, int icon_size);
+    /// @param action the action to be used.
+    /// @param icon_size the icon size.
+    /// @param items action items to be used, see #Action_items enum.
+    Icon(Action_base & action, int icon_size, Action_items items=ACTION_ALL);
 
     /// @}
     /// Set icon name and icon size.

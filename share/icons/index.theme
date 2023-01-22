@@ -7,7 +7,7 @@
 
 [Icon Theme]
 Name=tau
-Inherits=Hicolor
+Inherits=Oxygen,Hicolor
 Comment=The fallback theme for TAU library
 
 # Directory list

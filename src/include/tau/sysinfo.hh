@@ -27,7 +27,6 @@
 #ifndef TAU_SYSINFO_HH
 #define TAU_SYSINFO_HH
 
-#include <tau/types.hh>
 #include <tau/ustring.hh>
 
 namespace tau {
@@ -61,7 +60,7 @@ ustring uname;
 
 /// Operating system version numbers: major and minor.
 /// Differ on various OSes.
-int osmajor = 0, osminor = 0;
+int osmajor, osminor;
 
 /// @name Distributive related info (actual for Linux only).
 /// @{
@@ -70,7 +69,7 @@ int osmajor = 0, osminor = 0;
 ustring distrib;
 
 /// Distributive major and ninor release numbers.
-int distrib_major = 0, distrib_minor = 0;
+int distrib_major, distrib_minor;
 
 /// Distributive codename.
 ustring distrib_codename;
@@ -146,7 +145,7 @@ bool        shared;
 ustring     sopath;
 
 /// System locale.
-std::string locale = "C";
+std::string locale;
 
 /// Encoding for file i/o.
 std::string iocharset;

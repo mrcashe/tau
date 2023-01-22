@@ -212,7 +212,7 @@ Pixmap_ptr Pixmap_impl::load_bmp_from_memory(const char * raw, std::size_t bytes
 }
 
 Pixmap_ptr Pixmap_impl::load_bmp_from_file(const ustring & path) {
-    std::string lfp = Locale().encode_filename(path);
+    std::string lfp = Locale().io_encode(path);
     std::ifstream is(lfp, std::ios::binary);
     if (!is.good()) { throw sys_error(path); }
 

@@ -15,7 +15,7 @@ graphical user interfaces (GUI) in C++ programming language
 -   Cross-platform file and directory management functions and classes
 -   Path and URI management functions
 -   Classes and functions for UTF-8 encoding management
--   Built-in pixmap (bitmap) managing classes and functions provides import from 
+-   Built-in pixmap (bitmap) managing classes and functions provides import from
     BMP, ICO, ANI, XPM, CUR, Xcursor graphics formats
 -   Import from PNG graphics format done with using of libpng library
 -   Built-in signal/slot support for event handling (derived from libsigc++-2.0)
@@ -41,7 +41,7 @@ These are platforms for which file generation is possible
     +   x86_64-w64-mingw32.static (64 bit)
     +   i686-w64-mingw32.shared (32 bit)
     +   x86_64-w64-mingw32.shared (64 bit)
-    
+
 ### Generating output
 
 -   Static library for the host system *(optional)*.
@@ -132,9 +132,9 @@ package is missing.
 
     Provided by C++ compiler, so if any of C++ compilers found, *libstdc++* accessible too.
 
--   libpng (All platforms)
+-   libpng (All platforms) >= 1.6.28
 
-    I found it already installed in my FreeBSD distro.  
+    I found it already installed in my FreeBSD distro.
     Named *libpng-dev* on Ubuntu.
 
 -   libinotify (FreeBSD only)
@@ -143,46 +143,46 @@ package is missing.
 
 -   On POSIX platforms:
 
-    + libxkbcommon-x11
+    + libxkbcommon-x11 >= 0.5.0
 
-        I found it already installed in my FreeBSD distro.  
+        I found it already installed in my FreeBSD distro.
         Named *libxkbcommon-x11-dev* on Ubuntu.
 
-    + libxcb
+    + libxcb >= 1.11.1
 
-        I found it already installed in my FreeBSD distro.  
+        I found it already installed in my FreeBSD distro.
         Named *libxcb1-dev* on Ubuntu.
 
-    + libxcb-cursor
+    + libxcb-cursor >= 0.1.2
 
-        I found it already installed in my FreeBSD distro.  
+        I found it already installed in my FreeBSD distro.
         Named *libxcb-cursor-dev* on Ubuntu.
-        
-    + libxcb-icccm
 
-        I found it already installed in my FreeBSD distro.  
+    + libxcb-icccm >= 0.4.1
+
+        I found it already installed in my FreeBSD distro.
         Named *libxcb-icccm4-dev* on Ubuntu.
 
-    + libxcb-renderutil
+    + libxcb-renderutil >= 0.3.9
 
-        I found it already installed in my FreeBSD distro.  
+        I found it already installed in my FreeBSD distro.
         Named *libxcb-render-util0-dev* on Ubuntu.
 
-    + libxcb-screensaver
+    + libxcb-screensaver >= 1.11.1
 
-        I found it already installed in my FreeBSD distro.  
+        I found it already installed in my FreeBSD distro.
         Named *libxcb-screensaver0-dev* on Ubuntu.
-        
-    + libxcb-sync
 
-        I found it already installed in my FreeBSD distro.  
+    + libxcb-sync >= 1.11.1
+
+        I found it already installed in my FreeBSD distro.
         Named *libxcb-sync-dev* on Ubuntu.
-        
-    + libxcb-xfixes
 
-        I found it already installed in my FreeBSD distro.  
+    + libxcb-xfixes >= 1.11.1
+
+        I found it already installed in my FreeBSD distro.
         Named *libxcb-xfixes0-dev* on Ubuntu.
-        
+
 > Also, on Linux, the header **inotify.h** must be accessible. Since it is part
 > of the **Glibc** library, there should be no problems with its availability,
 > however, the installation of the Linux Kernel headers may be required.
@@ -196,7 +196,7 @@ Choose directory where to clone remote directory and type in the console:
 [~]$ git clone https://github.com/mrcashe/tau.git
 ~~~
 
-As a result, the directory named '**tau**' will appear. 
+As a result, the directory named '**tau**' will appear.
 
 #### Source Tree
 

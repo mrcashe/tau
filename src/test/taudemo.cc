@@ -633,7 +633,7 @@ void run() {
 int main(int argc, char * argv[]) {
     auto p = tau::path_build(tau::path_user_config_dir(), tau::program_name(), "state.ini");
     tau::path_mkdir(tau::path_dirname(p));
-    state_ = tau::Key_file::load_from_file(p);
+    state_ = tau::Key_file(p);
     tau::Timer timer(tau::fun(state_, static_cast<void (tau::Key_file::*)()>(&tau::Key_file::save)));
     state_.signal_changed().connect(tau::bind(tau::fun(timer, &tau::Timer::start), 6789, false));
     run();

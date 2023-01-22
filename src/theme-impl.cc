@@ -296,7 +296,7 @@ void Theme_impl::boot() {
     update_this_thread();
 
     ustring prefix = path_prefix(),
-        share = path_build(prefix, "share", program_name()), 
+        share = path_build(prefix, "share", program_name()),
         lib_share = path_build(prefix, "share", str_format("tau-", Major_, '.', Minor_));
 
     add_cursor_dir(path_build(prefix, "cursors"));
@@ -314,7 +314,7 @@ void Theme_impl::boot() {
     add_cursor_dir(path_build(lib_share, "cursors"));
     add_pixmap_dir(path_build(lib_share, "pixmaps"));
     add_icon_dir(path_build(lib_share, "icons"));
-    
+
     auto i = threads_.find(tid);
     if (i == threads_.end()) { throw internal_error("Theme_impl::init_actions(): unable to setup thread"); }
     Thread & thr = i->second;
@@ -432,8 +432,7 @@ bool Theme_impl::feed_icon_root(const ustring & root, const ustring & stop_after
         }
     }
 
-    std::ifstream is(Locale().encode_filename(path_build(root, "index.theme")));
-    Key_file kf(is, ',');
+    Key_file kf(path_build(root, "index.theme"), ',');
     Key_section * theme_sect = kf.has_section("Icon Theme") ? &kf.section("Icon Theme") : nullptr;
     ustring theme_name = theme_sect ? kf.get_string(*theme_sect, "Name", this_filename) : this_filename;
     int itheme = -1;
@@ -443,7 +442,6 @@ bool Theme_impl::feed_icon_root(const ustring & root, const ustring & stop_after
         inherits = str_explode(kf.get_string(*theme_sect, "Inherits"), ',');
 
         if (kf.has_key(*theme_sect, "Directories")) {
-            //std::cout << "Icon theme " << theme_name << "\n";
             Lock sl(mx_);
             itheme = find_icon_theme_nolock(theme_name);
 
@@ -461,7 +459,6 @@ bool Theme_impl::feed_icon_root(const ustring & root, const ustring & stop_after
                 for (const ustring & s: inherits) {
                     iref.inherits.push_back(s);
                     int inherited = find_icon_theme_nolock(s);
-                    //std::cout << "  inherits " << s << " -> " << inherited << "\n";
                     if (inherited >= 0) { iref.inherited.push_back(inherited); }
                 }
 
@@ -532,7 +529,6 @@ bool Theme_impl::feed_icon_root(const ustring & root, const ustring & stop_after
             for (const ustring & s: inherits) {
                 rctheme.inherits.push_back(s);
                 int inherited = find_cursor_theme_nolock(s);
-                //std::cout << "  inherits " << s << " -> " << inherited << "\n";
                 if (inherited >= 0) { rctheme.inherited.push_back(inherited); }
             }
 
@@ -813,11 +809,12 @@ Cursor_ptr Theme_impl::uncache_cursor(Cursor_cache & cache, const ustring & name
     return nullptr;
 }
 
-Pixmap_ptr Theme_impl::find_pixmap(const ustring & names) {
+Pixmap_cptr Theme_impl::find_pixmap(const ustring & names) {
     auto v = str_explode(names, ":;");
 
-    for (const ustring & name: v) {
-        auto pixmap = uncache_pixmap(name);
+    // Trying to uncache first given variant.
+    if (!v.empty()) {
+        auto pixmap = uncache_pixmap(v[0]);
         if (pixmap) { return pixmap; }
     }
 
@@ -881,33 +878,20 @@ Pixmap_ptr Theme_impl::find_pixmap(const ustring & names) {
         }
     }
 
+    // Trying to uncache all variants
+    if (v.size() > 1) {
+        for (const ustring & name: v) {
+            auto pixmap = uncache_pixmap(name);
+            if (pixmap) { return pixmap; }
+        }
+    }
+
     // Try to search into "picto-*".
     ustring ret_name;
+
     if (auto pixmap = find_picto(names, ret_name)) {
         cache_pixmap(pixmap, ret_name);
         return pixmap;
-    }
-
-    return nullptr;
-}
-
-void Theme_impl::cache_pixmap(Pixmap_ptr pixmap, const ustring & name) {
-    Pixmap_holder hol;
-    hol.pixmap = Pixmap_impl::dup(pixmap);
-    hol.tv = Timeval::now();
-    ustring key = str_toupper(str_trim(name));
-    Lock ml(mmx_);
-    pixmap_cache_[key] = hol;
-}
-
-Pixmap_ptr Theme_impl::uncache_pixmap(const ustring & name) {
-    ustring key = str_toupper(str_trim(name));
-    Lock ml(mmx_);
-    auto iter = pixmap_cache_.find(key);
-
-    if (iter != pixmap_cache_.end()) {
-        iter->second.tv = Timeval::now();
-        return Pixmap_impl::dup(iter->second.pixmap);
     }
 
     return nullptr;
@@ -967,23 +951,45 @@ int Theme_impl::icon_pixels(int icon_size) const {
     return std::max(0, icon_size);
 }
 
+void Theme_impl::cache_pixmap(Pixmap_ptr pixmap, const ustring & name) {
+    Pixmap_holder hol;
+    hol.pixmap = pixmap;
+    hol.tv = Timeval::now();
+    ustring key = str_toupper(str_trim(name));
+    Lock ml(mmx_);
+    pixmap_cache_[key] = hol;
+}
+
+Pixmap_cptr Theme_impl::uncache_pixmap(const ustring & name) {
+    ustring key = str_toupper(str_trim(name));
+    Lock ml(mmx_);
+    auto iter = pixmap_cache_.find(key);
+
+    if (iter != pixmap_cache_.end()) {
+        iter->second.tv = Timeval::now();
+        return iter->second.pixmap;
+    }
+
+    return nullptr;
+}
+
 void Theme_impl::cache_icon(Pixmap_ptr icon, const ustring & name, const ustring & context, int size) {
     Pixmap_holder hol;
-    hol.pixmap = Pixmap_impl::dup(icon);
+    hol.pixmap = icon;
     hol.tv = Timeval::now();
     ustring key = str_toupper(str_format(name, '-', (context.empty() ? "ANY" : context), '-', size));
     Lock lk(mmx_);
     icon_cache_[key] = hol;
 }
 
-Pixmap_ptr Theme_impl::uncache_icon(const ustring & name, const ustring & context, int size) {
+Pixmap_cptr Theme_impl::uncache_icon(const ustring & name, const ustring & context, int size) {
     ustring key = str_toupper(str_format(name, '-', (context.empty() ? "ANY" : context), '-', size));
     Lock lk(mmx_);
     auto iter = icon_cache_.find(key);
 
     if (iter != icon_cache_.end()) {
         iter->second.tv = Timeval::now();
-        return Pixmap_impl::dup(iter->second.pixmap);
+        return iter->second.pixmap;
     }
 
     return nullptr;
@@ -1104,7 +1110,7 @@ Pixmap_ptr Theme_impl::find_icon_in_theme(int iicon, const std::vector<ustring> 
     return nullptr;
 }
 
-Pixmap_ptr Theme_impl::find_icon(const ustring & names, int size, const ustring & context) {
+Pixmap_cptr Theme_impl::find_icon(const ustring & names, int size, const ustring & context) {
     size = icon_pixels(size);
     std::vector<ustring> unames;
 
@@ -1112,9 +1118,9 @@ Pixmap_ptr Theme_impl::find_icon(const ustring & names, int size, const ustring 
         unames.push_back(str_trim(str_toupper(s)));
     }
 
-    // Try to uncache icon.
-    for (const ustring & name: unames) {
-        if (auto pixmap = uncache_icon(name, context, size)) {
+    // Try to uncache only first icon.
+    if (!unames.empty()) {
+        if (auto pixmap = uncache_icon(unames[0], context, size)) {
             return pixmap;
         }
     }
@@ -1150,7 +1156,17 @@ Pixmap_ptr Theme_impl::find_icon(const ustring & names, int size, const ustring 
         }
     }
 
+    // Try to uncache all given variants.
+    if (unames.size() > 1) {
+        for (const ustring & name: unames) {
+            if (auto pixmap = uncache_icon(name, context, size)) {
+                return pixmap;
+            }
+        }
+    }
+
     ustring ret_name;
+
     if (auto pixmap = find_picto(names, ret_name)) {
         cache_icon(pixmap, ret_name, context, size);
         return pixmap;
@@ -1191,11 +1207,11 @@ Pixmap_ptr Theme_impl::find_picto(const ustring & names, ustring & ret_name) {
 }
 
 Pixmap_ptr Theme_impl::get_icon(const ustring & names, int size, const ustring & context) {
-    if (auto pixmap = find_icon(names, size, context)) { return pixmap; }
+    if (auto pixmap = find_icon(names, size, context)) { return pixmap->dup(); }
     size = icon_pixels(size);
-    Pixmap_ptr pixmap = Pixmap_impl::create(1, size);
-    cache_icon(pixmap, str_explode(names, ":;").front(), context, size);
-    return pixmap;
+    auto pix = Pixmap_impl::create(1, size);
+    cache_icon(pix, str_explode(names, ":;").front(), context, size);
+    return pix;
 }
 
 ustring Theme_impl::cursor_theme() const {
