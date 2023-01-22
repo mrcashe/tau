@@ -25,8 +25,8 @@
 // ----------------------------------------------------------------------------
 
 #include <tau/encoding.hh>
-#include <tau/locale.hh>
 #include <tau/string.hh>
+#include <locale-impl.hh>
 
 namespace tau {
 
@@ -37,6 +37,7 @@ public:
     const char32_t *    table;
     bool                unicode;
     bool                multibyte;
+    bool                utf8;
     bool                little_endian;
 
     char32_t decode(char c) const {
@@ -264,20 +265,15 @@ const char32_t koi8ru[128] = {
 };
 
 tau::Encoding_data edata[] = {
-    {   .name           = "",
-        .table          = nullptr,
-        .unicode        = false,
-        .multibyte      = false
+    {   .name           = ""
     },
-    {   .name           = "ASCII",
-        .table          = nullptr,
-        .unicode        = false,
-        .multibyte      = false
+    {   .name           = "ASCII"
     },
     {   .name           = "UTF-8:UTF8",
         .table          = nullptr,
         .unicode        = true,
-        .multibyte      = true
+        .multibyte      = true,
+        .utf8           = true
     },
     {   .name           = "UTF-16:UTF16:UTF-16BE:UTF16BE",
         .table          = nullptr,
@@ -288,6 +284,7 @@ tau::Encoding_data edata[] = {
         .table          = nullptr,
         .unicode        = true,
         .multibyte      = true,
+        .utf8           = false,
         .little_endian  = true
     },
     {   .name           = "UTF-32:UTF32:UTF-32BE:UTF32BE",
@@ -299,6 +296,7 @@ tau::Encoding_data edata[] = {
         .table          = nullptr,
         .unicode        = true,
         .multibyte      = true,
+        .utf8           = false,
         .little_endian  = true
     },
     {   .name           = "CP1250:WINDOWS-1250",
@@ -342,21 +340,36 @@ tau::Encoding_data edata[] = {
 
 namespace tau {
 
-Encoding::Encoding():
-    data(&edata[0])
-{
-}
-
 Encoding::Encoding(const std::string & name):
-    data(&edata[0])
+    data(edata)
 {
-    for (Encoding_data * dp = edata; dp->name; ++dp) {
-        if (str_similar(name, dp->name, ':')) {
-            data = dp;
-            break;
+    if (name.empty()) {
+        if (sys_locale_ptr_) {
+            data = sys_locale_ptr_->enc.data;
+        }
+    }
+
+    else {
+        for (Encoding_data * dp = edata; dp->name; ++dp) {
+            if (str_similar(name, dp->name, ':')) {
+                data = dp;
+                break;
+            }
         }
     }
 }
+
+Encoding::Encoding(const Encoding & other):
+    data(other.data)
+{
+}
+
+Encoding & Encoding::operator=(const Encoding & other) {
+    if (this != &other) { data = other.data; }
+    return *this;
+}
+
+Encoding::~Encoding() {}
 
 bool Encoding::operator==(const Encoding & other) const {
     return data == other.data;
@@ -364,10 +377,6 @@ bool Encoding::operator==(const Encoding & other) const {
 
 bool Encoding::operator!=(const Encoding & other) const {
     return data != other.data;
-}
-
-bool Encoding::operator!() const {
-    return '\0' == data->name[0];
 }
 
 Encoding::operator bool() const {
@@ -386,6 +395,10 @@ bool Encoding::is_multibyte() const {
     return data->multibyte;
 }
 
+bool Encoding::is_utf8() const {
+    return data->utf8;
+}
+
 bool Encoding::is_little_endian() const {
     return data->little_endian;
 }
@@ -402,7 +415,7 @@ ustring Encoding::decode(const std::string & s) const {
         return result;
     }
 
-    return ustring(s);
+    return s;
 }
 
 std::string Encoding::encode(const ustring & str) const {
@@ -425,7 +438,7 @@ std::string Encoding::encode(const ustring & str) const {
         return result;
     }
 
-    return std::string(str);
+    return str;
 }
 
 } // namespace tau

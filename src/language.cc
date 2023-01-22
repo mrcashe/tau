@@ -39,7 +39,7 @@ struct Language_data {
     const char * sample;
 };
 
-static const Language_data datas[] = {
+Language_data datas[] = {
     {
         .code   = "",
         .ename  = "C",
@@ -1442,34 +1442,39 @@ static const Language_data datas[] = {
     }
 };
 
-Language::Language():
-    data(&datas[0])
-{
-    std::string code = locale_language(locale_spec());
-
-    for (const Language_data * datap = datas; datap->code; ++datap) {
-        if (str_similar(code, datap->code, ':')) {
-            data = datap;
-            break;
-        }
-    }
-}
-
 Language::Language(const std::string & code):
-    data(&datas[0])
+    data(datas)
 {
-    for (const Language_data * datap = datas; datap->code; ++datap) {
-        if (str_similar(code, datap->code, ':')) {
-            data = datap;
-            break;
+    if (code.empty()) {
+        if (sys_locale_ptr_) {
+            data = sys_locale_ptr_->lang.data;
+        }
+    }
+
+    else {
+        for (Language_data * datap = datas; datap->code; ++datap) {
+            if (str_similar(code, datap->code, ':')) {
+                data = datap;
+                break;
+            }
         }
     }
 }
 
-Language::Language(const Language_data * datap):
-    data(datap)
+Language::Language(const Language & other):
+    data(other.data)
 {
 }
+
+Language & Language::operator=(const Language & other) {
+    if (this != &other) {
+        data = other.data;
+    }
+
+    return *this;
+}
+
+Language::~Language() {}
 
 std::string Language::ename() const {
     return data->ename;

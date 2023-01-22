@@ -238,7 +238,14 @@ Key_file::Key_file(const ustring & path, char32_t lsep, char32_t csep):
     set_list_separator(lsep);
     set_comment_separator(csep);
     impl->path_ = path;
-    try { std::ifstream is(Locale().io_encode(path)); load(is); } catch (...) {}
+
+    try {
+        auto & io = Locale().iocharset();
+        std::ifstream is(io.is_utf8() ? std::string(path) : io.encode(path), std::ios::binary);
+        load(is);
+    }
+
+    catch (...) {}
 }
 
 Key_file::Key_file(const Key_file & other):
@@ -314,7 +321,8 @@ void Key_file::load(std::istream & is) {
 }
 
 void Key_file::load(const ustring & path) {
-    std::ifstream is(Locale().io_encode(path));
+    auto & io = Locale().iocharset();
+    std::ifstream is(io.is_utf8() ? std::string(path) : io.encode(path));
     load(is);
     impl->path_ = path;
 }
@@ -328,7 +336,8 @@ void Key_file::save(std::ostream & os) {
 }
 
 void Key_file::save(const ustring & path) {
-    std::ofstream os(Locale().io_encode(path));
+    auto & io = Locale().iocharset();
+    std::ofstream os(io.is_utf8() ? std::string(path) : io.encode(path));
     save(os);
 }
 

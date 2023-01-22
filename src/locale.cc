@@ -32,39 +32,6 @@
 
 namespace {
 
-struct Static_data {
-    const char *        code;
-    const char *        int_curr_symbol;
-    const char *        currency_symbol;
-    const char *        mon_decimal_point;
-    const char *        mon_thousands_sep;
-    const char *        mon_grouping;
-    const char *        positive_sign;
-    const char *        negative_sign;
-    int                 int_frac_digits;
-    int                 frac_digits;
-    int                 p_cs_precedes;
-    int                 p_sep_by_space;
-    int                 n_cs_precedes;
-    int                 n_sep_by_space;
-    int                 p_sign_posn;
-    int                 n_sign_posn;
-    const char *        decimal_point;
-    const char *        thousands_sep;
-    const char *        grouping;
-    const char *        abday;
-    const char *        day;
-    const char *        abmon;
-    const char *        mon;
-    const char *        d_t_fmt;
-    const char *        d_fmt;
-    const char *        t_fmt;
-    const char *        am_pm;
-    const char *        t_fmt_ampm;
-    const char *        date_fmt;
-    int                 first_weekday;
-};
-
 const char * de_DE_abday =      "\u0053\u006F:"
                                 "\u004D\u006F:"
                                 "\u0044\u0069:"
@@ -213,8 +180,8 @@ const char * ru_RU_d_t_fmt =    "\u0025\u0061\u0020\u0025\u0064\u0020\u0025\u006
 const char * ru_RU_d_fmt =      "\u0025\u0064\u002E\u0025\u006D\u002E\u0025\u0059";
 const char * ru_RU_t_fmt =      "\u0025\u0054";
 
-const Static_data sdata_[] = {
-    {   .code                   = "POSIX",
+const Locale_static sdata_[] = {
+    {   .code                   = "C",
         .int_curr_symbol        = nullptr,
         .currency_symbol        = nullptr,
         .mon_decimal_point      = "\u002e",
@@ -465,16 +432,43 @@ const Static_data sdata_[] = {
     {   .code                   = nullptr }
 };
 
-const Static_data * find_sdata(const tau::Language & lang, const tau::Territory & terr) {
+const Locale_static * find_sdata(const tau::Language & lang, const tau::Territory & terr) {
     std::string code = lang.shortest()+"_"+terr.code2();
 
-    for (const Static_data * p = sdata_; p->code; ++p) {
+    for (const Locale_static * p = sdata_; p->code; ++p) {
         if (code == p->code) {
             return p;
         }
     }
 
     return sdata_;
+}
+
+std::string locale_language(const std::string & locale) {
+    auto end = locale.find_first_of("-_");
+    return (std::string::npos != end) ? locale.substr(0, end) : std::string();
+}
+
+std::string locale_territory(const std::string & locale) {
+    auto begin = locale.find_first_of("-_");
+    if (std::string::npos == begin) { return std::string(); }
+    ++begin;
+    auto end = locale.find('.');
+    return locale.substr(begin, end-begin);
+}
+
+std::string locale_encoding(const std::string & locale) {
+    auto begin = locale.find('.');
+    if (std::string::npos == begin) { return std::string(); }
+    ++begin;
+    auto end = locale.find('@');
+    return locale.substr(begin, end-begin);
+}
+
+std::string locale_modifier(const std::string & locale) {
+    auto begin = locale.find('@');
+    if (std::string::npos == begin) { return std::string(); }
+    return locale.substr(1+begin);
 }
 
 } // anonymous namespace
@@ -484,63 +478,41 @@ const Static_data * find_sdata(const tau::Language & lang, const tau::Territory 
 
 namespace tau {
 
-struct Locale_data {
-    Language            lang;
-    Territory           terr;
-    Encoding            enc;            // System encoding.
-    Encoding            fenc;           // Encoding used for file names.
-    std::string         mod;
-    const Static_data * sdata;
+Locale_data sys_locale_ = {
+    .spec   = "C",
+    .lang   = Language("C"),
+    .terr   = Territory(),
+    .enc    = Encoding("ASCII"),
+    .fenc   = Encoding("ASCII"),
+    .mod    = "",
+    .sdata  = sdata_
 };
 
-} // namespace tau
+Locale_data * sys_locale_ptr_ = nullptr;
 
-// ----------------------------------------------------------------------------
-// ----------------------------------------------------------------------------
-
-namespace tau {
-
-Locale::Locale():
-    data(new Locale_data(sys_data()))
+Locale::Locale(const std::string & spec):
+    data(sys_locale_ptr_)
 {
-}
+    if (spec.empty()) {
+        if (!data) {
+            data = sys_locale_ptr_ = &sys_locale_;
+            init();
+            data->lang = Language(locale_language(data->spec));
+            data->terr = Territory(locale_territory(data->spec));
+            data->mod = locale_modifier(data->spec);
+            data->sdata = find_sdata(data->lang, data->terr);
+        }
+    }
 
-Locale::~Locale() {
-    delete data;
-}
-
-Locale::Locale(const std::string & spec) {
-    if (!spec.empty()) {
+    else {
         data = new Locale_data;
         data->lang = Language(locale_language(spec));
         data->terr = Territory(locale_territory(spec));
         data->enc = Encoding(locale_encoding(spec));
-        data->fenc = Encoding(tau::iocharset());
+        data->fenc = sys_locale_.fenc;
         data->mod = locale_modifier(spec);
         data->sdata = find_sdata(data->lang, data->terr);
     }
-
-    else {
-        data = new Locale_data(sys_data());
-    }
-}
-
-const tau::Locale_data & Locale::sys_data() {
-    static tau::Locale_data sd;
-    static bool init = false;
-
-    if (!init) {
-        init = true;
-        std::string spec = tau::locale_spec();
-        sd.lang = tau::Language(tau::locale_language(spec));
-        sd.terr = tau::Territory(tau::locale_territory(spec));
-        sd.enc = tau::Encoding(tau::locale_encoding(spec));
-        sd.fenc = tau::Encoding(tau::iocharset());
-        sd.mod = tau::locale_modifier(spec);
-        sd.sdata = find_sdata(sd.lang, sd.terr);
-    }
-
-    return sd;
 }
 
 Locale::Locale(const Language & lang, const Territory & terr, const std::string & modifier):
@@ -549,7 +521,7 @@ Locale::Locale(const Language & lang, const Territory & terr, const std::string 
     data->lang = lang;
     data->terr = terr;
     data->mod = modifier;
-    data->fenc = Encoding(tau::iocharset());
+    data->fenc = sys_locale_.fenc;
     data->sdata = find_sdata(data->lang, data->terr);
 }
 
@@ -559,7 +531,7 @@ Locale::Locale(const Language & lang, const Territory & terr, const Encoding & e
     data->lang = lang;
     data->terr = terr;
     data->enc = enc;
-    data->fenc = Encoding(tau::iocharset());
+    data->fenc = sys_locale_.fenc;
     data->mod = modifier;
     data->sdata = find_sdata(data->lang, data->terr);
 }
@@ -570,22 +542,27 @@ Locale::Locale(const Locale & other):
     data->lang = other.data->lang;
     data->terr = other.data->terr;
     data->enc = other.data->enc;
-    data->fenc = Encoding(tau::iocharset());
+    data->fenc = sys_locale_.fenc;
     data->mod = other.data->mod;
     data->sdata = other.data->sdata;
 }
 
 Locale & Locale::operator=(const Locale & other) {
     if (this != &other) {
+        if (data == sys_locale_ptr_) { data = new Locale_data; }
         data->lang = other.data->lang;
         data->terr = other.data->terr;
         data->enc = other.data->enc;
-        data->fenc = Encoding(tau::iocharset());
+        data->fenc = sys_locale_.fenc;
         data->mod = other.data->mod;
         data->sdata = other.data->sdata;
     }
 
     return *this;
+}
+
+Locale::~Locale() {
+    if (data !=  sys_locale_ptr_) { delete data; }
 }
 
 bool Locale::operator==(const Locale & other) const {
@@ -596,6 +573,26 @@ bool Locale::operator==(const Locale & other) const {
 bool Locale::operator!=(const Locale & other) const {
     return data->lang != other.data->lang || data->terr != other.data->terr ||
            data->enc != other.data->enc || data->mod != other.data->mod;
+}
+
+// static
+char * Locale::set(int category, const std::string & locale) {
+    Locale lc;
+    char * result = setlocale(category, locale.c_str());
+
+    if (result) {
+        if (!locale.empty() && lc.code() != locale) {
+            lc.data = sys_locale_ptr_ = &sys_locale_;
+            lc.data->spec = locale;
+            lc.init();
+            lc.data->lang = Language(locale_language(lc.data->spec));
+            lc.data->terr = Territory(locale_territory(lc.data->spec));
+            lc.data->mod = locale_modifier(lc.data->spec);
+            lc.data->sdata = find_sdata(lc.data->lang, lc.data->terr);
+        }
+    }
+
+    return result;
 }
 
 std::string Locale::code() const {
@@ -660,22 +657,6 @@ std::vector<Locale> Locale::variants() const {
     }
 
     return v;
-}
-
-ustring Locale::decode(const std::string & s) const {
-    return data->enc.decode(s);
-}
-
-std::string Locale::encode(const ustring & s) const {
-    return data->enc.encode(s);
-}
-
-ustring Locale::io_decode(const std::string & s) const {
-    return data->fenc.decode(s);
-}
-
-std::string Locale::io_encode(const ustring & s) const {
-    return data->fenc.encode(s);
 }
 
 ustring Locale::int_curr_symbol() const {
@@ -848,58 +829,6 @@ ustring Locale::date_fmt() const {
 
 int Locale::first_weekday() const {
     return data->sdata->first_weekday;
-}
-
-// ----------------------------------------------------------------------------
-// ----------------------------------------------------------------------------
-
-std::string locale_language(const std::string & locale) {
-    auto end = locale.find_first_of("-_");
-    return (std::string::npos != end) ? locale.substr(0, end) : std::string();
-}
-
-std::string locale_territory(const std::string & locale) {
-    auto begin = locale.find_first_of("-_");
-    if (std::string::npos == begin) { return std::string(); }
-    ++begin;
-    auto end = locale.find('.');
-    return locale.substr(begin, end-begin);
-}
-
-std::string locale_encoding(const std::string & locale) {
-    auto begin = locale.find('.');
-    if (std::string::npos == begin) { return std::string(); }
-    ++begin;
-    auto end = locale.find('@');
-    return locale.substr(begin, end-begin);
-}
-
-std::string locale_modifier(const std::string & locale) {
-    auto begin = locale.find('@');
-    if (std::string::npos == begin) { return std::string(); }
-    return locale.substr(1+begin);
-}
-
-std::string locale_language() {
-    return locale_language(locale_spec());
-}
-
-std::string locale_territory() {
-    return locale_territory(locale_spec());
-}
-
-std::string locale_modifier() {
-    return locale_modifier(locale_spec());
-}
-
-bool locale_is_utf8(const std::string & locale) {
-    std::string enc = locale_encoding(locale);
-    for (std::size_t i = 0; i < enc.size(); ++i) { enc[i] = toupper(enc[i]); }
-    return enc == "UTF-8" || enc == "UTF8";
-}
-
-bool locale_is_utf8() {
-    return locale_is_utf8(locale_spec());
 }
 
 } // namespace tau

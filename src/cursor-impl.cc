@@ -446,7 +446,8 @@ void Cursor_impl::load_xcursor(std::ifstream & is, unsigned size_px) {
 // static
 void Cursor_impl::load(const ustring & path, unsigned size_px) {
     clear();
-    std::ifstream is(Locale().io_encode(path), std::ios::binary);
+    auto & io = Locale().iocharset();
+    std::ifstream is(io.is_utf8() ? std::string(path) : io.encode(path), std::ios::binary);
 
     if (is.good()) {
         char buf[4];
@@ -645,7 +646,8 @@ Cursor_ptr Cursor_impl::load_from_file(const ustring & path, unsigned size_px) {
 
 // static
 std::vector<unsigned> Cursor::list_sizes(const ustring & path) {
-    std::ifstream is(Locale().io_encode(path), std::ios::binary);
+    auto & io = Locale().iocharset();
+    std::ifstream is(io.is_utf8() ? std::string(path) : io.encode(path), std::ios::binary);
 
     if (is.good()) {
         char buf[4];

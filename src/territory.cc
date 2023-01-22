@@ -29,9 +29,7 @@
 
 namespace tau {
 
-class Territory_data {
-public:
-
+struct Territory_data {
     const char *        code2;
     const char *        code3;
     int                 num;
@@ -45,7 +43,7 @@ public:
 
 namespace {
 
-const tau::Territory_data data_[] = {
+tau::Territory_data data_[] = {
     {   .code2          = "",
         .code3          = "",
         .num            = 0,
@@ -1049,10 +1047,10 @@ const tau::Territory_data data_[] = {
     {   .code2          = nullptr }
 };
 
-const tau::Territory_data * find_data(const std::string & code) {
+tau::Territory_data * find_data(const std::string & code) {
     std::string ucode = tau::str_toupper(code);
 
-    for (const tau::Territory_data * p = data_; p->code2; ++p) {
+    for (tau::Territory_data * p = data_; p->code2; ++p) {
         if (ucode == p->code2 || ucode == p->code3) {
             return p;
         }
@@ -1068,14 +1066,18 @@ const tau::Territory_data * find_data(const std::string & code) {
 
 namespace tau {
 
-Territory::Territory():
-    data(find_data(locale_territory(locale_spec())))
-{
-}
-
 Territory::Territory(const std::string & iso_code):
-    data(find_data(iso_code))
+    data(data_)
 {
+    if (iso_code.empty()) {
+        if (sys_locale_ptr_) {
+            data = sys_locale_ptr_->terr.data;
+        }
+    }
+
+    else {
+        data = find_data(iso_code);
+    }
 }
 
 Territory::Territory(const Territory & other):
@@ -1090,6 +1092,8 @@ Territory & Territory::operator=(const Territory & other) {
 
     return *this;
 }
+
+Territory::~Territory() {}
 
 bool Territory::operator==(const Territory & other) const {
     return data == other.data;

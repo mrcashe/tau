@@ -41,25 +41,22 @@ class Encoding {
 public:
 
     /// Default constructor.
-    Encoding();
-
-    /// Constructor with name.
-    Encoding(const std::string & name);
+    Encoding(const std::string & name=std::string());
 
     /// Copy constructor.
-    Encoding(const Encoding & other) = default;
+    Encoding(const Encoding & other);
 
     /// Copy operator.
-    Encoding & operator=(const Encoding & other) = default;
+    Encoding & operator=(const Encoding & other);
+
+    /// Destructor.
+   ~Encoding();
 
     /// Compare operator.
     bool operator==(const Encoding & other) const;
 
     /// Compare operator.
     bool operator!=(const Encoding & other) const;
-
-    /// Validate encoding.
-    bool operator!() const;
 
     /// Validate encoding.
     operator bool() const;
@@ -72,6 +69,9 @@ public:
 
     /// Test if multibyte.
     bool is_multibyte() const;
+
+    /// Test if UTF-8.
+    bool is_utf8() const;
 
     /// Test if little endian.
     bool is_little_endian() const;

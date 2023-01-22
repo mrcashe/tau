@@ -160,7 +160,7 @@ Loop_win::Drives Loop_win::list_drives() const {
     DWORD nbytes = GetLogicalDriveStringsA(0, NULL);
 
     if (0 != nbytes) {
-        Locale loc;
+        auto & io = Locale().iocharset();
         char buf[1+nbytes];
         GetLogicalDriveStringsA(1+nbytes, buf);
 
@@ -169,7 +169,7 @@ Loop_win::Drives Loop_win::list_drives() const {
                 UINT drive_type = GetDriveType(buf+i);
 
                 if (DRIVE_UNKNOWN != drive_type && DRIVE_NO_ROOT_DIR != drive_type) {
-                    v.push_back(loc.io_encode(buf+i));
+                    v.push_back(io.encode(buf+i));
                 }
             }
 

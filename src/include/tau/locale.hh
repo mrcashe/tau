@@ -33,29 +33,30 @@
 #include <tau/language.hh>
 #include <tau/encoding.hh>
 #include <tau/ustring.hh>
+#include <locale.h>
 #include <vector>
 
 namespace tau {
 
 struct Locale_data;
-class Territory_data;
+struct Territory_data;
 
 /// Represents territory based on ISO territory/country codes.
 /// @ingroup i18n_group
 class Territory {
 public:
 
-    /// Constructs from current locale.
-    Territory();
-
-    /// Constructs from iso code.
-    Territory(const std::string & iso_code);
+    /// Constructs from iso code or current locale if iso_code is empty.
+    Territory(const std::string & iso_code=std::string());
 
     /// Copy constructor.
     Territory(const Territory & other);
 
     /// Copy operator.
     Territory & operator=(const Territory & other);
+
+    /// Destructor.
+   ~Territory();
 
     /// Compare operator.
     bool operator==(const Territory & other) const;
@@ -84,7 +85,7 @@ public:
 
 private:
 
-    const Territory_data * data;
+    Territory_data * data;
 };
 
 /// %Locale.
@@ -92,11 +93,10 @@ private:
 class Locale {
 public:
 
-    /// Construct from the system locale.
-    Locale();
+    /// @name Constructors, operators and destructor.
 
-    /// Construct from ISO code.
-    Locale(const std::string & iso_code);
+    /// Construct from ISO code or system locale (when iso_code is empty).
+    Locale(const std::string & iso_code = std::string());
 
     /// Construct from components.
     Locale(const Language & lang, const Territory & terr, const std::string & modifier=std::string());
@@ -112,6 +112,11 @@ public:
 
     /// Destructor.
    ~Locale();
+
+    /// @}
+
+    /// Wrapper around setlocale(3) libc function.
+    static char * set(int category=LC_ALL, const std::string & locale=std::string());
 
     /// Compare operator.
     bool operator==(const Locale & other) const;
@@ -146,18 +151,6 @@ public:
     /// is "fr_BE", "fr".
     /// @note borrowed from glib.
     std::vector<Locale> variants() const;
-
-    /// Convert string to UTF-8.
-    ustring decode(const std::string & s) const;
-
-    /// Convert string from UTF-8.
-    std::string encode(const ustring & s) const;
-
-    /// Convert file name to UTF-8.
-    ustring io_decode(const std::string & s) const;
-
-    /// Convert file name from UTF-8 to encoding used for filenames.
-    std::string io_encode(const ustring & s) const;
 
     /// Get international currency symbol.
     ustring int_curr_symbol() const;
@@ -314,7 +307,7 @@ public:
 private:
 
     Locale_data * data;
-    const Locale_data & sys_data();
+    void init();
 };
 
 } // namespace tau

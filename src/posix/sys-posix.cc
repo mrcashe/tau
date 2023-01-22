@@ -27,7 +27,6 @@
 #include <tau/exception.hh>
 #include <tau/fileinfo.hh>
 #include <tau/font.hh>
-#include <tau/locale.hh>
 #include <tau/timeval.hh>
 #include <tau/string.hh>
 #include <locale-impl.hh>
@@ -70,34 +69,13 @@ struct tm Timeval::localtime() const {
     return res;
 }
 
-std::string locale_spec() {
-    const char * s;
-
-    s = getenv("LANG");
-    if (s && '\0' != *s) { return s; }
-
-    s = getenv("LANGUAGE");
-    if (s && '\0' != *s) { return s; }
-
-    s = getenv("LC_ALL");
-    if (s && '\0' != *s) { return s; }
-
-    s = getenv("LC_MESSAGES");
-    if (s && '\0' != *s) { return s; }
-
-    return "C";
-}
-
-std::string iocharset() {
-    return locale_encoding();
-}
-
 bool path_is_absolute(const ustring & path) {
     return '/' == *path.begin();
 }
 
 ustring path_home() {
     const char * home = getenv("HOME");
+    auto & io = Locale().iocharset();
 
     if (!home || '\0' == *home) {
         struct passwd pwd;
@@ -107,15 +85,18 @@ ustring path_home() {
 
         if (!logname || '\0' == *logname) {
             int result = getpwnam_r(logname, &pwd, buffer, sizeof(buffer), &pw);
-            if (0 == result && pw && pw->pw_uid == getuid()) { return Locale().decode(pw->pw_dir); }
+
+            if (0 == result && pw && pw->pw_uid == getuid()) {
+                return io.is_utf8() ? ustring(pw->pw_dir) : io.decode(pw->pw_dir);
+            }
         }
 
         int result = getpwuid_r(getuid(), &pwd, buffer, sizeof(buffer), &pw);
-        if (0 == result && pw) { return Locale().decode(pw->pw_dir); }
+        if (0 == result && pw) { return io.is_utf8() ? ustring(pw->pw_dir) : io.decode(pw->pw_dir); }
         return ustring(); // FIXME What to do in that case?
     }
 
-    return Locale().decode(home);
+    return io.is_utf8() ? ustring(home) : io.decode(home);
 }
 
 ustring user_name() {
@@ -123,22 +104,24 @@ ustring user_name() {
     struct passwd * pw = nullptr;
     char buffer[16384];
     const char * logname = getenv("LOGNAME");
+    auto & io = Locale().iocharset();
 
     if (logname) {
         int result = getpwnam_r(logname, &pwd, buffer, sizeof(buffer), &pw);
-        if (0 == result && pw && pw->pw_uid == getuid()) { return Locale().decode(pw->pw_name); }
+        if (0 == result && pw && pw->pw_uid == getuid()) { return io.is_utf8() ? ustring(pw->pw_name) : io.decode(pw->pw_name); }
     }
 
     int result = getpwuid_r(getuid(), &pwd, buffer, sizeof(buffer), &pw);
-    if (0 == result && pw) { return Locale().decode(pw->pw_name); }
+    if (0 == result && pw) { return io.is_utf8() ? ustring(pw->pw_name) : io.decode(pw->pw_name); }
     return "somebody";
 }
 
 ustring path_user_data_dir() {
     const char * env = getenv("XDG_DATA_HOME");
+    auto & enc = Locale().encoding();
 
     if (env && '\0' != *env) {
-        ustring dir = Locale().decode(env);
+        ustring dir = enc.is_utf8() ? ustring(env) : enc.decode(env);
         if (path_is_absolute(dir)) { return dir; }
     }
 
@@ -155,7 +138,8 @@ ustring path_user_config_dir() {
     const char * env = getenv("XDG_CONFIG_HOME");
 
     if (env && '\0' != *env) {
-        ustring dir = Locale().decode(env);
+        auto & enc = Locale().encoding();
+        ustring dir = enc.is_utf8() ? ustring(env) : enc.decode(env);
         if (path_is_absolute(dir)) { return dir; }
     }
 
@@ -172,7 +156,8 @@ ustring path_user_cache_dir() {
     const char * env = getenv("XDG_CACHE_HOME");
 
     if (env && '\0' != *env) {
-        ustring dir = Locale().decode(env);
+        auto & enc = Locale().encoding();
+        ustring dir = enc.is_utf8() ? ustring(env) : enc.decode(env);
         if (path_is_absolute(dir)) { return dir; }
     }
 
@@ -189,7 +174,8 @@ ustring path_user_runtime_dir() {
     const char * env = getenv("XDG_RUNTIME_DIR");
 
     if (env && '\0' != *env) {
-        ustring dir = Locale().decode(env);
+        auto & enc = Locale().encoding();
+        ustring dir = enc.is_utf8() ? ustring(env) : enc.decode(env);
         if (path_is_absolute(dir)) { return dir; }
     }
 
@@ -200,7 +186,8 @@ ustring path_tmp() {
     const char * env = getenv("TMPDIR");
 
     if (env && '\0' != *env) {
-        ustring dir = Locale().decode(env);
+        auto & enc = Locale().encoding();
+        ustring dir = enc.is_utf8() ? ustring(env) : enc.decode(env);
         if (path_is_absolute(dir)) { return dir; }
     }
 
@@ -209,29 +196,32 @@ ustring path_tmp() {
 
 ustring path_cwd() {
     const char * pwd = getenv("PWD");
+    auto & enc = Locale().encoding();
 
     if (pwd && '\0' != *pwd) {
-        return Locale().decode(pwd);
+        return enc.is_utf8() ? ustring(pwd) : enc.decode(pwd);
     }
 
     char wd[1+PATH_MAX];
 
-    if (getcwd(wd, PATH_MAX)) { return
-        Locale().io_decode(wd);
+    if (getcwd(wd, PATH_MAX)) {
+        return enc.is_utf8() ? ustring(wd) : enc.decode(wd);
     }
 
     return ustring();
 }
 
 std::vector<ustring> path_list(const ustring & path) {
-    DIR * d = opendir(Locale().io_encode(path).c_str());
+    auto & io = Locale().iocharset();
+    std::string lfp = io.is_utf8() ? std::string(path) : io.encode(path);
+    DIR * d = opendir(lfp.c_str());
     if (!d) { throw sys_error(); }
     struct dirent * de;
     std::vector<ustring> v;
 
     do {
         de = readdir(d);
-        if (de) { v.push_back(Locale().io_decode(de->d_name)); }
+        if (de) { v.push_back(io.is_utf8() ? ustring(de->d_name) : io.decode(de->d_name)); }
     } while (de);
 
     closedir(d);
@@ -242,7 +232,9 @@ std::vector<ustring> path_glob(const ustring & mask) {
     std::vector<ustring> v;
 
     glob_t gl;
-    int result = glob(Locale().io_encode(mask).c_str(), GLOB_NOSORT|GLOB_TILDE, 0, &gl);
+    auto & io = Locale().iocharset();
+    std::string lm = io.is_utf8() ? std::string(mask) : io.encode(mask);
+    int result = glob(lm.c_str(), GLOB_NOSORT|GLOB_TILDE, 0, &gl);
 
     if (GLOB_NOSPACE == result) {
         throw std::bad_alloc();
@@ -254,7 +246,7 @@ std::vector<ustring> path_glob(const ustring & mask) {
 
     else if (0 == result) {
         for (std::size_t i = 0; i < gl.gl_pathc; ++i) {
-            v.push_back(Locale().io_decode(gl.gl_pathv[i]));
+            v.push_back(io.is_utf8() ? ustring(gl.gl_pathv[i]) : io.decode(gl.gl_pathv[i]));
         }
     }
 
@@ -270,7 +262,9 @@ void path_mkdir(const ustring & path) {
     if (!file_is_dir(path)) {
         ustring parent = path_dirname(path);
         if (!file_exists(parent)) { path_mkdir(parent); }
-        if (0 != mkdir(Locale().io_encode(path).c_str(), 0755)) { throw sys_error(path); }
+        auto & io = Locale().iocharset();
+        std::string lfp = io.is_utf8() ? std::string(path) : io.encode(path);
+        if (0 != mkdir(lfp.c_str(), 0755)) { throw sys_error(path); }
     }
 }
 
@@ -281,11 +275,12 @@ ustring path_dirname(const ustring & path) {
 }
 
 ustring path_real(const ustring & path) {
-    Locale loc;
-    char * res_path = realpath(loc.io_encode(path).c_str(), nullptr);
+    auto & io = Locale().iocharset();
+    std::string lfp = io.is_utf8() ? std::string(path) : io.encode(path);
+    char * res_path = realpath(lfp.c_str(), nullptr);
 
     if (res_path) {
-        ustring res = loc.io_decode(res_path);
+        ustring res = io.is_utf8() ? ustring(res_path) : io.decode(res_path);
         std::free(res_path);
         return res;
     }
@@ -295,7 +290,10 @@ ustring path_real(const ustring & path) {
 
 bool path_match(const ustring & pattern, const ustring & path) {
     Locale loc;
-    return 0 == fnmatch(loc.io_encode(pattern).c_str(), loc.io_encode(path).c_str(), FNM_PATHNAME|FNM_PERIOD);
+    auto & io = Locale().iocharset();
+    std::string lp = io.is_utf8() ? std::string(pattern) : io.encode(pattern);
+    std::string lfp = io.is_utf8() ? std::string(path) : io.encode(path);
+    return 0 == fnmatch(lp.c_str(), lfp.c_str(), FNM_PATHNAME|FNM_PERIOD);
 }
 
 std::vector<ustring> path_which(const ustring & cmd) {
@@ -305,7 +303,8 @@ std::vector<ustring> path_which(const ustring & cmd) {
         char * env = getenv("PATH");
 
         if (env) {
-            auto vv = str_explode(Locale().io_decode(env), ':');
+            auto & enc = Locale().encoding();
+            auto vv = str_explode(enc.is_utf8() ? ustring(env) : enc.decode(env), ':');
 
             for (const ustring & s: vv) {
                 ustring path = path_build(s, cmd);
@@ -340,11 +339,15 @@ ustring usystem(const ustring & cmd) {
         int fd = mkstemp(tmp);
 
         if (fd > 2) {
-            if (-1 < std::system(Locale().encode(str_format(cmd, " > ", &tmp[0])).c_str())) {
+            auto & enc = Locale().encoding();
+            auto us = str_format(cmd, " > ", &tmp[0]);
+
+            if (-1 < std::system((enc.is_utf8() ? std::string(us) : enc.encode(us)).c_str())) {
                 if (std::size_t bytes = Fileinfo(tmp).bytes()) {
                     char out[bytes];
                     ssize_t nread = read(fd, out, bytes);
-                    if (0 < nread) { os = str_trim(Locale().decode(std::string(out, nread))); }
+                    std::string sout(out, nread);
+                    if (0 < nread) { os.assign(str_trim(enc.is_utf8() ? ustring(sout) : enc.decode(sout))); }
                 }
             }
 
@@ -379,9 +382,28 @@ void setup_sysinfo_posix() {
     sysinfo_.iocharset = Locale().iocharset().name();
 }
 
-std::string locale_encoding() {
-    std::string e = locale_encoding(locale_spec());
-    return e.empty() ? "UTF-8" : e;
+void Locale::init() {
+    const char * s;
+
+    s = getenv("LANG");
+    if (s && '\0' != *s) { data->spec = s; }
+
+    s = getenv("LANGUAGE");
+    if (s && '\0' != *s) { data->spec = s; }
+
+    s = getenv("LC_ALL");
+    if (s && '\0' != *s) { data->spec = s; }
+
+    s = getenv("LC_MESSAGES");
+    if (s && '\0' != *s) { data->spec = s; }
+
+    auto begin = data->spec.find('.');
+
+    if (std::string::npos != begin) {
+        ++begin;
+        auto end = data->spec.find('@');
+        data->fenc = data->enc = Encoding(data->spec.substr(begin, end-begin));
+    }
 }
 
 } // namespace tau

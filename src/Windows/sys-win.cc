@@ -27,7 +27,6 @@
 #include "types-win.hh"
 #include <tau/exception.hh>
 #include <tau/fileinfo.hh>
-#include <tau/locale.hh>
 #include <tau/string.hh>
 #include <tau/timeval.hh>
 #include <locale-impl.hh>
@@ -160,7 +159,7 @@ ustring path_tmp() {
     const char * tmp = getenv("TEMP");
 
     if (tmp && '\0' != *tmp) {
-        return Locale().decode(tmp);
+        return Encoding().decode(tmp);
     }
 
     return root_dir();
@@ -244,7 +243,7 @@ void path_mkdir(const ustring & path) {
                 throw user_error(str_format("file '", parent, "' exists but not a directory"));
             }
 
-            if (0 != mkdir(Locale().encode(path).c_str())) {
+            if (0 != mkdir(Locale().iocharset().encode(path).c_str())) {
                 throw sys_error(path);
             }
         }
@@ -306,7 +305,7 @@ std::vector<ustring> path_which(const ustring & cmd) {
         char * env = getenv("PATH");
 
         if (env) {
-            auto vv = str_explode(Locale().io_decode(env), ':');
+            auto vv = str_explode(Locale().iocharset().decode(env), ':');
 
             for (const ustring & s: vv) {
                 ustring path = path_build(s, cmd);
@@ -488,12 +487,12 @@ void setup_sysinfo_win() {
     sysinfo_.iocharset = Locale().iocharset().name();
 }
 
-std::string locale_spec() {
+void Locale::init() {
     LCID lcid = GetThreadLocale();
     char iso639[10];
-    if (!GetLocaleInfo (lcid, LOCALE_SISO639LANGNAME, iso639, sizeof (iso639))) { return "C"; }
+    if (!GetLocaleInfo (lcid, LOCALE_SISO639LANGNAME, iso639, sizeof iso639)) { return; }
     char iso3166[10];
-    if (!GetLocaleInfo (lcid, LOCALE_SISO3166CTRYNAME, iso3166, sizeof (iso3166))) { return "C"; }
+    if (!GetLocaleInfo (lcid, LOCALE_SISO3166CTRYNAME, iso3166, sizeof iso3166)) { return; }
     LANGID langid = LANGIDFROMLCID(lcid);
     std::string s;
 
@@ -514,7 +513,7 @@ std::string locale_spec() {
                 break;
             }
 
-        break;
+            break;
 
         case LANG_UZBEK:
             switch (SUBLANGID(langid)) {
@@ -525,16 +524,16 @@ std::string locale_spec() {
         break;
     }
 
-    return str_format(iso639, '_', iso3166, ".CP", GetACP(), s);
-}
+    data->spec = str_format(iso639, '_', iso3166, ".CP", GetACP(), s);
+    auto begin = data->spec.find('.');
 
-std::string iocharset() {
-    return str_format("CP", GetOEMCP());
-}
+    if (std::string::npos != begin) {
+        ++begin;
+        auto end = data->spec.find('@');
+        data->enc = Encoding(data->spec.substr(begin, end-begin));
+    }
 
-std::string locale_encoding() {
-    std::string e = locale_encoding(locale_spec());
-    return e.empty() ? "ASCII" : e;
+    data->fenc = Encoding(str_format("CP", GetOEMCP()));
 }
 
 } // namespace tau

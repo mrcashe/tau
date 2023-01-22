@@ -49,7 +49,7 @@ struct Fileinfo_win: public Fileinfo_impl {
         bytes_ = 0;
 
         if (!uri_.empty()) {
-            std::string path = Locale().io_encode(path_real(uri_));
+            std::string path = Locale().iocharset().encode(path_real(uri_));
             struct stat st;
 
             if (0 > stat(path.c_str(), &st)) {

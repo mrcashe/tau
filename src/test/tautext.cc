@@ -341,8 +341,7 @@ struct Main: tau::Toplevel {
             else {
                 const tau::ustring name = tau::str_format(pg.metaid, ".ini");
                 const tau::ustring mpath = tau::path_build(tau::path_build(tau::path_user_data_dir(), tau::program_name(), "meta"), name);
-                std::ifstream is(tau::Locale().io_encode(mpath));
-                tau::Key_file kf(is);
+                tau::Key_file kf(mpath);
                 std::size_t row = kf.get_integer(kf.section("pos"), "row");
                 std::size_t col = kf.get_integer(kf.section("pos"), "col");
                 pg.edit.move_to(row, col);
@@ -465,8 +464,7 @@ struct Main: tau::Toplevel {
 
     void load_session() {
         tau::ustring path = tau::path_build(tau::path_user_data_dir(), tau::program_name(), "session.ini");
-        std::ifstream is(tau::Locale().io_encode(path));
-        tau::Key_file kf(is);
+        tau::Key_file kf(path);
         std::vector<int> v;
 
         for (auto & s: kf.list_sections()) {
@@ -511,8 +509,7 @@ struct Main: tau::Toplevel {
         if (metas_.empty()) {
             try {
                 const tau::ustring path = tau::path_build(tau::path_user_data_dir(), tau::program_name(), "metas.ini");
-                std::ifstream is(tau::Locale().io_encode(path));
-                tau::Key_file kf(is);
+                tau::Key_file kf(path);
 
                 for (const tau::ustring & s: kf.list_sections()) {
                     if (tau::file_exists(s)) {
@@ -758,8 +755,7 @@ struct Main: tau::Toplevel {
                 tau::path_mkdir(dir);
                 tau::ustring name = tau::str_format(pg.metaid, ".ini");
                 tau::ustring path = tau::path_build(dir, name);
-                std::ofstream os(tau::Locale().io_encode(path));
-                kf.save(os);
+                kf.save(path);
                 // std::cout << "save_metadata " << path << '\n';
             }
 
@@ -797,8 +793,7 @@ struct Main: tau::Toplevel {
                 const tau::ustring dir = tau::path_build(tau::path_user_data_dir(), tau::program_name());
                 tau::path_mkdir(dir);
                 const tau::ustring path = tau::path_build(dir, "metas.ini");
-                std::ofstream os(tau::Locale().io_encode(path));
-                kf.save(os);
+                kf.save(path);
                 // std::cout << "save_metas() -> " << path << '\n';
             }
 
@@ -840,8 +835,7 @@ struct Main: tau::Toplevel {
             tau::ustring path = tau::path_build(tau::path_user_data_dir(), tau::program_name());
             tau::path_mkdir(path);
             path = tau::path_build(path, "session.ini");
-            std::ofstream os(tau::Locale().io_encode(path));
-            kf.save(os);
+            kf.save(path);
             // std::cout << "save_session() -> " << path << '\n';
         }
 
@@ -1542,13 +1536,13 @@ struct Main: tau::Toplevel {
 };
 
 int main(int argc, char * argv[]) {
-    setlocale(LC_ALL, "");
+    tau::Locale::set();
 
     for (int i = 1; i < argc; ++i) {
         std::string arg(argv[i]);
 
         if ('-' != arg[0]) {
-            tau::ustring path = tau::Locale().decode(arg);
+            tau::ustring path = tau::Encoding().decode(arg);
             if (!tau::path_is_absolute(path)) { path = tau::path_build(tau::path_cwd(), path); }
             if (args_.end() == std::find(args_.begin(), args_.end(), path)) { args_.push_back(path); }
         }

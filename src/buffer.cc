@@ -188,8 +188,8 @@ void Buffer::save(std::ostream & os) {
 }
 
 void Buffer::save_to_file(const ustring & path) {
-    tau::Locale lc;
-    std::ofstream os(lc.io_encode(path));
+    auto & io = Locale().iocharset();
+    std::ofstream os(io.is_utf8() ? std::string(path) : io.encode(path));
     if (!os.good()) { throw sys_error(); }
     save(os);
     os.close();
@@ -268,7 +268,8 @@ Buffer_citer Buffer::insert(Buffer_citer iter, std::istream & is) {
 
 // static
 Buffer Buffer::load_from_file(const ustring & path) {
-    std::ifstream is(Locale().encode(path), std::ios::binary);
+    auto & io = Locale().iocharset();
+    std::ifstream is(io.is_utf8() ? std::string(path) : io.encode(path), std::ios::binary);
     if (!is.good()) { throw sys_error(path); }
     Buffer buffer;
     buffer.insert(buffer.cend(), is);

@@ -123,7 +123,8 @@ void Loop_linux::on_inotify() {
 
                 if (0 != kevent->len) {
                     std::string s(kevent->name, kevent->len);
-                    name = Locale().io_decode(s);
+                    auto & io = Locale().iocharset();
+                    name.assign(io.is_utf8() ? ustring(s) : io.decode(s));
                 }
 
                 signal_chain_notify_(kevent->wd, name, mask);
@@ -156,7 +157,9 @@ File_monitor_ptr Loop_linux::create_file_monitor(const ustring & path, int mask)
         if (fd < 0) { throw sys_error("inotify_init1(): "+path); }
     }
 
-    int wd = inotify_add_watch(fd, Locale().io_encode(path).c_str(), umask);
+    auto & io = Locale().iocharset();
+    std::string lfp = io.is_utf8() ? std::string(path) : io.encode(path);
+    int wd = inotify_add_watch(fd, lfp.c_str(), umask);
 
     if (wd < 0) {
         sys_error x("inotify_add_watch(): "+path);

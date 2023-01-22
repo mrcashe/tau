@@ -35,7 +35,8 @@
 namespace tau {
 
 Pixmap_ptr Pixmap_impl::load_png_from_file(const ustring & path) {
-    std::string lfp = Locale().io_encode(path);
+    auto & io = Locale().iocharset();
+    std::string lfp = io.is_utf8() ? std::string(path) : io.encode(path);
     FILE * is = std::fopen(lfp.c_str(), "rb");
     if (!is) { throw sys_error(); }
     uint8_t header[8];

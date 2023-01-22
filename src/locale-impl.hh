@@ -29,43 +29,52 @@
 
 #include <tau/locale.hh>
 
+struct Locale_static {
+    const char *        code;
+    const char *        int_curr_symbol;
+    const char *        currency_symbol;
+    const char *        mon_decimal_point;
+    const char *        mon_thousands_sep;
+    const char *        mon_grouping;
+    const char *        positive_sign;
+    const char *        negative_sign;
+    int                 int_frac_digits;
+    int                 frac_digits;
+    int                 p_cs_precedes;
+    int                 p_sep_by_space;
+    int                 n_cs_precedes;
+    int                 n_sep_by_space;
+    int                 p_sign_posn;
+    int                 n_sign_posn;
+    const char *        decimal_point;
+    const char *        thousands_sep;
+    const char *        grouping;
+    const char *        abday;
+    const char *        day;
+    const char *        abmon;
+    const char *        mon;
+    const char *        d_t_fmt;
+    const char *        d_fmt;
+    const char *        t_fmt;
+    const char *        am_pm;
+    const char *        t_fmt_ampm;
+    const char *        date_fmt;
+    int                 first_weekday;
+};
+
 namespace tau {
 
-// Get X/Open style locale specification.
-std::string locale_spec();
+struct Locale_data {
+    std::string         spec;
+    Language            lang;
+    Territory           terr;
+    Encoding            enc;    // System encoding.
+    Encoding            fenc;   // Encoding used for file names.
+    std::string         mod;
+    const Locale_static * sdata;
+};
 
-// Get language component from X/Open style locale specification.
-std::string locale_language(const std::string & locale);
-
-// Get territory component from X/Open style locale specification.
-std::string locale_territory(const std::string & locale);
-
-// Get codeset component from X/Open style locale specification.
-std::string locale_encoding(const std::string & locale);
-
-// Get modifier component from X/Open style locale specification.
-std::string locale_modifier(const std::string & locale);
-
-// Get language component from X/Open style locale specification.
-std::string locale_language();
-
-// Get territory component from X/Open style locale specification.
-std::string locale_territory();
-
-// Get codeset component from X/Open style locale specification.
-std::string locale_encoding();
-
-// Get modifier component from X/Open style locale specification.
-std::string locale_modifier();
-
-// Check codeset is UTF-8.
-bool locale_is_utf8(const std::string & locale);
-
-// Check locale is UTF-8.
-bool locale_is_utf8();
-
-// Get encoding used for file names.
-std::string iocharset();
+extern Locale_data * sys_locale_ptr_;
 
 } // namespace tau
 

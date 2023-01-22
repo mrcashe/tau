@@ -42,17 +42,17 @@ struct Language_data;
 class Language {
 public:
 
-    /// Default constructor constructs Language from current locale.
-    Language();
-
-    /// Construct from any ISO code.
-    Language(const std::string & iso_code);
+    /// Construct from any ISO code or from current locale if iso_code is empty.
+    Language(const std::string & iso_code=std::string());
 
     /// Copy constructor.
-    Language(const Language & other) = default;
+    Language(const Language & other);
 
     /// Copy operator.
-    Language & operator=(const Language & other) = default;
+    Language & operator=(const Language & other);
+
+    /// Destructor.
+   ~Language();
 
     /// Compare operator.
     bool operator==(const Language & other) const;
@@ -86,8 +86,7 @@ public:
 
 private:
 
-    const Language_data * data;
-    Language(const Language_data * datap);
+    Language_data * data;
 };
 
 } // namespace tau

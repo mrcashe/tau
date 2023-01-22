@@ -35,7 +35,8 @@ namespace tau {
 void Loop_impl::boot_linkage() {
     sysinfo_.shared = true;
     const char * ld = getenv("LD_LIBRARY_PATH");
-    ustring uld = ld ? Locale().decode(ld) : "";
+    auto & enc = Locale().encoding();
+    ustring uld = ld ? (enc.is_utf8() ? enc.decode(ld) : ustring(ld)) : "";
     auto v = str_explode(uld, ':');
     v.insert(v.begin(), path_dirname(path_self()));
 
