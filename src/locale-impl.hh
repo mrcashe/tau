@@ -69,7 +69,7 @@ struct Locale_data {
     Language            lang;
     Territory           terr;
     Encoding            enc;    // System encoding.
-    Encoding            fenc;   // Encoding used for file names.
+    Encoding            iocharset;   // Encoding used for file names.
     std::string         mod;
     const Locale_static * sdata;
 };

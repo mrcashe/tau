@@ -217,6 +217,17 @@ std::vector<ustring> path_find(const ustring & dir, const ustring & mask) {
     return v;
 }
 
+ustring str_env(const std::string & env, const ustring & fallback) {
+    ustring res;
+
+    if (char * val = getenv(env.c_str())) {
+        auto enc = Encoding();
+        res.assign(enc.is_utf8() ? ustring(val) : enc.decode(val));
+    }
+
+    return res;
+}
+
 } // namespace tau
 
 //END

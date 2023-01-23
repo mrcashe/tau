@@ -236,6 +236,7 @@ const ustring & str_delimiters();
 /// Format file or memory size in bytes.
 /// @param nbytes number of bytes to be formatted.
 /// @param si if @b true, format in SI units (1kB = 1000 bytes), else 1KiB = 1024 bytes.
+/// @ingroup string_group
 ustring str_bytes(uintmax_t nbytes, bool si=false);
 
 } // namespace tau

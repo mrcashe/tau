@@ -74,29 +74,26 @@ bool path_is_absolute(const ustring & path) {
 }
 
 ustring path_home() {
-    const char * home = getenv("HOME");
-    auto & io = Locale().iocharset();
+    ustring home(str_env("HOME"));
+    if (!home.empty()) { return home; }
 
-    if (!home || '\0' == *home) {
-        struct passwd pwd;
-        struct passwd * pw = nullptr;
-        char buffer[16384];
-        const char * logname = getenv("LOGNAME");
+    Encoding enc;
+    struct passwd pwd;
+    struct passwd * pw = nullptr;
+    char buffer[16384];
+    const char * logname = getenv("LOGNAME");
 
-        if (!logname || '\0' == *logname) {
-            int result = getpwnam_r(logname, &pwd, buffer, sizeof(buffer), &pw);
+    if (!logname || '\0' == *logname) {
+        int result = getpwnam_r(logname, &pwd, buffer, sizeof(buffer), &pw);
 
-            if (0 == result && pw && pw->pw_uid == getuid()) {
-                return io.is_utf8() ? ustring(pw->pw_dir) : io.decode(pw->pw_dir);
-            }
+        if (0 == result && pw && pw->pw_uid == getuid()) {
+            return enc.is_utf8() ? ustring(pw->pw_dir) : enc.decode(pw->pw_dir);
         }
-
-        int result = getpwuid_r(getuid(), &pwd, buffer, sizeof(buffer), &pw);
-        if (0 == result && pw) { return io.is_utf8() ? ustring(pw->pw_dir) : io.decode(pw->pw_dir); }
-        return ustring(); // FIXME What to do in that case?
     }
 
-    return io.is_utf8() ? ustring(home) : io.decode(home);
+    int result = getpwuid_r(getuid(), &pwd, buffer, sizeof(buffer), &pw);
+    if (0 == result && pw) { return enc.is_utf8() ? ustring(pw->pw_dir) : enc.decode(pw->pw_dir); }
+    return ustring(); // FIXME What to do in that case?
 }
 
 ustring user_name() {
@@ -117,98 +114,54 @@ ustring user_name() {
 }
 
 ustring path_user_data_dir() {
-    const char * env = getenv("XDG_DATA_HOME");
-    auto & enc = Locale().encoding();
-
-    if (env && '\0' != *env) {
-        ustring dir = enc.is_utf8() ? ustring(env) : enc.decode(env);
-        if (path_is_absolute(dir)) { return dir; }
-    }
-
-    ustring dir = path_home();
-
-    if (!dir.empty()) {
-        return path_build(dir, ".local", "share");
-    }
-
+    ustring dir = str_env("XDG_DATA_HOME");
+    if (path_is_absolute(dir)) { return dir; }
+    dir = path_home();
+    if (!dir.empty()) { return path_build(dir, ".local", "share"); }
     return path_build(path_build(path_tmp(), user_name()), ".local", "share");
 }
 
 ustring path_user_config_dir() {
-    const char * env = getenv("XDG_CONFIG_HOME");
-
-    if (env && '\0' != *env) {
-        auto & enc = Locale().encoding();
-        ustring dir = enc.is_utf8() ? ustring(env) : enc.decode(env);
-        if (path_is_absolute(dir)) { return dir; }
-    }
-
-    ustring dir = path_home();
-
-    if (!dir.empty()) {
-        return path_build(dir, ".config");
-    }
-
+    ustring dir = str_env("XDG_CONFIG_HOME");
+    if (path_is_absolute(dir)) { return dir; }
+    dir = path_home();
+    if (!dir.empty()) { return path_build(dir, ".config"); }
     return path_build(path_tmp(), user_name(), ".config");
 }
 
 ustring path_user_cache_dir() {
-    const char * env = getenv("XDG_CACHE_HOME");
-
-    if (env && '\0' != *env) {
-        auto & enc = Locale().encoding();
-        ustring dir = enc.is_utf8() ? ustring(env) : enc.decode(env);
-        if (path_is_absolute(dir)) { return dir; }
-    }
-
-    ustring dir = path_home();
-
-    if (!dir.empty()) {
-        return path_build(dir, ".cache");
-    }
-
+    ustring dir = str_env("XDG_CACHE_HOME");
+    if (path_is_absolute(dir)) { return dir; }
+    dir = path_home();
+    if (!dir.empty()) { return path_build(dir, ".cache"); }
     return path_build(path_tmp(), user_name(), ".cache");
 }
 
 ustring path_user_runtime_dir() {
-    const char * env = getenv("XDG_RUNTIME_DIR");
-
-    if (env && '\0' != *env) {
-        auto & enc = Locale().encoding();
-        ustring dir = enc.is_utf8() ? ustring(env) : enc.decode(env);
-        if (path_is_absolute(dir)) { return dir; }
-    }
-
+    ustring dir = str_env("XDG_RUNTIME_DIR");
+    if (path_is_absolute(dir)) { return dir; }
     return path_user_cache_dir();
 }
 
 ustring path_tmp() {
-    const char * env = getenv("TMPDIR");
-
-    if (env && '\0' != *env) {
-        auto & enc = Locale().encoding();
-        ustring dir = enc.is_utf8() ? ustring(env) : enc.decode(env);
-        if (path_is_absolute(dir)) { return dir; }
-    }
-
+    ustring dir = str_env("TMPDIR");
+    if (path_is_absolute(dir)) { return dir; }
     return "/tmp";
 }
 
 ustring path_cwd() {
-    const char * pwd = getenv("PWD");
-    auto & enc = Locale().encoding();
+    ustring dir = str_env("PWD");
 
-    if (pwd && '\0' != *pwd) {
-        return enc.is_utf8() ? ustring(pwd) : enc.decode(pwd);
+    if (dir.empty()) {
+        char wd[1+PATH_MAX];
+
+        if (getcwd(wd, PATH_MAX)) {
+            Encoding enc;
+            dir.assign(enc.is_utf8() ? ustring(wd) : enc.decode(wd));
+        }
     }
 
-    char wd[1+PATH_MAX];
-
-    if (getcwd(wd, PATH_MAX)) {
-        return enc.is_utf8() ? ustring(wd) : enc.decode(wd);
-    }
-
-    return ustring();
+    return dir;
 }
 
 std::vector<ustring> path_list(const ustring & path) {
@@ -300,16 +253,9 @@ std::vector<ustring> path_which(const ustring & cmd) {
     std::vector<ustring> v;
 
     if (ustring::npos == cmd.find_first_of("/\\")) {
-        char * env = getenv("PATH");
-
-        if (env) {
-            auto & enc = Locale().encoding();
-            auto vv = str_explode(enc.is_utf8() ? ustring(env) : enc.decode(env), ':');
-
-            for (const ustring & s: vv) {
-                ustring path = path_build(s, cmd);
-                if (Fileinfo(path).is_exec()) { v.push_back(path); }
-            }
+        for (const ustring & s: str_explode(str_env("PATH"), ':')) {
+            ustring path = path_build(s, cmd);
+            if (Fileinfo(path).is_exec()) { v.push_back(path); }
         }
     }
 
@@ -382,27 +328,14 @@ void setup_sysinfo_posix() {
     sysinfo_.iocharset = Locale().iocharset().name();
 }
 
-void Locale::init() {
-    const char * s;
-
-    s = getenv("LANG");
-    if (s && '\0' != *s) { data->spec = s; }
-
-    s = getenv("LANGUAGE");
-    if (s && '\0' != *s) { data->spec = s; }
-
-    s = getenv("LC_ALL");
-    if (s && '\0' != *s) { data->spec = s; }
-
-    s = getenv("LC_MESSAGES");
-    if (s && '\0' != *s) { data->spec = s; }
-
+void Locale::init1() {
+    data->spec = str_env("LANG", str_env("LANGUAGE", "C"));
     auto begin = data->spec.find('.');
 
     if (std::string::npos != begin) {
         ++begin;
         auto end = data->spec.find('@');
-        data->fenc = data->enc = Encoding(data->spec.substr(begin, end-begin));
+        data->iocharset = data->enc = Encoding(data->spec.substr(begin, end-begin));
     }
 }
 

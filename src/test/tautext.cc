@@ -34,7 +34,7 @@
 
 namespace {
 
-tau::Key_file               state_;
+tau::Key_file               kstate_;
 std::vector<tau::ustring>   args_;
 int                         line_ = -1;
 int                         col_ = -1;
@@ -89,6 +89,7 @@ struct Main: tau::Toplevel {
     using Metas = std::unordered_map<std::string, Meta_holder>;
 
     tau::Loop           loop_;
+    tau::ustring        datadir_;
     Pages               pages_;
     Metas               metas_;
     tau::ustring        font_spec_;
@@ -99,6 +100,7 @@ struct Main: tau::Toplevel {
     tau::connection     show_cx_;
     tau::connection     session_cx_;
     tau::signal<bool()> signal_modified_;
+    tau::Key_file       ksession_;
 
     tau::Menubar        menubar_;
     tau::Box            toolbar_ { tau::OR_RIGHT, 6 };
@@ -137,16 +139,19 @@ struct Main: tau::Toplevel {
     tau::Action         view_zin_action_ { view_increase_font_master_action_, tau::fun(this, &Main::on_menu_increase_font) };
     tau::Master_action  view_decrease_font_master_action_ { "<Ctrl>-", "Decrease Font", "zoom-out" };
     tau::Action         view_zout_action_ { view_decrease_font_master_action_ , tau::fun(this, &Main::on_menu_decrease_font) };
-    tau::Action         view_next_page_action_ { tau::KC_RIGHT, tau::KM_ALT, "Next Page", "go-next", tau::fun(this, &Main::on_menu_next_doc) };
-    tau::Action         view_prev_page_action_ { tau::KC_LEFT, tau::KM_ALT, "Previous Page", "go-previous", tau::fun(this, &Main::on_menu_prev_doc) };
+    tau::Action         view_next_page_action_ { tau::KC_RIGHT, tau::KM_ALT, "Next Page", tau::ICON_GO_NEXT, tau::fun(this, &Main::on_menu_next_doc) };
+    tau::Action         view_prev_page_action_ { tau::KC_LEFT, tau::KM_ALT, "Previous Page", tau::ICON_GO_PREVIOUS, tau::fun(this, &Main::on_menu_prev_doc) };
 
     tau::Action         settings_action_ { U'P', tau::KM_CONTROL, "Settings", tau::fun(this, &Main::on_menu_settings) };
 
     Main(const tau::Rect & bounds=tau::Rect()):
         Toplevel(bounds)
     {
-        font_spec_ = state_.get_string(state_.root(), "font", tau::Font::mono());
-        font_size_ = state_.get_integer(state_.root(), "font-size", 10);
+        datadir_ = tau::path_build(tau::path_user_data_dir(), tau::program_name());
+        tau::path_mkdir(datadir_);
+        ksession_.load(tau::path_build(datadir_, "session.ini"));
+        font_spec_ = kstate_.get_string(kstate_.root(), "font", tau::Font::mono());
+        font_size_ = kstate_.get_integer(kstate_.root(), "font-size", 10);
 
         connect_action(escape_action_);
         connect_action(file_quit_action_);
@@ -379,7 +384,7 @@ struct Main: tau::Toplevel {
     void update_recent_menu() {
         load_metas();
         recent_menu_.clear();
-        auto v = state_.get_integers(state_.root(), "recent");
+        auto v = kstate_.get_integers(kstate_.root(), "recent");
         std::map<uint64_t, uint64_t> ids;
         std::vector<uint64_t> ats;
 
@@ -435,7 +440,7 @@ struct Main: tau::Toplevel {
         if (ats.size() > max_recent_) { ats.resize(max_recent_); }
         std::vector<long long> v;
         for (uint64_t at: ats) { v.push_back(ids[at]); }
-        state_.set_integers(state_.root(), "recent", v);
+        kstate_.set_integers(kstate_.root(), "recent", v);
         update_recent_menu();
     }
 
@@ -453,8 +458,8 @@ struct Main: tau::Toplevel {
 
         if (font_spec_ != rspec) {
             font_spec_ = rspec;
-            state_.set_integer(state_.root(), "font-size", tau::font_size_from_spec(spec));
-            state_.set_string(state_.root(), "font", rspec);
+            kstate_.set_integer(kstate_.root(), "font-size", tau::font_size_from_spec(spec));
+            kstate_.set_string(kstate_.root(), "font", rspec);
 
             for (Page & pg: pages_) {
                 pg.edit.style().font("font").set(tau::font_size_change(font_spec_, 0 != pg.font_size ? pg.font_size : font_size_));
@@ -463,53 +468,71 @@ struct Main: tau::Toplevel {
     }
 
     void load_session() {
-        tau::ustring path = tau::path_build(tau::path_user_data_dir(), tau::program_name(), "session.ini");
-        tau::Key_file kf(path);
+        load_metas();
         std::vector<int> v;
 
-        for (auto & s: kf.list_sections()) {
+        for (auto & s: ksession_.list_sections()) {
             if (tau::str_has_prefix(s, "Page_")) {
                 try { v.push_back(std::stoi(s.substr(5))); }
                 catch (...) {}
             }
         }
 
-        if (!v.empty()) {
-            load_metas();
-            std::sort(v.begin(), v.end());
+        std::sort(v.begin(), v.end());
 
-            for (auto & i: v) {
-                tau::ustring sect = tau::str_format("Page_", i);
-                uint64_t metaid = kf.get_integer(kf.section(sect), "metaid");
+        for (auto & i: v) {
+            auto & sect = ksession_.section(tau::str_format("Page_", i));
+            uint64_t metaid = ksession_.get_integer(sect, "metaid");
+            auto j = std::find_if(metas_.begin(), metas_.end(), [metaid](auto & p) { return p.second.id == metaid; } );
+            if (j != metas_.end()) { open_file(j->second.path); }
+        }
 
-                if (0 != metaid) {
-                    for (auto & p: metas_) {
-                        if (p.second.id == metaid) {
-                            open_file(p.second.path);
-                            break;
-                        }
-                    }
+        uint64_t current_metaid = ksession_.get_integer(ksession_.root(), "current");
+        auto k = std::find_if(pages_.begin(), pages_.end(), [current_metaid](auto & pg) { return pg.metaid == current_metaid; } );
+        if (k != pages_.end()) { notebook_.show_page(k->page); }
+    }
+
+    void save_session() {
+        session_cx_.disconnect();
+        int page = 1, npages = notebook_.page_count();
+        uint64_t current_metaid = 0;
+
+        for (int n = 0; n < npages; ++n) {
+            for (Page & pg: pages_) {
+                if (n == pg.page && !pg.path.empty()) {
+                    auto & sect = ksession_.section(tau::str_format("Page_", page++));
+                    ksession_.set_integer(sect, "metaid", pg.metaid);
+                    if (pg.page == notebook_.current_page()) { current_metaid = pg.metaid; }
                 }
             }
+        }
 
-            uint64_t current_metaid = kf.get_integer(kf.root(), "current");
+        if (0 != current_metaid) {
+            ksession_.set_integer(ksession_.root(), "current", current_metaid);
+        }
 
-            if (0 != current_metaid) {
-                for (auto & pg: pages_) {
-                    if (pg.metaid == current_metaid) {
-                        notebook_.show_page(pg.page);
-                        break;
-                    }
-                }
-            }
+        try {
+            ksession_.save();
+            // std::cout << "save_session() -> " << '\n';
+        }
+
+        catch (tau::exception & x) {
+            std::cerr << "** Main::save_session(): tau::exception caught: " << x.what() << std::endl;
+        }
+
+        catch (std::exception & x) {
+            std::cerr << "** Main::save_session(): std::exception caught: " << x.what() << std::endl;
+        }
+
+        catch (...) {
+            std::cerr << "** Main::save_session(): unknown exception caught" << std::endl;
         }
     }
 
     void load_metas() {
         if (metas_.empty()) {
             try {
-                const tau::ustring path = tau::path_build(tau::path_user_data_dir(), tau::program_name(), "metas.ini");
-                tau::Key_file kf(path);
+                tau::Key_file kf(tau::path_build(datadir_, "metas.ini"));
 
                 for (const tau::ustring & s: kf.list_sections()) {
                     if (tau::file_exists(s)) {
@@ -811,47 +834,6 @@ struct Main: tau::Toplevel {
         }
     }
 
-    void save_session() {
-        session_cx_.disconnect();
-        tau::Key_file kf;
-        int page = 1, npages = notebook_.page_count();
-        uint64_t current_metaid = 0;
-
-        for (int n = 0; n < npages; ++n) {
-            for (Page & pg: pages_) {
-                if (n == pg.page && !pg.path.empty()) {
-                    tau::ustring sect = tau::str_format("Page_", page++);
-                    kf.set_integer(kf.section(sect), "metaid", pg.metaid);
-                    if (pg.page == notebook_.current_page()) { current_metaid = pg.metaid; }
-                }
-            }
-        }
-
-        if (0 != current_metaid) {
-            kf.set_integer(kf.root(), "current", current_metaid);
-        }
-
-        try {
-            tau::ustring path = tau::path_build(tau::path_user_data_dir(), tau::program_name());
-            tau::path_mkdir(path);
-            path = tau::path_build(path, "session.ini");
-            kf.save(path);
-            // std::cout << "save_session() -> " << path << '\n';
-        }
-
-        catch (tau::exception & x) {
-            std::cerr << "** Main::save_session(): tau::exception caught: " << x.what() << std::endl;
-        }
-
-        catch (std::exception & x) {
-            std::cerr << "** Main::save_session(): std::exception caught: " << x.what() << std::endl;
-        }
-
-        catch (...) {
-            std::cerr << "** Main::save_session(): unknown exception caught" << std::endl;
-        }
-    }
-
     void on_notebook_page_added(int page) {
         if (!pages_.empty()) {
             file_close_all_action_.enable();
@@ -1095,13 +1077,13 @@ struct Main: tau::Toplevel {
     }
 
     void load_fileman(tau::Fileman & fman) {
-        tau::Key_section & sect = state_.section("navigator");
-        fman.load_state(state_, sect);
+        tau::Key_section & sect = kstate_.section("navigator");
+        fman.load_state(kstate_, sect);
     }
 
     void save_fileman(tau::Fileman & fman) {
-        tau::Key_section & sect = state_.section("navigator");
-        fman.save_state(state_, sect);
+        tau::Key_section & sect = kstate_.section("navigator");
+        fman.save_state(kstate_, sect);
     }
 
     void on_saver_apply(tau::Fileman * fman) {
@@ -1166,7 +1148,7 @@ struct Main: tau::Toplevel {
             tau::Navigator navi(fman.navigator_ptr());
             navi.allow_multiple_select();
             tau::Rect bounds;
-            auto gv = state_.get_integers(state_.section("open_dialog"), "geometry");
+            auto gv = kstate_.get_integers(kstate_.section("open_dialog"), "geometry");
             if (gv.size() > 3) { bounds.set(gv[0], gv[1], tau::Size(gv[2], gv[3])); }
             tau::Dialog dlg(*this, "Open a file", bounds);
             dlg.insert(fman);
@@ -1182,7 +1164,7 @@ struct Main: tau::Toplevel {
             gv[1] = bounds.y();
             gv[2] = bounds.width();
             gv[3] = bounds.height();
-            state_.set_integers(state_.section("open_dialog"), "geometry", gv);
+            kstate_.set_integers(kstate_.section("open_dialog"), "geometry", gv);
         }
 
         else if (!notebook_.hidden()) {
@@ -1561,17 +1543,17 @@ int main(int argc, char * argv[]) {
     try {
         auto state_path = tau::path_build(tau::path_user_config_dir(), tau::program_name(), "state.ini");
         tau::path_mkdir(tau::path_dirname(state_path));
-        state_.load(state_path);
-        auto v = state_.get_integers(state_.root(), "geometry");
+        kstate_.load(state_path);
+        auto v = kstate_.get_integers(kstate_.root(), "geometry");
         tau::Rect bounds;
         if (v.size() > 3) { bounds.set(tau::Point(v[0], v[1]), tau::Size(v[2], v[3])); }
         Main w(bounds);
-        tau::Timer timer(tau::fun(state_, static_cast<void (tau::Key_file::*)()>(&tau::Key_file::save)));
-        state_.signal_changed().connect(tau::bind(tau::fun(timer, &tau::Timer::start), 7401, false));
+        tau::Timer timer(tau::fun(kstate_, static_cast<void (tau::Key_file::*)()>(&tau::Key_file::save)));
+        kstate_.signal_changed().connect(tau::bind(tau::fun(timer, &tau::Timer::start), 7401, false));
         tau::Loop().run();
         std::vector<long long> iv = { w.position().x(), w.position().y(), w.size().iwidth(), w.size().iheight() };
-        state_.set_integers(state_.root(), "geometry", iv);
-        state_.save();
+        kstate_.set_integers(kstate_.root(), "geometry", iv);
+        kstate_.save();
     }
 
     catch (tau::exception & x) {

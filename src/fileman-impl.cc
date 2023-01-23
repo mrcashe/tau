@@ -26,6 +26,7 @@
 
 #include <tau/exception.hh>
 #include <tau/key-file.hh>
+#include <tau/navigator.hh>
 #include <tau/sys.hh>
 #include <tau/painter.hh>
 #include <button-impl.hh>
@@ -298,13 +299,13 @@ void Fileman_impl::apply() {
                         bbox->hint_margin(0, 0, 10, 0);
                         box->append(bbox, true);
 
-                        Button_ptr yes = std::make_shared<Button_impl>("Yes", "dialog-ok", MEDIUM_ICON);
+                        Button_ptr yes = std::make_shared<Button_impl>("Yes", ICON_DIALOG_OK, MEDIUM_ICON);
                         yes->signal_click().connect(fun(yes, &Widget_impl::quit_dialog));
                         yes->signal_click().connect(fun(this, &Widget_impl::quit_dialog));
                         yes->signal_click().connect(fun(user_apply_action_, &Action::exec));
                         bbox->append(yes, true);
 
-                        Button_ptr no = std::make_shared<Button_impl>("No", "dialog-cancel", MEDIUM_ICON);
+                        Button_ptr no = std::make_shared<Button_impl>("No", ICON_DIALOG_CANCEL, MEDIUM_ICON);
                         no->signal_click().connect(fun(yes, &Widget_impl::quit_dialog));
                         bbox->append(no, true);
 
@@ -459,12 +460,12 @@ void Fileman_impl::on_mkdir() {
             bbox->hint_margin(0, 0, 10, 4);
             box->append(bbox, true);
 
-            mkdir_ok_button_ = std::make_shared<Button_impl>("OK", "dialog-ok", SMALL_ICON);
+            mkdir_ok_button_ = std::make_shared<Button_impl>("OK", ICON_DIALOG_OK, SMALL_ICON);
             bbox->append(mkdir_ok_button_, true);
             mkdir_ok_button_->signal_click().connect(tau::bind(fun(this, &Fileman_impl::on_mkdir_apply), ent.get()));
             mkdir_ok_button_->disable();
 
-            Button_ptr cancel_button = std::make_shared<Button_impl>("Cancel", "dialog-cancel", SMALL_ICON);
+            Button_ptr cancel_button = std::make_shared<Button_impl>("Cancel", ICON_DIALOG_CANCEL, SMALL_ICON);
             bbox->append(cancel_button, true);
             cancel_button->signal_click().connect(fun(cancel_button, &Widget_impl::quit_dialog));
 
@@ -530,7 +531,7 @@ void Fileman_impl::init_places() {
     vbox->append(hbox, true);
     hbox->append(std::make_shared<Text_impl>("Places", ALIGN_START, ALIGN_CENTER));
 
-    Button_ptr button = std::make_shared<Button_impl>(std::make_shared<Icon_impl>("picto-close", 12));
+    Button_ptr button = std::make_shared<Button_impl>(std::make_shared<Icon_impl>(ICON_PICTO_CLOSE, 12));
     button->hide_relief();
     button->signal_click().connect(fun(this, &Fileman_impl::hide_places));
     hbox->append(button, true);
@@ -592,18 +593,18 @@ void Fileman_impl::on_configure() {
     Submenu_ptr sort_item = std::make_shared<Submenu_impl>("Sort", sort_menu);
     menu->append(sort_item);
 
-    Check_menu_ptr sort_name = std::make_shared<Check_menu_impl>("By Name", CHECK_RSTYLE, "name" == navi_->sorted_by());
-    sort_name->signal_check().connect(tau::bind(fun(navi_, &Navigator_impl::sort_by), "name"));
+    Check_menu_ptr sort_name = std::make_shared<Check_menu_impl>("By Name", CHECK_RSTYLE, NAVIGATOR_INFO_NAME == navi_->sorted_by());
+    sort_name->signal_check().connect(tau::bind(fun(navi_, &Navigator_impl::sort_by), NAVIGATOR_INFO_NAME));
     sort_menu->append(sort_name);
 
-    Check_menu_ptr sort_size = std::make_shared<Check_menu_impl>("By Size", CHECK_RSTYLE, "bytes" == navi_->sorted_by());
+    Check_menu_ptr sort_size = std::make_shared<Check_menu_impl>("By Size", CHECK_RSTYLE, NAVIGATOR_INFO_BYTES == navi_->sorted_by());
     sort_size->join(sort_name);
-    sort_size->signal_check().connect(tau::bind(fun(navi_, &Navigator_impl::sort_by), "bytes"));
+    sort_size->signal_check().connect(tau::bind(fun(navi_, &Navigator_impl::sort_by), NAVIGATOR_INFO_BYTES));
     sort_menu->append(sort_size);
 
-    Check_menu_ptr sort_date = std::make_shared<Check_menu_impl>("By Date", CHECK_RSTYLE, "date" == navi_->sorted_by());
+    Check_menu_ptr sort_date = std::make_shared<Check_menu_impl>("By Date", CHECK_RSTYLE, NAVIGATOR_INFO_DATE == navi_->sorted_by());
     sort_date->join(sort_name);
-    sort_date->signal_check().connect(tau::bind(fun(navi_, &Navigator_impl::sort_by), "date"));
+    sort_date->signal_check().connect(tau::bind(fun(navi_, &Navigator_impl::sort_by), NAVIGATOR_INFO_DATE));
     sort_menu->append(sort_date);
 
     Check_menu_ptr sort_unsorted = std::make_shared<Check_menu_impl>("Keep Unsorted", CHECK_RSTYLE, "" == navi_->sorted_by());
@@ -615,14 +616,14 @@ void Fileman_impl::on_configure() {
     Submenu_ptr columns_item = std::make_shared<Submenu_impl>("Columns", columns_menu);
     menu->append(columns_item);
 
-    Check_menu_ptr columns_size = std::make_shared<Check_menu_impl>("Show File Size", CHECK_VSTYLE, info_visible("bytes"));
-    columns_size->signal_check().connect(tau::bind(fun(this, &Fileman_impl::show_info), "bytes", U':'));
-    columns_size->signal_uncheck().connect(tau::bind(fun(this, &Fileman_impl::hide_info), "bytes", U':'));
+    Check_menu_ptr columns_size = std::make_shared<Check_menu_impl>("Show File Size", CHECK_VSTYLE, info_visible(NAVIGATOR_INFO_BYTES));
+    columns_size->signal_check().connect(tau::bind(fun(this, &Fileman_impl::show_info), NAVIGATOR_INFO_BYTES, U':'));
+    columns_size->signal_uncheck().connect(tau::bind(fun(this, &Fileman_impl::hide_info), NAVIGATOR_INFO_BYTES, U':'));
     columns_menu->append(columns_size);
 
-    Check_menu_ptr columns_date = std::make_shared<Check_menu_impl>("Show File Date", CHECK_VSTYLE, info_visible("date"));
-    columns_date->signal_check().connect(tau::bind(fun(this, &Fileman_impl::show_info), "date", U':'));
-    columns_date->signal_uncheck().connect(tau::bind(fun(this, &Fileman_impl::hide_info), "date", U':'));
+    Check_menu_ptr columns_date = std::make_shared<Check_menu_impl>("Show File Date", CHECK_VSTYLE, info_visible(NAVIGATOR_INFO_DATE));
+    columns_date->signal_check().connect(tau::bind(fun(this, &Fileman_impl::show_info), NAVIGATOR_INFO_DATE, U':'));
+    columns_date->signal_uncheck().connect(tau::bind(fun(this, &Fileman_impl::hide_info), NAVIGATOR_INFO_DATE, U':'));
     columns_menu->append(columns_date);
 
     sort_menu->append_separator();
@@ -634,7 +635,7 @@ void Fileman_impl::on_configure() {
 
     menu->append_separator();
 
-    Check_menu_ptr show_hidden = std::make_shared<Check_menu_impl>("Show Hidden Files", CHECK_VSTYLE, info_visible("hidden"));
+    Check_menu_ptr show_hidden = std::make_shared<Check_menu_impl>("Show Hidden Files", CHECK_VSTYLE, info_visible(NAVIGATOR_INFO_HIDDEN));
     show_hidden->signal_check().connect(tau::bind(fun(this, &Fileman_impl::on_show_hidden), true));
     show_hidden->signal_uncheck().connect(tau::bind(fun(this, &Fileman_impl::on_show_hidden), false));
     menu->append(show_hidden);
@@ -690,14 +691,14 @@ void Fileman_impl::updir() {
 }
 
 void Fileman_impl::on_show_hidden(bool show) {
-    if (show) { show_info("hidden"); }
-    else { hide_info("hidden"); }
+    if (show) { show_info(NAVIGATOR_INFO_HIDDEN); }
+    else { hide_info(NAVIGATOR_INFO_HIDDEN); }
 }
 
 void Fileman_impl::load_state(Key_file & kf, Key_section & sect) {
     show_info(kf.get_string(sect, "visible_info_items"), kf.list_separator());
     hide_info(kf.get_string(sect, "invisible_info_items"), kf.list_separator());
-    navi_->sort_by(kf.get_string(sect, "sort_by", "name"));
+    navi_->sort_by(kf.get_string(sect, "sort_by", NAVIGATOR_INFO_NAME));
     set_ratio(kf.get_double(sect, "ratio", ratio()));
     if (kf.get_boolean(sect, "sort_backward")) { navi_->sort_backward(); }
 }
@@ -712,8 +713,8 @@ void Fileman_impl::save_state(Key_file & kf, Key_section & sect) {
 
 void Fileman_impl::show_info(const ustring & items, char32_t sep) {
     for (const ustring & s: str_explode(items, sep)) {
-        if (str_similar("hidden", s)) { hidden_action_.set(true); }
-        else if (str_similar("places", s)) { show_places(); }
+        if (str_similar(NAVIGATOR_INFO_HIDDEN, s)) { hidden_action_.set(true); }
+        else if (str_similar(NAVIGATOR_INFO_PLACES, s)) { show_places(); }
     }
 
     navi_->show_info(items, sep);
@@ -721,27 +722,27 @@ void Fileman_impl::show_info(const ustring & items, char32_t sep) {
 
 void Fileman_impl::hide_info(const ustring & items, char32_t sep) {
     for (const ustring & s: str_explode(items, sep)) {
-        if (str_similar("hidden", s)) { hidden_action_.set(false); }
-        else if (str_similar("places", s)) { hide_places(); }
+        if (str_similar(NAVIGATOR_INFO_HIDDEN, s)) { hidden_action_.set(false); }
+        else if (str_similar(NAVIGATOR_INFO_PLACES, s)) { hide_places(); }
     }
 
     navi_->hide_info(items, sep);
 }
 
 bool Fileman_impl::info_visible(const ustring & item) const {
-    if (str_similar(item, "places")) { return places_visible_; }
+    if (str_similar(item, NAVIGATOR_INFO_PLACES)) { return places_visible_; }
     return navi_->info_visible(item);
 }
 
 ustring Fileman_impl::visible_info_items(char32_t sep) const {
     ustring s = navi_->visible_info_items(sep);
-    if (places_visible_) { s += sep; s += "places"; }
+    if (places_visible_) { s += sep; s += NAVIGATOR_INFO_PLACES; }
     return s;
 }
 
 ustring Fileman_impl::invisible_info_items(char32_t sep) const {
     ustring s = navi_->invisible_info_items(sep);
-    if (!places_visible_) { s += sep; s += "places"; }
+    if (!places_visible_) { s += sep; s += NAVIGATOR_INFO_PLACES; }
     return s;
 }
 

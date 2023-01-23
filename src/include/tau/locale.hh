@@ -94,6 +94,7 @@ class Locale {
 public:
 
     /// @name Constructors, operators and destructor.
+    /// @{
 
     /// Construct from ISO code or system locale (when iso_code is empty).
     Locale(const std::string & iso_code = std::string());
@@ -307,7 +308,8 @@ public:
 private:
 
     Locale_data * data;
-    void init();
+    void init1();
+    void init2();
 };
 
 } // namespace tau

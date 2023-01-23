@@ -104,7 +104,7 @@ public:
 
     /// Save to stream.
     /// @throw sys_error in case of OS error.
-    void save(std::ostream & os);
+    void save(std::ostream & os) const;
 
     /// Save to file.
     /// @throw sys_error in case of OS error.
@@ -318,6 +318,18 @@ private:
 
     Key_file_impl * impl;
 };
+
+/// Stream Key_file in.
+/// @relates Key_file
+inline std::istream & operator>>(std::istream & is, Key_file & kf) {
+    kf.load(is); return is;
+}
+
+/// Stream Key_file out.
+/// @relates Key_file
+inline std::ostream & operator<<(std::ostream & os, const Key_file & kf) {
+    kf.save(os); return os;
+}
 
 } // namespace tau
 

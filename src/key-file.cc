@@ -59,12 +59,18 @@ struct Key_section {
     Key_section & operator=(const Key_section & other) = default;
     Key_section & operator=(Key_section && other) = default;
 
+    std::vector<ustring> list_keys() const {
+        std::vector<ustring> v;
+        for (auto & p: elems_) { v.push_back(p.first); }
+        return v;
+    }
+
     // Return true if changed.
     bool set_value(const ustring & name, const ustring & val) {
-        auto i = std::find_if(elems_.begin(), elems_.end(), [name](const Pair & pair) { return name == pair.first; } );
+        auto i = std::find_if(elems_.begin(), elems_.end(), [name](auto & p) { return name == p.first; } );
 
         if (i == elems_.end()) {
-            elems_.emplace_back(name, val);
+            elems_.emplace_back(std::make_pair(name, val));
             return true;
         }
 
@@ -80,17 +86,19 @@ struct Key_section {
 
     bool has_key(const ustring & key_name, bool similar) const {
         return similar
-            ? std::any_of(elems_.begin(), elems_.end(), [key_name](const Pair & pair) { return str_similar(key_name, pair.first); } )
-            : elems_.end() != std::find_if(elems_.begin(), elems_.end(), [key_name](const Pair & pair) { return key_name == pair.first; } );
+            ? std::any_of(elems_.begin(), elems_.end(), [key_name](auto & p) { return str_similar(key_name, p.first); } )
+            : elems_.end() != std::find_if(elems_.begin(), elems_.end(), [key_name](auto & p) { return key_name == p.first; } );
     }
 
-    Storage::iterator find(const ustring & key_name, bool similar=false) {
+    Storage::iterator find(const ustring & key, bool similar=false) {
+
         if (similar) {
-            return std::find_if(elems_.begin(), elems_.end(), [key_name](auto & p) { return str_similar(key_name, p.first); } );
+            return std::find_if(elems_.begin(), elems_.end(), [key](auto & p) { return str_similar(key, p.first); } );
         }
 
         else {
-            return std::find_if(elems_.begin(), elems_.end(), [key_name](auto & p) { return key_name == p.first; } );
+            auto i = std::find_if(elems_.begin(), elems_.end(), [key](auto & p) { return key == p.first; } );
+            return i;
         }
     }
 
@@ -99,7 +107,7 @@ struct Key_section {
         return i != elems_.end() ? i->first : ustring();
     }
 
-    void stream_out(ustring & os, char csep) {
+    void stream_out(ustring & os, char csep) const {
         if (!comment_.empty()) {
             auto v = str_explode(comment_, str_newlines());
 
@@ -152,7 +160,7 @@ struct Key_file_impl {
     Key_file_impl & operator=(const Key_file_impl & other) = default;
     Key_file_impl & operator=(Key_file_impl && other) = default;
 
-    void stream_out(ustring & os) {
+    void stream_out(ustring & os) const {
         root_.stream_out(os, csep_);
 
         for (auto & p: sections_) {
@@ -164,48 +172,45 @@ struct Key_file_impl {
         }
     }
 
-    Storage::iterator find(const ustring & sect_name) {
-        return std::find_if(sections_.begin(), sections_.end(), [sect_name](const Pair & pair) { return sect_name == pair.first; } );
+    std::vector<ustring> list_sections() const {
+        std::vector<ustring> v;
+        for (auto & p: sections_) { v.push_back(p.first); }
+        return v;
+    }
+
+    Storage::iterator find(const ustring & sect_name, bool similar=false) {
+        if (similar) {
+            return std::find_if(sections_.begin(), sections_.end(), [sect_name](auto & p) { return str_similar(p.first, sect_name); } );
+        }
+
+        else {
+            return std::find_if(sections_.begin(), sections_.end(), [sect_name](auto & p) { return p.first == sect_name; } );
+        }
+    }
+
+    Storage::const_iterator find(const ustring & sect_name, bool similar=false) const {
+        if (similar) {
+            return std::find_if(sections_.begin(), sections_.end(), [sect_name](auto & p) { return str_similar(p.first, sect_name); } );
+        }
+
+        else {
+            return std::find_if(sections_.begin(), sections_.end(), [sect_name](auto & p) { return p.first == sect_name; } );
+        }
     }
 
     bool has_section(const ustring & sect_name, bool similar) const {
-        return similar
-            ? std::any_of(sections_.begin(), sections_.end(), [sect_name](const Pair & pair) { return str_similar(sect_name, pair.first); } )
-            : sections_.end() != std::find_if(sections_.begin(), sections_.end(), [sect_name](const Pair & pair) { return sect_name == pair.first; } );
+        return find(sect_name, similar) != sections_.end();
     }
 
     bool has_key(const ustring & sect_name, const ustring & key_name, bool similar) const {
-        if (similar) {
-            for (auto & sect: sections_) {
-                if (str_similar(sect_name, sect.first)) {
-                    return sect.second.has_key(key_name, true);
-                }
-            }
-
-            return false;
-        }
-
-        else {
-            auto i = std::find_if(sections_.begin(), sections_.end(), [sect_name](const Pair & pair) { return sect_name == pair.first; } );
-            return i != sections_.end() && i->second.has_key(key_name, false);
-        }
+        auto i = find(sect_name, similar);
+        return i != sections_.end() && i->second.has_key(key_name, similar);
     }
 
     Key_section & section(const ustring & sect_name, bool similar) {
-        if (similar) {
-            for (auto & p: sections_) {
-                if (str_similar(sect_name, p.first)) {
-                    return p.second;
-                }
-            }
-        }
-
-        else {
-            auto i = std::find_if(sections_.begin(), sections_.end(), [sect_name](const Pair & pair) { return sect_name == pair.first; } );
-            if (i != sections_.end()) { return i->second; }
-        }
-
-        sections_.emplace_back(sect_name, Key_section());
+        auto i = find(sect_name, similar);
+        if (i != sections_.end()) { return i->second; }
+        sections_.emplace_back(std::make_pair(sect_name, Key_section()));
         signal_changed_();
         return sections_.back().second;
     }
@@ -327,7 +332,7 @@ void Key_file::load(const ustring & path) {
     impl->path_ = path;
 }
 
-void Key_file::save(std::ostream & os) {
+void Key_file::save(std::ostream & os) const {
     if (os.good()) {
         ustring s;
         impl->stream_out(s);
@@ -367,15 +372,11 @@ char32_t Key_file::comment_separator() const {
 }
 
 std::vector<ustring> Key_file::list_sections() const {
-    std::vector<ustring> v;
-    for (auto & p: impl->sections_) { v.push_back(p.first); }
-    return v;
+    return impl->list_sections();
 }
 
 std::vector<ustring> Key_file::list_keys(const Key_section & sect) const {
-    std::vector<ustring> v;
-    for (auto & p: sect.elems_) { v.push_back(p.first); }
-    return v;
+    return sect.list_keys();
 }
 
 bool Key_file::has_section(const ustring & sect_name, bool similar) const {
@@ -499,10 +500,10 @@ std::vector<bool> Key_file::get_booleans(Key_section & sect, const ustring & key
 }
 
 long long Key_file::get_integer(Key_section & sect, const ustring & key, long long fallback) {
-    auto iter = sect.find(key);
+    auto i = sect.find(key);
 
-    if (iter != sect.elems_.end()) {
-        try { return std::stoll(iter->second, nullptr, 0); }
+    if (i != sect.elems_.end()) {
+        try { return std::stoll(i->second, nullptr, 0); }
         catch (std::exception & x) { std::cerr << "** Key_file::get_integer(): an exception caught: " << x.what() << std::endl; }
     }
 
@@ -553,15 +554,8 @@ void Key_file::remove_key(Key_section & sect, const ustring & key, bool similar)
 }
 
 void Key_file::remove_section(const ustring & sect_name, bool similar) {
-    if (similar) {
-        auto i = std::find_if(impl->sections_.begin(), impl->sections_.end(), [&sect_name](auto & p) { return str_similar(sect_name, p.first); } );
-        if (i != impl->sections_.end()) { impl->sections_.erase(i); impl->signal_changed_(); }
-    }
-
-    else {
-        auto i = impl->find(sect_name);
-        if (i != impl->sections_.end()) { impl->sections_.erase(i); impl->signal_changed_(); }
-    }
+    auto i = impl->find(sect_name, similar);
+    if (i != impl->sections_.end()) { impl->sections_.erase(i); impl->signal_changed_(); }
 }
 
 void Key_file::clear() {

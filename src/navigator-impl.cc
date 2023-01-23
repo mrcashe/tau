@@ -24,8 +24,10 @@
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ----------------------------------------------------------------------------
 
+#include <tau/icon.hh>
 #include <tau/locale.hh>
 #include <tau/loop.hh>
+#include <tau/navigator.hh>
 #include <tau/string.hh>
 #include <tau/sys.hh>
 #include <display-impl.hh>
@@ -39,6 +41,12 @@
 #include <iostream>
 
 namespace tau {
+
+const char * NAVIGATOR_INFO_NAME = "name";
+const char * NAVIGATOR_INFO_BYTES = "bytes";
+const char * NAVIGATOR_INFO_DATE = "date";
+const char * NAVIGATOR_INFO_HIDDEN = "hidden";
+const char * NAVIGATOR_INFO_PLACES = "places";
 
 Navigator_impl::Navigator_impl(const ustring & path):
     Bin_impl(),
@@ -154,12 +162,12 @@ void Navigator_impl::show_record(Rec & rec) {
         }
 
         if (rec.fi.is_dir()) {
-            if (!dir_icon_) { dir_icon_ = Theme_impl::root()->find_icon("folder", SMALL_ICON); }
+            if (!dir_icon_) { dir_icon_ = Theme_impl::root()->find_icon(ICON_FOLDER, SMALL_ICON); }
             ico = dir_icon_;
         }
 
         else {
-            if (!unknown_icon_) { unknown_icon_ = Theme_impl::root()->find_icon("unknown", SMALL_ICON); }
+            if (!unknown_icon_) { unknown_icon_ = Theme_impl::root()->find_icon(ICON_UNKNOWN, SMALL_ICON); }
             ico = unknown_icon_;
 
             // Do not show file size for directory.
@@ -256,7 +264,7 @@ void Navigator_impl::preprocess(Holder & hol) {
     hol.indice.resize(hol.recs.size());
     for (unsigned n = 0; n < hol.indice.size(); ++n) { hol.indice[n] = n; }
 
-    if ("name" == sort_by_) {
+    if (NAVIGATOR_INFO_NAME == sort_by_) {
         if (sorted_backward()) {
             std::sort(hol.indice.begin(), hol.indice.end(), [hol](unsigned r1, unsigned r2) { return hol.recs[r2].name < hol.recs[r1].name; } );
         }
@@ -266,7 +274,7 @@ void Navigator_impl::preprocess(Holder & hol) {
         }
     }
 
-    else if ("date" == sort_by_) {
+    else if (NAVIGATOR_INFO_DATE == sort_by_) {
         if (sorted_backward()) {
             std::sort(hol.indice.begin(), hol.indice.end(), [hol](unsigned r1, unsigned r2) { return hol.recs[r2].fi.mtime() < hol.recs[r1].fi.mtime(); } );
         }
@@ -276,7 +284,7 @@ void Navigator_impl::preprocess(Holder & hol) {
         }
     }
 
-    else if ("bytes" == sort_by_) {
+    else if (NAVIGATOR_INFO_BYTES == sort_by_) {
         if (sorted_backward()) {
             std::sort(hol.indice.begin(), hol.indice.end(), [hol](unsigned r1, unsigned r2) { return hol.recs[r2].fi.bytes() < hol.recs[r1].fi.bytes(); } );
         }
@@ -384,19 +392,19 @@ bool Navigator_impl::on_list_mark_validate(int br) {
 void Navigator_impl::on_list_header_click(int column) {
     switch (column) {
         case 0:
-            if ("name" != sort_by_) { sort_by("name"); }
+            if (NAVIGATOR_INFO_NAME != sort_by_) { sort_by(NAVIGATOR_INFO_NAME); }
             else if (sorted_backward()) { sort_forward(); }
             else { sort_backward(); }
             break;
 
         case 1:
-            if ("bytes" != sort_by_) { sort_by("bytes"); }
+            if (NAVIGATOR_INFO_BYTES != sort_by_) { sort_by(NAVIGATOR_INFO_BYTES); }
             else if (sorted_backward()) { sort_forward(); }
             else { sort_backward(); }
             break;
 
         case 2:
-            if ("date" != sort_by_) { sort_by("date"); }
+            if (NAVIGATOR_INFO_DATE != sort_by_) { sort_by(NAVIGATOR_INFO_DATE); }
             else if (sorted_backward()) { sort_forward(); }
             else { sort_backward(); }
             break;
@@ -432,9 +440,9 @@ void Navigator_impl::sort_forward() {
         sort_backward_ = false;
 
         if (list_) {
-            if ("name" == sort_by_) { list_->show_sort_marker(0); }
-            else if ("bytes" == sort_by_) { list_->show_sort_marker(1); }
-            else if ("date" == sort_by_) { list_->show_sort_marker(2); }
+            if (NAVIGATOR_INFO_NAME == sort_by_) { list_->show_sort_marker(0); }
+            else if (NAVIGATOR_INFO_BYTES == sort_by_) { list_->show_sort_marker(1); }
+            else if (NAVIGATOR_INFO_DATE == sort_by_) { list_->show_sort_marker(2); }
         }
 
         if (holder_) {
@@ -450,9 +458,9 @@ void Navigator_impl::sort_backward() {
         sort_backward_ = true;
 
         if (list_) {
-            if ("name" == sort_by_) { list_->show_sort_marker(0, true); }
-            else if ("bytes" == sort_by_) { list_->show_sort_marker(1, true); }
-            else if ("date" == sort_by_) { list_->show_sort_marker(2, true); }
+            if (NAVIGATOR_INFO_NAME == sort_by_) { list_->show_sort_marker(0, true); }
+            else if (NAVIGATOR_INFO_BYTES == sort_by_) { list_->show_sort_marker(1, true); }
+            else if (NAVIGATOR_INFO_DATE == sort_by_) { list_->show_sort_marker(2, true); }
         }
 
         if (holder_) {
@@ -584,17 +592,17 @@ void Navigator_impl::on_unparent() {
 void Navigator_impl::sort_by(const ustring & col) {
     int list_col = -1;
 
-    if ("name" == col) {
+    if (NAVIGATOR_INFO_NAME == col) {
         list_col = 0;
         sort_by_ = col;
     }
 
-    else if ("bytes" == col) {
+    else if (NAVIGATOR_INFO_BYTES == col) {
         list_col = 1;
         sort_by_ = col;
     }
 
-    else if ("date" == col) {
+    else if (NAVIGATOR_INFO_DATE == col) {
         list_col = 2;
         sort_by_ = col;
     }
@@ -612,9 +620,9 @@ void Navigator_impl::sort_by(const ustring & col) {
 
 void Navigator_impl::show_info(const ustring & items, char32_t sep) {
     for (const ustring & s: str_explode(items, sep)) {
-        if (str_similar("date", s)) { date_visible_ = true; }
-        else if (str_similar("bytes", s)) { bytes_visible_ = true; }
-        else if (str_similar("hidden", s)) { hidden_visible_ = true; }
+        if (str_similar(NAVIGATOR_INFO_DATE, s)) { date_visible_ = true; }
+        else if (str_similar(NAVIGATOR_INFO_BYTES, s)) { bytes_visible_ = true; }
+        else if (str_similar(NAVIGATOR_INFO_HIDDEN, s)) { hidden_visible_ = true; }
     }
 
     show_current_dir();
@@ -623,9 +631,9 @@ void Navigator_impl::show_info(const ustring & items, char32_t sep) {
 
 void Navigator_impl::hide_info(const ustring & items, char32_t sep) {
     for (const ustring & s: str_explode(items, sep)) {
-        if (str_similar("date", s)) { date_visible_ = false; }
-        else if (str_similar("bytes", s)) { bytes_visible_ = false; }
-        else if (str_similar("hidden", s)) { hidden_visible_ = false; }
+        if (str_similar(NAVIGATOR_INFO_DATE, s)) { date_visible_ = false; }
+        else if (str_similar(NAVIGATOR_INFO_BYTES, s)) { bytes_visible_ = false; }
+        else if (str_similar(NAVIGATOR_INFO_HIDDEN, s)) { hidden_visible_ = false; }
     }
 
     show_current_dir();
@@ -633,27 +641,27 @@ void Navigator_impl::hide_info(const ustring & items, char32_t sep) {
 }
 
 bool Navigator_impl::info_visible(const ustring & s) const {
-    if (str_similar("name", s)) { return true; }
-    else if (str_similar("bytes", s)) { return bytes_visible_; }
-    else if (str_similar("date", s)) { return date_visible_; }
-    else if (str_similar("hidden", s)) { return hidden_visible_; }
+    if (str_similar(NAVIGATOR_INFO_NAME, s)) { return true; }
+    else if (str_similar(NAVIGATOR_INFO_BYTES, s)) { return bytes_visible_; }
+    else if (str_similar(NAVIGATOR_INFO_DATE, s)) { return date_visible_; }
+    else if (str_similar(NAVIGATOR_INFO_HIDDEN, s)) { return hidden_visible_; }
     return false;
 }
 
 ustring Navigator_impl::visible_info_items(char32_t sep) const {
-    ustring res = "name";
-    if (bytes_visible_) { res += sep; res += "bytes"; }
-    if (date_visible_) { res += sep; res += "date"; }
-    if (hidden_visible_) { res += sep; res += "hidden"; }
+    ustring res = NAVIGATOR_INFO_NAME;
+    if (bytes_visible_) { res += sep; res += NAVIGATOR_INFO_BYTES; }
+    if (date_visible_) { res += sep; res += NAVIGATOR_INFO_DATE; }
+    if (hidden_visible_) { res += sep; res += NAVIGATOR_INFO_HIDDEN; }
     return res;
 }
 
 ustring Navigator_impl::invisible_info_items(char32_t sep) const {
     ustring res;
 
-    if (!bytes_visible_) { res += "bytes"; }
-    if (!date_visible_) { if (!res.empty()) { res += sep; } res += "date"; }
-    if (!hidden_visible_) { if (!res.empty()) { res += sep; } res += "hidden"; }
+    if (!bytes_visible_) { res += NAVIGATOR_INFO_BYTES; }
+    if (!date_visible_) { if (!res.empty()) { res += sep; } res += NAVIGATOR_INFO_DATE; }
+    if (!hidden_visible_) { if (!res.empty()) { res += sep; } res += NAVIGATOR_INFO_HIDDEN; }
 
     return res;
 }

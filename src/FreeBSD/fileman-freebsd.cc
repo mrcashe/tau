@@ -58,7 +58,7 @@ protected:
             tp->signal_select().connect(tau::bind(fun(this, &Fileman_impl::set_uri), "/"));
             int br = places_list_->append_row(tp, true);
 
-            Icon_ptr ico = std::make_shared<Icon_impl>("drive-harddisk", SMALL_ICON);
+            Icon_ptr ico = std::make_shared<Icon_impl>(ICON_DRIVE_HARDDISK, SMALL_ICON);
             ico->signal_select().connect(tau::bind(fun(this, &Fileman_impl::set_uri), "/"));
             places_list_->insert(br, ico, -1, true);
 
@@ -66,7 +66,7 @@ protected:
             tp->signal_select().connect(tau::bind(fun(this, &Fileman_impl::set_uri), path_home()));
             br = places_list_->append_row(tp, true);
 
-            ico = std::make_shared<Icon_impl>("go-home:folder", SMALL_ICON);
+            ico = std::make_shared<Icon_impl>(ustring(ICON_GO_HOME)+":"+ICON_FOLDER, SMALL_ICON);
             ico->signal_select().connect(tau::bind(fun(this, &Fileman_impl::set_uri), path_home()));
             places_list_->insert(br, ico, -1, true);
 
@@ -80,7 +80,7 @@ protected:
                     tp->signal_select().connect(tau::bind(fun(this, &Fileman_impl::set_uri), mpoint));
                     br = places_list_->append_row(tp, true);
 
-                    ico = std::make_shared<Icon_impl>("drive-removable-media:drive-harddisk", SMALL_ICON);
+                    ico = std::make_shared<Icon_impl>(ustring(ICON_DRIVE_REMOVABLE_MEDIA)+":"+ICON_DRIVE_HARDDISK, SMALL_ICON);
                     ico->signal_select().connect(tau::bind(fun(this, &Fileman_impl::set_uri), mpoint));
                     places_list_->insert(br, ico, -1, true);
                 }

@@ -34,13 +34,11 @@ namespace tau {
 
 void Loop_impl::boot_linkage() {
     sysinfo_.shared = true;
-    const char * ld = getenv("LD_LIBRARY_PATH");
-    auto & enc = Locale().encoding();
-    ustring uld = ld ? (enc.is_utf8() ? enc.decode(ld) : ustring(ld)) : "";
-    auto v = str_explode(uld, ':');
+    auto v = str_explode(str_env("LD_LIBRARY_PATH"), ':');
     v.insert(v.begin(), path_dirname(path_self()));
 
     static const char * pfxs = "/usr/lib:/usr/local/lib";
+
     for (auto & s: str_explode(pfxs, ':')) {
         v.push_back(s);
         v.push_back(path_build(s, sysinfo_.target));

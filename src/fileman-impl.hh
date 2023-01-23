@@ -28,6 +28,7 @@
 #define TAU_FILE_SELECTOR_IMPL_HH
 
 #include <tau/action.hh>
+#include <tau/icon.hh>
 #include <navigator-impl.hh>
 #include <table-impl.hh>
 #include <twins-impl.hh>
@@ -102,14 +103,14 @@ private:
     Button_ptr              mkdir_ok_button_;
 
     Action                  user_apply_action_ { KC_NONE, KM_NONE };
-    Action                  apply_action_ { KC_NONE, KM_NONE, "Apply", "dialog-ok", fun(this, &Fileman_impl::on_apply) };
-    Action                  configure_action_ { KC_NONE, KM_NONE, "Configure", "configure", "Configure file open widget", fun(this, &Fileman_impl::on_configure) };
-    Action                  cancel_action_ { "Escape Cancel", "Cancel", "dialog-cancel", fun(this, &Fileman_impl::on_cancel) };
-    Action                  next_action_ { KC_RIGHT, KM_ALT, "Next Folder", "go-next:go-right", "Go to next folder", fun(this, &Fileman_impl::next) };
-    Action                  prev_action_ { KC_LEFT, KM_ALT, "Previous Folder", "go-previous:go-left", "Go to previous folder", fun(this, &Fileman_impl::prev) };
-    Action                  updir_action_ { KC_UP, KM_ALT, "Up Folder", "go-up", "Go to parent folder", fun(this, &Fileman_impl::updir) };
-    Action                  refresh_action_ { "F5", "Refresh", "view-refresh", ustring("Reload current folder") };
-    Action                  mkdir_action_ { "F7", "Create Directory", "folder-new:folder", "Create a new folder", fun(this, &Fileman_impl::on_mkdir) };
+    Action                  apply_action_ { KC_NONE, KM_NONE, "Apply", ICON_DIALOG_OK, fun(this, &Fileman_impl::on_apply) };
+    Action                  configure_action_ { KC_NONE, KM_NONE, "Configure", ICON_CONFIGURE, "Configure file open widget", fun(this, &Fileman_impl::on_configure) };
+    Action                  cancel_action_ { "Escape Cancel", "Cancel", ICON_DIALOG_CANCEL, fun(this, &Fileman_impl::on_cancel) };
+    Action                  next_action_ { KC_RIGHT, KM_ALT, "Next Folder", ICON_GO_NEXT, "Go to next folder", fun(this, &Fileman_impl::next) };
+    Action                  prev_action_ { KC_LEFT, KM_ALT, "Previous Folder", ICON_GO_PREVIOUS, "Go to previous folder", fun(this, &Fileman_impl::prev) };
+    Action                  updir_action_ { KC_UP, KM_ALT, "Up Folder", ICON_GO_UP, "Go to parent folder", fun(this, &Fileman_impl::updir) };
+    Action                  refresh_action_ { "F5", "Refresh", ICON_VIEW_REFRESH, ustring("Reload current folder") };
+    Action                  mkdir_action_ { "F7", "Create Directory", ICON_FOLDER_NEW, "Create a new folder", fun(this, &Fileman_impl::on_mkdir) };
     Toggle_action           hidden_action_ { "<Alt>.", "Show Hidden Files", "show-hidden", "Show Hidden Files", fun(this, &Fileman_impl::on_show_hidden) };
 
 private:

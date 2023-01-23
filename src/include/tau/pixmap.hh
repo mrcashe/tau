@@ -40,7 +40,7 @@ namespace tau {
 /// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup pixmap_group
-/// See also @ref pixmap_page
+/// See also @ref icon_sect
 class Pixmap {
 public:
 

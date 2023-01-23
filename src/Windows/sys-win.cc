@@ -156,13 +156,7 @@ ustring user_name() {
 }
 
 ustring path_tmp() {
-    const char * tmp = getenv("TEMP");
-
-    if (tmp && '\0' != *tmp) {
-        return Encoding().decode(tmp);
-    }
-
-    return root_dir();
+    return str_env("TEMP", root_dir());
 }
 
 ustring path_user_data_dir() {
@@ -302,10 +296,10 @@ std::vector<ustring> path_which(const ustring & cmd) {
     std::vector<ustring> v;
 
     if (ustring::npos == cmd.find_first_of("/\\")) {
-        char * env = getenv("PATH");
+        ustring env(str_env("PATH"));
 
-        if (env) {
-            auto vv = str_explode(Locale().iocharset().decode(env), ':');
+        if (!env.empty()) {
+            auto vv = str_explode(env, ':');
 
             for (const ustring & s: vv) {
                 ustring path = path_build(s, cmd);
@@ -487,7 +481,7 @@ void setup_sysinfo_win() {
     sysinfo_.iocharset = Locale().iocharset().name();
 }
 
-void Locale::init() {
+void Locale::init1() {
     LCID lcid = GetThreadLocale();
     char iso639[10];
     if (!GetLocaleInfo (lcid, LOCALE_SISO639LANGNAME, iso639, sizeof iso639)) { return; }
@@ -533,7 +527,7 @@ void Locale::init() {
         data->enc = Encoding(data->spec.substr(begin, end-begin));
     }
 
-    data->fenc = Encoding(str_format("CP", GetOEMCP()));
+    data->iocharset = Encoding(str_format("CP", GetOEMCP()));
 }
 
 } // namespace tau

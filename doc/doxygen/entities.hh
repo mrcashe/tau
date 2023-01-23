@@ -44,7 +44,7 @@
 /// Time management classes and functions
 
 /// @defgroup file_group Files
-/// File management classes and functions
+/// File management classes, functions, variables
 
 /// @defgroup dir_group Directories
 /// Directory management functions
@@ -62,16 +62,19 @@
 /// Font managing classes and functions
 
 /// @defgroup input_group Keyboard & Mouse
-/// Keyboard & Mouse management classes and functions
+/// Keyboard & Mouse management classes, functions, constants
+
+/// @defgroup action_group Actions
+/// Action related stuff
 
 /// @defgroup geometry_group Geometry
 /// Geometrical classes
 
-/// @defgroup paint_group Painting
-/// Classes used for painting
+/// @defgroup paint_group Painting and Imaging
+/// Classes used for painting and drawing images
 
 /// @defgroup pixmap_group Pixmaps
-/// Pixmaps, pictures, bitmaps
+/// Pixmaps, pictures, bitmaps, icons
 
 /// @defgroup i18n_group Localization
 /// Classes and functions used for localization (l10n) and internationalization (i18n)

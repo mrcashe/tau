@@ -481,10 +481,11 @@ if test -z $which_doxygen; then
 else
     echo "include $supdir/doc.mk" >>$conf_mk
     tmp=$(mktemp)
+    doxyinput="$topdir/README.md $srcdir/include $srcdir/include/tau $topdir/doc/doxygen"
     echo "s+PROJECT_NUMBER *=.*+PROJECT_NUMBER = $version+" >>$tmp
     echo "s+OUTPUT_DIRECTORY *=.*+OUTPUT_DIRECTORY = $doxydir+" >>$tmp
     echo "s+EXAMPLE_PATH *=.*+EXAMPLE_PATH = $topdir+" >>$tmp
-    echo "s+INPUT *=.*+INPUT = $topdir/README.md $srcdir/include $srcdir/include/tau $srcdir/doxygen+" >>$tmp
+    echo "s+INPUT *=.*+INPUT = $doxyinput+" >>$tmp
     echo "s+IMAGE_PATH *=.*+IMAGE_PATH = $shdir/pixmaps $shdir/icons/actions/12 $shdir/icons/actions/22 $shdir/icons/devices/22 $shdir/icons/places/22+" >>$tmp
     sed -f "$tmp" "$topdir/doc/Doxyfile" >"$confdir/Doxyfile"
     rm -f $tmp

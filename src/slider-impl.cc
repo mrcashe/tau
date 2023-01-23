@@ -25,6 +25,7 @@
 // ----------------------------------------------------------------------------
 
 #include <tau/brush.hh>
+#include <tau/icon.hh>
 #include <tau/input.hh>
 #include <tau/painter.hh>
 #include <tau/pen.hh>
@@ -112,8 +113,8 @@ void Slider_impl::init() {
 }
 
 void Slider_impl::update_arrows() {
-    start_->set_image(std::make_shared<Icon_impl>(horizontal() ? "picto-left" : "picto-up", 12));
-    end_->set_image(std::make_shared<Icon_impl>(horizontal() ? "picto-right" : "picto-down", 12));
+    start_->set_image(std::make_shared<Icon_impl>(horizontal() ? ICON_PICTO_LEFT : ICON_PICTO_UP, 12));
+    end_->set_image(std::make_shared<Icon_impl>(horizontal() ? ICON_PICTO_RIGHT : ICON_PICTO_DOWN, 12));
 }
 
 double Slider_impl::location() const {

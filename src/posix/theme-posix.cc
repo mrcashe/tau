@@ -177,11 +177,8 @@ void Theme_posix::boot() {
     }
 
     // Trying to obtain cursor size from environment.
-
-    if (const char * xcursor_size = getenv("XCURSOR_SIZE")) {
-        int sz = atoi(xcursor_size);
-        if (sz >= 12) { cursor_size_ = sz; }
-    }
+    int cs = std::atoi(str_env("XCURSOR_SIZE").c_str());
+    if (cs) { cursor_size_ = std::max(12, cs); }
 
     // TODO Add support for "XCURSOR_THEME" environment variable here.
 

@@ -444,33 +444,6 @@ const Locale_static * find_sdata(const tau::Language & lang, const tau::Territor
     return sdata_;
 }
 
-std::string locale_language(const std::string & locale) {
-    auto end = locale.find_first_of("-_");
-    return (std::string::npos != end) ? locale.substr(0, end) : std::string();
-}
-
-std::string locale_territory(const std::string & locale) {
-    auto begin = locale.find_first_of("-_");
-    if (std::string::npos == begin) { return std::string(); }
-    ++begin;
-    auto end = locale.find('.');
-    return locale.substr(begin, end-begin);
-}
-
-std::string locale_encoding(const std::string & locale) {
-    auto begin = locale.find('.');
-    if (std::string::npos == begin) { return std::string(); }
-    ++begin;
-    auto end = locale.find('@');
-    return locale.substr(begin, end-begin);
-}
-
-std::string locale_modifier(const std::string & locale) {
-    auto begin = locale.find('@');
-    if (std::string::npos == begin) { return std::string(); }
-    return locale.substr(1+begin);
-}
-
 } // anonymous namespace
 
 // ----------------------------------------------------------------------------
@@ -479,13 +452,13 @@ std::string locale_modifier(const std::string & locale) {
 namespace tau {
 
 Locale_data sys_locale_ = {
-    .spec   = "C",
-    .lang   = Language("C"),
-    .terr   = Territory(),
-    .enc    = Encoding("ASCII"),
-    .fenc   = Encoding("ASCII"),
-    .mod    = "",
-    .sdata  = sdata_
+    .spec       = "C",
+    .lang       = Language("C"),
+    .terr       = Territory(),
+    .enc        = Encoding("ASCII"),
+    .iocharset  = Encoding("ASCII"),
+    .mod        = "",
+    .sdata      = sdata_
 };
 
 Locale_data * sys_locale_ptr_ = nullptr;
@@ -496,23 +469,46 @@ Locale::Locale(const std::string & spec):
     if (spec.empty()) {
         if (!data) {
             data = sys_locale_ptr_ = &sys_locale_;
-            init();
-            data->lang = Language(locale_language(data->spec));
-            data->terr = Territory(locale_territory(data->spec));
-            data->mod = locale_modifier(data->spec);
-            data->sdata = find_sdata(data->lang, data->terr);
+            init1();
+            init2();
         }
     }
 
     else {
         data = new Locale_data;
-        data->lang = Language(locale_language(spec));
-        data->terr = Territory(locale_territory(spec));
-        data->enc = Encoding(locale_encoding(spec));
-        data->fenc = sys_locale_.fenc;
-        data->mod = locale_modifier(spec);
-        data->sdata = find_sdata(data->lang, data->terr);
+        data->spec = spec;
+        data->iocharset = sys_locale_.iocharset;
+        init2();
     }
+}
+
+
+void Locale::init2() {
+    auto end = data->spec.find_first_of("-_");
+    if (std::string::npos != end) { data->lang = Language(data->spec.substr(0, end)); }
+
+    auto begin = data->spec.find_first_of("-_");
+
+    if (std::string::npos != begin) {
+        ++begin;
+        end = data->spec.find('.');
+        data->terr = Territory(data->spec.substr(begin, end-begin));
+    }
+
+    if (!data->enc) {
+        begin = data->spec.find('.');
+
+        if (std::string::npos != begin) {
+            ++begin;
+            end = data->spec.find('@');
+            data->enc = data->spec.substr(begin, end-begin);
+        }
+    }
+
+    begin = data->spec.find('@');
+    if (std::string::npos != begin) { data->mod = data->spec.substr(1+begin); }
+    if (!data->iocharset) { data->iocharset = data->enc; }
+    data->sdata = find_sdata(data->lang, data->terr);
 }
 
 Locale::Locale(const Language & lang, const Territory & terr, const std::string & modifier):
@@ -521,7 +517,7 @@ Locale::Locale(const Language & lang, const Territory & terr, const std::string 
     data->lang = lang;
     data->terr = terr;
     data->mod = modifier;
-    data->fenc = sys_locale_.fenc;
+    data->iocharset = sys_locale_.iocharset;
     data->sdata = find_sdata(data->lang, data->terr);
 }
 
@@ -531,7 +527,7 @@ Locale::Locale(const Language & lang, const Territory & terr, const Encoding & e
     data->lang = lang;
     data->terr = terr;
     data->enc = enc;
-    data->fenc = sys_locale_.fenc;
+    data->iocharset = sys_locale_.iocharset;
     data->mod = modifier;
     data->sdata = find_sdata(data->lang, data->terr);
 }
@@ -542,7 +538,7 @@ Locale::Locale(const Locale & other):
     data->lang = other.data->lang;
     data->terr = other.data->terr;
     data->enc = other.data->enc;
-    data->fenc = sys_locale_.fenc;
+    data->iocharset = sys_locale_.iocharset;
     data->mod = other.data->mod;
     data->sdata = other.data->sdata;
 }
@@ -553,7 +549,7 @@ Locale & Locale::operator=(const Locale & other) {
         data->lang = other.data->lang;
         data->terr = other.data->terr;
         data->enc = other.data->enc;
-        data->fenc = sys_locale_.fenc;
+        data->iocharset = sys_locale_.iocharset;
         data->mod = other.data->mod;
         data->sdata = other.data->sdata;
     }
@@ -584,11 +580,7 @@ char * Locale::set(int category, const std::string & locale) {
         if (!locale.empty() && lc.code() != locale) {
             lc.data = sys_locale_ptr_ = &sys_locale_;
             lc.data->spec = locale;
-            lc.init();
-            lc.data->lang = Language(locale_language(lc.data->spec));
-            lc.data->terr = Territory(locale_territory(lc.data->spec));
-            lc.data->mod = locale_modifier(lc.data->spec);
-            lc.data->sdata = find_sdata(lc.data->lang, lc.data->terr);
+            lc.init2();
         }
     }
 
@@ -624,7 +616,7 @@ const Encoding & Locale::encoding() const {
 }
 
 const Encoding & Locale::iocharset() const {
-    return data->fenc;
+    return data->iocharset;
 }
 
 std::string Locale::modifier() const {
@@ -635,10 +627,10 @@ std::vector<Locale> Locale::variants() const {
     std::vector<Locale> v;
 
     std::string locale = code();
-    std::string lang = locale_language(locale);
-    std::string terr = locale_territory(locale);
-    std::string enc = locale_encoding(locale);
-    std::string mod = locale_modifier(locale);
+    std::string lang = data->lang.code2();
+    std::string terr = data->lang.name();
+    std::string enc = data->enc.name();
+    std::string mod = data->mod;
 
     if (!lang.empty() && !terr.empty() && !enc.empty() && !mod.empty()) {
         v.push_back(Locale(str_format(lang, '_', terr, '.', enc, mod)));

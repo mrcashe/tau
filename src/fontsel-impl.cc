@@ -143,10 +143,10 @@ void Fontsel_impl::init() {
     align(btn.get(), ALIGN_FILL, ALIGN_FILL);
 
     auto theme = Theme_impl::root();
-    auto pa = theme->find_action(FOCUS_NEXT_ACTION);
+    auto pa = theme->find_action(ACTION_FOCUS_NEXT);
     if (pa) { next_.connect_master_action(*pa); }
 
-    pa = theme->find_action(FOCUS_PREVIOUS_ACTION);
+    pa = theme->find_action(ACTION_FOCUS_PREVIOUS);
     if (pa) { prev_.connect_master_action(*pa); }
 
     apply_.disable();

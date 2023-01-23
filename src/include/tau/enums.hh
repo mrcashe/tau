@@ -232,6 +232,7 @@ enum Wrap_mode {
 };
 
 /// Action items to be used.
+/// @ingroup enum_group
 enum Action_items {
     ACTION_NOTHING  = 0,        ///< Do not use anything.
     ACTION_LABEL    = 1 << 0,   ///< Use label provided by action.

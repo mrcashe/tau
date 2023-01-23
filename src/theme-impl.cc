@@ -27,6 +27,7 @@
 #include <tau/exception.hh>
 #include <tau/fileinfo.hh>
 #include <tau/font.hh>
+#include <tau/icon.hh>
 #include <tau/key-file.hh>
 #include <tau/locale.hh>
 #include <tau/sys.hh>
@@ -41,22 +42,51 @@
 #include <fstream>
 #include <iostream>
 
-const char * FOCUS_NEXT_ACTION = "focus-next";
-const char * FOCUS_PREVIOUS_ACTION = "focus-previous";
-const char * PAN_LEFT_ACTION = "pan-left";
-const char * PAN_RIGHT_ACTION = "pan-right";
-const char * PAN_UP_ACTION = "pan-up";
-const char * PAN_DOWN_ACTION = "pan-down";
-
 namespace {
 
+struct Cursor_theme {
+    std::vector<tau::ustring>   roots;
+    std::vector<tau::ustring>   inherits;
+    std::vector<int>            inherited;
+    tau::ustring                name;
+};
+
+struct Icon_dir {
+    tau::ustring                path;
+    tau::ustring                type;
+    tau::ustring                context;
+    bool                        scalable = false;
+    bool                        files_listed = false;
+    std::list<tau::ustring>     files;
+    int                         size = 0;
+    unsigned                    scale = 1;
+    int                         threshold = 2;
+    int                         min_size = 0;
+    int                         max_size = 0;
+};
+
+struct Icon_theme {
+    std::vector<tau::ustring>   roots;
+    std::vector<tau::ustring>   inherits;
+    std::vector<Icon_dir>       dirs;
+    std::vector<int>            inherited;
+    tau::ustring                name;
+    tau::ustring                name_i18n;
+    tau::ustring                comment;
+    tau::ustring                comment_i18n;
+    tau::ustring                example;
+    bool                        hidden = false;
+};
+
 using Smutex        = std::recursive_mutex;
+using Slock         = std::lock_guard<Smutex>;
+
 using Dirs          = std::list<tau::ustring>;
 using Cursor_map    = std::unordered_map<std::string, std::string>; // Maps Name->Path.
 using Pixmap_map    = std::unordered_map<std::string, std::string>; // Maps Name->Path.
 
-using Cursor_themes = std::vector<tau::Theme_impl::Cursor_theme>;
-using Icon_themes   = std::vector<tau::Theme_impl::Icon_theme>;
+using Cursor_themes = std::vector<Cursor_theme>;
+using Icon_themes   = std::vector<Icon_theme>;
 
 Smutex              mx_;
 std::atomic_int     nicon_dirs_ { 0 };
@@ -232,14 +262,14 @@ const char * picto_dec_xpm_ =
 ;
 
 const struct { const char * name, * xpm; } pictos_[] = {
-    { "picto-up",    picto_up_xpm_ },
-    { "picto-down",  picto_down_xpm_ },
-    { "picto-left",  picto_left_xpm_ },
-    { "picto-right", picto_right_xpm_ },
-    { "picto-close", picto_close_xpm_ },
-    { "picto-inc",   picto_inc_xpm_ },
-    { "picto-dec",   picto_dec_xpm_ },
-    { nullptr,       nullptr },
+    { tau::ICON_PICTO_UP,       picto_up_xpm_ },
+    { tau::ICON_PICTO_DOWN,     picto_down_xpm_ },
+    { tau::ICON_PICTO_LEFT,     picto_left_xpm_ },
+    { tau::ICON_PICTO_RIGHT,    picto_right_xpm_ },
+    { tau::ICON_PICTO_CLOSE,    picto_close_xpm_ },
+    { tau::ICON_PICTO_INC,      picto_inc_xpm_ },
+    { tau::ICON_PICTO_DEC,      picto_dec_xpm_ },
+    { nullptr,                  nullptr },
 };
 
 struct Action_def {
@@ -251,14 +281,14 @@ struct Action_def {
 };
 
 const Action_def action_defs_[] = {
-    //     name               label             icon            tooltip             accels
-    { FOCUS_NEXT_ACTION,     "Focus Next",      "go-next",      "Focus Next",       "Tab"                       },
-    { FOCUS_PREVIOUS_ACTION, "Focus Previous",  "go-previous",  "Focus Previous",   "<Shift>Tab <Shift>LeftTab" },
-    { PAN_LEFT_ACTION,       "Pan Left",        "",             "Pan Left",         "<Ctrl><Alt>Left"           },
-    { PAN_RIGHT_ACTION,      "Pan Right",       "",             "Pan Right",        "<Ctrl><Alt>Right"          },
-    { PAN_UP_ACTION,         "Pan Up",          "",             "Pan Up",           "<Ctrl>Up"                  },
-    { PAN_DOWN_ACTION,       "Pan Down",        "",             "Pan Down",         "<Ctrl>Down"                },
-    { nullptr,               nullptr,           nullptr,        nullptr,            nullptr                     }
+    //     name                   label             icon            tooltip             accels
+    { tau::ACTION_FOCUS_NEXT,     "Focus Next",      "go-next",      "Focus Next",       "Tab"                       },
+    { tau::ACTION_FOCUS_PREVIOUS, "Focus Previous",  "go-previous",  "Focus Previous",   "<Shift>Tab <Shift>LeftTab" },
+    { tau::ACTION_PAN_LEFT,       "Pan Left",        "",             "Pan Left",         "<Ctrl><Alt>Left"           },
+    { tau::ACTION_PAN_RIGHT,      "Pan Right",       "",             "Pan Right",        "<Ctrl><Alt>Right"          },
+    { tau::ACTION_PAN_UP,         "Pan Up",          "",             "Pan Up",           "<Ctrl>Up"                  },
+    { tau::ACTION_PAN_DOWN,       "Pan Down",        "",             "Pan Down",         "<Ctrl>Down"                },
+    { nullptr,                    nullptr,           nullptr,        nullptr,            nullptr                     }
 };
 
 // Default style items.
@@ -280,12 +310,143 @@ const struct { const char * name, * value; } items_[] = {
     { nullptr,                  nullptr         }
 };
 
+
+struct Pixmap_holder {
+    tau::Pixmap_ptr pixmap;
+    tau::Timeval    tv;
+};
+
+using Pixmap_cache = std::unordered_map<std::string, Pixmap_holder>;
+
+Pixmap_cache        icon_cache_;
+Pixmap_cache        pixmap_cache_;
+
+void cache_icon(tau::Pixmap_ptr icon, const tau::ustring & name, const tau::ustring & context, int size) {
+    Pixmap_holder hol;
+    hol.pixmap = icon;
+    hol.tv = tau::Timeval::now();
+    tau::ustring key = tau::str_toupper(tau::str_format(name, '-', (context.empty() ? "ANY" : context), '-', size));
+    Slock lk(mx_);
+    icon_cache_[key] = hol;
+}
+
+tau::Pixmap_cptr uncache_icon(const tau::ustring & name, const tau::ustring & context, int size) {
+    tau::ustring key = tau::str_toupper(str_format(name, '-', (context.empty() ? "ANY" : context), '-', size));
+    Slock lk(mx_);
+    auto iter = icon_cache_.find(key);
+
+    if (iter != icon_cache_.end()) {
+        iter->second.tv = tau::Timeval::now();
+        return iter->second.pixmap;
+    }
+
+    return nullptr;
+}
+
+void cache_pixmap(tau::Pixmap_ptr pixmap, const tau::ustring & name) {
+    Pixmap_holder hol;
+    hol.pixmap = pixmap;
+    hol.tv = tau::Timeval::now();
+    tau::ustring key = tau::str_toupper(tau::str_trim(name));
+    Slock ml(mx_);
+    pixmap_cache_[key] = hol;
+}
+
+tau::Pixmap_cptr uncache_pixmap(const tau::ustring & name) {
+    tau::ustring key = tau::str_toupper(str_trim(name));
+    Slock ml(mx_);
+    auto iter = pixmap_cache_.find(key);
+
+    if (iter != pixmap_cache_.end()) {
+        iter->second.tv = tau::Timeval::now();
+        return iter->second.pixmap;
+    }
+
+    return nullptr;
+}
+
+tau::Pixmap_ptr find_icon_in_dir(Icon_dir & dir, const std::vector<tau::ustring> & unames, const tau::ustring & context, int size) {
+    if (!dir.files_listed) {
+        try {
+            for (auto & file: path_list(dir.path)) {
+                if (tau::Fileinfo(tau::path_build(dir.path, file)).is_regular()) {
+                    tau::ustring suf = tau::path_suffix(file);
+
+                    if (tau::str_similar(suf, tau::str_explode(tau::Pixmap_impl::list_file_suffixes(), ":;"))) {
+                        dir.files.push_back(file);
+                    }
+                }
+            }
+
+            dir.files_listed = true;
+        }
+
+        catch (tau::exception & x) {
+            std::cerr << "** Theme_impl::find_icon_in_dir: dir=" << dir.path << ": " << x.what() << std::endl;
+            return nullptr;
+        }
+
+        catch (...) {
+            std::cerr << "** Theme_impl::find_icon_in_dir: dir=" << dir.path << ": unknown exception caught" << std::endl;
+            return nullptr;
+        }
+    }
+
+    std::list<tau::ustring> blacklist;
+
+    for (auto & file: dir.files) {
+        tau::ustring basename = tau::path_basename(file);
+
+        for (auto & uname: unames) {
+            if (tau::str_similar(basename, uname)) {
+                tau::ustring path = tau::path_build(dir.path, file);
+
+                try {
+                    if (auto pixmap = tau::Pixmap_impl::load_from_file(path)) {
+                        cache_icon(pixmap, uname, context, size);
+                        for (auto & s: blacklist) { dir.files.remove(s); }
+                        return pixmap;
+                    }
+                }
+
+                catch (tau::exception & x) {
+                    std::cerr << "** Theme_impl::find_icon_in_dir: file=" << path << ": " << x.what() << std::endl;
+                    blacklist.push_back(file);
+                    break;
+                }
+
+                catch (std::exception & x) {
+                    std::cerr << "** Theme_impl::find_icon_in_dir: file=" << path << ": " << x.what() << std::endl;
+                    blacklist.push_back(file);
+                    break;
+                }
+
+                catch (...) {
+                    std::cerr << "** Theme_impl::find_icon_in_dir: file=" << path << ": unknown exception caught" << std::endl;
+                    blacklist.push_back(file);
+                    break;
+                }
+            }
+        }
+    }
+
+    for (auto & s: blacklist) { dir.files.remove(s); }
+    return nullptr;
+}
+
 } // anonymous namespace
 
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
 
 namespace tau {
+
+const char * ACTION_FOCUS_NEXT = "focus-next";
+const char * ACTION_FOCUS_PREVIOUS = "focus-previous";
+const char * ACTION_PAN_LEFT = "pan-left";
+const char * ACTION_PAN_RIGHT = "pan-right";
+const char * ACTION_PAN_UP = "pan-up";
+const char * ACTION_PAN_DOWN = "pan-down";
 
 // Overriden by Theme_posix.
 // Overriden by Theme_win.
@@ -949,113 +1110,6 @@ int Theme_impl::icon_pixels(int icon_size) const {
     }
 
     return std::max(0, icon_size);
-}
-
-void Theme_impl::cache_pixmap(Pixmap_ptr pixmap, const ustring & name) {
-    Pixmap_holder hol;
-    hol.pixmap = pixmap;
-    hol.tv = Timeval::now();
-    ustring key = str_toupper(str_trim(name));
-    Lock ml(mmx_);
-    pixmap_cache_[key] = hol;
-}
-
-Pixmap_cptr Theme_impl::uncache_pixmap(const ustring & name) {
-    ustring key = str_toupper(str_trim(name));
-    Lock ml(mmx_);
-    auto iter = pixmap_cache_.find(key);
-
-    if (iter != pixmap_cache_.end()) {
-        iter->second.tv = Timeval::now();
-        return iter->second.pixmap;
-    }
-
-    return nullptr;
-}
-
-void Theme_impl::cache_icon(Pixmap_ptr icon, const ustring & name, const ustring & context, int size) {
-    Pixmap_holder hol;
-    hol.pixmap = icon;
-    hol.tv = Timeval::now();
-    ustring key = str_toupper(str_format(name, '-', (context.empty() ? "ANY" : context), '-', size));
-    Lock lk(mmx_);
-    icon_cache_[key] = hol;
-}
-
-Pixmap_cptr Theme_impl::uncache_icon(const ustring & name, const ustring & context, int size) {
-    ustring key = str_toupper(str_format(name, '-', (context.empty() ? "ANY" : context), '-', size));
-    Lock lk(mmx_);
-    auto iter = icon_cache_.find(key);
-
-    if (iter != icon_cache_.end()) {
-        iter->second.tv = Timeval::now();
-        return iter->second.pixmap;
-    }
-
-    return nullptr;
-}
-
-Pixmap_ptr Theme_impl::find_icon_in_dir(Icon_dir & dir, const std::vector<ustring> & unames, const ustring & context, int size) {
-    if (!dir.files_listed) {
-        try {
-            for (const ustring & file: path_list(dir.path)) {
-                if (Fileinfo(path_build(dir.path, file)).is_regular()) {
-                    ustring suf = path_suffix(file);
-
-                    if (str_similar(suf, str_explode(Pixmap_impl::list_file_suffixes(), ":;"))) {
-                        dir.files.push_back(file);
-                    }
-                }
-            }
-
-            dir.files_listed = true;
-        }
-
-        catch (exception & x) {
-            std::cerr << "** Theme_impl::find_icon_in_dir: dir=" << dir.path << ": " << x.what() << std::endl;
-            return nullptr;
-        }
-
-        catch (...) {
-            std::cerr << "** Theme_impl::find_icon_in_dir: dir=" << dir.path << ": unknown exception caught" << std::endl;
-            return nullptr;
-        }
-    }
-
-    std::list<ustring> blacklist;
-
-    for (const ustring & file: dir.files) {
-        ustring basename = path_basename(file);
-
-        for (const ustring & uname: unames) {
-            if (str_similar(basename, uname)) {
-                ustring path = path_build(dir.path, file);
-
-                try {
-                    if (auto pixmap = Pixmap_impl::load_from_file(path)) {
-                        cache_icon(pixmap, uname, context, size);
-                        for (const ustring & s: blacklist) { dir.files.remove(s); }
-                        return pixmap;
-                    }
-                }
-
-                catch (exception & x) {
-                    std::cerr << "** Theme_impl::find_icon_in_dir: file=" << path << ": " << x.what() << std::endl;
-                    blacklist.push_back(file);
-                    break;
-                }
-
-                catch (...) {
-                    std::cerr << "** Theme_impl::find_icon_in_dir: file=" << path << ": unknown exception caught" << std::endl;
-                    blacklist.push_back(file);
-                    break;
-                }
-            }
-        }
-    }
-
-    for (const ustring & s: blacklist) { dir.files.remove(s); }
-    return nullptr;
 }
 
 Pixmap_ptr Theme_impl::find_icon_in_theme(int iicon, const std::vector<ustring> & unames, const ustring & context, std::vector<int> & seen, int size) {

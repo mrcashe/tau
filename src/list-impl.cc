@@ -25,6 +25,7 @@
 // ----------------------------------------------------------------------------
 
 #include <tau/exception.hh>
+#include <tau/icon.hh>
 #include <absolute-impl.hh>
 #include <box-impl.hh>
 #include <icon-impl.hh>
@@ -930,7 +931,7 @@ void List_impl::show_header(int column, Widget_ptr title) {
     hdr.box->signal_mouse_down().connect(tau::bind(fun(this, &List_impl::on_header_mouse_down), column));
     hdr.box->append(hdr.title);
     hdr.sep = std::make_shared<Separator_impl>(SEPARATOR_SOLID);
-    hdr.sep->hint_size(Size(2, 0));
+    hdr.sep->hint_size(2, 0);
     hdr.sep->signal_mouse_down().connect(tau::bind(fun(this, &List_impl::on_sep_mouse_down), std::ref(hdr)));
     hdr.sep->signal_mouse_up().connect(tau::bind(fun(this, &List_impl::on_sep_mouse_up), std::ref(hdr)));
     hdr.sep->signal_mouse_motion().connect(tau::bind(fun(this, &List_impl::on_sep_mouse_motion), std::ref(hdr)));
@@ -959,7 +960,7 @@ void List_impl::show_sort_marker(int column, bool descend) {
     auto i = std::find_if(headers_.begin(), headers_.end(), [column](Header & hdr) { return hdr.column == column; } );
 
     if (i != headers_.end()) {
-        ustring picto_name = descend ? "picto-up" : "picto-down";
+        ustring picto_name = descend ? ICON_PICTO_UP : ICON_PICTO_DOWN;
 
         if (!i->marker) {
             i->marker = std::make_shared<Icon_impl>(picto_name, 12);

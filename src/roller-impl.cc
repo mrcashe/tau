@@ -24,6 +24,7 @@
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ----------------------------------------------------------------------------
 
+#include <tau/icon.hh>
 #include <button-impl.hh>
 #include <roller-impl.hh>
 #include <scroller-impl.hh>
@@ -39,9 +40,9 @@ Roller_impl::Roller_impl(Orientation orient, bool autohide):
     set_spacing(3);
     scroller_ = std::make_shared<Scroller_impl>();
     append(scroller_);
-    ustring start_icon = horizontal() ? "picto-left" : "picto-up";
+    ustring start_icon = horizontal() ? ICON_PICTO_LEFT : ICON_PICTO_UP;
     set_start(std::make_shared<Button_impl>(start_icon, 12));
-    ustring end_icon = horizontal() ? "picto-right" : "picto-down";
+    ustring end_icon = horizontal() ? ICON_PICTO_RIGHT : ICON_PICTO_DOWN;
     set_end(std::make_shared<Button_impl>(end_icon, 12));
     scroller_->signal_pan_changed().connect(fun(this, &Roller_impl::update_buttons));
     scroller_->signal_size_changed().connect(fun(this, &Roller_impl::update_buttons));

@@ -28,6 +28,7 @@
 #define TAU_COLOR_SELECTOR_IMPL_HH
 
 #include <tau/action.hh>
+#include <tau/icon.hh>
 #include <table-impl.hh>
 
 namespace tau {
@@ -77,8 +78,8 @@ private:
     Entry_ptr           html_;
     Table_ptr           ntable_;
 
-    Action              apply_action_ { KC_NONE, KM_NONE, "Apply", ustring("dialog-ok") };
-    Action              cancel_action_ { "Escape Cancel", "Cancel", ustring("dialog-cancel") };
+    Action              apply_action_ { KC_NONE, KM_NONE, "Apply", ustring(ICON_DIALOG_OK) };
+    Action              cancel_action_ { "Escape Cancel", "Cancel", ustring(ICON_DIALOG_CANCEL) };
 
     signal<void(const Color &)> signal_color_changed_;
     connection          html_cx_;

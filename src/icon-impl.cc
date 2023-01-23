@@ -32,6 +32,29 @@
 
 namespace tau {
 
+const char * ICON_CONFIGURE = "configure";
+const char * ICON_DIALOG_CANCEL = "dialog-cancel";
+const char * ICON_DIALOG_OK = "dialog-ok";
+const char * ICON_DRIVE_OPTICAL = "drive-optical";
+const char * ICON_DRIVE_HARDDISK = "drive-harddisk";
+const char * ICON_DRIVE_REMOVABLE_MEDIA = "drive-removable-media";
+const char * ICON_FOLDER = "folder";
+const char * ICON_FOLDER_NEW = "folder-new";
+const char * ICON_FOLDER_REMOTE = "folder-remote";
+const char * ICON_GO_HOME = "go-home";
+const char * ICON_GO_NEXT = "go-next";
+const char * ICON_GO_PREVIOUS = "go-previous";
+const char * ICON_GO_UP = "go-up";
+const char * ICON_PICTO_DEC = "picto-dec";
+const char * ICON_PICTO_INC = "picto-inc";
+const char * ICON_PICTO_CLOSE = "picto-close";
+const char * ICON_PICTO_DOWN = "picto-down";
+const char * ICON_PICTO_LEFT = "picto-left";
+const char * ICON_PICTO_RIGHT = "picto-right";
+const char * ICON_PICTO_UP = "picto-up";
+const char * ICON_UNKNOWN = "unknown";
+const char * ICON_VIEW_REFRESH = "view-refresh";
+
 Icon_impl::Icon_impl():
     Image_impl()
 {

@@ -34,6 +34,7 @@
 #include <tau/signal.hh>
 #include <tau/style.hh>
 #include <tau/timeval.hh>
+#include <tau/theme.hh>
 #include <tau/ustring.hh>
 #include <loop-impl.hh>
 #include <atomic>
@@ -42,13 +43,6 @@
 #include <mutex>
 #include <vector>
 #include <unordered_map>
-
-extern const char * FOCUS_NEXT_ACTION;
-extern const char * FOCUS_PREVIOUS_ACTION;
-extern const char * PAN_LEFT_ACTION;
-extern const char * PAN_RIGHT_ACTION;
-extern const char * PAN_UP_ACTION;
-extern const char * PAN_DOWN_ACTION;
 
 namespace tau {
 
@@ -95,52 +89,12 @@ public:
 
 public:
 
-    struct Cursor_theme {
-        std::vector<ustring>    roots;
-        std::vector<ustring>    inherits;
-        std::vector<int>        inherited;
-        ustring                 name;
-    };
-
-    struct Icon_dir {
-        ustring                 path;
-        ustring                 type;
-        ustring                 context;
-        bool                    scalable = false;
-        bool                    files_listed = false;
-        std::list<ustring>      files;
-        int                     size = 0;
-        unsigned                scale = 1;
-        int                     threshold = 2;
-        int                     min_size = 0;
-        int                     max_size = 0;
-    };
-
-    struct Icon_theme {
-        std::vector<ustring>    roots;
-        std::vector<ustring>    inherits;
-        std::vector<Icon_dir>   dirs;
-        std::vector<int>        inherited;
-        ustring                 name;
-        ustring                 name_i18n;
-        ustring                 comment;
-        ustring                 comment_i18n;
-        ustring                 example;
-        bool                    hidden = false;
-    };
-
     struct Cursor_holder {
         Cursor_ptr      cursor;
         Timeval         tv;
     };
 
-    struct Pixmap_holder {
-        Pixmap_ptr      pixmap;
-        Timeval         tv;
-    };
-
     using Cursor_cache  = std::unordered_map<std::string, Cursor_holder>;
-    using Pixmap_cache = std::unordered_map<std::string, Pixmap_holder>;
 
 protected:
 
@@ -159,8 +113,6 @@ protected:
 private:
 
     Cursor_cache        cursor_cache_;
-    Pixmap_cache        pixmap_cache_;
-    Pixmap_cache        icon_cache_;
     Loop_impl *         cleanup_loop_ = nullptr;
 
 protected:
@@ -189,15 +141,8 @@ private:
     int find_cursor_theme_nolock(const ustring & name) const;
     Cursor_ptr find_cursor_in_theme(int ctheme, const std::vector<ustring> & unames, std::vector<int> & seen, int size);
 
-    void cache_pixmap(Pixmap_ptr pixmap, const ustring & name);
-    Pixmap_cptr uncache_pixmap(const ustring & name);
-
-    void cache_icon(Pixmap_ptr icon, const ustring & name, const ustring & context, int size);
-    Pixmap_cptr uncache_icon(const ustring & name, const ustring & context, int size);
-
     int find_icon_theme(const ustring & name) const;
     int find_icon_theme_nolock(const ustring & name) const;
-    Pixmap_ptr find_icon_in_dir(Icon_dir & dir, const std::vector<ustring> & unames, const ustring & context, int size);
     Pixmap_ptr find_icon_in_theme(int itheme, const std::vector<ustring> & unames, const ustring & context, std::vector<int> & seen, int size);
     int icon_pixels(int icon_size) const;
 

@@ -28,7 +28,7 @@
 #define TAU_ICON_IMPL_HH
 
 #include <tau/enums.hh>
-#include <tau/pixmap.hh>
+#include <tau/icon.hh>
 #include <image-impl.hh>
 
 namespace tau {

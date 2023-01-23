@@ -194,7 +194,7 @@ struct Main: tau::Toplevel {
         {
             tau::Text label("tau::Toggle", tau::ALIGN_START);
             table.put(label, 0, row);
-            tau::Icon ico2("configure", tau::SMALL_ICON);
+            tau::Icon ico2(tau::ICON_CONFIGURE, tau::SMALL_ICON);
             tau::Toggle toggle_button(ico2, "Toggle button");
             table.put(toggle_button, 7, row, 1, 1, true, true);
         }

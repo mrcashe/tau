@@ -37,4 +37,3 @@ clean:
 
 doc:
 	@if test -n $(doxygen); then (cd $(topdir) && $(doxygen) "$(confdir)/Doxyfile"); fi
-#

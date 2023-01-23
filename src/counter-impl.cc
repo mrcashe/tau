@@ -24,6 +24,7 @@
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ----------------------------------------------------------------------------
 
+#include <tau/icon.hh>
 #include <tau/string.hh>
 #include <button-impl.hh>
 #include <counter-impl.hh>
@@ -87,11 +88,11 @@ void Counter_impl::init(double value, double max_value, double min_value) {
 
     auto theme = Theme_impl::root();
 
-    Pixmap_cptr pixmap = theme->find_pixmap("picto-dec");
+    Pixmap_cptr pixmap = theme->find_pixmap(ICON_PICTO_DEC);
     if (pixmap) { down_->set_image(std::make_shared<Image_impl>(pixmap->dup(), true)); }
     else { down_->hint_size(8, 4); }
 
-    pixmap = theme->find_pixmap("picto-inc");
+    pixmap = theme->find_pixmap(ICON_PICTO_INC);
     if (pixmap) { up_->set_image(std::make_shared<Image_impl>(pixmap->dup(), true)); }
     else { up_->hint_size(8, 4); }
 

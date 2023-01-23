@@ -46,122 +46,129 @@ extern const int Minor_;
 /// @ingroup sys_group
 extern const int Micro_;
 
-/// @ingroup path_group
 /// Build path from two components.
+/// @ingroup path_group
 ustring path_build(const ustring & s1, const ustring & s2);
 
-/// @ingroup path_group
 /// Build path from three components.
+/// @ingroup path_group
 ustring path_build(const ustring & s1, const ustring & s2, const ustring & s3);
 
-/// @ingroup path_group
 /// Test if path absolute.
+/// @ingroup path_group
 bool path_is_absolute(const ustring & path);
 
-/// @ingroup path_group
 /// Extracts all but the directory-part of the path.
 /// If the file name contains no slash, it is left unchanged.
 /// Otherwise, everything through the last slash is removed from it.
+/// @ingroup path_group
 ustring path_notdir(const ustring & path);
 
-/// @ingroup path_group
 /// Get file extension.
+/// @ingroup path_group
 ustring path_suffix(const ustring & path);
 
-/// @ingroup path_group
 /// Get file name excluding directory part and suffix.
+/// @ingroup path_group
 ustring path_basename(const ustring & path);
 
-/// @ingroup path_group
 /// Get directory part of the path.
+/// @ingroup path_group
 ustring path_dirname(const ustring & path);
 
-/// @ingroup path_group
 /// Get resolved path.
+/// @ingroup path_group
 ustring path_real(const ustring & path);
 
-/// @ingroup path_group
 /// Get executable file path.
+/// @ingroup path_group
 ustring path_self();
 
-/// @ingroup path_group
 /// Test if path matches against given template.
+/// @ingroup path_group
 bool path_match(const ustring & pattern, const ustring & path);
 
-/// @ingroup dir_group
 /// Get current directory.
+/// @ingroup dir_group
 ustring path_cwd();
 
-/// @ingroup path_group
 /// Get temporary directory.
+/// @ingroup path_group
 ustring path_tmp();
 
-/// @ingroup path_group
 /// Get program installation prefix directory.
+/// @ingroup path_group
 ustring path_prefix();
 
-/// @ingroup path_group
 /// Get share directory path.
+/// @ingroup path_group
 ustring path_share();
 
-/// @ingroup path_group
 /// Get user home directory path.
+/// @ingroup path_group
 ustring path_home();
 
-/// @ingroup path_group
 /// Get user data directory path.
+/// @ingroup path_group
 ustring path_user_data_dir();
 
-/// @ingroup path_group
 /// Get user configuration directory path.
+/// @ingroup path_group
 ustring path_user_config_dir();
 
-/// @ingroup path_group
 /// Get user cache directory path.
+/// @ingroup path_group
 ustring path_user_cache_dir();
 
-/// @ingroup path_group
 /// Get user runtime directory path.
+/// @ingroup path_group
 ustring path_user_runtime_dir();
 
-/// @ingroup path_group
 /// Get full paths of shell commands.
+/// @ingroup path_group
 std::vector<ustring> path_which(const ustring & cmd);
 
 /// @ingroup dir_group
 /// Make directory with parents.
 void path_mkdir(const ustring & path);
 
-/// @ingroup dir_group
 /// Lists directory.
 /// Directory names are included in search result.
+/// @ingroup dir_group
 std::vector<ustring> path_glob(const ustring & mask);
 
-/// @ingroup dir_group
 /// Lists directory.
 /// Directory names doesn't included in search result.
+/// @ingroup dir_group
 std::vector<ustring> path_list(const ustring & dir_path);
 
-/// @ingroup dir_group
 /// Perform recursive file search under given directory.
 /// Directory names included in search result.
+/// @ingroup dir_group
 std::vector<ustring> path_find(const ustring & dir, const ustring & mask="*");
 
-/// @ingroup sys_group
 /// Get user name (login name).
+/// @ingroup sys_group
 ustring user_name();
 
-/// @ingroup file_group
 /// Get program name.
+/// @ingroup file_group
 ustring program_name();
 
-/// @ingroup file_group
 /// Test if file exist.
+/// @ingroup file_group
 bool file_exists(const ustring & path);
 
-/// @ingroup file_group
 /// Test if file is directory.
+/// @ingroup file_group
 bool file_is_dir(const ustring & path);
+
+/// Get environment value.
+/// Gets UTF-8 encoded value obtained from environment
+/// variable named @e env. If that variable is not defined,
+/// fallback value returned which is empty by default.
+/// @ingroup sys_group
+ustring str_env(const std::string & env, const ustring & fallback=ustring());
 
 /// Sleep for a while.
 /// @param time_ms time of the sleep, in milliseconds.

@@ -46,13 +46,13 @@ Scroller_impl::Scroller_impl():
     signal_take_focus_.connect(fun(this, &Scroller_impl::on_take_focus));
 
     auto theme = Theme_impl::root();
-    auto ma = theme->find_action(PAN_LEFT_ACTION);
+    auto ma = theme->find_action(ACTION_PAN_LEFT);
     if (ma) { pan_left_action_.connect_master_action(*ma); }
-    ma = theme->find_action(PAN_RIGHT_ACTION);
+    ma = theme->find_action(ACTION_PAN_RIGHT);
     if (ma) { pan_right_action_.connect_master_action(*ma); }
-    ma = theme->find_action(PAN_UP_ACTION);
+    ma = theme->find_action(ACTION_PAN_UP);
     if (ma) { pan_up_action_.connect_master_action(*ma); }
-    ma = theme->find_action(PAN_DOWN_ACTION);
+    ma = theme->find_action(ACTION_PAN_DOWN);
     if (ma) { pan_down_action_.connect_master_action(*ma); }
 
     connect_action(pan_left_action_);

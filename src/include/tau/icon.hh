@@ -38,6 +38,7 @@ namespace tau {
 ///
 /// @note This class is a wrapper around its implementation shared pointer.
 ///
+/// @ingroup paint_group
 /// @ingroup widget_group
 class Icon: public Widget {
 public:
@@ -99,6 +100,108 @@ public:
     /// Get icon size.
     int icon_size() const;
 };
+
+/// @name Standard Icon Names
+/// Here is the string constants used for icon loading from icon themes.
+/// You can pass those constants to either @link tau::Theme::find_icon() @endlink
+/// or @link tau::Theme::get_icon() @endlink methods to obtain @link tau::Pixmap @endlink
+/// object containing image bits.
+///
+/// Using those constants prevent typos during icon name input and generating errors at compile time.
+/// @{
+
+/// Configure.
+/// The actual value is "configure".
+/// @ingroup paint_group
+extern const char * ICON_CONFIGURE;
+
+/// The actual value is "dialog-cancel".
+/// @ingroup paint_group
+extern const char * ICON_DIALOG_CANCEL;
+
+/// The actual value is "dialog-ok".
+/// @ingroup paint_group
+extern const char * ICON_DIALOG_OK;
+
+/// The actual value is "drive-optical".
+/// @ingroup paint_group
+extern const char * ICON_DRIVE_OPTICAL;
+
+/// The actual value is "drive-harddisk".
+/// @ingroup paint_group
+extern const char * ICON_DRIVE_HARDDISK;
+
+/// The actual value is "drive-removable-media".
+/// @ingroup paint_group
+extern const char * ICON_DRIVE_REMOVABLE_MEDIA;
+
+/// The actual value is "folder".
+/// @ingroup paint_group
+extern const char * ICON_FOLDER;
+
+/// The actual value is "folder-new".
+/// @ingroup paint_group
+extern const char * ICON_FOLDER_NEW;
+
+/// The actual value is "folder-remote".
+/// @ingroup paint_group
+extern const char * ICON_FOLDER_REMOTE;
+
+/// The actual value is "go-home".
+/// @ingroup paint_group
+extern const char * ICON_GO_HOME;
+
+/// The actual value is "go-next".
+/// @ingroup paint_group
+extern const char * ICON_GO_NEXT;
+
+/// The actual value is "go-previous".
+/// @ingroup paint_group
+extern const char * ICON_GO_PREVIOUS;
+
+/// The actual value is "go-up".
+/// @ingroup paint_group
+extern const char * ICON_GO_UP;
+
+/// The actual value is "picto-dec".
+/// @ingroup paint_group
+extern const char * ICON_PICTO_DEC;
+
+/// The actual value is "picto-inc".
+/// @ingroup paint_group
+extern const char * ICON_PICTO_INC;
+
+/// The actual value is "picto-close".
+/// @ingroup paint_group
+extern const char * ICON_PICTO_CLOSE;
+
+/// The actual value is "picto-down".
+/// @ingroup paint_group
+extern const char * ICON_PICTO_DOWN;
+
+/// The actual value is "picto-left".
+/// @ingroup paint_group
+extern const char * ICON_PICTO_LEFT;
+
+/// The actual value is "picto-right".
+/// @ingroup paint_group
+extern const char * ICON_PICTO_RIGHT;
+
+/// The actual value is "picto-up".
+/// @ingroup paint_group
+extern const char * ICON_PICTO_UP;
+
+/// The actual value is "unknown".
+/// @ingroup paint_group
+extern const char * ICON_UNKNOWN;
+
+/// The actual value is "view-refresh".
+/// @ingroup paint_group
+extern const char * ICON_VIEW_REFRESH;
+
+/// @}
+
+///
 
 } // namespace tau
 

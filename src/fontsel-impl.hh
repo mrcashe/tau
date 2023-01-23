@@ -28,6 +28,7 @@
 #define TAU_FONT_SELECTOR_IMPL_HH
 
 #include <tau/action.hh>
+#include <tau/icon.hh>
 #include <table-impl.hh>
 
 namespace tau {
@@ -76,8 +77,8 @@ private:
     Action          zout_   { ustring("<Ctrl>-") }; // Decrease size action.
     Action          next_   { "Tab", fun(this, &Fontsel_impl::focus_next) }; // Focus next action.
     Action          prev_   { "<Shift>Tab <Shift>LeftTab", fun(this, &Fontsel_impl::focus_previous) }; // Focus previous action.
-    Action          cancel_ { "Escape Cancel", "Cancel", ustring("dialog-cancel") };
-    Action          apply_  { KC_NONE, KM_NONE, "Apply", ustring("dialog-ok") };
+    Action          cancel_ { "Escape Cancel", "Cancel", ustring(ICON_DIALOG_CANCEL) };
+    Action          apply_  { KC_NONE, KM_NONE, "Apply", ustring(ICON_DIALOG_OK) };
 
     signal<void(const ustring &)> signal_selection_changed_;
     signal<void(const ustring &)> signal_font_activated_;

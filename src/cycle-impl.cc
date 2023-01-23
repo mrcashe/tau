@@ -24,6 +24,7 @@
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ----------------------------------------------------------------------------
 
+#include <tau/icon.hh>
 #include <card-impl.hh>
 #include <button-impl.hh>
 #include <cycle-impl.hh>
@@ -75,11 +76,11 @@ Cycle_impl::Cycle_impl(Border_style bs):
 
     auto theme = Theme_impl::root();
 
-    auto pixmap = theme->find_pixmap("picto-dec");
+    auto pixmap = theme->find_pixmap(ICON_PICTO_DEC);
     if (pixmap) { down_->set_image(std::make_shared<Image_impl>(pixmap->dup(), true)); }
     else { down_->hint_size(8, 4); }
 
-    pixmap = theme->find_pixmap("picto-inc");
+    pixmap = theme->find_pixmap(ICON_PICTO_INC);
     if (pixmap) { up_->set_image(std::make_shared<Image_impl>(pixmap->dup(), true)); }
     else { up_->hint_size(8, 4); }
 

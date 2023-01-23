@@ -42,8 +42,8 @@ Box_impl::Box_impl(Orientation orient, unsigned spacing):
     signal_display().connect(fun(this, &Box_impl::update_requisition));
     signal_take_focus().connect(fun(this, &Box_impl::on_take_focus));
 
-    next_action_.connect_master_action(FOCUS_NEXT_ACTION);
-    prev_action_.connect_master_action(FOCUS_PREVIOUS_ACTION);
+    next_action_.connect_master_action(ACTION_FOCUS_NEXT);
+    prev_action_.connect_master_action(ACTION_FOCUS_PREVIOUS);
 
     connect_action(next_action_);
     connect_action(prev_action_);

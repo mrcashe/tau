@@ -118,7 +118,7 @@ public:
     /// Some actions are used by library itself and can be used by end user too.
     /// This method tries to obtain a standard action by it's name.
     /// These actions provide key bindings, standard icon names, labels and tooltips.
-    /// The standard action names, used and provided by the library, see @ref actions_page
+    /// The standard action names, used and provided by the library, see @ref actions_sect
     /// action list.
     ///
     /// @param name an action name.
@@ -138,6 +138,45 @@ private:
 
     Theme_ptr impl;
 };
+
+/// @name Action Keys
+/// Those strings can be used as a key for access to established master actions (see @link tau::Master_action @endlink).
+/// Pass them as argument to @link tau::Theme::find_action() @endlink method and get the Master_action pointer
+/// as a result.
+///
+/// @{
+
+/// Focus next child within Container.
+/// Actual value: "focus-next"
+/// @ingroup action_group
+extern const char * ACTION_FOCUS_NEXT;
+
+/// Focus previos child within Container.
+/// Actual value: "focus-previous"
+/// @ingroup action_group
+extern const char * ACTION_FOCUS_PREVIOUS;
+
+/// Pan (scroll) Scroller's child left.
+/// Actual value: "pan-left"
+/// @ingroup action_group
+extern const char * ACTION_PAN_LEFT;
+
+/// Pan (scroll) Scroller's child right.
+/// Actual value: "pan-right"
+/// @ingroup action_group
+extern const char * ACTION_PAN_RIGHT;
+
+/// Pan (scroll) Scroller's child up.
+/// Actual value: "pan-up"
+/// @ingroup action_group
+extern const char * ACTION_PAN_UP;
+
+/// Pan (scroll) Scroller's child down.
+/// Actual value: "pan-down"
+/// @ingroup action_group
+extern const char * ACTION_PAN_DOWN;
+
+/// @}
 
 } // namespace tau
 

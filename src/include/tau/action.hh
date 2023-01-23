@@ -37,8 +37,8 @@
 
 namespace tau {
 
-/// An action that holds information for the other actions.
-/// @ingroup input_group
+/// An action that holds information for other actions.
+/// @ingroup action_group
 class Master_action: public trackable {
 public:
 
@@ -209,7 +209,7 @@ private:
 /// - Trigger or toggle.
 ///
 /// %Action also provides set of signals to inform user about happening events.
-/// @ingroup input_group
+/// @ingroup action_group
 class Action_base: public trackable {
 public:
 
@@ -413,7 +413,7 @@ private:
 };
 
 /// A simple event-like action.
-/// @ingroup input_group
+/// @ingroup action_group
 class Action: public Action_base {
 public:
 
@@ -478,7 +478,7 @@ private:
 };
 
 /// A toggle action.
-/// @ingroup input_group
+/// @ingroup action_group
 class Toggle_action: public Action_base {
 public:
 

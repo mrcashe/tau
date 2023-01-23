@@ -24,6 +24,7 @@
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ----------------------------------------------------------------------------
 
+#include <tau/icon.hh>
 #include <menu-impl.hh>
 
 namespace tau {
@@ -58,7 +59,7 @@ Submenu_impl::Submenu_impl(const ustring & label, Menu_ptr menu, const ustring &
 }
 
 void Submenu_impl::init() {
-    arrow_ = std::make_shared<Icon_impl>("picto-right", 12);
+    arrow_ = std::make_shared<Icon_impl>(ICON_PICTO_RIGHT, 12);
 
     if (menu_) {
         menu_->signal_enable().connect(fun(this, &Submenu_impl::on_menu_enable));

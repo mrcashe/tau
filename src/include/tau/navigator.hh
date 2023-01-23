@@ -38,6 +38,7 @@ namespace tau {
 ///
 /// @note This class is a wrapper around its implementation shared pointer.
 ///
+/// @ingroup file_group
 /// @ingroup widget_group
 class Navigator: public Widget {
 public:
@@ -101,47 +102,32 @@ public:
     bool sorted_backward() const;
 
     /// Show info items.
-    /// @param items item list
-    /// @param sep list separator
-    /// @sa hide_info()
-    /// @sa info_visible()
-    /// @sa visible_info_items()
-    /// @sa invisible_info_items()
+    /// @param items item list, see @ref navigator_info for items meaning.
+    /// @param sep list separator.
+    /// @sa hide_info() info_visible() visible_info_items() invisible_info_items()
     void show_info(const ustring & items, char32_t sep=U':');
 
     /// Hide info items.
-    /// @param items item list
+    /// @param items item list, see @ref navigator_info for items meaning.
     /// @param sep list separator
-    /// @sa show_info()
-    /// @sa info_visible()
-    /// @sa visible_info_items()
-    /// @sa invisible_info_items()
+    /// @sa show_info() info_visible() visible_info_items() invisible_info_items()
     void hide_info(const ustring & items, char32_t sep=U':');
 
     /// Test if info item visible.
-    /// @param item the item name
-    /// @sa show_info()
-    /// @sa hide_info()
-    /// @sa visible_info_items()
-    /// @sa invisible_info_items()
+    /// @param item the item name, see @ref navigator_info for items meaning.
+    /// @sa show_info() hide_info() visible_info_items() invisible_info_items()
     bool info_visible(const ustring & item) const;
 
-    /// List visible info items.
+    /// %List visible info items.
     /// @param sep list separator
-    /// @return item list
-    /// @sa show_info()
-    /// @sa hide_info()
-    /// @sa info_visible()
-    /// @sa invisible_info_items()
+    /// @return item list, see @ref navigator_info for items meaning.
+    /// @sa show_info() hide_info() info_visible() invisible_info_items()
     ustring visible_info_items(char32_t sep=U':') const;
 
-    /// List invisible info items.
+    /// %List invisible info items.
     /// @param sep list separator
-    /// @return item list
-    /// @sa show_info()
-    /// @sa hide_info()
-    /// @sa info_visible()
-    /// @sa visible_info_items()
+    /// @return item list, see @ref navigator_info for items meaning.
+    /// @sa show_info() hide_info() info_visible() visible_info_items()
     ustring invisible_info_items(char32_t sep=U':') const;
 
     /// Allow multiple select.
@@ -191,6 +177,50 @@ public:
     /// The bound string represents a full path to the clicked or ENTERed file or directory.
     signal<void(const ustring &)> & signal_file_activate();
 };
+
+/// @name Navigator and Fileman classes information type string constants
+///
+/// Those keys can be used with following methods:
+/// -  @link tau::Navigator::show_info() @endlink
+/// -  @link tau::Navigator::hide_info() @endlink
+/// -  @link tau::Navigator::info_visible() @endlink
+/// -  @link tau::Navigator::visible_info_items() @endlink
+/// -  @link tau::Navigator::invisible_info_items() @endlink
+/// -  @link tau::Fileman::show_info() @endlink
+/// -  @link tau::Fileman::hide_info() @endlink
+/// -  @link tau::Fileman::info_visible() @endlink
+/// -  @link tau::Fileman::visible_info_items() @endlink
+/// -  @link tau::Fileman::invisible_info_items() @endlink
+///
+/// See also @ref navigator_info
+/// @{
+
+/// Show/hide file/folder name.
+/// Actual value is "name".
+/// @ingroup file_group
+extern const char * NAVIGATOR_INFO_NAME;
+
+/// Show/hide file/folder size in bytes.
+/// Actual value is "bytes".
+/// @ingroup file_group
+extern const char * NAVIGATOR_INFO_BYTES;
+
+/// Show/hide file/folder modify time.
+/// Actual value is "date".
+/// @ingroup file_group
+extern const char * NAVIGATOR_INFO_DATE;
+
+/// Show/hide hidden files.
+/// Actual value is "hidden".
+/// @ingroup file_group
+extern const char * NAVIGATOR_INFO_HIDDEN;
+
+/// Show/hide places.
+/// Actual value is "places".
+/// @ingroup file_group
+extern const char * NAVIGATOR_INFO_PLACES;
+
+/// @}
 
 } // namespace tau
 
