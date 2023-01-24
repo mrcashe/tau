@@ -24,49 +24,51 @@
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ----------------------------------------------------------------------------
 
-/// @mainpage TAU Library (Doxygen)
-///
-/// @b tau is an open source cross-platform library for creating
-/// graphical user interfaces (GUI) in C++ programming language
-///
-/// ### AUTHORS
-///
-/// @include AUTHORS
-///
-/// ### COPYING
-///
-/// [The 2-Clause BSD License](https://opensource.org/licenses/BSD-2-Clause)
-///
-/// @include COPYING
-///
-/// ---
-///
-/// ### README
-///
-/// Shows basic information about library, suitable for quick start.
-///
-/// Includes sections:
-/// 
-/// - Features
-/// - Host platforms
-/// - Target platforms
-/// - Generating output
-/// - API versioning
-/// - Getting Started
-///     + Tools used during build process
-///         - Programs from the Unix basesystem
-///         - C++ compiler, binutils and gmake
-///         - Optional programs
-///     + Software packages used during build process
-///     + Download
-///         - Source Tree
-///         - Build Tree
-///     + Configure
-///     + Make
-///     + Install
-///         - What will be installed and where
-///     + Using without Install
-///     + Using Built Libraries
-///
-/// [View README.md file](README.md)
-///
+/**
+@mainpage TAU Library (Doxygen)
+
+@b tau is an open source cross-platform library for creating
+graphical user interfaces (GUI) in C++ programming language
+
+### AUTHORS
+
+@include AUTHORS
+
+### COPYING
+
+[The 2-Clause BSD License](https://opensource.org/licenses/BSD-2-Clause)
+
+@include COPYING
+
+---
+
+### README
+
+Shows basic information about library, suitable for quick start.
+
+Includes sections:
+
+- Features
+- Host platforms
+- Target platforms
+- Generating output
+- API versioning
+- Getting Started
+    + Tools used during build process
+        - Programs from the Unix basesystem
+        - C++ compiler, binutils and gmake
+        - Optional programs
+    + Software packages used during build process
+    + Download
+        - Source Tree
+        - Build Tree
+    + Configure
+    + Make
+    + Install
+        - What will be installed and where
+    + Using without Install
+    + Using Built Libraries
+
+[View README.md file](README.md)
+
+**/

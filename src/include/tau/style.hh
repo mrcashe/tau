@@ -180,6 +180,7 @@ private:
 
 /// CSS-like style.
 /// @ingroup style_group
+/// @sa @ref style_sect
 class Style {
 public:
 
@@ -202,26 +203,33 @@ public:
     void unparent();
 
     /// Assign or reassign a value to the item.
+    /// @sa @ref style_sect
     Style_item & set(const std::string & name, const ustring & value=ustring());
 
     /// Get item by name.
+    /// @sa @ref style_sect
     Style_item & get(const std::string & name);
 
     /// Get const item by name.
+    /// @sa @ref style_sect
     const Style_item & get(const std::string & name) const;
 
     /// Get wrapped Style_item into Font_style.
+    /// @sa @ref style_sect
     Font_style font(const std::string & name);
 
     /// Get wrapped Style_item into Color_style.
+    /// @sa @ref style_sect
     Color_style color(const std::string & name);
 
     /// Redirect item.
     /// @param src item that will replace @a dest
     /// @param dest item that will be replaced
+    /// @sa @ref style_sect
     void redirect(const std::string & src, const std::string & dest);
 
     /// Unset specified item.
+    /// @sa @ref style_sect
     void unset(const std::string & name);
 
     /// Unset all items.
@@ -231,6 +239,95 @@ private:
 
     Style_impl * impl;
 };
+
+/// @name String variables providing style names
+/// @{
+
+/// Font style name.
+/// The actual value is "font".
+/// @ingroup style_group
+/// @sa @ref style_sect
+extern const char * STYLE_FONT;
+
+/// Foreground style name.
+/// The actual value is "foreground".
+/// @ingroup style_group
+/// @sa @ref style_sect
+extern const char * STYLE_FOREGROUND;
+
+/// Menu foreground style name.
+/// The actual value is "menu/foreground".
+/// @ingroup style_group
+/// @sa @ref style_sect
+extern const char * STYLE_MENU_FOREGROUND;
+
+/// Slider foreground style name.
+/// The actual value is "slider/foreground".
+/// @ingroup style_group
+/// @sa @ref style_sect
+extern const char * STYLE_SLIDER_FOREGROUND;
+
+/// Progress foreground style name.
+/// The actual value is "progress/foreground".
+/// @ingroup style_group
+/// @sa @ref style_sect
+extern const char * STYLE_PROGRESS_FOREGROUND;
+
+/// Accel foreground style name.
+/// The actual value is "accel/foreground".
+/// @ingroup style_group
+/// @sa @ref style_sect
+extern const char * STYLE_ACCEL_FOREGROUND;
+
+/// Background style name.
+/// The actual value is "background".
+/// @ingroup style_group
+/// @sa @ref style_sect
+extern const char * STYLE_BACKGROUND;
+
+/// Progress background style name.
+/// The actual value is "progress/background".
+/// @ingroup style_group
+/// @sa @ref style_sect
+extern const char * STYLE_PROGRESS_BACKGROUND;
+
+/// Whitespace background style name.
+/// The actual value is "whitespace/background".
+/// @ingroup style_group
+/// @sa @ref style_sect
+extern const char * STYLE_WHITESPACE_BACKGROUND;
+
+/// Menu background style name.
+/// The actual value is "menu/background".
+/// @ingroup style_group
+/// @sa @ref style_sect
+extern const char * STYLE_MENU_BACKGROUND;
+
+/// Selection background style name.
+/// The actual value is "select/background".
+/// @ingroup style_group
+/// @sa @ref style_sect
+extern const char * STYLE_SELECT_BACKGROUND;
+
+/// Tooltip background style name.
+/// The actual value is "tooltip/background".
+/// @ingroup style_group
+/// @sa @ref style_sect
+extern const char * STYLE_TOOLTIP_BACKGROUND;
+
+/// Button background style name.
+/// The actual value is "button/background".
+/// @ingroup style_group
+/// @sa @ref style_sect
+extern const char * STYLE_BUTTON_BACKGROUND;
+
+/// Slider background style name.
+/// The actual value is "slider/background".
+/// @ingroup style_group
+/// @sa @ref style_sect
+extern const char * STYLE_SLIDER_BACKGROUND;
+
+/// @}
 
 } // namespace tau
 

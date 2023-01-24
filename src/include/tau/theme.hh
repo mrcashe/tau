@@ -117,15 +117,17 @@ public:
     /// Find library provided Master_action.
     /// Some actions are used by library itself and can be used by end user too.
     /// This method tries to obtain a standard action by it's name.
-    /// These actions provide key bindings, standard icon names, labels and tooltips.
-    /// The standard action names, used and provided by the library, see @ref actions_sect
-    /// action list.
+    /// These standard actions provide:
+    /// - Key bindings
+    /// - Standard icon names
+    /// - Labels
+    /// - Tooltips.
     ///
-    /// @param name an action name.
+    /// @param name an action name, see @ref action_sect for actual available values.
     /// @return the pointer to the Master_action or <b>nullptr</b> if not found.
-    ///
-    /// @warning do not keep, @b delete or @e free() returned pointer, that pointer belongs
+    /// @warning do not keep, @b delete or @e free() returned pointer, that pointer belong
     /// to associative container and may be invalidated at any moment!
+    /// @sa @ref action_sect
     Master_action * find_action(const ustring & name);
 
     /// Get signal for cursor theme changing event.

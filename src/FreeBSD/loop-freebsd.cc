@@ -106,7 +106,7 @@ void Loop_freebsd::on_inotify() {
 
                 if (0 != kevent->len) {
                     std::string s(kevent->name, kevent->len);
-                    name = Locale().io_decode(s);
+                    name = Encoding().decode(s);
                 }
 
                 signal_chain_notify_(kevent->wd, name, mask);
@@ -139,7 +139,7 @@ File_monitor_ptr Loop_freebsd::create_file_monitor(const ustring & path, int mas
         if (fd < 0) { throw sys_error("inotify_init1(): "+path); }
     }
 
-    int wd = inotify_add_watch(fd, Locale().io_encode(path).c_str(), umask);
+    int wd = inotify_add_watch(fd, Encoding().encode(path).c_str(), umask);
 
     if (wd < 0) {
         sys_error x("inotify_add_watch(): "+path);

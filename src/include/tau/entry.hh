@@ -39,6 +39,7 @@ namespace tau {
 /// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup widget_group
+/// @ingroup input_group
 class Entry: public Widget {
 public:
 

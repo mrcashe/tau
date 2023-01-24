@@ -28,6 +28,7 @@
 #define TAU_LOOP_IMPL_HH
 
 #include <types-impl.hh>
+#include <sys-impl.hh>
 #include <tau/signal.hh>
 #include <vector>
 #include <thread>
@@ -53,6 +54,7 @@ public:
     bool alive() const { return runlevel_ >= 0; }
     void start_timer(Timer_ptr tp);
     void stop_timer(Timer_impl * tpi);
+    const Sysinfo & sysinfo() { return sysinfo_; }
 
     virtual File_monitor_ptr create_file_monitor(const ustring & path, int event_mask) = 0;
     virtual Event_ptr create_event() = 0;

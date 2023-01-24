@@ -34,147 +34,147 @@
 namespace {
 
 struct { const char * name; uint32_t rgb24; } named_colors[] = {
-    { "AliceBlue",              0xF0F8FF },
-    { "AntiqueWhite",           0xFAEBD7 },
-    { "Aqua",                   0x00FFFF },
-    { "Aquamarine",             0x7FFFD4 },
-    { "Azure",                  0xF0FFFF },
-    { "Beige",                  0xF5F5DC },
-    { "Bisque",                 0xFFE4C4 },
-    { "Black",                  0x000000 },
-    { "BlanchedAlmond",         0xFFEBCD },
-    { "Blue",                   0x0000FF },
-    { "BlueViolet",             0x8A2BE2 },
-    { "Brown",                  0xA52A2A },
-    { "BurlyWood",              0xDEB887 },
-    { "CadetBlue",              0x5F9EA0 },
-    { "Chartreuse",             0x7FFF00 },
-    { "Chocolate",              0xD2691E },
-    { "Coral",                  0xFF7F50 },
-    { "CornflowerBlue",         0x6495ED },
-    { "Cornsilk",               0xFFF8DC },
-    { "Crimson",                0xDC143C },
-    { "Cyan",                   0x00FFFF },
-    { "DarkBlue",               0x00008B },
-    { "DarkCyan",               0x008B8B },
-    { "DarkGoldenRod",          0xB8860B },
-    { "DarkGray",               0xA9A9A9 },
-    { "DarkGreen",              0x006400 },
-    { "DarkKhaki",              0xBDB76B },
-    { "DarkMagenta",            0x8B008B },
-    { "DarkOliveGreen",         0x556B2F },
-    { "DarkOrange",             0xFF8C00 },
-    { "DarkOrchid",             0x9932CC },
-    { "DarkRed",                0x8B0000 },
-    { "DarkSalmon",             0xE9967A },
-    { "DarkSeaGreen",           0x8FBC8F },
-    { "DarkSlateBlue",          0x483D8B },
-    { "DarkSlateGray",          0x2F4F4F },
-    { "DarkTurquoise",          0x00CED1 },
-    { "DarkViolet",             0x9400D3 },
-    { "DeepPink",               0xFF1493 },
-    { "DeepSkyBlue",            0x00BFFF },
-    { "DimGray",                0x696969 },
-    { "DodgerBlue",             0x1E90FF },
-    { "FireBrick",              0xB22222 },
-    { "FloralWhite",            0xFFFAF0 },
-    { "ForestGreen",            0x228B22 },
-    { "Fuchsia",                0xFF00FF },
-    { "Gainsboro",              0xDCDCDC },
-    { "GhostWhite",             0xF8F8FF },
-    { "Gold",                   0xFFD700 },
-    { "GoldenRod",              0xDAA520 },
-    { "Gray",                   0x808080 },
-    { "Green",                  0x008000 },
-    { "GreenYellow",            0xADFF2F },
-    { "HoneyDew",               0xF0FFF0 },
-    { "HotPink",                0xFF69B4 },
-    { "IndianRed",              0xCD5C5C },
-    { "Indigo",                 0x4B0082 },
-    { "Ivory",                  0xFFFFF0 },
-    { "Khaki",                  0xF0E68C },
-    { "Lavender",               0xE6E6FA },
-    { "LavenderBlush",          0xFFF0F5 },
-    { "LawnGreen",              0x7CFC00 },
-    { "LemonChiffon",           0xFFFACD },
-    { "LightBlue",              0xADD8E6 },
-    { "LightCoral",             0xF08080 },
-    { "LightCyan",              0xE0FFFF },
-    { "LightGoldenRodYellow",   0xFAFAD2 },
-    { "LightGray",              0xD3D3D3 },
-    { "LightGreen",             0x90EE90 },
-    { "LightPink",              0xFFB6C1 },
-    { "LightSalmon",            0xFFA07A },
-    { "LightSeaGreen",          0x20B2AA },
-    { "LightSkyBlue",           0x87CEFA },
-    { "LightSlateGray",         0x778899 },
-    { "LightSteelBlue",         0xB0C4DE },
-    { "LightYellow",            0xFFFFE0 },
-    { "Lime",                   0x00FF00 },
-    { "LimeGreen",              0x32CD32 },
-    { "Linen",                  0xFAF0E6 },
-    { "Magenta",                0xFF00FF },
-    { "Maroon",                 0x800000 },
-    { "MediumAquaMarine",       0x66CDAA },
-    { "MediumBlue",             0x0000CD },
-    { "MediumOrchid",           0xBA55D3 },
-    { "MediumPurple",           0x9370DB },
-    { "MediumSeaGreen",         0x3CB371 },
-    { "MediumSlateBlue",        0x7B68EE },
-    { "MediumSpringGreen",      0x00FA9A },
-    { "MediumTurquoise",        0x48D1CC },
-    { "MediumVioletRed",        0xC71585 },
-    { "MidnightBlue",           0x191970 },
-    { "MintCream",              0xF5FFFA },
-    { "MistyRose",              0xFFE4E1 },
-    { "Moccasin",               0xFFE4B5 },
-    { "NavajoWhite",            0xFFDEAD },
-    { "Navy",                   0x000080 },
-    { "OldLace",                0xFDF5E6 },
-    { "Olive",                  0x808000 },
-    { "OliveDrab",              0x6B8E23 },
-    { "Orange",                 0xFFA500 },
-    { "OrangeRed",              0xFF4500 },
-    { "Orchid",                 0xDA70D6 },
-    { "PaleGoldenRod",          0xEEE8AA },
-    { "PaleGreen",              0x98FB98 },
-    { "PaleTurquoise",          0xAFEEEE },
-    { "PaleVioletRed",          0xDB7093 },
-    { "PapayaWhip",             0xFFEFD5 },
-    { "PeachPuff",              0xFFDAB9 },
-    { "Peru",                   0xCD853F },
-    { "Pink",                   0xFFC0CB },
-    { "Plum",                   0xDDA0DD },
-    { "PowderBlue",             0xB0E0E6 },
-    { "Purple",                 0x800080 },
-    { "Red",                    0xFF0000 },
-    { "RosyBrown",              0xBC8F8F },
-    { "RoyalBlue",              0x4169E1 },
-    { "SaddleBrown",            0x8B4513 },
-    { "Salmon",                 0xFA8072 },
-    { "SandyBrown",             0xF4A460 },
-    { "SeaGreen",               0x2E8B57 },
-    { "SeaShell",               0xFFF5EE },
-    { "Sienna",                 0xA0522D },
-    { "Silver",                 0xC0C0C0 },
-    { "SkyBlue",                0x87CEEB },
-    { "SlateBlue",              0x6A5ACD },
-    { "SlateGray",              0x708090 },
-    { "Snow",                   0xFFFAFA },
-    { "SpringGreen",            0x00FF7F },
-    { "SteelBlue",              0x4682B4 },
-    { "Tan",                    0xD2B48C },
-    { "Teal",                   0x008080 },
-    { "Thistle",                0xD8BFD8 },
-    { "Tomato",                 0xFF6347 },
-    { "Turquoise",              0x40E0D0 },
-    { "Violet",                 0xEE82EE },
-    { "Wheat",                  0xF5DEB3 },
-    { "White",                  0xFFFFFF },
-    { "WhiteSmoke",             0xF5F5F5 },
-    { "Yellow",                 0xFFFF00 },
-    { "YellowGreen",            0x9ACD32 },
-    { nullptr,                  0x000000 }
+    { tau::COLOR_ALICE_BLUE,                 0xF0F8FF },
+    { tau::COLOR_ANTIQUE_WHITE,              0xFAEBD7 },
+    { tau::COLOR_AQUA,                       0x00FFFF },
+    { tau::COLOR_AQUAMARINE,                 0x7FFFD4 },
+    { tau::COLOR_AZURE,                      0xF0FFFF },
+    { tau::COLOR_BEIGE,                      0xF5F5DC },
+    { tau::COLOR_BISQUE,                     0xFFE4C4 },
+    { tau::COLOR_BLACK,                      0x000000 },
+    { tau::COLOR_BLANCHED_ALMOND,            0xFFEBCD },
+    { tau::COLOR_BLUE,                       0x0000FF },
+    { tau::COLOR_BLUE_VIOLET,                0x8A2BE2 },
+    { tau::COLOR_BROWN,                      0xA52A2A },
+    { tau::COLOR_BURLY_WOOD,                 0xDEB887 },
+    { tau::COLOR_CADET_BLUE,                 0x5F9EA0 },
+    { tau::COLOR_CHARTREUSE,                 0x7FFF00 },
+    { tau::COLOR_CHOCOLATE,                  0xD2691E },
+    { tau::COLOR_CORAL,                      0xFF7F50 },
+    { tau::COLOR_CORNFLOWER_BLUE,            0x6495ED },
+    { tau::COLOR_CORNSILK,                   0xFFF8DC },
+    { tau::COLOR_CRIMSON,                    0xDC143C },
+    { tau::COLOR_CYAN,                       0x00FFFF },
+    { tau::COLOR_DARK_BLUE,                  0x00008B },
+    { tau::COLOR_DARK_CYAN,                  0x008B8B },
+    { tau::COLOR_DARK_GOLDEN_ROD,            0xB8860B },
+    { tau::COLOR_DARK_GRAY,                  0xA9A9A9 },
+    { tau::COLOR_DARK_GREEN,                 0x006400 },
+    { tau::COLOR_DARK_KHAKI,                 0xBDB76B },
+    { tau::COLOR_DARK_MAGENTA,               0x8B008B },
+    { tau::COLOR_DARK_OLIVE_GREEN,           0x556B2F },
+    { tau::COLOR_DARK_ORANGE,                0xFF8C00 },
+    { tau::COLOR_DARK_ORCHID,                0x9932CC },
+    { tau::COLOR_DARK_RED,                   0x8B0000 },
+    { tau::COLOR_DARK_SALMON,                0xE9967A },
+    { tau::COLOR_DARK_SEA_GREEN,             0x8FBC8F },
+    { tau::COLOR_DARK_SLATE_BLUE,            0x483D8B },
+    { tau::COLOR_DARK_SLATE_GRAY,            0x2F4F4F },
+    { tau::COLOR_DARK_TURQUOISE,             0x00CED1 },
+    { tau::COLOR_DARK_VIOLET,                0x9400D3 },
+    { tau::COLOR_DEEP_PINK,                  0xFF1493 },
+    { tau::COLOR_DEEP_SKY_BLUE,              0x00BFFF },
+    { tau::COLOR_DIM_GRAY,                   0x696969 },
+    { tau::COLOR_DODGER_BLUE,                0x1E90FF },
+    { tau::COLOR_FIRE_BRICK,                 0xB22222 },
+    { tau::COLOR_FLORAL_WHITE,               0xFFFAF0 },
+    { tau::COLOR_FOREST_GREEN,               0x228B22 },
+    { tau::COLOR_FUCHSIA,                    0xFF00FF },
+    { tau::COLOR_GAINSBORO,                  0xDCDCDC },
+    { tau::COLOR_GHOST_WHITE,                0xF8F8FF },
+    { tau::COLOR_GOLD,                       0xFFD700 },
+    { tau::COLOR_GOLDEN_ROD,                 0xDAA520 },
+    { tau::COLOR_GRAY,                       0x808080 },
+    { tau::COLOR_GREEN,                      0x008000 },
+    { tau::COLOR_GREEN_YELLOW,               0xADFF2F },
+    { tau::COLOR_HONEY_DEW,                  0xF0FFF0 },
+    { tau::COLOR_HOT_PINK,                   0xFF69B4 },
+    { tau::COLOR_INDIAN_RED,                 0xCD5C5C },
+    { tau::COLOR_INDIGO,                     0x4B0082 },
+    { tau::COLOR_IVORY,                      0xFFFFF0 },
+    { tau::COLOR_KHAKI,                      0xF0E68C },
+    { tau::COLOR_LAVENDER,                   0xE6E6FA },
+    { tau::COLOR_LAVENDER_BLUSH,             0xFFF0F5 },
+    { tau::COLOR_LAWN_GREEN,                 0x7CFC00 },
+    { tau::COLOR_LEMON_CHIFFON,              0xFFFACD },
+    { tau::COLOR_LIGHT_BLUE,                 0xADD8E6 },
+    { tau::COLOR_LIGHT_CORAL,                0xF08080 },
+    { tau::COLOR_LIGHT_CYAN,                 0xE0FFFF },
+    { tau::COLOR_LIGHT_GOLDEN_ROD_YELLOW,    0xFAFAD2 },
+    { tau::COLOR_LIGHT_GRAY,                 0xD3D3D3 },
+    { tau::COLOR_LIGHT_GREEN,                0x90EE90 },
+    { tau::COLOR_LIGHT_PINK,                 0xFFB6C1 },
+    { tau::COLOR_LIGHT_SALMON,               0xFFA07A },
+    { tau::COLOR_LIGHT_SEA_GREEN,            0x20B2AA },
+    { tau::COLOR_LIGHT_SKY_BLUE,             0x87CEFA },
+    { tau::COLOR_LIGHT_SLATE_GRAY,           0x778899 },
+    { tau::COLOR_LIGHT_STEEL_BLUE,           0xB0C4DE },
+    { tau::COLOR_LIGHT_YELLOW,               0xFFFFE0 },
+    { tau::COLOR_LIME,                       0x00FF00 },
+    { tau::COLOR_LIME_GREEN,                 0x32CD32 },
+    { tau::COLOR_LINEN,                      0xFAF0E6 },
+    { tau::COLOR_MAGENTA,                    0xFF00FF },
+    { tau::COLOR_MAROON,                     0x800000 },
+    { tau::COLOR_MEDIUM_AQUA_MARINE,         0x66CDAA },
+    { tau::COLOR_MEDIUM_BLUE,                0x0000CD },
+    { tau::COLOR_MEDIUM_ORCHID,              0xBA55D3 },
+    { tau::COLOR_MEDIUM_PURPLE,              0x9370DB },
+    { tau::COLOR_MEDIUM_SEA_GREEN,           0x3CB371 },
+    { tau::COLOR_MEDIUM_SLATE_BLUE,          0x7B68EE },
+    { tau::COLOR_MEDIUM_SPRING_GREEN,        0x00FA9A },
+    { tau::COLOR_MEDIUM_TURQUOISE,           0x48D1CC },
+    { tau::COLOR_MEDIUM_VIOLET_RED,          0xC71585 },
+    { tau::COLOR_MIDNIGHT_BLUE,              0x191970 },
+    { tau::COLOR_MINT_CREAM,                 0xF5FFFA },
+    { tau::COLOR_MISTY_ROSE,                 0xFFE4E1 },
+    { tau::COLOR_MOCCASIN,                   0xFFE4B5 },
+    { tau::COLOR_NAVAJO_WHITE,               0xFFDEAD },
+    { tau::COLOR_NAVY,                       0x000080 },
+    { tau::COLOR_OLD_LACE,                   0xFDF5E6 },
+    { tau::COLOR_OLIVE,                      0x808000 },
+    { tau::COLOR_OLIVE_DRAB,                 0x6B8E23 },
+    { tau::COLOR_ORANGE,                     0xFFA500 },
+    { tau::COLOR_ORANGE_RED,                 0xFF4500 },
+    { tau::COLOR_ORCHID,                     0xDA70D6 },
+    { tau::COLOR_PALE_GOLDEN_ROD,            0xEEE8AA },
+    { tau::COLOR_PALE_GREEN,                 0x98FB98 },
+    { tau::COLOR_PALE_TURQUOISE,             0xAFEEEE },
+    { tau::COLOR_PALE_VIOLET_RED,            0xDB7093 },
+    { tau::COLOR_PAPAYA_WHIP,                0xFFEFD5 },
+    { tau::COLOR_PEACH_PUFF,                 0xFFDAB9 },
+    { tau::COLOR_PERU,                       0xCD853F },
+    { tau::COLOR_PINK,                       0xFFC0CB },
+    { tau::COLOR_PLUM,                       0xDDA0DD },
+    { tau::COLOR_POWDER_BLUE,                0xB0E0E6 },
+    { tau::COLOR_PURPLE,                     0x800080 },
+    { tau::COLOR_RED,                        0xFF0000 },
+    { tau::COLOR_ROSY_BROWN,                 0xBC8F8F },
+    { tau::COLOR_ROYAL_BLUE,                 0x4169E1 },
+    { tau::COLOR_SADDLE_BROWN,               0x8B4513 },
+    { tau::COLOR_SALMON,                     0xFA8072 },
+    { tau::COLOR_SANDY_BROWN,                0xF4A460 },
+    { tau::COLOR_SEA_GREEN,                  0x2E8B57 },
+    { tau::COLOR_SEA_SHELL,                  0xFFF5EE },
+    { tau::COLOR_SIENNA,                     0xA0522D },
+    { tau::COLOR_SILVER,                     0xC0C0C0 },
+    { tau::COLOR_SKY_BLUE,                   0x87CEEB },
+    { tau::COLOR_SLATE_BLUE,                 0x6A5ACD },
+    { tau::COLOR_SLATE_GRAY,                 0x708090 },
+    { tau::COLOR_SNOW,                       0xFFFAFA },
+    { tau::COLOR_SPRING_GREEN,               0x00FF7F },
+    { tau::COLOR_STEEL_BLUE,                 0x4682B4 },
+    { tau::COLOR_TAN,                        0xD2B48C },
+    { tau::COLOR_TEAL,                       0x008080 },
+    { tau::COLOR_THISTLE,                    0xD8BFD8 },
+    { tau::COLOR_TOMATO,                     0xFF6347 },
+    { tau::COLOR_TURQUOISE,                  0x40E0D0 },
+    { tau::COLOR_VIOLET,                     0xEE82EE },
+    { tau::COLOR_WHEAT,                      0xF5DEB3 },
+    { tau::COLOR_WHITE,                      0xFFFFFF },
+    { tau::COLOR_WHITE_SMOKE,                0xF5F5F5 },
+    { tau::COLOR_YELLOW,                     0xFFFF00 },
+    { tau::COLOR_YELLOW_GREEN,               0x9ACD32 },
+    { nullptr,                               0x000000 }
 };
 
 std::unordered_map<std::string, uint32_t> named;
@@ -194,6 +194,147 @@ double color_from_char(char c) {
 // ----------------------------------------------------------------------------
 
 namespace tau {
+
+const char * COLOR_ALICE_BLUE                   = "AliceBlue";
+const char * COLOR_ANTIQUE_WHITE                = "AntiqueWhite";
+const char * COLOR_AQUA                         = "Aqua";
+const char * COLOR_AQUAMARINE                   = "Aquamarine";
+const char * COLOR_AZURE                        = "Azure";
+const char * COLOR_BEIGE                        = "Beige";
+const char * COLOR_BISQUE                       = "Bisque";
+const char * COLOR_BLACK                        = "Black";
+const char * COLOR_BLANCHED_ALMOND              = "BlanchedAlmond";
+const char * COLOR_BLUE                         = "Blue";
+const char * COLOR_BLUE_VIOLET                  = "BlueViolet";
+const char * COLOR_BROWN                        = "Brown";
+const char * COLOR_BURLY_WOOD                   = "BurlyWood";
+const char * COLOR_CADET_BLUE                   = "CadetBlue";
+const char * COLOR_CHARTREUSE                   = "Chartreuse";
+const char * COLOR_CHOCOLATE                    = "Chocolate";
+const char * COLOR_CORAL                        = "Coral";
+const char * COLOR_CORNFLOWER_BLUE              = "CornflowerBlue";
+const char * COLOR_CORNSILK                     = "Cornsilk";
+const char * COLOR_CRIMSON                      = "Crimson";
+const char * COLOR_CYAN                         = "Cyan";
+const char * COLOR_DARK_BLUE                    = "DarkBlue";
+const char * COLOR_DARK_CYAN                    = "DarkCyan";
+const char * COLOR_DARK_GOLDEN_ROD              = "DarkGoldenRod";
+const char * COLOR_DARK_GRAY                    = "DarkGray";
+const char * COLOR_DARK_GREEN                   = "DarkGreen";
+const char * COLOR_DARK_KHAKI                   = "DarkKhaki";
+const char * COLOR_DARK_MAGENTA                 = "DarkMagenta";
+const char * COLOR_DARK_OLIVE_GREEN             = "DarkOliveGreen";
+const char * COLOR_DARK_ORANGE                  = "DarkOrange";
+const char * COLOR_DARK_ORCHID                  = "DarkOrchid";
+const char * COLOR_DARK_RED                     = "DarkRed";
+const char * COLOR_DARK_SALMON                  = "DarkSalmon";
+const char * COLOR_DARK_SEA_GREEN               = "DarkSeaGreen";
+const char * COLOR_DARK_SLATE_BLUE              = "DarkSlateBlue";
+const char * COLOR_DARK_SLATE_GRAY              = "DarkSlateGray";
+const char * COLOR_DARK_TURQUOISE               = "DarkTurquoise";
+const char * COLOR_DARK_VIOLET                  = "DarkViolet";
+const char * COLOR_DEEP_PINK                    = "DeepPink";
+const char * COLOR_DEEP_SKY_BLUE                = "DeepSkyBlue";
+const char * COLOR_DIM_GRAY                     = "DimGray";
+const char * COLOR_DODGER_BLUE                  = "DodgerBlue";
+const char * COLOR_FIRE_BRICK                   = "FireBrick";
+const char * COLOR_FLORAL_WHITE                 = "FloralWhite";
+const char * COLOR_FOREST_GREEN                 = "ForestGreen";
+const char * COLOR_FUCHSIA                      = "Fuchsia";
+const char * COLOR_GAINSBORO                    = "Gainsboro";
+const char * COLOR_GHOST_WHITE                  = "GhostWhite";
+const char * COLOR_GOLD                         = "Gold";
+const char * COLOR_GOLDEN_ROD                   = "GoldenRod";
+const char * COLOR_GRAY                         = "Gray";
+const char * COLOR_GREEN                        = "Green";
+const char * COLOR_GREEN_YELLOW                 = "GreenYellow";
+const char * COLOR_HONEY_DEW                    = "HoneyDew";
+const char * COLOR_HOT_PINK                     = "HotPink";
+const char * COLOR_INDIAN_RED                   = "IndianRed";
+const char * COLOR_INDIGO                       = "Indigo";
+const char * COLOR_IVORY                        = "Ivory";
+const char * COLOR_KHAKI                        = "Khaki";
+const char * COLOR_LAVENDER                     = "Lavender";
+const char * COLOR_LAVENDER_BLUSH               = "LavenderBlush";
+const char * COLOR_LAWN_GREEN                   = "LawnGreen";
+const char * COLOR_LEMON_CHIFFON                = "LemonChiffon";
+const char * COLOR_LIGHT_BLUE                   = "LightBlue";
+const char * COLOR_LIGHT_CORAL                  = "LightCoral";
+const char * COLOR_LIGHT_CYAN                   = "LightCyan";
+const char * COLOR_LIGHT_GOLDEN_ROD_YELLOW      = "LightGoldenRodYellow";
+const char * COLOR_LIGHT_GRAY                   = "LightGray";
+const char * COLOR_LIGHT_GREEN                  = "LightGreen";
+const char * COLOR_LIGHT_PINK                   = "LightPink";
+const char * COLOR_LIGHT_SALMON                 = "LightSalmon";
+const char * COLOR_LIGHT_SEA_GREEN              = "LightSeaGreen";
+const char * COLOR_LIGHT_SKY_BLUE               = "LightSkyBlue";
+const char * COLOR_LIGHT_SLATE_GRAY             = "LightSlateGray";
+const char * COLOR_LIGHT_STEEL_BLUE             = "LightSteelBlue";
+const char * COLOR_LIGHT_YELLOW                 = "LightYellow";
+const char * COLOR_LIME                         = "Lime";
+const char * COLOR_LIME_GREEN                   = "LimeGreen";
+const char * COLOR_LINEN                        = "Linen";
+const char * COLOR_MAGENTA                      = "Magenta";
+const char * COLOR_MAROON                       = "Maroon";
+const char * COLOR_MEDIUM_AQUA_MARINE           = "MediumAquaMarine";
+const char * COLOR_MEDIUM_BLUE                  = "MediumBlue";
+const char * COLOR_MEDIUM_ORCHID                = "MediumOrchid";
+const char * COLOR_MEDIUM_PURPLE                = "MediumPurple";
+const char * COLOR_MEDIUM_SEA_GREEN             = "MediumSeaGreen";
+const char * COLOR_MEDIUM_SLATE_BLUE            = "MediumSlateBlue";
+const char * COLOR_MEDIUM_SPRING_GREEN          = "MediumSpringGreen";
+const char * COLOR_MEDIUM_TURQUOISE             = "MediumTurquoise";
+const char * COLOR_MEDIUM_VIOLET_RED            = "MediumVioletRed";
+const char * COLOR_MIDNIGHT_BLUE                = "MidnightBlue";
+const char * COLOR_MINT_CREAM                   = "MintCream";
+const char * COLOR_MISTY_ROSE                   = "MistyRose";
+const char * COLOR_MOCCASIN                     = "Moccasin";
+const char * COLOR_NAVAJO_WHITE                 = "NavajoWhite";
+const char * COLOR_NAVY                         = "Navy";
+const char * COLOR_OLD_LACE                     = "OldLace";
+const char * COLOR_OLIVE                        = "Olive";
+const char * COLOR_OLIVE_DRAB                   = "OliveDrab";
+const char * COLOR_ORANGE                       = "Orange";
+const char * COLOR_ORANGE_RED                   = "OrangeRed";
+const char * COLOR_ORCHID                       = "Orchid";
+const char * COLOR_PALE_GOLDEN_ROD              = "PaleGoldenRod";
+const char * COLOR_PALE_GREEN                   = "PaleGreen";
+const char * COLOR_PALE_TURQUOISE               = "PaleTurquoise";
+const char * COLOR_PALE_VIOLET_RED              = "PaleVioletRed";
+const char * COLOR_PAPAYA_WHIP                  = "PapayaWhip";
+const char * COLOR_PEACH_PUFF                   = "PeachPuff";
+const char * COLOR_PERU                         = "Peru";
+const char * COLOR_PINK                         = "Pink";
+const char * COLOR_PLUM                         = "Plum";
+const char * COLOR_POWDER_BLUE                  = "PowderBlue";
+const char * COLOR_PURPLE                       = "Purple";
+const char * COLOR_RED                          = "Red";
+const char * COLOR_ROSY_BROWN                   = "RosyBrown";
+const char * COLOR_ROYAL_BLUE                   = "RoyalBlue";
+const char * COLOR_SADDLE_BROWN                 = "SaddleBrown";
+const char * COLOR_SALMON                       = "Salmon";
+const char * COLOR_SANDY_BROWN                  = "SandyBrown";
+const char * COLOR_SEA_GREEN                    = "SeaGreen";
+const char * COLOR_SEA_SHELL                    = "SeaShell";
+const char * COLOR_SIENNA                       = "Sienna";
+const char * COLOR_SILVER                       = "Silver";
+const char * COLOR_SKY_BLUE                     = "SkyBlue";
+const char * COLOR_SLATE_BLUE                   = "SlateBlue";
+const char * COLOR_SLATE_GRAY                   = "SlateGray";
+const char * COLOR_SNOW                         = "Snow";
+const char * COLOR_SPRING_GREEN                 = "SpringGreen";
+const char * COLOR_STEEL_BLUE                   = "SteelBlue";
+const char * COLOR_TAN                          = "Tan";
+const char * COLOR_TEAL                         = "Teal";
+const char * COLOR_THISTLE                      = "Thistle";
+const char * COLOR_TOMATO                       = "Tomato";
+const char * COLOR_TURQUOISE                    = "Turquoise";
+const char * COLOR_VIOLET                       = "Violet";
+const char * COLOR_WHEAT                        = "Wheat";
+const char * COLOR_WHITE                        = "White";
+const char * COLOR_WHITE_SMOKE                  = "WhiteSmoke";
+const char * COLOR_YELLOW                       = "Yellow";
+const char * COLOR_YELLOW_GREEN                 = "YellowGreen";
 
 Color::Color(double red, double green, double blue, double alpha) {
     set(red, green, blue, alpha);

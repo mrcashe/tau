@@ -34,6 +34,8 @@ namespace tau {
 /// System information structure.
 /// @ingroup sys_group
 struct Sysinfo {
+/// The struct size, in bytes.
+uint16_t    bytes;
 
 /// Major version component, same as Major_.
 int         Major;
@@ -56,11 +58,12 @@ std::string plat;
 ///
 /// This is what uname(1) outputs on POSIX.
 /// On Windows, so far GetVersionInfoExW() used.
-ustring uname;
+ustring     uname;
 
 /// Operating system version numbers: major and minor.
 /// Differ on various OSes.
-int osmajor, osminor;
+int         osmajor;
+int         osminor;
 
 /// @name Distributive related info (actual for Linux only).
 /// @{
@@ -69,13 +72,14 @@ int osmajor, osminor;
 ustring distrib;
 
 /// Distributive major and ninor release numbers.
-int distrib_major, distrib_minor;
+int         distrib_major;
+int         distrib_minor;
 
 /// Distributive codename.
-ustring distrib_codename;
+ustring     distrib_codename;
 
 /// Distributive description.
-ustring distrib_description;
+ustring     distrib_description;
 
 /// @}
 ///

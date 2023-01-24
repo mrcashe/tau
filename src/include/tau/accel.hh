@@ -38,6 +38,7 @@ namespace tau {
 
 /// A keyboard accelerator.
 /// @ingroup input_group
+/// @sa @ref kbd_sect
 class Accel: public trackable {
 public:
 
@@ -56,18 +57,25 @@ public:
     /// Constructor with key code and key modifier.
     /// @param kc key code, see #Key_codes enum.
     /// @param km key modifier, see #Key_modifiers enum.
+    /// @overload Accel(char32_t kc, int km)
     Accel(char32_t kc, int km=KM_NONE);
 
     /// Constructor with key code, key modifier and slot.
     /// @param kc key code, see #Key_codes enum.
     /// @param km key modifier, see #Key_modifiers enum.
     /// @param slot_activate slot to be connected.
+    /// @overload Accel(char32_t kc, int km, slot<bool()> slot_activate)
     Accel(char32_t kc, int km, slot<bool()> slot_activate);
 
     /// Constructor with string representation.
+    /// @param spec the key specification
+    /// @overload Accel(const ustring & spec)
     Accel(const ustring & spec);
 
     /// Constructor with string representation and slot.
+    /// @param spec the key specification
+    /// @param slot_activate slot to be connected to signal_activated()
+    /// @overload Accel(const ustring & spec, slot<bool()> slot_activate)
     Accel(const ustring & spec, slot<bool()> slot_activate);
 
     /// @}
@@ -80,9 +88,11 @@ public:
     /// Compare.
     /// @param kc key code, see #Key_codes enum.
     /// @param km key modifier, see #Key_modifiers enum.
+    /// @overload bool equals(char32_t kc, int km) const
     bool equals(char32_t kc, int km) const;
 
     /// Compare.
+    /// @overload bool equals(const ustring & spec) const
     bool equals(const ustring & spec) const;
 
     /// Compare.
@@ -94,10 +104,13 @@ public:
     /// Assign new key code and modifiers.
     /// @param kc key code, see #Key_codes enum.
     /// @param km key modifier, see #Key_modifiers enum.
+    /// @overload void assign(char32_t kc, int km)
     void assign(char32_t kc, int km=0);
 
     /// Set new key code and modifiers from string.
-    void assign(const ustring & str);
+    /// @param spec the key specification.
+    /// @overload void assign(const ustring & spec)
+    void assign(const ustring & spec);
 
     /// Gets key code.
     char32_t key_code() const { return kc_; }

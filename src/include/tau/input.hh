@@ -340,40 +340,72 @@ enum Mouse_modifiers {
     MM_CONTROL                  = 0x0200        ///< Control mouse modifier
 };
 
-/// Convert UCS-4 character into form "U+xxxx".
+/// Convert UCS-4 character into string.
+/// If kc is a member of #Key_codes enum, the result will be name of kc
+/// (all available at the moment key names are summarized in @ref kc_sect).
+/// Otherwise, the result will looks like "U+xxxx", where "xxxx" is key code
+/// doesn't matter whether it Unicode character or not.
 /// @ingroup input_group
+/// @sa @ref kbd_sect
+/// @sa @ref kc_sect
 ustring key_code_to_string(char32_t kc);
 
-/// Gets key code from string.
+/// Gets key code from a string.
 /// @ingroup input_group
+/// @sa @ref kbd_sect
+/// @sa @ref kc_sect
 char32_t key_code_from_string(const ustring & str);
 
 /// Convert key modifiers into string representation.
-/// Resulting string will contain something like this: "<CONTROL><SHIFT>".
+/// Resulting string will contain something like this: "\<CONTROL\>\<SHIFT\>".
 /// @ingroup input_group
+/// @sa @ref kbd_sect
+/// @sa @ref km_sect
 ustring key_modifiers_to_string(int km);
 
 /// Convert string representation to key modifiers.
+/// To successful convert, the str must contain key modifiers textual representation
+/// in form like this: "\<CONTROL\>\<Alt\>". The character case does not matter.
+/// See complete list of all recognizable key modifier representation at @ref km_sect.
+/// If no representations found, the @link KM_NONE @endlink value will be returned.
+/// @param str the string possibly containing representation of any key modifiers.
+/// @return bitwise mask of flags mentioned in #Key_modifiers enumeration.
 /// @ingroup input_group
+/// @sa @ref kbd_sect
+/// @sa @ref km_sect
 int key_modifiers_from_string(const ustring & str);
 
 /// Convert key specification (code+modifiers) into string representation.
 /// @ingroup input_group
+/// @sa @ref kbd_sect
+/// @sa @ref km_sect
+/// @sa @ref kc_sect
 ustring key_spec_to_string(char32_t kc, int km);
 
 /// Convert key specification (code+modifiers) into human readable text representation.
 /// @ingroup input_group
+/// @sa @ref kbd_sect
+/// @sa @ref km_sect
+/// @sa @ref kc_sect
 ustring key_spec_to_label(char32_t kc, int km);
 
 /// Extract key code and modifier from string.
 /// @ingroup input_group
+/// @sa @ref kbd_sect
+/// @sa @ref km_sect
+/// @sa @ref kc_sect
 void key_spec_from_string(const ustring & spec, char32_t & kc, int & km);
 
 /// Check is key code a modifier key.
 /// @ingroup input_group
+/// @sa @ref kbd_sect
+/// @sa @ref km_sect
+/// @sa @ref kc_sect
 bool key_code_is_modifier(char32_t kc);
 
-/// @name Textual representation of shift keys
+/// @name Const access string variables providing key modifiers names
+/// @sa @ref kbd_sect
+/// @sa @ref km_sect
 /// @{
 
 /// Actual value is "NONE".
@@ -430,7 +462,9 @@ extern const char * KM_CAPS_NAME;
 
 /// @}
 
-/// @name Textual representation of keyboard keys
+/// @name Const access string variables providing key code names
+/// @sa @ref kbd_sect
+/// @sa @ref kc_sect
 /// @{
 
 /// Actual value is "None".

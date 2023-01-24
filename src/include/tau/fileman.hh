@@ -26,8 +26,8 @@
 
 /// @file fileman.hh The Fileman class.
 
-#ifndef TAU_FILESEL_HH
-#define TAU_FILESEL_HH
+#ifndef TAU_FILEMAN_HH
+#define TAU_FILEMAN_HH
 
 #include <tau/enums.hh>
 #include <tau/ustring.hh>
@@ -160,4 +160,4 @@ public:
 
 } // namespace tau
 
-#endif // TAU_FILESEL_HH
+#endif // TAU_FILEMAN_HH

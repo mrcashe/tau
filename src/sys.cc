@@ -28,6 +28,7 @@
 #include <tau/locale.hh>
 #include <tau/string.hh>
 #include <tau/string.hh>
+#include <loop-impl.hh>
 #include <sys-impl.hh>
 #include <errno.h>
 #include <cstdlib>
@@ -49,7 +50,7 @@ tau::ustring    share_;
 namespace tau {
 
 const Sysinfo & sysinfo() {
-    return sysinfo_;
+    return Loop_impl::this_loop()->sysinfo();
 }
 
 ustring str_sysinfo() {

@@ -44,19 +44,19 @@ These are platforms for which file generation is possible
 
 ### Generating output
 
--   Static library for the host system *(optional)*.
--   Shared library for the host system **(default)**, but generation can be switched off.
--   *.pc* files for pkg-config(1) utility.
+-   Static library for the host system (optional).
+-   Shared library for the host system (default), but generation can be switched off.
+-   `.pc` files for `pkg-config(1)` utility.
 -   Demonstration executable binary files linked against any of generated
     shared or static library.
--   Static library for supported MXE targets *(optional)*.
--   C++ header files *(optional)*.
--   [**Doxygen**](https://doxygen.nl/) documentation in HTML format *(optional)*.
+-   Static library for supported MXE targets (optional).
+-   C++ header files (optional).
+-   [**Doxygen**](https://doxygen.nl/) documentation in HTML format (optional).
 
 ### API versioning
 
 **tau** uses classical three-component versioning scheme: *Major_.Minor_.Micro_*.
-I use underscrore character '_' here because library source code declares that
+I use underscrore character ('_') here because library source code declares that
 variables this manner. The actual version number can be obtained from *VERSION* file
 in project's root directory.
 
@@ -81,9 +81,9 @@ Must present if you have working system. Presence of the following
 programs is mandatory or build process will fail otherwise.
 Note that, the building system does not support native **FreeBSD**
 `make` and `csh`, so if you are FreeBSD user, you may require to run:
-~~~
-[~]$ sudo pkg install gmake bash pkgconf
-~~~
+
+`[~]$ sudo pkg install gmake bash pkgconf`
+
 
 - basename
 - bash
@@ -189,12 +189,12 @@ package is missing.
 
 ### Download
 Download can be done from the [**GitHub**](https://github.com/) repository using
-*git* command. Therefore, **git** should be installed on your system.
+`git` command. Therefore, **git** should be installed on your system.
 
 Choose directory where to clone remote directory and type in the console:
-~~~
-[~]$ git clone https://github.com/mrcashe/tau.git
-~~~
+
+`[~]$ git clone https://github.com/mrcashe/tau.git`
+
 
 As a result, the directory named '**tau**' will appear.
 
@@ -246,23 +246,23 @@ Alternatively, you can run `make` (or `gmake`) without any arguments:
 [~]$ gmake
 ~~~
 
-`gmake` will run `configure` by itself, because subdirectory *./conf* does not exists
+`gmake` will run `configure` by itself, because subdirectory ./conf does not exists
 and will start building process immediately.
 
 You can also use configure options, the brief list is:
--   *--prefix*=***PREFIX*** the install prefix where built files will be copied.
+-   *--prefix*=PREFIX the install prefix where built files will be copied.
 -   *--enable-static* enable static library building.
 
 One more feature of `configure` script is it can be called from any place but not only
-from project's root directory. Suppose, you downloaded source into *~/build/tau/* directory
-and do not want to build there. You can make another directory, say *~/build/tau-build/*,
+from project's root directory. Suppose, you downloaded source into ~/build/tau/ directory
+and do not want to build there. You can make another directory, say ~/build/tau-build/,
 `cd` to it and enter:
 
 ~~~
 [~]$ ../tau/configure
 ~~~
 
-...and build process will happen within *~/build/tau-build/* directory. Same way, you may
+...and build process will happen within ~/build/tau-build/ directory. Same way, you may
 specify an absolute path to the `configure` script:
 
 ~~~
@@ -282,67 +282,67 @@ The standard make targets are provided:
 
 -   **all** means usual action: to build everything that enabled;
 -   **clean** also has obvious meaning: remove all built object and library files;
--   **install** install enabled components using defined install ***PREFIX**;
--   **uninstall** uninstall previously installed package using defined install ***PREFIX**.
+-   **install** install enabled components using defined install ***PREFIX***;
+-   **uninstall** uninstall previously installed package using defined install ***PREFIX***.
 
 And one more non-standard is:
 
--   **rm** remove all Build Tree completely, the `configure` call needed to resume build process.
+-   **rm** remove entire **Build Tree** completely, the `configure` call needed to resume build process.
 
 > The complete list of all available targets will be published in Doxygen documentation.
 
 To build the library, run `gmake` without arguments or run `gmake all`. The building
-process will start, the generated files will be placed into *./build/* subdirectory
-and built demo programs will be placed into *./bin/* subdirectory.
+process will start, the generated files will be placed into `./build/` subdirectory
+and built demo programs will be placed into `./bin/` subdirectory.
 
 ## Install
 
 After `gmake` succeed, you may install generated files using `gmake install` command.
-The default install ***PREFIX*** is */usr/local* and you should use *sudo* or *su*
+The default install ***PREFIX*** is `/usr/local` and you should use `sudo` or `su`
 command to install files. Good alternative is specify ***$HOME*** variable as
 ***PREFIX*** during configure stage, but you should to setup some environment
-variables in your *~/.profile*, *~/.bash_profile* or *~/.csh_profile* file,
+variables in your `~/.profile`, `~/.bash_profile` or `~/.csh_profile` file,
 such as ***PATH***, ***LD_LIBRARY_PATH*** and ***PKG_CONFIG_PATH***.
 
 #### What will be installed and where
 
 -   Shared library (and static, if enabled, too) will be installed
-    into ***PREFIX**/lib/* subdirectory.
--   pkg-config file(s) will be installed into ***PREFIX**/lib/pkgconfig/*
-    subdirectory.
--   C++ header files will be installed into ***PREFIX**/include/tau-Major_.Minor_/*
+    into ***PREFIX***/lib/ subdirectory.
+-   `pkg-config` file(s) will be installed into ***PREFIX***/$(libdata)/pkgconfig/
+    subdirectory, where $(libdata) is *lib* for **Linux** and *libdata* for **FreeBSD**.
+-   C++ header files will be installed into ***PREFIX***/include/tau-Major_.Minor_/
     subdirectory, where *Major_* and *Minor_* are 1st and 2nd API version
     components, see above section about API versioning.
--   Binary executable files will be installed into ***PREFIX**/bin/*
+-   Binary executable files will be installed into ***PREFIX***/bin/
     subdirectory.
--   Various data files will be installed into ***PREFIX**/share/tau-Major_.Minor_/*
+-   Various data files will be installed into ***PREFIX***/share/tau-Major_.Minor_/
     subdirectory, where *Major_* and *Minor_* are 1st and 2nd API version
     components, see above section about API versioning.
 
 > Despite libtau has builtin support for [XDG Icon Themes](https://www.freedesktop.org/wiki/Specifications/icon-theme-spec/),
 > SVG graphics format not yet realized in library, so I have to bundle fallback
 > icon theme derived from Oxygen icon theme that consists of PNG files.
-> Its name is 'tau' and if you choose */usr/local* or */usr* as ***PREFIX***
+> Its name is 'Tau' and if you choose `/usr/local` or `/usr` as ***PREFIX***
 > directory, that theme may be shown by other programs.
 
 ## Using without Install
 
 If you do not planning to use built libraries, you may not install the package,
-all binaries are capable to run from the *./bin/* subdirectory.
+all binaries are capable to run from the `./bin/` subdirectory.
 > If you didn't run `make install` and using separate build directory, the
 > fallback icon theme will not be accessible by test applications so you will
 > see the black boxes on the buttons instead of icons. To resolve this, you
-> can create symbolic link to the *./share/* subdirectory within Source Tree manually:
+> can create symbolic link to the `./share/` subdirectory within Source Tree manually:
 > `ln -s /path/to/tau/share share`.
 
 ## Using Built Libraries
 
-To have access to the generated *.pc* file(s), you should run `gmake install`.
-The manual intervention may be required to update ldconfig(8) database. Run
+To have access to the generated `.pc` file(s), you should run `gmake install`.
+The manual intervention may be required to update `ldconfig(8)` database. Run
 `sudo /sbin/ldconfig` after package install if you enabled shared library
 building.
 
-The pkg-config package name for tau library is ***tau-Major_.Minor_***. Here is a
+The `pkg-config` package name for tau library is ***tau-Major_.Minor_***. Here is a
 sample how to use pkg-config to link against shared *libtau*.
 
 ~~~

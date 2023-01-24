@@ -63,6 +63,7 @@
 
 /// @defgroup input_group Keyboard & Mouse
 /// Keyboard & Mouse management classes, functions, constants
+/// See @ref kbd_sect for more information
 
 /// @defgroup action_group Actions
 /// Action related stuff

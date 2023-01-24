@@ -281,7 +281,7 @@ struct Action_def {
 };
 
 const Action_def action_defs_[] = {
-    //     name                   label             icon            tooltip             accels
+    //     name                   label              icon            tooltip             accels
     { tau::ACTION_FOCUS_NEXT,     "Focus Next",      "go-next",      "Focus Next",       "Tab"                       },
     { tau::ACTION_FOCUS_PREVIOUS, "Focus Previous",  "go-previous",  "Focus Previous",   "<Shift>Tab <Shift>LeftTab" },
     { tau::ACTION_PAN_LEFT,       "Pan Left",        "",             "Pan Left",         "<Ctrl><Alt>Left"           },
@@ -293,23 +293,22 @@ const Action_def action_defs_[] = {
 
 // Default style items.
 const struct { const char * name, * value; } items_[] = {
-    { "font",                   ""              },
-    { "foreground",             "DarkSlateGray" },
-    { "menu/foreground",        "Indigo"        },
-    { "slider/foreground",      "SteelBlue"     },
-    { "progress/foreground",    "Blue"          },
-    { "accel/foreground",       "Magenta"       },
-    { "progress/background",    "DeepSkyBlue"   },
-    { "background",             "LightGray"     },
-    { "whitespace/background",  "Snow"          },
-    { "menu/background",        "Silver"        },
-    { "select/background",      "DeepSkyBlue"   },
-    { "tooltip/background",     "Aquamarine"    },
-    { "button/background",      "Gainsboro"     },
-    { "slider/background",      "DarkGray"      },
-    { nullptr,                  nullptr         }
+    { tau::STYLE_FONT,                  ""              },
+    { tau::STYLE_FOREGROUND,            "Black"         },
+    { tau::STYLE_MENU_FOREGROUND,       "DarkSlateGray" },
+    { tau::STYLE_SLIDER_FOREGROUND,     "SteelBlue"     },
+    { tau::STYLE_PROGRESS_FOREGROUND,   "Blue"          },
+    { tau::STYLE_ACCEL_FOREGROUND,      "Magenta"       },
+    { tau::STYLE_PROGRESS_BACKGROUND,   "DeepSkyBlue"   },
+    { tau::STYLE_BACKGROUND,            "LightGray"     },
+    { tau::STYLE_WHITESPACE_BACKGROUND, "Snow"          },
+    { tau::STYLE_MENU_BACKGROUND,       "Silver"        },
+    { tau::STYLE_SELECT_BACKGROUND,     "DeepSkyBlue"   },
+    { tau::STYLE_TOOLTIP_BACKGROUND,    "Aquamarine"    },
+    { tau::STYLE_BUTTON_BACKGROUND,     "Gainsboro"     },
+    { tau::STYLE_SLIDER_BACKGROUND,     "DarkGray"      },
+    { nullptr,                          nullptr         }
 };
-
 
 struct Pixmap_holder {
     tau::Pixmap_ptr pixmap;

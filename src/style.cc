@@ -33,6 +33,21 @@
 
 namespace tau {
 
+const char * STYLE_FONT = "font";
+const char * STYLE_FOREGROUND = "foreground";
+const char * STYLE_MENU_FOREGROUND = "menu/foreground";
+const char * STYLE_SLIDER_FOREGROUND = "slider/foreground";
+const char * STYLE_PROGRESS_FOREGROUND = "progress/foreground";
+const char * STYLE_ACCEL_FOREGROUND = "accel/foreground";
+const char * STYLE_BACKGROUND = "background";
+const char * STYLE_PROGRESS_BACKGROUND = "progress/background";
+const char * STYLE_WHITESPACE_BACKGROUND = "whitespace/background";
+const char * STYLE_MENU_BACKGROUND = "menu/background";
+const char * STYLE_SELECT_BACKGROUND = "select/background";
+const char * STYLE_TOOLTIP_BACKGROUND = "tooltip/background";
+const char * STYLE_BUTTON_BACKGROUND = "button/background";
+const char * STYLE_SLIDER_BACKGROUND = "slider/background";
+
 struct Style_impl {
     using Item_ptr = std::shared_ptr<Style_item>;
     using Item_cptr = std::shared_ptr<const Style_item>;

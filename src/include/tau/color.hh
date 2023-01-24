@@ -218,6 +218,572 @@ private:
     double value_       = 0.0;
 };
 
+/// @name Const access string variables providing CSS color names
+/// @sa @ref color_sect
+/// @{
+
+/// The actual value is "AliceBlue".
+/// @ingroup paint_group
+extern const char * COLOR_ALICE_BLUE;
+
+/// The actual value is "AntiqueWhite".
+/// @ingroup paint_group
+extern const char * COLOR_ANTIQUE_WHITE;
+
+/// The actual value is "Aqua".
+/// @ingroup paint_group
+extern const char * COLOR_AQUA;
+
+/// The actual value is "Aquamarine".
+/// @ingroup paint_group
+extern const char * COLOR_AQUAMARINE;
+
+/// The actual value is "Azure".
+/// @ingroup paint_group
+extern const char * COLOR_AZURE;
+
+/// The actual value is "Beige".
+/// @ingroup paint_group
+extern const char * COLOR_BEIGE;
+
+/// The actual value is "Bisque".
+/// @ingroup paint_group
+extern const char * COLOR_BISQUE;
+
+/// The actual value is "Black".
+/// @ingroup paint_group
+extern const char * COLOR_BLACK;
+
+/// The actual value is "BlanchedAlmond".
+/// @ingroup paint_group
+extern const char * COLOR_BLANCHED_ALMOND;
+
+/// The actual value is "Blue".
+/// @ingroup paint_group
+extern const char * COLOR_BLUE;
+
+/// The actual value is "BlueViolet".
+/// @ingroup paint_group
+extern const char * COLOR_BLUE_VIOLET;
+
+/// The actual value is "Brown".
+/// @ingroup paint_group
+extern const char * COLOR_BROWN;
+
+/// The actual value is "BurlyWood".
+/// @ingroup paint_group
+extern const char * COLOR_BURLY_WOOD;
+
+/// The actual value is "CadetBlue".
+/// @ingroup paint_group
+extern const char * COLOR_CADET_BLUE;
+
+/// The actual value is "Chartreuse".
+/// @ingroup paint_group
+extern const char * COLOR_CHARTREUSE;
+
+/// The actual value is "Chocolate".
+/// @ingroup paint_group
+extern const char * COLOR_CHOCOLATE;
+
+/// The actual value is "Coral".
+/// @ingroup paint_group
+extern const char * COLOR_CORAL;
+
+/// The actual value is "CornflowerBlue".
+/// @ingroup paint_group
+extern const char * COLOR_CORNFLOWER_BLUE;
+
+/// The actual value is "Cornsilk".
+/// @ingroup paint_group
+extern const char * COLOR_CORNSILK;
+
+/// The actual value is "Crimson".
+/// @ingroup paint_group
+extern const char * COLOR_CRIMSON;
+
+/// The actual value is "Cyan".
+/// @ingroup paint_group
+extern const char * COLOR_CYAN;
+
+/// The actual value is "DarkBlue".
+/// @ingroup paint_group
+extern const char * COLOR_DARK_BLUE;
+
+/// The actual value is "DarkCyan".
+/// @ingroup paint_group
+extern const char * COLOR_DARK_CYAN;
+
+/// The actual value is "DarkGoldenRod".
+/// @ingroup paint_group
+extern const char * COLOR_DARK_GOLDEN_ROD;
+
+/// The actual value is "DarkGray".
+/// @ingroup paint_group
+extern const char * COLOR_DARK_GRAY;
+
+/// The actual value is "DarkGreen".
+/// @ingroup paint_group
+extern const char * COLOR_DARK_GREEN;
+
+/// The actual value is "DarkKhaki".
+/// @ingroup paint_group
+extern const char * COLOR_DARK_KHAKI;
+
+/// The actual value is "DarkMagenta".
+/// @ingroup paint_group
+extern const char * COLOR_DARK_MAGENTA;
+
+/// The actual value is "DarkOliveGreen".
+/// @ingroup paint_group
+extern const char * COLOR_DARK_OLIVE_GREEN;
+
+/// The actual value is "DarkOrange".
+/// @ingroup paint_group
+extern const char * COLOR_DARK_ORANGE;
+
+/// The actual value is "DarkOrchid".
+/// @ingroup paint_group
+extern const char * COLOR_DARK_ORCHID;
+
+/// The actual value is "DarkRed".
+/// @ingroup paint_group
+extern const char * COLOR_DARK_RED;
+
+/// The actual value is "DarkSalmon".
+/// @ingroup paint_group
+extern const char * COLOR_DARK_SALMON;
+
+/// The actual value is "DarkSeaGreen".
+/// @ingroup paint_group
+extern const char * COLOR_DARK_SEA_GREEN;
+
+/// The actual value is "DarkSlateBlue".
+/// @ingroup paint_group
+extern const char * COLOR_DARK_SLATE_BLUE;
+
+/// The actual value is "DarkSlateGray".
+/// @ingroup paint_group
+extern const char * COLOR_DARK_SLATE_GRAY;
+
+/// The actual value is "DarkTurquoise".
+/// @ingroup paint_group
+extern const char * COLOR_DARK_TURQUOISE;
+
+/// The actual value is "DarkViolet".
+/// @ingroup paint_group
+extern const char * COLOR_DARK_VIOLET;
+
+/// The actual value is "DeepPink".
+/// @ingroup paint_group
+extern const char * COLOR_DEEP_PINK;
+
+/// The actual value is "DeepSkyBlue".
+/// @ingroup paint_group
+extern const char * COLOR_DEEP_SKY_BLUE;
+
+/// The actual value is "DimGray".
+/// @ingroup paint_group
+extern const char * COLOR_DIM_GRAY;
+
+/// The actual value is "DodgerBlue".
+/// @ingroup paint_group
+extern const char * COLOR_DODGER_BLUE;
+
+/// The actual value is "FireBrick".
+/// @ingroup paint_group
+extern const char * COLOR_FIRE_BRICK;
+
+/// The actual value is "FloralWhite".
+/// @ingroup paint_group
+extern const char * COLOR_FLORAL_WHITE;
+
+/// The actual value is "ForestGreen".
+/// @ingroup paint_group
+extern const char * COLOR_FOREST_GREEN;
+
+/// The actual value is "Fuchsia".
+/// @ingroup paint_group
+extern const char * COLOR_FUCHSIA;
+
+/// The actual value is "Gainsboro".
+/// @ingroup paint_group
+extern const char * COLOR_GAINSBORO;
+
+/// The actual value is "GhostWhite".
+/// @ingroup paint_group
+extern const char * COLOR_GHOST_WHITE;
+
+/// The actual value is "Gold".
+/// @ingroup paint_group
+extern const char * COLOR_GOLD;
+
+/// The actual value is "GoldenRod".
+/// @ingroup paint_group
+extern const char * COLOR_GOLDEN_ROD;
+
+/// The actual value is "Gray".
+/// @ingroup paint_group
+extern const char * COLOR_GRAY;
+
+/// The actual value is "Green".
+/// @ingroup paint_group
+extern const char * COLOR_GREEN;
+
+/// The actual value is "GreenYellow".
+/// @ingroup paint_group
+extern const char * COLOR_GREEN_YELLOW;
+
+/// The actual value is "HoneyDew".
+/// @ingroup paint_group
+extern const char * COLOR_HONEY_DEW;
+
+/// The actual value is "HotPink".
+/// @ingroup paint_group
+extern const char * COLOR_HOT_PINK;
+
+/// The actual value is "IndianRed".
+/// @ingroup paint_group
+extern const char * COLOR_INDIAN_RED;
+
+/// The actual value is "Indigo".
+/// @ingroup paint_group
+extern const char * COLOR_INDIGO;
+
+/// The actual value is "Ivory".
+/// @ingroup paint_group
+extern const char * COLOR_IVORY;
+
+/// The actual value is "Khaki".
+/// @ingroup paint_group
+extern const char * COLOR_KHAKI;
+
+/// The actual value is "Lavender".
+/// @ingroup paint_group
+extern const char * COLOR_LAVENDER;
+
+/// The actual value is "LavenderBlush".
+/// @ingroup paint_group
+extern const char * COLOR_LAVENDER_BLUSH;
+
+/// The actual value is "LawnGreen".
+/// @ingroup paint_group
+extern const char * COLOR_LAWN_GREEN;
+
+/// The actual value is "LemonChiffon".
+/// @ingroup paint_group
+extern const char * COLOR_LEMON_CHIFFON;
+
+/// The actual value is "LightBlue".
+/// @ingroup paint_group
+extern const char * COLOR_LIGHT_BLUE;
+
+/// The actual value is "LightCoral".
+/// @ingroup paint_group
+extern const char * COLOR_LIGHT_CORAL;
+
+/// The actual value is "LightCyan".
+/// @ingroup paint_group
+extern const char * COLOR_LIGHT_CYAN;
+
+/// The actual value is "LightGoldenRodYellow".
+/// @ingroup paint_group
+extern const char * COLOR_LIGHT_GOLDEN_ROD_YELLOW;
+
+/// The actual value is "LightGray".
+/// @ingroup paint_group
+extern const char * COLOR_LIGHT_GRAY;
+
+/// The actual value is "LightGreen".
+/// @ingroup paint_group
+extern const char * COLOR_LIGHT_GREEN;
+
+/// The actual value is "LightPink".
+/// @ingroup paint_group
+extern const char * COLOR_LIGHT_PINK;
+
+/// The actual value is "LightSalmon".
+/// @ingroup paint_group
+extern const char * COLOR_LIGHT_SALMON;
+
+/// The actual value is "LightSeaGreen".
+/// @ingroup paint_group
+extern const char * COLOR_LIGHT_SEA_GREEN;
+
+/// The actual value is "LightSkyBlue".
+/// @ingroup paint_group
+extern const char * COLOR_LIGHT_SKY_BLUE;
+
+/// The actual value is "LightSlateGray".
+/// @ingroup paint_group
+extern const char * COLOR_LIGHT_SLATE_GRAY;
+
+/// The actual value is "LightSteelBlue".
+/// @ingroup paint_group
+extern const char * COLOR_LIGHT_STEEL_BLUE;
+
+/// The actual value is "LightYellow".
+/// @ingroup paint_group
+extern const char * COLOR_LIGHT_YELLOW;
+
+/// The actual value is "Lime".
+/// @ingroup paint_group
+extern const char * COLOR_LIME;
+
+/// The actual value is "LimeGreen".
+/// @ingroup paint_group
+extern const char * COLOR_LIME_GREEN;
+
+/// The actual value is "Linen".
+/// @ingroup paint_group
+extern const char * COLOR_LINEN;
+
+/// The actual value is "Magenta".
+/// @ingroup paint_group
+extern const char * COLOR_MAGENTA;
+
+/// The actual value is "Maroon".
+/// @ingroup paint_group
+extern const char * COLOR_MAROON;
+
+/// The actual value is "MediumAquaMarine".
+/// @ingroup paint_group
+extern const char * COLOR_MEDIUM_AQUA_MARINE;
+
+/// The actual value is "MediumBlue".
+/// @ingroup paint_group
+extern const char * COLOR_MEDIUM_BLUE;
+
+/// The actual value is "MediumOrchid".
+/// @ingroup paint_group
+extern const char * COLOR_MEDIUM_ORCHID;
+
+/// The actual value is "MediumPurple".
+/// @ingroup paint_group
+extern const char * COLOR_MEDIUM_PURPLE;
+
+/// The actual value is "MediumSeaGreen".
+/// @ingroup paint_group
+extern const char * COLOR_MEDIUM_SEA_GREEN;
+
+/// The actual value is "MediumSlateBlue".
+/// @ingroup paint_group
+extern const char * COLOR_MEDIUM_SLATE_BLUE;
+
+/// The actual value is "MediumSpringGreen".
+/// @ingroup paint_group
+extern const char * COLOR_MEDIUM_SPRING_GREEN;
+
+/// The actual value is "MediumTurquoise".
+/// @ingroup paint_group
+extern const char * COLOR_MEDIUM_TURQUOISE;
+
+/// The actual value is "MediumVioletRed".
+/// @ingroup paint_group
+extern const char * COLOR_MEDIUM_VIOLET_RED;
+
+/// The actual value is "MidnightBlue".
+/// @ingroup paint_group
+extern const char * COLOR_MIDNIGHT_BLUE;
+
+/// The actual value is "MintCream".
+/// @ingroup paint_group
+extern const char * COLOR_MINT_CREAM;
+
+/// The actual value is "MistyRose".
+/// @ingroup paint_group
+extern const char * COLOR_MISTY_ROSE;
+
+/// The actual value is "Moccasin".
+/// @ingroup paint_group
+extern const char * COLOR_MOCCASIN;
+
+/// The actual value is "NavajoWhite".
+/// @ingroup paint_group
+extern const char * COLOR_NAVAJO_WHITE;
+
+/// The actual value is "Navy".
+/// @ingroup paint_group
+extern const char * COLOR_NAVY;
+
+/// The actual value is "OldLace".
+/// @ingroup paint_group
+extern const char * COLOR_OLD_LACE;
+
+/// The actual value is "Olive".
+/// @ingroup paint_group
+extern const char * COLOR_OLIVE;
+
+/// The actual value is "OliveDrab".
+/// @ingroup paint_group
+extern const char * COLOR_OLIVE_DRAB;
+
+/// The actual value is "Orange".
+/// @ingroup paint_group
+extern const char * COLOR_ORANGE;
+
+/// The actual value is "OrangeRed".
+/// @ingroup paint_group
+extern const char * COLOR_ORANGE_RED;
+
+/// The actual value is "Orchid".
+/// @ingroup paint_group
+extern const char * COLOR_ORCHID;
+
+/// The actual value is "PaleGoldenRod".
+/// @ingroup paint_group
+extern const char * COLOR_PALE_GOLDEN_ROD;
+
+/// The actual value is "PaleGreen".
+/// @ingroup paint_group
+extern const char * COLOR_PALE_GREEN;
+
+/// The actual value is "PaleTurquoise".
+/// @ingroup paint_group
+extern const char * COLOR_PALE_TURQUOISE;
+
+/// The actual value is "PaleVioletRed".
+/// @ingroup paint_group
+extern const char * COLOR_PALE_VIOLET_RED;
+
+/// The actual value is "PapayaWhip".
+/// @ingroup paint_group
+extern const char * COLOR_PAPAYA_WHIP;
+
+/// The actual value is "PeachPuff".
+/// @ingroup paint_group
+extern const char * COLOR_PEACH_PUFF;
+
+/// The actual value is "Peru".
+/// @ingroup paint_group
+extern const char * COLOR_PERU;
+
+/// The actual value is "Pink".
+/// @ingroup paint_group
+extern const char * COLOR_PINK;
+
+/// The actual value is "Plum".
+/// @ingroup paint_group
+extern const char * COLOR_PLUM;
+
+/// The actual value is "PowderBlue".
+/// @ingroup paint_group
+extern const char * COLOR_POWDER_BLUE;
+
+/// The actual value is "Purple".
+/// @ingroup paint_group
+extern const char * COLOR_PURPLE;
+
+/// The actual value is "Red".
+/// @ingroup paint_group
+extern const char * COLOR_RED;
+
+/// The actual value is "RosyBrown".
+/// @ingroup paint_group
+extern const char * COLOR_ROSY_BROWN;
+
+/// The actual value is "RoyalBlue".
+/// @ingroup paint_group
+extern const char * COLOR_ROYAL_BLUE;
+
+/// The actual value is "SaddleBrown".
+/// @ingroup paint_group
+extern const char * COLOR_SADDLE_BROWN;
+
+/// The actual value is "Salmon".
+/// @ingroup paint_group
+extern const char * COLOR_SALMON;
+
+/// The actual value is "SandyBrown".
+/// @ingroup paint_group
+extern const char * COLOR_SANDY_BROWN;
+
+/// The actual value is "SeaGreen".
+/// @ingroup paint_group
+extern const char * COLOR_SEA_GREEN;
+
+/// The actual value is "SeaShell".
+/// @ingroup paint_group
+extern const char * COLOR_SEA_SHELL;
+
+/// The actual value is "Sienna".
+/// @ingroup paint_group
+extern const char * COLOR_SIENNA;
+
+/// The actual value is "Silver".
+/// @ingroup paint_group
+extern const char * COLOR_SILVER;
+
+/// The actual value is "SkyBlue".
+/// @ingroup paint_group
+extern const char * COLOR_SKY_BLUE;
+
+/// The actual value is "SlateBlue".
+/// @ingroup paint_group
+extern const char * COLOR_SLATE_BLUE;
+
+/// The actual value is "SlateGray".
+/// @ingroup paint_group
+extern const char * COLOR_SLATE_GRAY;
+
+/// The actual value is "Snow".
+/// @ingroup paint_group
+extern const char * COLOR_SNOW;
+
+/// The actual value is "SpringGreen".
+/// @ingroup paint_group
+extern const char * COLOR_SPRING_GREEN;
+
+/// The actual value is "SteelBlue".
+/// @ingroup paint_group
+extern const char * COLOR_STEEL_BLUE;
+
+/// The actual value is "Tan".
+/// @ingroup paint_group
+extern const char * COLOR_TAN;
+
+/// The actual value is "Teal".
+/// @ingroup paint_group
+extern const char * COLOR_TEAL;
+
+/// The actual value is "Thistle".
+/// @ingroup paint_group
+extern const char * COLOR_THISTLE;
+
+/// The actual value is "Tomato".
+/// @ingroup paint_group
+extern const char * COLOR_TOMATO;
+
+/// The actual value is "Turquoise".
+/// @ingroup paint_group
+extern const char * COLOR_TURQUOISE;
+
+/// The actual value is "Violet".
+/// @ingroup paint_group
+extern const char * COLOR_VIOLET;
+
+/// The actual value is "Wheat".
+/// @ingroup paint_group
+extern const char * COLOR_WHEAT;
+
+/// The actual value is "White".
+/// @ingroup paint_group
+extern const char * COLOR_WHITE;
+
+/// The actual value is "WhiteSmoke".
+/// @ingroup paint_group
+extern const char * COLOR_WHITE_SMOKE;
+
+/// The actual value is "Yellow".
+/// @ingroup paint_group
+extern const char * COLOR_YELLOW;
+
+/// The actual value is "YellowGreen".
+/// @ingroup paint_group
+extern const char * COLOR_YELLOW_GREEN;
+
+/// @}
+
 } // namespace tau
 
 #endif // TAU_COLOR_HH

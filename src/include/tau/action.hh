@@ -39,6 +39,9 @@ namespace tau {
 
 /// An action that holds information for other actions.
 /// @ingroup action_group
+/// @ingroup input_group
+/// @sa @ref action_sect
+/// @sa @ref kbd_sect
 class Master_action: public trackable {
 public:
 
@@ -55,27 +58,59 @@ public:
     Master_action & operator=(const Master_action & other) = default;
 
     /// Constructor with accels.
+    /// @param accels space separated list of accelerator specifications.
+    /// @overload Master_action(const ustring & accels)
     Master_action(const ustring & accels);
 
     /// Constructor with accel.
+    /// @param kc the key code, see #Key_codes enum.
+    /// @param km the key modifier, see #Key_modifiers enum.
+    /// @overload Master_action(char32_t kc, int km)
     Master_action(char32_t kc, int km);
 
     /// Constructor with accels and label.
+    /// @param accels space separated list of accelerator specifications.
+    /// @param label the label.
+    /// @overload Master_action(const ustring & accels, const ustring & label)
     Master_action(const ustring & accels, const ustring & label);
 
     /// Constructor with accel and label.
+    /// @param kc the key code, see #Key_codes enum.
+    /// @param km the key modifier, see #Key_modifiers enum.
+    /// @param label the label.
+    /// @overload Master_action(char32_t kc, int km, const ustring & label)
     Master_action(char32_t kc, int km, const ustring & label);
 
     /// Constructor with accels, label and icon name.
+    /// @param accels space separated list of accelerator specifications.
+    /// @param label the label.
+    /// @param icon_name the icon name.
+    /// @overload Master_action(const ustring & accels, const ustring & label, const ustring & icon_name)
     Master_action(const ustring & accels, const ustring & label, const ustring & icon_name);
 
     /// Constructor with accel, label and icon name.
+    /// @param kc the key code, see #Key_codes enum.
+    /// @param km the key modifier, see #Key_modifiers enum.
+    /// @param label the label.
+    /// @param icon_name the icon name.
+    /// @overload Master_action(char32_t kc, int km, const ustring & label, const ustring & icon_name)
     Master_action(char32_t kc, int km, const ustring & label, const ustring & icon_name);
 
     /// Constructor with accels, label, icon name and tooltip.
+    /// @param accels space separated list of accelerator specifications.
+    /// @param label the label.
+    /// @param icon_name the icon name.
+    /// @param tooltip the tooltip.
+    /// @overload Master_action(const ustring & accels, const ustring & label, const ustring & icon_name, const ustring & tooltip)
     Master_action(const ustring & accels, const ustring & label, const ustring & icon_name, const ustring & tooltip);
 
     /// Constructor with accel, label, icon name and tooltip.
+    /// @param kc the key code, see #Key_codes enum.
+    /// @param km the key modifier, see #Key_modifiers enum.
+    /// @param label the label.
+    /// @param icon_name the icon name.
+    /// @param tooltip the tooltip.
+    /// @overload Master_action(char32_t kc, int km, const ustring & label, const ustring & icon_name, const ustring & tooltip)
     Master_action(char32_t kc, int km, const ustring & label, const ustring & icon_name, const ustring & tooltip);
 
     /// @}
@@ -141,7 +176,7 @@ public:
     /// Remove all accelerators.
     void clear_accels();
 
-    /// List accelerators.
+    /// %List accelerators.
     std::vector<Accel> accels() const { return accels_; }
 
     /// Signal emitted when action becomes disabled.
@@ -210,6 +245,9 @@ private:
 ///
 /// %Action also provides set of signals to inform user about happening events.
 /// @ingroup action_group
+/// @ingroup input_group
+/// @sa @ref action_sect
+/// @sa @ref kbd_sect
 class Action_base: public trackable {
 public:
 
@@ -226,30 +264,64 @@ public:
     Action_base & operator=(const Action_base & other) = default;
 
     /// Constructor with accels.
+    /// @param accels space separated list of accelerator specifications.
+    /// @overload Action_base(const ustring & accels)
     Action_base(const ustring & accels);
 
     /// Constructor with accel.
+    /// @param kc the key code, see #Key_codes enum.
+    /// @param km the key modifier, see #Key_modifiers enum.
+    /// @overload Action_base(char32_t kc, int km)
     Action_base(char32_t kc, int km);
 
     /// Constructor with accels and label.
+    /// @param accels space separated list of accelerator specifications.
+    /// @param label the label.
+    /// @overload Action_base(const ustring & accels, const ustring & label)
     Action_base(const ustring & accels, const ustring & label);
 
     /// Constructor with accel and label.
+    /// @param kc the key code, see #Key_codes enum.
+    /// @param km the key modifier, see #Key_modifiers enum.
+    /// @param label the label.
+    /// @overload Action_base(char32_t kc, int km, const ustring & label)
     Action_base(char32_t kc, int km, const ustring & label);
 
     /// Constructor with accels, label and icon name.
+    /// @param accels space separated list of accelerator specifications.
+    /// @param label the label.
+    /// @param icon_name the icon name.
+    /// @overload Action_base(const ustring & accels, const ustring & label, const ustring & icon_name)
     Action_base(const ustring & accels, const ustring & label, const ustring & icon_name);
 
     /// Constructor with accel, label and icon name.
+    /// @param kc the key code, see #Key_codes enum.
+    /// @param km the key modifier, see #Key_modifiers enum.
+    /// @param label the label.
+    /// @param icon_name the icon name.
+    /// @overload Action_base(char32_t kc, int km, const ustring & label, const ustring & icon_name)
     Action_base(char32_t kc, int km, const ustring & label, const ustring & icon_name);
 
     /// Constructor with accels, label, icon name and tooltip.
+    /// @param accels space separated list of accelerator specifications.
+    /// @param label the label.
+    /// @param icon_name the icon name.
+    /// @param tooltip the tooltip.
+    /// @overload Action_base(const ustring & accels, const ustring & label, const ustring & icon_name, const ustring & tooltip)
     Action_base(const ustring & accels, const ustring & label, const ustring & icon_name, const ustring & tooltip);
 
     /// Constructor with accel, label, icon name and tooltip.
+    /// @param kc the key code, see #Key_codes enum.
+    /// @param km the key modifier, see #Key_modifiers enum.
+    /// @param label the label.
+    /// @param icon_name the icon name.
+    /// @param tooltip the tooltip.
+    /// @overload Action_base(char32_t kc, int km, const ustring & label, const ustring & icon_name, const ustring & tooltip)
     Action_base(char32_t kc, int km, const ustring & label, const ustring & icon_name, const ustring & tooltip);
 
     /// Constructor with master action.
+    /// @param master_action the Master_action.
+    /// @overload Action_base(Master_action & master_action)
     Action_base(Master_action & master_action);
 
     /// @private
@@ -334,7 +406,7 @@ public:
     /// Remove all accels.
     void clear_accels();
 
-    /// List accels.
+    /// %List accels.
     std::vector<Accel> & accels() { return accels_; }
 
     /// Signal emitted when action becomes disabled.
@@ -414,6 +486,9 @@ private:
 
 /// A simple event-like action.
 /// @ingroup action_group
+/// @ingroup input_group
+/// @sa @ref action_sect
+/// @sa @ref kbd_sect
 class Action: public Action_base {
 public:
 
@@ -430,33 +505,78 @@ public:
     Action & operator=(const Action & other) = default;
 
     /// Constructor with slot.
+    /// @param slot_activate slot to be connected using connect() method.
+    /// @overload Action(slot<void()> slot_activate)
     Action(slot<void()> slot_activate);
 
     /// Constructor with accels and optional slot.
+    /// @param accels space separated list of accelerator specifications.
+    /// @param slot_activate [optional] slot to be connected using connect() method.
+    /// @overload Action(const ustring & accels, slot<void()> slot_activate)
     Action(const ustring & accels, slot<void()> slot_activate=slot<void()>());
 
     /// Constructor with accel and optional slot.
+    /// @param kc the key code, see #Key_codes enum.
+    /// @param km the key modifier, see #Key_modifiers enum.
+    /// @param slot_activate [optional] slot to be connected using connect() method.
+    /// @overload Action(char32_t kc, int km, slot<void()> slot_activate)
     Action(char32_t kc, int km, slot<void()> slot_activate=slot<void()>());
 
     /// Constructor with accels, label and optional slot.
+    /// @param accels space separated list of accelerator specifications.
+    /// @param label the label.
+    /// @param slot_activate [optional] slot to be connected using connect() method.
+    /// @overload Action(const ustring & accels, const ustring & label, slot<void()> slot_activate)
     Action(const ustring & accels, const ustring & label, slot<void()> slot_activate=slot<void()>());
 
     /// Constructor with accel, label and optional slot.
+    /// @param kc the key code, see #Key_codes enum.
+    /// @param km the key modifier, see #Key_modifiers enum.
+    /// @param label the label.
+    /// @param slot_activate [optional] slot to be connected using connect() method.
+    /// @overload Action(char32_t kc, int km, const ustring & label, slot<void()> slot_activate)
     Action(char32_t kc, int km, const ustring & label, slot<void()> slot_activate=slot<void()>());
 
     /// Constructor with accels, label, icon name and optional slot.
+    /// @param accels space separated list of accelerator specifications.
+    /// @param label the label.
+    /// @param icon_name the icon name.
+    /// @param slot_activate [optional] slot to be connected using connect() method.
+    /// @overload Action(const ustring & accels, const ustring & label, const ustring & icon_name, slot<void()> slot_activate)
     Action(const ustring & accels, const ustring & label, const ustring & icon_name, slot<void()> slot_activate=slot<void()>());
 
     /// Constructor with accel, label, icon name and optional slot.
+    /// @param kc the key code, see #Key_codes enum.
+    /// @param km the key modifier, see #Key_modifiers enum.
+    /// @param label the label.
+    /// @param icon_name the icon name.
+    /// @param slot_activate [optional] slot to be connected using connect() method.
+    /// @overload Action(char32_t kc, int km, const ustring & label, const ustring & icon_name, slot<void()> slot_activate)
     Action(char32_t kc, int km, const ustring & label, const ustring & icon_name, slot<void()> slot_activate=slot<void()>());
 
     /// Constructor with accels, label, icon name, tooltip and optional slot.
+    /// @param accels space separated list of accelerator specifications.
+    /// @param label the label.
+    /// @param icon_name the icon name.
+    /// @param tooltip the tooltip.
+    /// @param slot_activate [optional] slot to be connected using connect() method.
+    /// @overload Action(const ustring & accels, const ustring & label, const ustring & icon_name, const ustring & tooltip, slot<void()> slot_activate)
     Action(const ustring & accels, const ustring & label, const ustring & icon_name, const ustring & tooltip, slot<void()> slot_activate=slot<void()>());
 
     /// Constructor with accel, label, icon name, tooltip and optional slot.
+    /// @param kc the key code, see #Key_codes enum.
+    /// @param km the key modifier, see #Key_modifiers enum.
+    /// @param label the label.
+    /// @param icon_name the icon name.
+    /// @param tooltip the tooltip.
+    /// @param slot_activate [optional] slot to be connected using connect() method.
+    /// @overload Action(char32_t kc, int km, const ustring & label, const ustring & icon_name, const ustring & tooltip, slot<void()> slot_activate)
     Action(char32_t kc, int km, const ustring & label, const ustring & icon_name, const ustring & tooltip, slot<void()> slot_activate=slot<void()>());
 
     /// Constructor with master action and optional slot.
+    /// @param master_action the Master_action.
+    /// @param slot_activate [optional] slot to be connected using connect() method.
+    /// @overload Action(Master_action & master_action, slot<void()> slot_activate)
     Action(Master_action & master_action, slot<void()> slot_activate=slot<void()>());
 
     /// @}
@@ -479,6 +599,9 @@ private:
 
 /// A toggle action.
 /// @ingroup action_group
+/// @ingroup input_group
+/// @sa @ref action_sect
+/// @sa @ref kbd_sect
 class Toggle_action: public Action_base {
 public:
 
@@ -495,33 +618,66 @@ public:
     Toggle_action & operator=(const Toggle_action & other) = default;
 
     /// Constructor with slot.
+    /// @param slot_toggle slot to be connected using connect() method.
+    /// @overload Toggle_action(slot<void(bool)> slot_toggle)
     Toggle_action(slot<void(bool)> slot_toggle);
 
     /// Constructor with accels and optional slot.
     Toggle_action(const ustring & accels, slot<void(bool)> slot_toggle=slot<void(bool)>());
 
     /// Constructor with accel and optional slot.
+    /// @param kc the key code, see #Key_codes enum.
+    /// @param km the key modifier, see #Key_modifiers enum.
+    /// @param slot_toggle [optional] slot to be connected using connect() method.
+    /// @overload Toggle_action(char32_t kc, int km, slot<void(bool)> slot_toggle)
     Toggle_action(char32_t kc, int km, slot<void(bool)> slot_toggle=slot<void(bool)>());
 
     /// Constructor with accels and label and optional slot.
     Toggle_action(const ustring & accels, const ustring & label, slot<void(bool)> slot_toggle=slot<void(bool)>());
 
     /// Constructor with accel, label and optional slot.
+    /// @param kc the key code, see #Key_codes enum.
+    /// @param km the key modifier, see #Key_modifiers enum.
+    /// @param label the label.
+    /// @param slot_toggle [optional] slot to be connected using connect() method.
+    /// @overload Toggle_action(char32_t kc, int km, const ustring & label, slot<void(bool)> slot_toggle)
     Toggle_action(char32_t kc, int km, const ustring & label, slot<void(bool)> slot_toggle=slot<void(bool)>());
 
     /// Constructor with accels, label and icon name and optional slot.
     Toggle_action(const ustring & accels, const ustring & label, const ustring & icon_name, slot<void(bool)> slot_toggle=slot<void(bool)>());
 
     /// Constructor with accel, label and icon name and optional slot.
+    /// @param kc the key code, see #Key_codes enum.
+    /// @param km the key modifier, see #Key_modifiers enum.
+    /// @param label the label.
+    /// @param icon_name the icon name.
+    /// @param slot_toggle [optional] slot to be connected using connect() method.
+    /// @overload Toggle_action(char32_t kc, int km, const ustring & label, const ustring & icon_name, slot<void(bool)> slot_toggle)
     Toggle_action(char32_t kc, int km, const ustring & label, const ustring & icon_name, slot<void(bool)> slot_toggle=slot<void(bool)>());
 
     /// Constructor with accels, label, icon name,tooltip and optional slot.
+    /// @param accels space separated list of accelerator specifications.
+    /// @param label the label.
+    /// @param icon_name the icon name.
+    /// @param tooltip the tooltip.
+    /// @param slot_toggle [optional] slot to be connected using connect() method.
+    /// @overload Toggle_action(const ustring & accels, const ustring & label, const ustring & icon_name, const ustring & tooltip, slot<void(bool)> slot_toggle)
     Toggle_action(const ustring & accels, const ustring & label, const ustring & icon_name, const ustring & tooltip, slot<void(bool)> slot_toggle=slot<void(bool)>());
 
     /// Constructor with accel, label, icon name and tooltip and optional slot.
+    /// @param kc the key code, see #Key_codes enum.
+    /// @param km the key modifier, see #Key_modifiers enum.
+    /// @param label the label.
+    /// @param icon_name the icon name.
+    /// @param tooltip the tooltip.
+    /// @param slot_toggle [optional] slot to be connected using connect() method.
+    /// @overload Toggle_action(char32_t kc, int km, const ustring & label, const ustring & icon_name, const ustring & tooltip, slot<void(bool)> slot_toggle)
     Toggle_action(char32_t kc, int km, const ustring & label, const ustring & icon_name, const ustring & tooltip, slot<void(bool)> slot_toggle=slot<void(bool)>());
 
     /// Constructor with master action and optional slot.
+    /// @param master_action the Master_action.
+    /// @param slot_toggle [optional] slot to be connected using connect() method.
+    /// @overload Toggle_action(Master_action & master_action, slot<void(bool)> slot_toggle)
     Toggle_action(Master_action & master_action, slot<void(bool)> slot_toggle=slot<void(bool)>());
 
     /// @}
