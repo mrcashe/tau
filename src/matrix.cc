@@ -182,6 +182,19 @@ double Matrix::y0() const {
     return y0_;
 }
 
+Vector operator*(const Vector & vec, const Matrix & mat) {
+    return mat.transform(vec);
+}
+
+Vector operator*(const Matrix & mat, const Vector & vec) {
+    return mat.transform(vec);
+}
+
+Vector & operator*=(Vector & vec, const Matrix & mat) {
+    vec = mat.transform(vec);
+    return vec;
+}
+
 } // namespace tau
 
 //END

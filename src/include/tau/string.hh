@@ -117,9 +117,7 @@ const char * utf8_next(const char * u);
 /// @param nbytes number of bytes in sequence, 1...6.
 /// @return leading character.
 /// @ingroup string_group
-inline char utf8_leader(std::size_t nbytes) {
-    return (nbytes > 1 && nbytes < 7) ? '\xfe' << (7-nbytes) : 0;
-}
+char utf8_leader(std::size_t nbytes);
 
 template<typename  T>
 inline void __str_format_helper(std::ostream & os, const T & arg) {

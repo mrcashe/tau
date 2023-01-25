@@ -24,21 +24,21 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # -----------------------------------------------------------------------------
 
-srcdirs += $(srcdir)/so $(posix_srcdir) $(posix_srcdir)/so $(unix_srcdir) $(confdir)/$(plat)
+srcdirs += $(posix_srcdir) $(xcb_srcdir) $(unix_srcdir) $(confdir)/$(plat) $(srcdir)/so $(posix_srcdir)/so
 VPATH = $(srcdirs)
 sources = $(foreach dir, $(srcdirs), $(wildcard $(dir)/*.cc))
-objects = $(addprefix $(unix_so_builddir)/, $(sort $(addsuffix .o, $(basename $(notdir $(sources))))))
-CXXFLAGS += -O2 $(unix_CXXFLAGS)
+objects = $(addprefix $(unix_so_builddir)/, $(addsuffix .o, $(basename $(notdir $(sources)))))
+CXXFLAGS += -O2 -g
 
 all: $(unix_sodir) $(unix_so_builddir) $(unix_so)
 
-$(unix_so): $(objects) $(xcb_so_builddir)/*.o
-	$(CXX) -shared -o $@ -fPIC $(unix_so_builddir)/*.o $(xcb_so_builddir)/*.o && chmod -x $@
+$(unix_so): $(objects)
+	$(CXX) -o $@ -g -shared -fPIC $(unix_so_builddir)/*.o && chmod -x $@
 
 install: $(lib_prefix)
 	@if [ -f $(unix_so) ]; then \
 	    echo "++ unix-so.mk: rebuilding shared library with -soname option..."; \
-	    $(CXX) -shared -o $(unix_sopath) -fPIC -Wl,-soname,$(unix_soname) $(unix_so_builddir)/*.o $(xcb_so_builddir)/*.o; \
+	    $(CXX) -o $(unix_sopath) -shared -fPIC -Wl,-soname,$(unix_soname) $(unix_so_builddir)/*.o; \
 	    chmod -x $(unix_sopath); \
 	    strip --strip-unneeded $(unix_sopath); \
 	    (cd $(lib_prefix) && ln -vsf $(unix_sofile) $(unix_soname)); \

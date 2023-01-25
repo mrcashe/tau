@@ -196,6 +196,16 @@ void Contour::cubic_to(double cx1, double cy1, double cx2, double cy2, double ex
     cubic_to(Vector(cx1, cy1), Vector(cx2, cy2), Vector(ex, ey));
 }
 
+Contour & operator*=(Contour & ctr, const Matrix & mat) {
+    ctr.transform(mat);
+    return ctr;
+}
+
+Contour & operator*=(const Matrix & mat, Contour & ctr) {
+    ctr.transform(mat);
+    return ctr;
+}
+
 } // namespace tau
 
 //END

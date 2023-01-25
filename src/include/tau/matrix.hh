@@ -118,24 +118,17 @@ private:
 /// Scale Vector by Matrix.
 /// @ingroup geometry_group
 /// @relates Matrix
-inline Vector operator*(const Vector & vec, const Matrix & mat) {
-    return mat.transform(vec);
-}
+Vector operator*(const Vector & vec, const Matrix & mat);
 
 /// Scale Vector by Matrix.
 /// @ingroup geometry_group
 /// @relates Matrix
-inline Vector operator*(const Matrix & mat, const Vector & vec) {
-    return mat.transform(vec);
-}
+Vector operator*(const Matrix & mat, const Vector & vec);
 
 /// Scale Vector by Matrix.
 /// @ingroup geometry_group
 /// @relates Matrix
-inline Vector & operator*=(Vector & vec, const Matrix & mat) {
-    vec = mat.transform(vec);
-    return vec;
-}
+Vector & operator*=(Vector & vec, const Matrix & mat);
 
 } // namespace tau
 

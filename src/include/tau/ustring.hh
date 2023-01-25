@@ -285,12 +285,11 @@ public:
     /// No reference return; use replace() to write characters.
     value_type operator[](size_type i) const;
 
-    /// No reference return; use replace() to write characters. @throw std::out_of_range
+    /// No reference return; use replace() to write characters.
+    /// @throw std::out_of_range
     value_type at(size_type i) const;
 
-    ustring substr(size_type i=0, size_type n=npos) const {
-        return ustring(*this, i, n);
-    }
+    ustring substr(size_type i=0, size_type n=npos) const;
 
     /// @}
     /// @name Access a sequence of characters.
@@ -388,14 +387,10 @@ public:
     /// @{
 
     /// Get underlaying std::string.
-    operator std::string() const {
-        return str_;
-    }
+    operator std::string() const;
 
     /// Get underlaying std::string.
-    const std::string & raw() const {
-        return str_;
-    }
+    const std::string & raw() const;
 
     /// Get underlaying C string.
     const char * data() const;
@@ -436,209 +431,131 @@ std::ostream & operator<<(std::ostream & os, const ustring & str);
 
 /// @ingroup string_group
 /// @relates ustring
-inline bool operator==(const ustring::const_iterator & lhs, const ustring::const_iterator & rhs) {
-    return (lhs.base() == rhs.base());
-}
+bool operator==(const ustring::const_iterator & lhs, const ustring::const_iterator & rhs);
 
 /// @ingroup string_group
 /// @relates ustring
-inline bool operator!=(const ustring::const_iterator& lhs, const ustring::const_iterator& rhs) {
-    return (lhs.base() != rhs.base());
-}
+bool operator!=(const ustring::const_iterator& lhs, const ustring::const_iterator& rhs);
 
 /// @ingroup string_group
 /// @relates ustring
-inline bool operator<(const ustring::const_iterator & lhs, const ustring::const_iterator & rhs) {
-    return (lhs.base() < rhs.base());
-}
+bool operator<(const ustring::const_iterator & lhs, const ustring::const_iterator & rhs);
 
 /// @ingroup string_group
 /// @relates ustring
-inline bool operator>(const ustring::const_iterator & lhs, const ustring::const_iterator & rhs) {
-    return (lhs.base() > rhs.base());
-}
+bool operator>(const ustring::const_iterator & lhs, const ustring::const_iterator & rhs);
 
 /// @ingroup string_group
 /// @relates ustring
-inline bool operator<=(const ustring::const_iterator & lhs, const ustring::const_iterator & rhs) {
-    return (lhs.base() <= rhs.base());
-}
+bool operator<=(const ustring::const_iterator & lhs, const ustring::const_iterator & rhs);
 
 /// @ingroup string_group
 /// @relates ustring
-inline bool operator>=(const ustring::const_iterator & lhs, const ustring::const_iterator & rhs) {
-    return (lhs.base() >= rhs.base());
-}
+bool operator>=(const ustring::const_iterator & lhs, const ustring::const_iterator & rhs);
 
 /// @ingroup string_group
 /// @relates ustring
-inline void swap(ustring & lhs, ustring & rhs) {
-    lhs.swap(rhs);
-}
+void swap(ustring & lhs, ustring & rhs);
 
 /// @ingroup string_group
 /// @relates ustring
-inline bool operator==(const ustring & lhs, const ustring & rhs) {
-    return (lhs.compare(rhs) == 0);
-}
+bool operator==(const ustring & lhs, const ustring & rhs);
 
 /// @ingroup string_group
 /// @relates ustring
-inline bool operator==(const ustring & lhs, const char * rhs) {
-    return (lhs.compare(rhs) == 0);
-}
+bool operator==(const ustring & lhs, const char * rhs);
 
 /// @ingroup string_group
 /// @relates ustring
-inline bool operator==(const char * lhs, const ustring & rhs) {
-    return (rhs.compare(lhs) == 0);
-}
+bool operator==(const char * lhs, const ustring & rhs);
 
 /// @ingroup string_group
 /// @relates ustring
-inline bool operator!=(const ustring & lhs, const ustring & rhs) {
-    return (lhs.compare(rhs) != 0);
-}
+bool operator!=(const ustring & lhs, const ustring & rhs);
 
 /// @ingroup string_group
 /// @relates ustring
-inline bool operator!=(const ustring & lhs, const char * rhs) {
-    return (lhs.compare(rhs) != 0);
-}
+bool operator!=(const ustring & lhs, const char * rhs);
 
 /// @ingroup string_group
 /// @relates ustring
-inline bool operator!=(const char * lhs, const ustring & rhs) {
-    return (rhs.compare(lhs) != 0);
-}
+bool operator!=(const char * lhs, const ustring & rhs);
 
 /// @ingroup string_group
 /// @relates ustring
-inline bool operator<(const ustring & lhs, const ustring & rhs) {
-    return (lhs.compare(rhs) < 0);
-}
+bool operator<(const ustring & lhs, const ustring & rhs);
 
 /// @ingroup string_group
 /// @relates ustring
-inline bool operator<(const ustring & lhs, const char * rhs) {
-    return (lhs.compare(rhs) < 0);
-}
+bool operator<(const ustring & lhs, const char * rhs);
 
 /// @ingroup string_group
 /// @relates ustring
-inline bool operator<(const char * lhs, const ustring & rhs) {
-    return (rhs.compare(lhs) > 0);
-}
+bool operator<(const char * lhs, const ustring & rhs);
 
 /// @ingroup string_group
 /// @relates ustring
-inline bool operator>(const ustring & lhs, const ustring & rhs) {
-    return (lhs.compare(rhs) > 0);
-}
+bool operator>(const ustring & lhs, const ustring & rhs);
 
 /// @ingroup string_group
 /// @relates ustring
-inline bool operator>(const ustring & lhs, const char * rhs) {
-    return (lhs.compare(rhs) > 0);
-}
+bool operator>(const ustring & lhs, const char * rhs);
 
 /// @ingroup string_group
 /// @relates ustring
-inline bool operator>(const char * lhs, const ustring & rhs) {
-    return (rhs.compare(lhs) < 0);
-}
+bool operator>(const char * lhs, const ustring & rhs);
 
 /// @ingroup string_group
 /// @relates ustring
-inline bool operator<=(const ustring & lhs, const ustring & rhs) {
-    return (lhs.compare(rhs) <= 0);
-}
+bool operator<=(const ustring & lhs, const ustring & rhs);
 
 /// @ingroup string_group
 /// @relates ustring
-inline bool operator<=(const ustring & lhs, const char * rhs) {
-    return (lhs.compare(rhs) <= 0);
-}
+bool operator<=(const ustring & lhs, const char * rhs);
 
 /// @ingroup string_group
 /// @relates ustring
-inline bool operator<=(const char * lhs, const ustring & rhs) {
-    return (rhs.compare(lhs) >= 0);
-}
+bool operator<=(const char * lhs, const ustring & rhs);
 
 /// @ingroup string_group
 /// @relates ustring
-inline bool operator>=(const ustring & lhs, const ustring & rhs) {
-    return (lhs.compare(rhs) >= 0);
-}
+bool operator>=(const ustring & lhs, const ustring & rhs);
 
 /// @ingroup string_group
 /// @relates ustring
-inline bool operator>=(const ustring & lhs, const char * rhs) {
-    return (lhs.compare(rhs) >= 0);
-}
+bool operator>=(const ustring & lhs, const char * rhs);
 
 /// @ingroup string_group
 /// @relates ustring
-inline bool operator>=(const char * lhs, const ustring & rhs) {
-    return (rhs.compare(lhs) <= 0);
-}
+bool operator>=(const char * lhs, const ustring & rhs);
 
 /// @ingroup string_group
 /// @relates ustring
-inline ustring operator+(const ustring & lhs, const ustring & rhs) {
-    ustring temp(lhs);
-    temp += rhs;
-    return temp;
-}
+ustring operator+(const ustring & lhs, const ustring & rhs);
 
 /// @ingroup string_group
 /// @relates ustring
-inline ustring operator+(const ustring & lhs, const char * rhs) {
-    ustring temp(lhs);
-    temp += rhs;
-    return temp;
-}
+ustring operator+(const ustring & lhs, const char * rhs);
 
 /// @ingroup string_group
 /// @relates ustring
-inline ustring operator+(const char * lhs, const ustring & rhs) {
-    ustring temp(lhs);
-    temp += rhs;
-    return temp;
-}
+ustring operator+(const char * lhs, const ustring & rhs);
 
 /// @ingroup string_group
 /// @relates ustring
-inline ustring operator+(const ustring & lhs, char32_t rhs) {
-    ustring temp(lhs);
-    temp += rhs;
-    return temp;
-}
+ustring operator+(const ustring & lhs, char32_t rhs);
 
 /// @ingroup string_group
 /// @relates ustring
-inline ustring operator+(char32_t lhs, const ustring & rhs) {
-    ustring temp(1, lhs);
-    temp += rhs;
-    return temp;
-}
+ustring operator+(char32_t lhs, const ustring & rhs);
 
 /// @ingroup string_group
 /// @relates ustring
-inline ustring operator+(const ustring & lhs, char rhs) {
-    ustring temp(lhs);
-    temp += rhs;
-    return temp;
-}
+ustring operator+(const ustring & lhs, char rhs);
 
 /// @ingroup string_group
 /// @relates ustring
-inline ustring operator+(char lhs, const ustring & rhs) {
-    ustring temp(1, lhs);
-    temp += rhs;
-    return temp;
-}
+ustring operator+(char lhs, const ustring & rhs);
 
 } // namespace tau
 

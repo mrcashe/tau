@@ -39,7 +39,7 @@ public:
     Context_xcb & operator=(const Context_xcb & other) = default;
    ~Context_xcb();
 
-    inline xcb_gcontext_t xid() const { return gc_; }
+    xcb_gcontext_t xid() const { return gc_; }
     void set_func(xcb_gx_t func);
     xcb_gx_t func() { return func_; }
     void set_plane_mask(uint32_t pmask);

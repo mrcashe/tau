@@ -31,6 +31,7 @@
 #include <event-impl.hh>
 #include <loop-impl.hh>
 #include <timer-impl.hh>
+#include <algorithm>
 #include <iomanip>
 #include <iostream>
 

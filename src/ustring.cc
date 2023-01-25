@@ -949,6 +949,19 @@ ustring::size_type ustring::size() const {
     return size_;
 }
 
+ustring ustring::substr(size_type i, size_type n) const {
+    return ustring(*this, i, n);
+}
+
+
+ustring::operator std::string() const {
+    return str_;
+}
+
+const std::string & ustring::raw() const {
+    return str_;
+}
+
 ustring::size_type ustring::length() const {
     return size();
 }
@@ -1008,6 +1021,148 @@ const char * ustring::c_str() const {
 ustring::size_type ustring::copy(char * dest, size_type n, size_type i) const {
     const utf_substr_bounds bounds(str_, i, n);
     return str_.copy(dest, bounds.n, bounds.i);
+}
+
+bool operator==(const ustring::const_iterator & lhs, const ustring::const_iterator & rhs) {
+    return (lhs.base() == rhs.base());
+}
+
+bool operator!=(const ustring::const_iterator& lhs, const ustring::const_iterator& rhs) {
+    return (lhs.base() != rhs.base());
+}
+
+bool operator<(const ustring::const_iterator & lhs, const ustring::const_iterator & rhs) {
+    return (lhs.base() < rhs.base());
+}
+
+bool operator>(const ustring::const_iterator & lhs, const ustring::const_iterator & rhs) {
+    return (lhs.base() > rhs.base());
+}
+
+bool operator<=(const ustring::const_iterator & lhs, const ustring::const_iterator & rhs) {
+    return (lhs.base() <= rhs.base());
+}
+
+bool operator>=(const ustring::const_iterator & lhs, const ustring::const_iterator & rhs) {
+    return (lhs.base() >= rhs.base());
+}
+
+void swap(ustring & lhs, ustring & rhs) {
+    lhs.swap(rhs);
+}
+
+bool operator==(const ustring & lhs, const ustring & rhs) {
+    return (lhs.compare(rhs) == 0);
+}
+
+bool operator==(const ustring & lhs, const char * rhs) {
+    return (lhs.compare(rhs) == 0);
+}
+
+bool operator==(const char * lhs, const ustring & rhs) {
+    return (rhs.compare(lhs) == 0);
+}
+
+bool operator!=(const ustring & lhs, const ustring & rhs) {
+    return (lhs.compare(rhs) != 0);
+}
+
+bool operator!=(const ustring & lhs, const char * rhs) {
+    return (lhs.compare(rhs) != 0);
+}
+
+bool operator!=(const char * lhs, const ustring & rhs) {
+    return (rhs.compare(lhs) != 0);
+}
+
+bool operator<(const ustring & lhs, const ustring & rhs) {
+    return (lhs.compare(rhs) < 0);
+}
+
+bool operator<(const ustring & lhs, const char * rhs) {
+    return (lhs.compare(rhs) < 0);
+}
+
+bool operator<(const char * lhs, const ustring & rhs) {
+    return (rhs.compare(lhs) > 0);
+}
+
+bool operator>(const ustring & lhs, const ustring & rhs) {
+    return (lhs.compare(rhs) > 0);
+}
+
+bool operator>(const ustring & lhs, const char * rhs) {
+    return (lhs.compare(rhs) > 0);
+}
+
+bool operator>(const char * lhs, const ustring & rhs) {
+    return (rhs.compare(lhs) < 0);
+}
+
+bool operator<=(const ustring & lhs, const ustring & rhs) {
+    return (lhs.compare(rhs) <= 0);
+}
+
+bool operator<=(const ustring & lhs, const char * rhs) {
+    return (lhs.compare(rhs) <= 0);
+}
+
+bool operator<=(const char * lhs, const ustring & rhs) {
+    return (rhs.compare(lhs) >= 0);
+}
+
+bool operator>=(const ustring & lhs, const ustring & rhs) {
+    return (lhs.compare(rhs) >= 0);
+}
+
+bool operator>=(const ustring & lhs, const char * rhs) {
+    return (lhs.compare(rhs) >= 0);
+}
+
+bool operator>=(const char * lhs, const ustring & rhs) {
+    return (rhs.compare(lhs) <= 0);
+}
+
+ustring operator+(const ustring & lhs, const ustring & rhs) {
+    ustring temp(lhs);
+    temp += rhs;
+    return temp;
+}
+
+ustring operator+(const ustring & lhs, const char * rhs) {
+    ustring temp(lhs);
+    temp += rhs;
+    return temp;
+}
+
+ustring operator+(const char * lhs, const ustring & rhs) {
+    ustring temp(lhs);
+    temp += rhs;
+    return temp;
+}
+
+ustring operator+(const ustring & lhs, char32_t rhs) {
+    ustring temp(lhs);
+    temp += rhs;
+    return temp;
+}
+
+ustring operator+(char32_t lhs, const ustring & rhs) {
+    ustring temp(1, lhs);
+    temp += rhs;
+    return temp;
+}
+
+ustring operator+(const ustring & lhs, char rhs) {
+    ustring temp(lhs);
+    temp += rhs;
+    return temp;
+}
+
+ustring operator+(char lhs, const ustring & rhs) {
+    ustring temp(1, lhs);
+    temp += rhs;
+    return temp;
 }
 
 ustring::operator std::u16string() const {

@@ -321,15 +321,11 @@ private:
 
 /// Stream Key_file in.
 /// @relates Key_file
-inline std::istream & operator>>(std::istream & is, Key_file & kf) {
-    kf.load(is); return is;
-}
+std::istream & operator>>(std::istream & is, Key_file & kf);
 
 /// Stream Key_file out.
 /// @relates Key_file
-inline std::ostream & operator<<(std::ostream & os, const Key_file & kf) {
-    kf.save(os); return os;
-}
+std::ostream & operator<<(std::ostream & os, const Key_file & kf);
 
 } // namespace tau
 

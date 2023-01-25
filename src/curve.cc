@@ -122,6 +122,11 @@ void Curve::transform(const Matrix & mat) {
     cp2_ *= mat;
 }
 
+Curve & operator*=(Curve & cv, const Matrix & mat) {
+    cv.transform(mat);
+    return cv;
+}
+
 } // namespace tau
 
 //END

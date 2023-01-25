@@ -28,8 +28,8 @@ all_sources = $(basename $(notdir $(wildcard $(srcdir)/test/*.cc)))
 all_binaries = $(addprefix $(bindir)/, $(all_sources))
 sources = $(basename $(notdir $(wildcard $(builddir)/test/*.cc)))
 binaries = $(addprefix $(bindir)/, $(sources))
-unix_sys_shared += $(shell pkg-config --libs $(pkg_required))
-CXXFLAGS += -O0 -g -Wall -pthread $(hh_option) $(unix_sys_headers)
+LDFLAGS += -lpthread $(shell pkg-config --libs $(pkg_required))
+CXXFLAGS += -O0 -g -pthread
 VPATH = $(srcdir)/test
 
 all: $(unix_test_a_builddir) $(bindir) $(binaries)
@@ -54,7 +54,7 @@ uninstall:
 	done		
 
 $(bindir)/%: %.cc $(unix_a)
-	$(CXX) $(CXXFLAGS) -o $@ $< -MD -MF $(unix_test_a_builddir)/$(notdir $@).dep $(unix_a) $(unix_sys_shared)
+	$(CXX) $(CXXFLAGS) -o $@ $< -MD -MF $(unix_test_a_builddir)/$(notdir $@).dep $(unix_a) $(LDFLAGS)
 
 $(bindir):
 	@mkdir -vp $@

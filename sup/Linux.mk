@@ -26,19 +26,10 @@
 
 export unix_a_builddir = $(builddir)/linux-a
 export unix_so_builddir = $(builddir)/linux-so
-export xcb_a_builddir = $(builddir)/linux-xcb-a
-export xcb_so_builddir = $(builddir)/linux-xcb-so
 export unix_test_a_builddir = $(builddir)/linux-test-a
 export unix_test_so_builddir = $(builddir)/linux-test-so
-
 export posix_srcdir = $(srcdir)/posix
+export xcb_srcdir = $(srcdir)/xcb
 export unix_srcdir = $(srcdir)/Linux
-
-export unix_sys_headers = $(shell pkg-config --cflags $(pkg_required))
-export unix_sys_shared =
-
-export unix_CXXFLAGS = -g -Wall $(unix_sys_headers) $(hh_impl_options)
-export unix_AR = ar
-export unix_STRIP = strip
-
+CXXFLAGS += $(shell pkg-config --cflags $(pkg_required))
 include $(supdir)/unix.mk

@@ -37,54 +37,30 @@ export unix_sodir = $(bindir)
 export unix_so = $(unix_sodir)/$(unix_sofile)
 export unix_sopath = $(lib_prefix)/$(unix_sofile)
 
-unix_a_mk = 00-unix-a.mk
-xcb_a_mk = 00-xcb-a.mk
-unix_so_mk = 02-unix-so.mk
-xcb_so_mk = 01-xcb-so.mk
-unix_test_a_mk = 08-unix-test-a.mk
+unix_so_mk = 00-unix-so.mk
+unix_a_mk = 02-unix-a.mk
 unix_test_so_mk = 08-unix-test-so.mk
-
-.PHONY: en-xcb-a su-xcb-a rm-xcb-a en-xcb-so su-xcb-so rm-xcb-so
-
-en-xcb-a:
-	@$(ln) $(topdir)/sup/xcb-a.mk $(builddir)/$(xcb_a_mk)
-
-su-xcb-a:
-	@$(rm) $(builddir)/$(xcb_a_mk)
-
-rm-xcb-a:
-	@if [ -e $(builddir)/$(xcb_a_mk) ]; then $(MAKE) -C $(builddir) -f $(xcb_a_mk) rm; fi
-	@$(rm) "$(builddir)/$(xcb_a_mk)"
-
-en-xcb-so:
-	@$(ln) "$(topdir)/sup/xcb-so.mk" "$(builddir)/$(xcb_so_mk)"
-
-su-xcb-so:
-	@$(rm) "$(builddir)/$(xcb_so_mk)"
-
-rm-xcb-so:
-	@if [ -e $(builddir)/$(xcb_so_mk) ]; then $(MAKE) -C $(builddir) -f $(xcb_so_mk) rm; fi
-	@$(rm) "$(builddir)/$(xcb_so_mk)"
+unix_test_a_mk = 08-unix-test-a.mk
 
 .PHONY: en-host-a su-host-a rm-host-a en-host-so su-host-so rm-host-so
 
-en-host-a: $(builddir) en-xcb-a
+en-host-a: $(builddir)
 	@$(ln) "$(supdir)/unix-a.mk" "$(builddir)/$(unix_a_mk)"
 
-su-host-a: su-xcb-a su-host-test-a
+su-host-a: su-host-test-a
 	@$(rm) "$(builddir)/$(unix_a_mk)"
 
-rm-host-a: rm-xcb-a rm-host-test-a
+rm-host-a: rm-host-test-a
 	@if [ -e "$(builddir)/$(unix_a_mk)" ]; then $(MAKE) -C $(builddir) -f $(unix_a_mk) rm; fi
 	@$(rm) "$(builddir)/$(unix_a_mk)"
 
-en-host-so: $(builddir) en-xcb-so
+en-host-so: $(builddir)
 	@$(ln) "$(supdir)/unix-so.mk" "$(builddir)/$(unix_so_mk)"
 
-su-host-so: su-xcb-so su-host-test-so
+su-host-so: su-host-test-so
 	@$(rm) "$(builddir)/$(unix_so_mk)"
 
-rm-host-so: rm-xcb-so rm-host-test-so
+rm-host-so: rm-host-test-so
 	@if [ -e "$(builddir)/$(unix_so_mk)" ]; then $(MAKE) -C $(builddir) -f $(unix_so_mk) rm; fi
 	@$(rm) "$(builddir)/$(unix_so_mk)"
 

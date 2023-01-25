@@ -54,104 +54,52 @@ public:
     Vector(const Point & pt);
 
     /// 2D constructor.
-    Vector(double x, double y):
-        x_(x),
-        y_(y)
-    {
-    }
+    Vector(double x, double y);
 
     /// 3D constructor.
-    Vector(double x, double y, double z):
-        x_(x),
-        y_(y),
-        z_(z)
-    {
-    }
+    Vector(double x, double y, double z);
 
     /// Get x coordinate.
-    double x() const {
-        return x_;
-    }
+    double x() const;
 
     /// Get y coordinate.
-    double y() const {
-        return y_;
-    }
+    double y() const;
 
     /// Get z coordinate.
-    double z() const {
-        return z_;
-    }
+    double z() const;
 
     /// Add other vector.
-    void operator+=(const Vector & other) {
-        x_ += other.x();
-        y_ += other.y();
-        z_ += other.z();
-    }
+    void operator+=(const Vector & other);
 
     /// Subtract other vector.
-    void operator-=(const Vector & other) {
-        x_ -= other.x();
-        y_ -= other.y();
-        z_ -= other.z();
-    }
+    void operator-=(const Vector & other);
 
     /// Multiply by scale factor.
-    void operator*=(double s) {
-        x_ *= s;
-        y_ *= s;
-        z_ *= s;
-    }
+    void operator*=(double s);
 
     /// Multiply by other vector.
-    void operator*=(const Vector & other) {
-        x_ *= other.x();
-        y_ *= other.y();
-        z_ *= other.z();
-    }
+    void operator*=(const Vector & other);
 
     /// Divide by scale factor.
-    void operator/=(double s) {
-        x_ /= s;
-        y_ /= s;
-        z_ /= s;
-    }
+    void operator/=(double s);
 
     /// Divide by other vector.
-    void operator/=(const Vector & other) {
-        x_ /= other.x();
-        y_ /= other.y();
-        z_ /= other.z();
-    }
+    void operator/=(const Vector & other);
 
     /// Set x value.
-    void set_x(double x) {
-        x_ = x;
-    }
+    void set_x(double x);
 
     /// Set y value.
-    void set_y(double y) {
-        y_ = y;
-    }
+    void set_y(double y);
 
     /// Set z value.
-    void set_z(double z) {
-        z_ = z;
-    }
+    void set_z(double z);
 
     /// Set x and y values.
-    void set(double x, double y) {
-        x_ = x;
-        y_ = y;
-    }
+    void set(double x, double y);
 
     /// Set all values.
-    void set(double x, double y, double z) {
-        x_ = x;
-        y_ = y;
-        z_ = z;
-    }
+    void set(double x, double y, double z);
 
     /// Set from Point.
     void set(const Point & pt);
@@ -160,9 +108,7 @@ public:
     void set(const Size & sz);
 
     /// Reset coordinates to 0.0.
-    void reset() {
-        x_ = y_ = z_ = 0.0;
-    }
+    void reset();
 
     /// Returns the length of the vector.
     double length() const;
@@ -178,43 +124,25 @@ private:
 };
 
 /// @relates Vector
-inline Vector operator+(const Vector & lhs, const Vector & rhs) {
-    return Vector(lhs.x()+rhs.x(), lhs.y()+rhs.y(), lhs.z()+rhs.z());
-}
+Vector operator+(const Vector & lhs, const Vector & rhs);
 
 /// @relates Vector
-inline Vector operator-(const Vector & lhs, const Vector & rhs) {
-    return Vector(lhs.x()-rhs.x(), lhs.y()-rhs.y(), lhs.z()-rhs.z());
-}
+Vector operator-(const Vector & lhs, const Vector & rhs);
 
 /// @relates Vector
-inline Vector operator*(const Vector & lhs, const Vector & rhs) {
-    return Vector(lhs.x()*rhs.x(), lhs.y()*rhs.y(), lhs.z()*rhs.z());
-}
+Vector operator*(const Vector & lhs, const Vector & rhs);
 
 /// @relates Vector
-inline Vector operator*(const Vector & v, double s) {
-    return Vector(v.x()*s, v.y()*s, v.z()*s);
-}
+Vector operator*(const Vector & v, double s);
 
 /// @relates Vector
-inline Vector operator*(double s, const Vector & v) {
-    return Vector(v.x()*s, v.y()*s, v.z()*s);
-}
+Vector operator*(double s, const Vector & v);
 
 /// @relates Vector
-inline Vector operator/(const Vector & lhs, const Vector & rhs) {
-    Vector v(lhs);
-    v /= rhs;
-    return v;
-}
+Vector operator/(const Vector & lhs, const Vector & rhs);
 
 /// @relates Vector
-inline Vector operator/(const Vector & lhs, double s) {
-    Vector v(lhs);
-    v /= s;
-    return v;
-}
+Vector operator/(const Vector & lhs, double s);
 
 /// The 2D/3D point with integer coordinates.
 /// @ingroup geometry_group
@@ -231,33 +159,16 @@ public:
     Point & operator=(const Point & other) = default;
 
     /// 2D constructor.
-    Point(int x, int y):
-        x_(x),
-        y_(y)
-    {
-    }
+    Point(int x, int y);
 
     /// 3D constructor.
-    Point(int x, int y, int z):
-        x_(x),
-        y_(y),
-        z_(z)
-    {
-    }
+    Point(int x, int y, int z);
 
     /// Constructor with Vector.
-    Point(const Vector & vec):
-        x_(vec.x()),
-        y_(vec.y()),
-        z_(vec.z())
-    {
-    }
+    Point(const Vector & vec);
 
     /// Assignment from Vector.
-    Point & operator=(const Vector & vec) {
-        set(vec);
-        return *this;
-    }
+    Point & operator=(const Vector & vec);
 
     /// 2D setter.
     Point & set(int x, int y);
@@ -312,73 +223,28 @@ public:
     bool translate(const Point & other);
 
     /// X coordinate accessor.
-    int x() const {
-        return x_;
-    }
+    int x() const;
 
     /// Y coordinate accessor.
-    int y() const {
-        return y_;
-    }
+    int y() const;
 
     /// Z coordinate accessor.
-    int z() const {
-        return z_;
-    }
+    int z() const;
 
     /// Reset coordinates to 0.
-    void reset() {
-        x_ = y_ = z_ = 0;
-    }
+    void reset();
 
     /// Transpose coordinates.
-    Point & operator+=(const Point & p) {
-        x_ += p.x_;
-        y_ += p.y_;
-        z_ += p.z_;
-        return *this;
-    }
+    Point & operator+=(const Point & p);
 
     /// Transpose coordinates.
-    Point & operator+=(const Size & sz);
-
-    /// Transpose coordinates.
-    Point & operator-=(const Point & p) {
-        x_ -= p.x_;
-        y_ -= p.y_;
-        z_ -= p.z_;
-        return *this;
-    }
+    Point & operator-=(const Point & p);
 
     /// Scale coordinates.
-    Point & operator*=(double m) {
-        x_ = (static_cast<double>(x_)*m);
-        y_ = (static_cast<double>(y_)*m);
-        z_ = (static_cast<double>(z_)*m);
-        return *this;
-    }
+    Point & operator*=(double m);
 
     /// Scale coordinates.
-    Point & operator*=(const Vector & v) {
-        x_ = (static_cast<double>(x_)*v.x());
-        y_ = (static_cast<double>(y_)*v.y());
-        z_ = (static_cast<double>(z_)*v.z());
-        return *this;
-    }
-
-    /// Shift left.
-    void operator<<=(unsigned nbits) {
-        x_ <<= nbits;
-        y_ <<= nbits;
-        z_ <<= nbits;
-    }
-
-    /// Shift right.
-    void operator>>=(unsigned nbits) {
-        x_ <<= nbits;
-        y_ <<= nbits;
-        z_ <<= nbits;
-    }
+    Point & operator*=(const Vector & v);
 
 private:
 
@@ -388,53 +254,25 @@ private:
 };
 
 /// @relates Point
-inline Point operator*(const Point & p, double m) {
-    return Point(p)*=m;
-}
+Point operator*(const Point & p, double m);
 
 /// @relates Point
-inline Point operator*(double m, const Point & p) {
-    return Point(p)*=m;
-}
+Point operator*(double m, const Point & p);
 
 /// @relates Point
-inline Point operator+(const Point & p, const Point & q) {
-    return Point(p.x()+q.x(), p.y()+q.y());
-}
+Point operator+(const Point & p, const Point & q);
 
 /// @relates Point
-inline Point operator-(const Point & p, const Point & q) {
-    return Point(p.x()-q.x(), p.y()-q.y(), p.z()-q.z());
-}
+Point operator-(const Point & p, const Point & q);
 
 /// @relates Point
-inline Point operator-(const Point & p) {
-    return Point(-p.x(), -p.y(), -p.z());
-}
+Point operator-(const Point & p);
 
 /// @relates Point
-inline bool operator==(const Point & p, const Point & q) {
-    return p.x() == q.x() && p.y() == q.y() && p.z() == q.z();
-}
+bool operator==(const Point & p, const Point & q);
 
 /// @relates Point
-inline bool operator!=(const Point & p, const Point & q) {
-    return !(p == q);
-}
-
-/// @relates Point
-inline Point operator<<(const Point & p, unsigned nbits) {
-    Point q(p);
-    q <<= nbits;
-    return q;
-}
-
-/// @relates Point
-inline Point operator>>(const Point & p, unsigned nbits) {
-    Point q(p);
-    q >>= nbits;
-    return q;
-}
+bool operator!=(const Point & p, const Point & q);
 
 /// The 2D/3D size with unsigned integer values.
 /// @ingroup geometry_group
@@ -445,72 +283,32 @@ public:
     Size(const Size & other) = default;
     Size & operator=(const Size & other) = default;
 
-    Size(unsigned width, unsigned height):
-        width_(width),
-        height_(height)
-    {
-    }
+    Size(unsigned width, unsigned height);
 
-    Size(unsigned width, unsigned height, unsigned depth):
-        width_(width),
-        height_(height),
-        depth_(depth)
-    {
-    }
+    Size(unsigned width, unsigned height, unsigned depth);
 
-    Size(unsigned all):
-        width_(all),
-        height_(all),
-        depth_(all)
-    {
-    }
+    Size(unsigned all);
 
     /// Constructs from Vector.
-    Size(const Vector & v) {
-        update(v);
-    }
+    Size(const Vector & v);
 
-    void set(const Size & other) {
-        update(other);
-    }
+    void set(const Size & other);
 
-    void set(unsigned width, unsigned height) {
-        update(width, height);
-    }
+    void set(unsigned width, unsigned height);
 
-    void set(unsigned width, unsigned height, unsigned depth) {
-        update(width, height, depth);
-    }
+    void set(unsigned width, unsigned height, unsigned depth);
 
-    static Size from_vector(const Vector & vec) {
-        Size sz;
-        sz.update(vec);
-        return sz;
-    }
+    unsigned width() const;
 
-    unsigned width() const {
-        return width_;
-    }
+    unsigned height() const;
 
-    unsigned height() const {
-        return height_;
-    }
+    unsigned depth() const;
 
-    unsigned depth() const {
-        return depth_;
-    }
+    int iwidth() const;
 
-    int iwidth() const {
-        return width_;
-    }
+    int iheight() const;
 
-    int iheight() const {
-        return height_;
-    }
-
-    int idepth() const {
-        return depth_;
-    }
+    int idepth() const;
 
     /// Update width.
     /// @return true if changed.
@@ -668,81 +466,40 @@ public:
     Size grown(int dx, int dy, int dz) const;
 
     /// 2D check empty.
-    bool empty() const {
-        return 0 == width_ || 0 == height_;
-    }
+    bool empty() const;
 
     /// 3D check empty.
-    bool empty3() const {
-        return 0 == width_ || 0 == height_ || 0 == depth_;
-    }
+    bool empty3() const;
 
     /// Reset values to 0.
-    void reset() {
-        width_ = height_ = depth_ = 0;
-    }
+    void reset();
 
     /// Return minimal of width(), height().
-    unsigned min() const {
-        return std::min(width_, height_);
-    }
+    unsigned min() const;
 
     /// Return maximal of width(), height().
-    unsigned max() const {
-        return std::max(width_, height_);
-    }
+    unsigned max() const;
 
     /// Return minimal of width(), height(), depth().
-    unsigned min3() const {
-        return std::min(std::min(width_, height_), depth_);
-    }
+    unsigned min3() const;
 
     /// Return maximal of width(), height(), depth().
-    unsigned max3() const {
-        return std::max(std::max(width_, height_), depth_);
-    }
+    unsigned max3() const;
 
     /// Test if not empty.
-    operator bool() const {
-        return !empty();
-    }
+    operator bool() const;
 
     /// Add other Size.
-    Size & operator+=(const Size & size) {
-        width_  += size.width();
-        height_ += size.height();
-        depth_  += size.depth();
-        return *this;
-    }
+    Size & operator+=(const Size & size);
 
     /// Subtract other Size.
-    Size & operator-=(const Size & size) {
-        width_  -= size.width();
-        height_ -= size.height();
-        depth_  -= size.depth();
-        return *this;
-    }
+    Size & operator-=(const Size & size);
 
-    Size & operator|=(const Size & sz) {
-        width_  = std::max(width_,  sz.width_);
-        height_ = std::max(height_, sz.height_);
-        depth_  = std::max(depth_,  sz.depth_);
-        return *this;
-    }
+    Size & operator|=(const Size & sz);
 
-    Size & operator&=(const Size & sz) {
-        width_  = std::min(width_,  sz.width_);
-        height_ = std::min(height_, sz.height_);
-        depth_  = std::min(depth_,  sz.depth_);
-        return *this;
-    }
+    Size & operator&=(const Size & sz);
 
-    Size & operator*=(double m) {
-        width_  = static_cast<double>(width_)*m;
-        height_ = static_cast<double>(height_)*m;
-        depth_  = static_cast<double>(depth_)*m;
-        return *this;
-    }
+    Size & operator*=(double m);
 
 private:
 
@@ -751,62 +508,32 @@ private:
     unsigned depth_  = 0;
 };
 
-/// @relates Point
-inline Point & Point::operator+=(const Size & sz) {
-    x_ += sz.width();
-    y_ += sz.height();
-    z_ += sz.depth();
-    return *this;
-}
+/// @relates Size
+bool operator==(const Size & s, const Size & t);
 
 /// @relates Size
-inline bool operator==(const Size & s, const Size & t) {
-    return (s.width() == t.width()) && (s.height() == t.height());
-}
+bool operator!=(const Size & s, const Size & t);
 
 /// @relates Size
-inline bool operator!=(const Size & s, const Size & t) {
-    return (s.width() != t.width()) || (s.height() != t.height());
-}
+Size operator+(const Size & lhs, const Size & rhs);
 
 /// @relates Size
-inline Size operator+(const Size & lhs, const Size & rhs) {
-    return Size(lhs).increased(rhs);
-}
+Size operator|(const Size & lhs, const Size & rhs);
 
 /// @relates Size
-inline Size operator|(const Size & lhs, const Size & rhs) {
-    Size sz(lhs);
-    sz |= rhs;
-    return sz;
-}
+Size operator&(const Size & lhs, const Size & rhs);
 
 /// @relates Size
-inline Size operator&(const Size & lhs, const Size & rhs) {
-    Size sz(lhs);
-    sz &= rhs;
-    return sz;
-}
-
-/// @relates Size
-inline Size operator-(const Size & lhs, const Size & rhs) {
-    return Size(lhs).decreased(rhs);
-}
+Size operator-(const Size & lhs, const Size & rhs);
 
 /// @relates Point
-inline Point operator+(const Point & p, const Size & sz) {
-    return Point(p.x()+sz.width(), p.y()+sz.height(), p.z()+sz.depth());
-}
+Point operator+(const Point & p, const Size & sz);
 
 /// @relates Point
-inline Point operator+(const Size & sz, const Point & p) {
-    return Point(p.x()+sz.width(), p.y()+sz.height(), p.z()+sz.depth());
-}
+Point operator+(const Size & sz, const Point & p);
 
 /// @relates Point
-inline Point operator-(const Point & p, const Size & sz) {
-    return Point(p.x()-sz.width(), p.y()-sz.height(), p.z()-sz.depth());
-}
+Point operator-(const Point & p, const Size & sz);
 
 /// The rectangle with integer coordinates.
 /// @ingroup geometry_group
@@ -816,92 +543,60 @@ public:
     Rect() = default;
 
     /// Constructor with coordinates and size.
-    Rect(int x, int y, const Size & size) {
-        set(x, y, size);
-    }
+    Rect(int x, int y, const Size & size);
 
     /// Constructor with coordinates and size.
-    Rect(const Point & org, const Size & size) {
-        set(org, size);
-    }
+    Rect(const Point & org, const Size & size);
 
     /// Constructor with coordinates.
-    Rect(int x1, int y1, int x2, int y2) {
-        set(x1, y1, x2, y2);
-    }
+    Rect(int x1, int y1, int x2, int y2);
 
     /// Constructor with coordinates.
-    Rect(const Point & a, const Point & b) {
-        set(a, b);
-    }
+    Rect(const Point & a, const Point & b);
 
     /// Constructor with Size and coordinates at (0, 0).
-    Rect(const Size & size) {
-        set(size);
-    }
+    Rect(const Size & size);
 
     /// Constructor with width and height and coordinates at (0, 0).
-    Rect(unsigned width, unsigned height) {
-        set(0, 0, Size(width, height));
-    }
+    Rect(unsigned width, unsigned height);
 
     /// Get origin.
-    Point origin() const {
-        return org_;
-    }
+    Point origin() const;
 
     /// Get left coordinate.
-    int left() const {
-        return org_.x();
-    }
+    int left() const;
 
     /// Get right coordinate.
     int right() const;
 
     /// Get top coordinate.
-    int top() const {
-        return org_.y();
-    }
+    int top() const;
 
     /// Get bottom coordinate.
     int bottom() const;
 
     /// Get left coordinate.
     /// Same as left().
-    int x() const {
-        return left();
-    }
+    int x() const;
 
     /// Get top coordinate.
     /// Same as top().
-    int y() const {
-        return top();
-    }
+    int y() const;
 
     /// Get size.
-    Size size() const {
-        return sz_;
-    }
+    Size size() const;
 
     /// Get width.
-    unsigned width() const {
-        return sz_.width();
-    }
+    unsigned width() const;
 
     /// Get height.
-    unsigned height() const {
-        return sz_.height();
-    }
+    unsigned height() const;
 
     /// Get signed width.
-    int iwidth() const {
-        return sz_.iwidth();
-    }
+    int iwidth() const;
 
     /// Get signed height.
-    int iheight() const {
-        return sz_.iheight();
-    }
+    int iheight() const;
 
     /// Assign new value.
     void set(const Rect & r);
@@ -919,17 +614,13 @@ public:
     void set(int x1, int y1, int x2, int y2);
 
     /// Assign new value.
-    void set(const Point & a, const Point & b) {
-        set(a.x(), a.y(), b.x(), b.y());
-    }
+    void set(const Point & a, const Point & b);
 
     /// Reset origin and size.
     void reset();
 
     /// Test if empty.
-    bool empty() const {
-        return sz_.empty();
-    }
+    bool empty() const;
 
     /// Get top left point.
     Point top_left() const;
@@ -966,163 +657,92 @@ public:
     /// Make union of two rectangles.
     Rect united(const Rect & other) const;
 
-    void move_to(const Point & p) {
-        org_ = p;
-    }
+    void move_to(const Point & p);
 
     /// Assign new origin.
-    void move_to(int x, int y) {
-        move_to(Point(x, y));
-    }
+    void move_to(int x, int y);
 
     /// Move relatively.
-    void translate(const Point & p) {
-        org_ += p;
-    }
+    void translate(const Point & p);
 
     /// Move relatively.
-    void translate(int dx, int dy) {
-        translate(Point(dx, dy));
-    }
+    void translate(int dx, int dy);
 
     /// Move relatively.
-    void translate(const Size & sz) {
-        org_.set(org_.x()+sz.width(), org_.y()+sz.height());
-    }
+    void translate(const Size & sz);
 
-    Rect translated(const Point & p) const {
-        Rect r(*this);
-        r.translate(p);
-        return r;
-    }
+    Rect translated(const Point & p) const;
 
-    Rect translated(const Size & sz) const {
-        Rect r(*this);
-        r.translate(sz);
-        return r;
-    }
+    Rect translated(const Size & sz) const;
 
-    Rect translated(int x, int y) const {
-        return translated(Point(x, y));
-    }
+    Rect translated(int x, int y) const;
 
     /// Resize.
-    void resize(unsigned width, unsigned height) {
-        sz_.update(width, height);
-    }
+    void resize(unsigned width, unsigned height);
 
     /// Resize.
-    void resize(const Size & size) {
-        sz_ = size;
-    }
+    void resize(const Size & size);
 
-    bool update_left(int x) {
-        return org_.update_x(x);
-    }
+    bool update_left(int x);
 
-    bool update_top(int y) {
-        return org_.update_y(y);
-    }
+    bool update_top(int y);
 
-    bool update_width(unsigned width) {
-        return sz_.update_width(width);
-    }
+    bool update_width(unsigned width);
 
-    bool update_height(unsigned height) {
-        return sz_.update_height(height);
-    }
+    bool update_height(unsigned height);
 
-    bool update_origin(const Point & pt) {
-        return org_.update(pt);
-    }
+    bool update_origin(const Point & pt);
 
-    bool update_origin(int x, int y) {
-        return org_.update(x, y);
-    }
+    bool update_origin(int x, int y);
 
-    bool update_size(const Size & sz) {
-        return sz_.update(sz);
-    }
+    bool update_size(const Size & sz);
 
-    bool update_size(unsigned width, unsigned height) {
-        return sz_.update(width, height);
-    }
+    bool update_size(unsigned width, unsigned height);
 
     /// Increase size.
-    void increase(unsigned dx, unsigned dy) {
-        sz_.increase(dx, dy);
-    }
+    void increase(unsigned dx, unsigned dy);
 
     /// Increase size.
-    void increase(const Size & sz) {
-        sz_.increase(sz);
-    }
+    void increase(const Size & sz);
 
     /// Decrease size.
-    void decrease(unsigned dx, unsigned dy) {
-        sz_.decrease(dx, dy);
-    }
+    void decrease(unsigned dx, unsigned dy);
 
     /// Decrease size.
-    void decrease(const Size & sz) {
-        sz_.decrease(sz);
-    }
+    void decrease(const Size & sz);
 
     /// Make increased rectangle.
-    Rect increased(unsigned dx, unsigned dy) const {
-        return Rect(org_, sz_.increased(dx, dy));
-    }
+    Rect increased(unsigned dx, unsigned dy) const;
 
     /// Make increased rectangle.
-    Rect increased(const Size & sz) const {
-        return Rect(org_, sz_.increased(sz));
-    }
+    Rect increased(const Size & sz) const;
 
     /// Make decreased rectangle.
-    Rect decreased(unsigned dx, unsigned dy) const {
-        return Rect(org_, sz_.decreased(dx, dy));
-    }
+    Rect decreased(unsigned dx, unsigned dy) const;
 
     /// Make decreased rectangle.
-    Rect decreased(const Size & sz) const {
-        return Rect(org_, sz_.decreased(sz));
-    }
+    Rect decreased(const Size & sz) const;
 
     /// Grow size up or down.
-    void grow(int dx, int dy) {
-        sz_.grow(dx, dy);
-    }
+    void grow(int dx, int dy);
 
     /// Make grown rectangle.
-    Rect grown(int dx, int dy) const {
-        return Rect(org_, sz_.grown(dx, dy));
-    }
+    Rect grown(int dx, int dy) const;
 
     /// Assign new value.
-    Rect & operator=(const Rect & r) {
-        set(r);
-        return *this;
-    }
+    Rect & operator=(const Rect & r);
 
     /// Unite with other rectangle.
-    void operator|=(const Rect & other) {
-        unite(other);
-    }
+    void operator|=(const Rect & other);
 
     /// Intersect with other rectangle.
-    void operator&=(const Rect & other) {
-        intersect(other);
-    }
+    void operator&=(const Rect & other);
 
     /// Unite with size.
-    void operator|=(const Size & size) {
-        sz_ |= size;
-    }
+    void operator|=(const Size & size);
 
     /// Test if not empty.
-    operator bool() const {
-        return !empty();
-    }
+    operator bool() const;
 
 private:
 
@@ -1131,24 +751,16 @@ private:
 };
 
 /// @relates Rect
-inline Rect operator|(const Rect & r1, const Rect & r2) {
-    return r1.united(r2);
-}
+Rect operator|(const Rect & r1, const Rect & r2);
 
 /// @relates Rect
-inline Rect operator&(const Rect & r1, const Rect & r2) {
-    return r1.intersected(r2);
-}
+Rect operator&(const Rect & r1, const Rect & r2);
 
 /// @relates Rect
-inline bool operator==(const Rect & r1, const Rect & r2) {
-    return r1.top_left() != r2.top_left() && r1.bottom_right() != r2.bottom_right();
-}
+bool operator==(const Rect & r1, const Rect & r2);
 
 /// @relates Rect
-inline bool operator!=(const Rect & r1, const Rect & r2) {
-    return r1.top_left() != r2.top_left() || r1.bottom_right() != r2.bottom_right();
-}
+bool operator!=(const Rect & r1, const Rect & r2);
 
 } // namespace tau
 

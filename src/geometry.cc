@@ -28,6 +28,20 @@
 
 namespace tau {
 
+Vector::Vector(double x, double y):
+    x_(x),
+    y_(y)
+{
+}
+
+/// 3D constructor.
+Vector::Vector(double x, double y, double z):
+    x_(x),
+    y_(y),
+    z_(z)
+{
+}
+
 Vector::Vector(const Point & pt):
     x_(pt.x()),
     y_(pt.y()),
@@ -47,6 +61,62 @@ void Vector::set(const Size & sz) {
     z_ = sz.depth();
 }
 
+double Vector::x() const {
+    return x_;
+}
+
+/// Get y coordinate.
+double Vector::y() const {
+    return y_;
+}
+
+/// Get z coordinate.
+double Vector::z() const {
+    return z_;
+}
+
+/// Add other vector.
+void Vector::operator+=(const Vector & other) {
+    x_ += other.x();
+    y_ += other.y();
+    z_ += other.z();
+}
+
+/// Subtract other vector.
+void Vector::operator-=(const Vector & other) {
+    x_ -= other.x();
+    y_ -= other.y();
+    z_ -= other.z();
+}
+
+/// Multiply by scale factor.
+void Vector::operator*=(double s) {
+    x_ *= s;
+    y_ *= s;
+    z_ *= s;
+}
+
+/// Multiply by other vector.
+void Vector::operator*=(const Vector & other) {
+    x_ *= other.x();
+    y_ *= other.y();
+    z_ *= other.z();
+}
+
+/// Divide by scale factor.
+void Vector::operator/=(double s) {
+    x_ /= s;
+    y_ /= s;
+    z_ /= s;
+}
+
+/// Divide by other vector.
+void Vector::operator/=(const Vector & other) {
+    x_ /= other.x();
+    y_ /= other.y();
+    z_ /= other.z();
+}
+
 double Vector::length() const {
     return std::sqrt(x_*x_ + y_*y_ + z_*z_);
 }
@@ -56,8 +126,92 @@ Vector Vector::normalized() const {
     return 0.0 != l ? (*this)/l : Vector();
 }
 
+void Vector::set_x(double x) {
+    x_ = x;
+}
+
+/// Set y value.
+void Vector::set_y(double y) {
+    y_ = y;
+}
+
+/// Set z value.
+void Vector::set_z(double z) {
+    z_ = z;
+}
+
+/// Set x and y values.
+void Vector::set(double x, double y) {
+    x_ = x;
+    y_ = y;
+}
+
+/// Set all values.
+void Vector::set(double x, double y, double z) {
+    x_ = x;
+    y_ = y;
+    z_ = z;
+}
+
+void Vector::reset() {
+    x_ = y_ = z_ = 0.0;
+}
+
+Vector operator+(const Vector & lhs, const Vector & rhs) {
+    return Vector(lhs.x()+rhs.x(), lhs.y()+rhs.y(), lhs.z()+rhs.z());
+}
+
+Vector operator-(const Vector & lhs, const Vector & rhs) {
+    return Vector(lhs.x()-rhs.x(), lhs.y()-rhs.y(), lhs.z()-rhs.z());
+}
+
+Vector operator*(const Vector & lhs, const Vector & rhs) {
+    return Vector(lhs.x()*rhs.x(), lhs.y()*rhs.y(), lhs.z()*rhs.z());
+}
+
+Vector operator*(const Vector & v, double s) {
+    return Vector(v.x()*s, v.y()*s, v.z()*s);
+}
+
+Vector operator*(double s, const Vector & v) {
+    return Vector(v.x()*s, v.y()*s, v.z()*s);
+}
+
+Vector operator/(const Vector & lhs, const Vector & rhs) {
+    Vector v(lhs);
+    v /= rhs;
+    return v;
+}
+
+Vector operator/(const Vector & lhs, double s) {
+    Vector v(lhs);
+    v /= s;
+    return v;
+}
+
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
+
+Point::Point(int x, int y):
+    x_(x),
+    y_(y)
+{
+}
+
+/// 3D constructor.
+Point::Point(int x, int y, int z):
+    x_(x),
+    y_(y),
+    z_(z)
+{
+}
+
+Point::Point(const Vector & vec):
+    x_(vec.x()),
+    y_(vec.y()),
+    z_(vec.z())
+{
+}
 
 Point & Point::set(int x, int y) {
     x_ = x;
@@ -161,8 +315,114 @@ bool Point::translate(const Point & other) {
     return update(other.x()+x_, other.y()+y_, other.z()+z_);
 }
 
+Point & Point::operator=(const Vector & vec) {
+    set(vec);
+    return *this;
+}
+
+int Point::x() const {
+    return x_;
+}
+
+/// Y coordinate accessor.
+int Point::y() const {
+    return y_;
+}
+
+/// Z coordinate accessor.
+int Point::z() const {
+    return z_;
+}
+
+void Point::reset() {
+    x_ = y_ = z_ = 0;
+}
+
+Point & Point::operator+=(const Point & p) {
+    x_ += p.x_;
+    y_ += p.y_;
+    z_ += p.z_;
+    return *this;
+}
+
+/// Transpose coordinates.
+Point & Point::operator-=(const Point & p) {
+    x_ -= p.x_;
+    y_ -= p.y_;
+    z_ -= p.z_;
+    return *this;
+}
+
+/// Scale coordinates.
+Point & Point::operator*=(double m) {
+    x_ = (static_cast<double>(x_)*m);
+    y_ = (static_cast<double>(y_)*m);
+    z_ = (static_cast<double>(z_)*m);
+    return *this;
+}
+
+/// Scale coordinates.
+Point & Point::operator*=(const Vector & v) {
+    x_ = (static_cast<double>(x_)*v.x());
+    y_ = (static_cast<double>(y_)*v.y());
+    z_ = (static_cast<double>(z_)*v.z());
+    return *this;
+}
+
+Point operator*(const Point & p, double m) {
+    return Point(p)*=m;
+}
+
+Point operator*(double m, const Point & p) {
+    return Point(p)*=m;
+}
+
+Point operator+(const Point & p, const Point & q) {
+    return Point(p.x()+q.x(), p.y()+q.y());
+}
+
+Point operator-(const Point & p, const Point & q) {
+    return Point(p.x()-q.x(), p.y()-q.y(), p.z()-q.z());
+}
+
+Point operator-(const Point & p) {
+    return Point(-p.x(), -p.y(), -p.z());
+}
+
+bool operator==(const Point & p, const Point & q) {
+    return p.x() == q.x() && p.y() == q.y() && p.z() == q.z();
+}
+
+bool operator!=(const Point & p, const Point & q) {
+    return !(p == q);
+}
+
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
+
+Size::Size(unsigned width, unsigned height):
+    width_(width),
+    height_(height)
+{
+}
+
+Size::Size(unsigned width, unsigned height, unsigned depth):
+    width_(width),
+    height_(height),
+    depth_(depth)
+{
+}
+
+Size::Size(unsigned all):
+    width_(all),
+    height_(all),
+    depth_(all)
+{
+}
+
+Size::Size(const Vector & v) {
+    update(v);
+}
 
 bool Size::update_width(unsigned width) {
     if (width_ != width) {
@@ -403,8 +663,175 @@ Size Size::grown(int dx, int dy, int dz) const {
     return sz;
 }
 
+void Size::set(const Size & other) {
+    update(other);
+}
+
+void Size::set(unsigned width, unsigned height) {
+    update(width, height);
+}
+
+void Size::set(unsigned width, unsigned height, unsigned depth) {
+    update(width, height, depth);
+}
+
+unsigned Size::width() const {
+    return width_;
+}
+
+unsigned Size::height() const {
+    return height_;
+}
+
+unsigned Size::depth() const {
+    return depth_;
+}
+
+int Size::iwidth() const {
+    return width_;
+}
+
+int Size::iheight() const {
+    return height_;
+}
+
+int Size::idepth() const {
+    return depth_;
+}
+
+bool Size::empty() const {
+    return 0 == width_ || 0 == height_;
+}
+
+bool Size::empty3() const {
+    return 0 == width_ || 0 == height_ || 0 == depth_;
+}
+
+void Size::reset() {
+    width_ = height_ = depth_ = 0;
+}
+
+unsigned Size::min() const {
+    return std::min(width_, height_);
+}
+
+unsigned Size::max() const {
+    return std::max(width_, height_);
+}
+
+unsigned Size::min3() const {
+    return std::min(std::min(width_, height_), depth_);
+}
+
+unsigned Size::max3() const {
+    return std::max(std::max(width_, height_), depth_);
+}
+
+Size::operator bool() const {
+    return !empty();
+}
+
+Size & Size::operator+=(const Size & size) {
+    width_  += size.width();
+    height_ += size.height();
+    depth_  += size.depth();
+    return *this;
+}
+
+Size & Size::operator-=(const Size & size) {
+    width_  -= size.width();
+    height_ -= size.height();
+    depth_  -= size.depth();
+    return *this;
+}
+
+Size & Size::operator|=(const Size & sz) {
+    width_  = std::max(width_,  sz.width_);
+    height_ = std::max(height_, sz.height_);
+    depth_  = std::max(depth_,  sz.depth_);
+    return *this;
+}
+
+Size & Size::operator&=(const Size & sz) {
+    width_  = std::min(width_,  sz.width_);
+    height_ = std::min(height_, sz.height_);
+    depth_  = std::min(depth_,  sz.depth_);
+    return *this;
+}
+
+Size & Size::operator*=(double m) {
+    width_  = static_cast<double>(width_)*m;
+    height_ = static_cast<double>(height_)*m;
+    depth_  = static_cast<double>(depth_)*m;
+    return *this;
+}
+
+bool operator==(const Size & s, const Size & t) {
+    return (s.width() == t.width()) && (s.height() == t.height());
+}
+
+bool operator!=(const Size & s, const Size & t) {
+    return (s.width() != t.width()) || (s.height() != t.height());
+}
+
+Size operator+(const Size & lhs, const Size & rhs) {
+    return Size(lhs).increased(rhs);
+}
+
+Size operator|(const Size & lhs, const Size & rhs) {
+    Size sz(lhs);
+    sz |= rhs;
+    return sz;
+}
+
+Size operator&(const Size & lhs, const Size & rhs) {
+    Size sz(lhs);
+    sz &= rhs;
+    return sz;
+}
+
+Size operator-(const Size & lhs, const Size & rhs) {
+    return Size(lhs).decreased(rhs);
+}
+
+Point operator+(const Point & p, const Size & sz) {
+    return Point(p.x()+sz.width(), p.y()+sz.height(), p.z()+sz.depth());
+}
+
+Point operator+(const Size & sz, const Point & p) {
+    return Point(p.x()+sz.width(), p.y()+sz.height(), p.z()+sz.depth());
+}
+
+Point operator-(const Point & p, const Size & sz) {
+    return Point(p.x()-sz.width(), p.y()-sz.height(), p.z()-sz.depth());
+}
+
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
+
+Rect::Rect(int x, int y, const Size & size) {
+    set(x, y, size);
+}
+
+Rect::Rect(const Point & org, const Size & size) {
+    set(org, size);
+}
+
+Rect::Rect(int x1, int y1, int x2, int y2) {
+    set(x1, y1, x2, y2);
+}
+
+Rect::Rect(const Point & a, const Point & b) {
+    set(a, b);
+}
+
+Rect::Rect(const Size & size) {
+    set(size);
+}
+
+Rect::Rect(unsigned width, unsigned height) {
+    set(0, 0, Size(width, height));
+}
 
 void Rect::set(int x1, int y1, int x2, int y2) {
     org_.set(std::min(x1, x2), std::min(y1, y2));
@@ -517,10 +944,211 @@ void Rect::intersect(const Rect & other) {
     }
 }
 
+Point Rect::origin() const {
+    return org_;
+}
+
+int Rect::left() const {
+    return org_.x();
+}
+
+int Rect::top() const {
+    return org_.y();
+}
+
+int Rect::x() const {
+    return left();
+}
+
+int Rect::y() const {
+    return top();
+}
+
+Size Rect::size() const {
+    return sz_;
+}
+
+unsigned Rect::width() const {
+    return sz_.width();
+}
+
+unsigned Rect::height() const {
+    return sz_.height();
+}
+
+int Rect::iwidth() const {
+    return sz_.iwidth();
+}
+
+int Rect::iheight() const {
+    return sz_.iheight();
+}
+
+void Rect::set(const Point & a, const Point & b) {
+    set(a.x(), a.y(), b.x(), b.y());
+}
+
+bool Rect::empty() const {
+    return sz_.empty();
+}
+
+void Rect::move_to(const Point & p) {
+    org_ = p;
+}
+
+void Rect::move_to(int x, int y) {
+    move_to(Point(x, y));
+}
+
+void Rect::translate(const Point & p) {
+    org_ += p;
+}
+
+void Rect::translate(int dx, int dy) {
+    translate(Point(dx, dy));
+}
+
+void Rect::translate(const Size & sz) {
+    org_.set(org_.x()+sz.width(), org_.y()+sz.height());
+}
+
+Rect Rect::translated(const Point & p) const {
+    Rect r(*this);
+    r.translate(p);
+    return r;
+}
+
+Rect Rect::translated(const Size & sz) const {
+    Rect r(*this);
+    r.translate(sz);
+    return r;
+}
+
+Rect Rect::translated(int x, int y) const {
+    return translated(Point(x, y));
+}
+
+void Rect::resize(unsigned width, unsigned height) {
+    sz_.update(width, height);
+}
+
+void Rect::resize(const Size & size) {
+    sz_ = size;
+}
+
+bool Rect::update_left(int x) {
+    return org_.update_x(x);
+}
+
+bool Rect::update_top(int y) {
+    return org_.update_y(y);
+}
+
+bool Rect::update_width(unsigned width) {
+    return sz_.update_width(width);
+}
+
+bool Rect::update_height(unsigned height) {
+    return sz_.update_height(height);
+}
+
+bool Rect::update_origin(const Point & pt) {
+    return org_.update(pt);
+}
+
+bool Rect::update_origin(int x, int y) {
+    return org_.update(x, y);
+}
+
+bool Rect::update_size(const Size & sz) {
+    return sz_.update(sz);
+}
+
+bool Rect::update_size(unsigned width, unsigned height) {
+    return sz_.update(width, height);
+}
+
+void Rect::increase(unsigned dx, unsigned dy) {
+    sz_.increase(dx, dy);
+}
+
+void Rect::increase(const Size & sz) {
+    sz_.increase(sz);
+}
+
+void Rect::decrease(unsigned dx, unsigned dy) {
+    sz_.decrease(dx, dy);
+}
+
+void Rect::decrease(const Size & sz) {
+    sz_.decrease(sz);
+}
+
+Rect Rect::increased(unsigned dx, unsigned dy) const {
+    return Rect(org_, sz_.increased(dx, dy));
+}
+
+Rect Rect::increased(const Size & sz) const {
+    return Rect(org_, sz_.increased(sz));
+}
+
+Rect Rect::decreased(unsigned dx, unsigned dy) const {
+    return Rect(org_, sz_.decreased(dx, dy));
+}
+
+Rect Rect::decreased(const Size & sz) const {
+    return Rect(org_, sz_.decreased(sz));
+}
+
+void Rect::grow(int dx, int dy) {
+    sz_.grow(dx, dy);
+}
+
+Rect Rect::grown(int dx, int dy) const {
+    return Rect(org_, sz_.grown(dx, dy));
+}
+
+Rect & Rect::operator=(const Rect & r) {
+    set(r);
+    return *this;
+}
+
+void Rect::operator|=(const Rect & other) {
+    unite(other);
+}
+
+void Rect::operator&=(const Rect & other) {
+    intersect(other);
+}
+
+void Rect::operator|=(const Size & size) {
+    sz_ |= size;
+}
+
+Rect::operator bool() const {
+    return !empty();
+}
+
 Rect Rect::intersected(const Rect & other) const {
     Rect res(*this);
     res.intersect(other);
     return res;
+}
+
+Rect operator|(const Rect & r1, const Rect & r2) {
+    return r1.united(r2);
+}
+
+Rect operator&(const Rect & r1, const Rect & r2) {
+    return r1.intersected(r2);
+}
+
+bool operator==(const Rect & r1, const Rect & r2) {
+    return r1.top_left() != r2.top_left() && r1.bottom_right() != r2.bottom_right();
+}
+
+bool operator!=(const Rect & r1, const Rect & r2) {
+    return r1.top_left() != r2.top_left() || r1.bottom_right() != r2.bottom_right();
 }
 
 } // namespace tau

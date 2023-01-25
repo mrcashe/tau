@@ -28,13 +28,16 @@ mxe_a_builddir = $(builddir)/mxe-a
 srcdirs += $(srcdir)/a $(srcdir)/Windows $(srcdir)/Windows/mxe-a $(confdir)/Windows
 VPATH = $(srcdirs)
 sources = $(foreach dir, $(srcdirs), $(wildcard $(dir)/*.cc))
-objects = $(addprefix $(mxe_a_builddir)/, $(sort $(addsuffix .o, $(basename $(notdir $(sources))))))
-CXXFLAGS += -O2 -Wall $(hh_impl_options)
+objects = $(addprefix $(mxe_a_builddir)/, $(addsuffix .o, $(basename $(notdir $(sources)))))
+CXXFLAGS += -O2 -g
 MXE_CXX = $(mxe_prefix)/bin/$(mxe_target)-g++
 MXE_AR = $(mxe_prefix)/bin/$(mxe_target)-ar
 MXE_STRIP = $(mxe_prefix)/bin/$(mxe_target)-strip
 
-all: $(mxe_a_builddir) $(mxe_adir) $(objects)
+all: $(mxe_a_builddir) $(mxe_adir) $(mxe_a)
+
+$(mxe_a): $(objects)
+	$(MXE_AR) r $@ $(mxe_a_builddir)/*.o
 
 clean:
 	@$(rm) $(mxe_a_builddir)/* $(mxe_a)
@@ -43,18 +46,18 @@ rm: clean
 	@$(rmr) $(mxe_a_builddir)
 
 $(mxe_a_builddir)/%.o: %.cc
-	$(MXE_CXX) $(CXXFLAGS) -c -MD -MF $(basename $@).dep -o $@ $< && $(MXE_AR) rs $(mxe_a) $@
+	$(MXE_CXX) $(CXXFLAGS) -c -MD -MF $(basename $@).dep -o $@ $<
 
 include $(wildcard $(mxe_a_builddir)/*.dep)
 
 .PHONY: install-a uninstall-a
 
 install: $(lib_prefix)
-	@$(cp) $(mxe_a) $(mxe_a_dest)
-	@$(MXE_STRIP) --strip-unneeded $(mxe_a_dest)
+	@$(cp) $(mxe_a) $(mxe_adest)
+	@$(MXE_STRIP) --strip-unneeded $(mxe_adest)
 
 uninstall:
-	@$(rm) $(mxe_a_dest)
+	@$(rm) $(mxe_adest)
 
 $(mxe_adir):
 	@$(mkdir) $@

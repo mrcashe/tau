@@ -47,7 +47,7 @@ public:
     {
     }
 
-    ~File_monitor_linux() {
+   ~File_monitor_linux() {
         signal_destroy_();
     }
 

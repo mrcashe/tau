@@ -27,19 +27,19 @@
 export mxe_afile = libtau-$(Major_).$(Minor_)-mxe.a
 export mxe_adir = $(bindir)
 export mxe_a = $(mxe_adir)/$(mxe_afile)
-export mxe_a_dest = $(lib_prefix)/libtau-$(Major_).$(Minor_)-$(mxe_target)-mxe.a
+export mxe_adest = $(lib_prefix)/libtau-$(Major_).$(Minor_)-$(mxe_target)-mxe.a
 
 export mxe_sofile = libtau-$(Major_).$(Minor_)-$(mxe_target)-mxe.dll
 export mxe_sodir = $(bindir)
 export mxe_so = $(mxe_sodir)/$(mxe_sofile)
-export mxe_so_dest = $(bin_prefix)/$(mxe_sofile)
+export mxe_sodest = $(bin_prefix)/$(mxe_sofile)
 
 export mxe_pc = $(pc_prefix)/tau-$(Major_).$(Minor_)-$(mxe_target)-mxe.pc
 
-mxe_a_mk = "10-mxe-a.mk"
-mxe_so_mk = "12-mxe-so.mk"
+mxe_so_mk = "10-mxe-so.mk"
+mxe_a_mk = "12-mxe-a.mk"
+mxe_test_so_mk = "18-mxe-test-so.mk"
 mxe_test_a_mk = "18-mxe-test-a.mk"
-mxe_test_so_mk = "20-mxe-test-so.mk"
 
 .PHONY: en-mxe-a su-mxe-a rm-mxe-a en-mxe-so su-mxe-so rm-mxe-so
 

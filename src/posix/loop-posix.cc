@@ -25,6 +25,7 @@
 // ----------------------------------------------------------------------------
 
 #include "loop-posix.hh"
+#include <algorithm>
 #include <iostream>
 
 namespace tau {

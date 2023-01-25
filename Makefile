@@ -31,21 +31,16 @@ clean: clean-build
 
 include conf/conf.mk
 
-export hh_src = $(srcdir)/include
 export srcdirs = $(srcdir) $(confdir)
-export hh_option = -I$(hh_src)
-export hh_impl_options = $(hh_option) -I$(srcdir)
-
-ifneq ($(strip $(wildcard $(builddir)/*-a.mk)),)
-j1 = -j 1
-endif
+export hh_src = $(srcdir)/include
+CXXFLAGS += -I$(hh_src) -I$(srcdir)
 
 BUILD_TARGETS = all-build install-build uninstall-build clean-build
 .PHONY: $(BUILD_TARGETS) rm xz test-links
 
 $(BUILD_TARGETS): $(builddir)
 	@target=`echo $@ | sed s/-build//`;\
-	$(MAKE) $(j1) -C $$builddir $$target || exit 1
+	$(MAKE) -C $$builddir $$target || exit 1
 
 conf/conf.mk:
 	@./configure || exit 1

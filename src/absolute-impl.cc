@@ -165,7 +165,8 @@ void Absolute_impl::update_requisition() {
     for (const Holder & hol: holders_) {
         if (!hol.wp->hidden()) {
             Point bottom_right = hol.pos;
-            bottom_right += child_requisition(hol);
+            Size req = child_requisition(hol);
+            bottom_right.translate(req.iwidth(), req.iheight());
             xmax = std::max(xmax, bottom_right.x());
             ymax = std::max(ymax, bottom_right.y());
         }

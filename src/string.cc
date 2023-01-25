@@ -417,6 +417,10 @@ ustring str_bytes(uintmax_t nbytes, bool si) {
     return buffer;
 }
 
+char utf8_leader(std::size_t nbytes) {
+    return (nbytes > 1 && nbytes < 7) ? '\xfe' << (7-nbytes) : 0;
+}
+
 } // namespace tau
 
 //END

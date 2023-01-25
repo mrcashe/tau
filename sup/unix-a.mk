@@ -24,13 +24,16 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # -----------------------------------------------------------------------------
 
-srcdirs += $(srcdir)/a $(posix_srcdir) $(posix_srcdir)/a $(unix_srcdir) $(confdir)/$(plat)
+srcdirs += $(posix_srcdir) $(xcb_srcdir) $(unix_srcdir) $(confdir)/$(plat) $(srcdir)/a $(posix_srcdir)/a
 VPATH = $(srcdirs)
 sources = $(foreach dir, $(srcdirs), $(wildcard $(dir)/*.cc))
-objects = $(addprefix $(unix_a_builddir)/, $(sort $(addsuffix .o, $(basename $(notdir $(sources))))))
-CXXFLAGS += -g -O0 $(unix_CXXFLAGS)
+objects = $(addprefix $(unix_a_builddir)/, $(addsuffix .o, $(basename $(notdir $(sources)))))
+CXXFLAGS += -O0 -g
 
-all: $(unix_adir) $(unix_a_builddir) $(objects)
+all: $(unix_adir) $(unix_a_builddir) $(unix_a)
+
+$(unix_a): $(objects)
+	ar r $@ $(unix_a_builddir)/*.o
 
 install: $(lib_prefix)
 	@if [ -f $(unix_a) ]; then \
@@ -42,7 +45,7 @@ uninstall:
 	@$(rm) $(unix_adest)
 
 $(unix_a_builddir)/%.o: %.cc
-	$(CXX) -o $@ $< $(CXXFLAGS) -c -MD -MF $(basename $@).dep && ar rs $(unix_a) $@
+	$(CXX) -o $@ $< $(CXXFLAGS) -c -MD -MF $(basename $@).dep
 
 $(unix_adir):
 	@$(mkdir) $@

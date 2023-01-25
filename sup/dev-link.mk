@@ -63,8 +63,8 @@ install-host:
 	    echo "Description: C++ GUI toolkit">>$(unix_pc); \
 	    echo "Version: $(Major_).$(Minor_).$(Micro_)">>$(unix_pc); \
 	    echo "Requires: $(pkg_required)">>$(unix_pc); \
-	    echo -n "Libs: -L$$">>$(unix_pc); \
-	    echo -n "{lib_prefix} -lpthread $(unix_sys_shared)">>$(unix_pc); \
+	    echo -n "Libs: -lpthread -L$$">>$(unix_pc); \
+	    echo -n "{lib_prefix}">>$(unix_pc); \
 	    [ -e $(unix_sopath) ] && echo -n " -ltau-$(Major_).$(Minor_)">>$(unix_pc); \
 	    echo "">>$(unix_pc); \
 	    echo -n "Cflags: -I$$">>$(unix_pc); \
@@ -72,15 +72,15 @@ install-host:
 	fi
 
 install-mxe:
-	@if [ -e $(mxe_a_dest) -o -e $(mxe_so_dest) ]; then \
+	@if [ -e $(mxe_adest) -o -e $(mxe_sodest) ]; then \
 	    $(mkdir) $(pc_prefix); \
 	    echo "++ dev.mk: writing $(mxe_pc)..."; \
 	    echo "prefix=$(PREFIX)" >$(mxe_pc); \
 	    echo "exec_prefix=$(PREFIX)" >>$(mxe_pc); \
 	    echo "lib_prefix=$(PREFIX)/lib">>$(mxe_pc); \
 	    echo "includedir=$(hh_prefix)">>$(mxe_pc); \
-	    [ -e $(mxe_a_dest) ] && echo "a=$(mxe_a_dest)">>$(mxe_pc); \
-	    [ -e $(mxe_so_dest) ] && echo "dll=$(mxe_so_dest)">>$(mxe_pc); \
+	    [ -e $(mxe_adest) ] && echo "a=$(mxe_adest)">>$(mxe_pc); \
+	    [ -e $(mxe_sodest) ] && echo "dll=$(mxe_sodest)">>$(mxe_pc); \
 	    echo "mxe_prefix=$(mxe_prefix)">>$(mxe_pc); \
 	    echo "mxe_target=$(mxe_target)">>$(mxe_pc); \
 	    echo "mxe_libroot=$(mxe_prefix)/$(mxe_target)/lib">>$(mxe_pc); \

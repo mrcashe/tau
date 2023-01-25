@@ -29,6 +29,7 @@
 
 #include <tau/doc.hh>
 #include <types-impl.hh>
+#include <algorithm>
 #include <map>
 
 namespace tau {

@@ -26,19 +26,10 @@
 
 export unix_a_builddir = $(builddir)/freebsd-a
 export unix_so_builddir = $(builddir)/freebsd-so
-export xcb_a_builddir = $(builddir)/freebsd-xcb-a
-export xcb_so_builddir = $(builddir)/freebsd-xcb-so
 export unix_test_a_builddir = $(builddir)/freebsd-test-a
 export unix_test_so_builddir = $(builddir)/freebsd-test-so
-
 export posix_srcdir = $(srcdir)/posix
+export xcb_srcdir = $(srcdir)/xcb
 export unix_srcdir = $(srcdir)/FreeBSD
-
-export unix_sys_headers = $(shell pkg-config --cflags $(pkg_required))
-export unix_sys_shared =
-
-export unix_CXXFLAGS = -O2 -g -Wall -fPIC $(unix_sys_headers) $(hh_impl_options)
-export unix_AR = ar
-export unix_STRIP = strip
-
+CXXFLAGS += $(shell pkg-config --cflags $(pkg_required))
 include $(supdir)/unix.mk

@@ -122,17 +122,19 @@ struct Style_impl {
     }
 
     void redirect(const std::string & src, const std::string & dest) {
-        auto i = items_.find(src), j = items_.find(dest);
+        if (redir_.end() == redir_.find(dest)) {
+            auto i = items_.find(src), j = items_.find(dest);
 
-        if (i != items_.end() && j != items_.end()) {
-            Item_ptr s = i->second, d = j->second;
-            s->signal_value_changed_ += d->signal_value_changed_;
-            s->signal_changed_ += d->signal_changed_;
-            items_.erase(j);
-            redir_[dest] = s;
-            s->set_ = true;
-            s->signal_value_changed_(s->get());
-            s->signal_changed_();
+            if (i != items_.end() && j != items_.end()) {
+                Item_ptr s = i->second, d = j->second;
+                s->signal_value_changed_ += d->signal_value_changed_;
+                s->signal_changed_ += d->signal_changed_;
+                items_.erase(j);
+                redir_[dest] = s;
+                s->set_ = true;
+                s->signal_value_changed_(s->get());
+                s->signal_changed_();
+            }
         }
     }
 };

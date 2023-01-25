@@ -26,6 +26,7 @@
 
 #include <posix/fileinfo-posix.hh>
 #include "loop-linux.hh"
+#include <iostream>
 
 namespace tau {
 
@@ -39,16 +40,26 @@ public:
 
     // Overrides pure Fileinfo_impl.
     signal<void(int, const ustring &)> & signal_watch(int event_mask) override {
-        if (!loop_) { loop_ = Loop_linux::this_linux_loop(); }
-        if (!mon_) { mon_ = loop_->create_file_monitor(uri_, event_mask); }
-        if (mon_) { mon_->signal_notify().connect(fun(signal_watch_)); }
+        if (!mon_) {
+            auto loop = Loop_linux::this_linux_loop();
+            mon_ = loop->create_file_monitor(uri_, event_mask);
+            if (mon_) { mon_->signal_notify().connect(fun(signal_watch_)); }
+        }
+
+        if (mon_) {
+            std::cout << "Watch " << uri_ << std::endl;
+        }
+
+        else {
+            std::cerr << "** Fileinfo_linux: failed to watch file " << uri_ << std::endl;
+        }
+
         return signal_watch_;
     }
 
 private:
 
     signal<void(int, const ustring &)> signal_watch_;
-    Loop_linux_ptr   loop_;
     File_monitor_ptr mon_;
 };
 

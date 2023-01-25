@@ -30,6 +30,7 @@
 #include <tau/sys.hh>
 #include <tau/key-file.hh>
 #include <tau/string.hh>
+#include <algorithm>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
@@ -569,6 +570,14 @@ bool Key_file::empty() const {
 
 signal<void()> & Key_file::signal_changed() {
     return impl->signal_changed_;
+}
+
+std::istream & operator>>(std::istream & is, Key_file & kf) {
+    kf.load(is); return is;
+}
+
+std::ostream & operator<<(std::ostream & os, const Key_file & kf) {
+    kf.save(os); return os;
 }
 
 } // namespace tau

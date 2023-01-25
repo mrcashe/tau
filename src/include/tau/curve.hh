@@ -106,10 +106,7 @@ private:
     Vector      end_;
 };
 
-inline Curve & operator*=(Curve & cv, const Matrix & mat) {
-    cv.transform(mat);
-    return cv;
-}
+Curve & operator*=(Curve & cv, const Matrix & mat);
 
 } // namespace tau
 

@@ -173,16 +173,10 @@ private:
 };
 
 /// @relates Contour
-inline Contour & operator*=(Contour & ctr, const Matrix & mat) {
-    ctr.transform(mat);
-    return ctr;
-}
+Contour & operator*=(Contour & ctr, const Matrix & mat);
 
 /// @relates Contour
-inline Contour & operator*=(const Matrix & mat, Contour & ctr) {
-    ctr.transform(mat);
-    return ctr;
-}
+Contour & operator*=(const Matrix & mat, Contour & ctr);
 
 } // namespace tau
 

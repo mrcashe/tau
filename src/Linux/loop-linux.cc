@@ -33,6 +33,7 @@
 #include "loop-linux.hh"
 #include <unistd.h>
 #include <sys/inotify.h>
+#include <algorithm>
 #include <cstring>
 #include <fcntl.h>
 #include <atomic>
@@ -103,7 +104,6 @@ void Loop_linux::on_inotify() {
             inotify_event * kevent = reinterpret_cast<inotify_event *>(buffer+offset);
             std::size_t event_size = sizeof(inotify_event)+kevent->len;
 
-            //std::cout << "notify \"" << name << "\" " << std::hex << kevent->mask << std::endl;
             unsigned mask = 0;
             if (IN_ACCESS & kevent->mask) { mask = FILE_ACCESSED; }
             if (IN_MODIFY & kevent->mask) { mask = FILE_CHANGED; }
@@ -157,8 +157,8 @@ File_monitor_ptr Loop_linux::create_file_monitor(const ustring & path, int mask)
         if (fd < 0) { throw sys_error("inotify_init1(): "+path); }
     }
 
-    auto & io = Locale().iocharset();
-    std::string lfp = io.is_utf8() ? std::string(path) : io.encode(path);
+    Encoding enc;
+    std::string lfp = enc.is_utf8() ? std::string(path) : enc.encode(path);
     int wd = inotify_add_watch(fd, lfp.c_str(), umask);
 
     if (wd < 0) {
@@ -169,6 +169,9 @@ File_monitor_ptr Loop_linux::create_file_monitor(const ustring & path, int mask)
 
     if (infd_ < 0) {
         infd_ = fd;
+        infd_poller_ = new Poller_posix(infd_);
+        infd_poller_->signal_poll().connect(fun(this, &Loop_linux::on_inotify));
+        add_poller(infd_poller_, POLLIN);
     }
 
     auto fm = std::make_shared<File_monitor_linux>(wd, path);

@@ -185,7 +185,7 @@ Colorsel_impl::Colorsel_impl(const Color & initial_color):
     put(html_, 7, 5, 1, 1, false, true);
 
     // Reuse frame.
-    frame = std::make_shared<Frame_impl>("Named Colors", ALIGN_CENTER, BORDER_GROOVE);
+    frame = std::make_shared<Frame_impl>("CSS Colors", ALIGN_CENTER, BORDER_GROOVE);
     put(frame, 6, 0, 2, 4, false, false);
 
     Box_ptr box = std::make_shared<Box_impl>(OR_RIGHT, 2);

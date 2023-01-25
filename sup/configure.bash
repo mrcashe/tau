@@ -134,7 +134,7 @@ if [ -e $argv ]; then
 fi
 
 PREFIX=''
-CXXFLAGS='-std=c++14'
+CXXFLAGS='-std=c++14 -Wall'
 disable_doc='NO'
 disable_mxe='NO'
 enable_static='NO'
