@@ -36,9 +36,9 @@ Menu_impl::Menu_impl(Orientation orient):
     Roller_impl(orient)
 {
     freeze();
-    style_.redirect("menu/background", "background");
-    style_.redirect("menu/background", "button/background");
-    style_.redirect("menu/foreground", "foreground");
+    style_.redirect(STYLE_MENU_BACKGROUND, STYLE_BACKGROUND);
+    style_.redirect(STYLE_MENU_BACKGROUND, STYLE_BUTTON_BACKGROUND);
+    style_.redirect(STYLE_MENU_FOREGROUND, STYLE_FOREGROUND);
     signal_focus_in().connect(fun(this, &Menu_impl::mark));
     connect_action(enter_action_);
     connect_action(cancel_action_);
@@ -214,7 +214,6 @@ bool Menu_impl::open_current() {
     auto toplevel = root();
     if (!toplevel) { return false; }
 
-    end_modal();
     Point pos;
     Gravity gravity;
 
@@ -241,6 +240,7 @@ bool Menu_impl::open_current() {
     }
 
     submenu_ = mp;
+    end_modal();
     if (parent_) { parent_->ungrab_mouse(); }
     mp->popup(toplevel, mp, pos, gravity, this);
     return true;

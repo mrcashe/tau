@@ -37,7 +37,7 @@ class List_impl: public Table_impl {
 public:
 
     List_impl();
-   ~List_impl() { destroy_ = true; }
+   ~List_impl() { signal_destroy_(); }
 
     int  prepend_row(Widget_ptr wp, bool shrink=false);
     int  prepend_row(Widget_ptr wp, Align align);

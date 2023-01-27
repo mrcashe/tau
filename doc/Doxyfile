@@ -778,7 +778,7 @@ FILE_PATTERNS          = *.hh
 # be searched for input files as well.
 # The default value is: NO.
 
-RECURSIVE              = NO
+RECURSIVE              = YES
 
 # The EXCLUDE tag can be used to specify files and/or directories that should be
 # excluded from the INPUT source files. This way you can easily exclude a
@@ -814,8 +814,7 @@ EXCLUDE_PATTERNS       =
 # Note that the wildcards are matched against the file with absolute path, so to
 # exclude all test directories use the pattern */test/*
 
-EXCLUDE_SYMBOLS        = tau::*functor* tau::slot::call tau::slot_impl* \
-                         tau::signal_emitter* tau::ustring_iterator
+EXCLUDE_SYMBOLS        = tau::ustring_iterator
 
 # The EXAMPLE_PATH tag can be used to specify one or more files or directories
 # that contain example code fragments that are included (see the \include

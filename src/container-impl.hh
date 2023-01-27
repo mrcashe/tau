@@ -107,7 +107,7 @@ public:
     void queue_arrange();
     void sync_arrange();
     void ungrab_mouse_down();
-    void on_child_visibility_changed(Widget_impl * wi);
+    void on_child_visibility(Widget_impl * wi);
     void on_obscure(Widget_impl * wi, bool yes);
 
     const Widget_impl * focused_child() const { return focused_child_; }

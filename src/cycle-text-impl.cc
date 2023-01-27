@@ -107,8 +107,8 @@ void Cycle_text_impl::remove_text(const ustring & text) {
 
         if (tp_text == text) {
             if (text == current_) { current_.clear(); }
-            hol.show_cx.disconnect();
-            hol.hide_cx.disconnect();
+            hol.show_cx.drop();
+            hol.hide_cx.drop();
             card_->remove(hol.entry);
             holders_.erase(i);
             return;

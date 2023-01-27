@@ -169,11 +169,12 @@ void Entry_impl::append(Widget_ptr wp, bool shrink) {
     wp->disallow_focus();
 }
 
-void Entry_impl::append(const ustring & text, unsigned margin_left, unsigned margin_right) {
+Widget_ptr Entry_impl::append(const ustring & text, unsigned margin_left, unsigned margin_right) {
     Text_ptr tp = std::make_shared<Text_impl>(text);
     tp->hint_margin_left(margin_left);
     tp->hint_margin_right(margin_right);
     box_->append(tp, true);
+    return tp;
 }
 
 void Entry_impl::prepend(Widget_ptr wp, bool shrink) {
@@ -181,11 +182,12 @@ void Entry_impl::prepend(Widget_ptr wp, bool shrink) {
     wp->disallow_focus();
 }
 
-void Entry_impl::prepend(const ustring & text, unsigned margin_left, unsigned margin_right) {
+Widget_ptr Entry_impl::prepend(const ustring & text, unsigned margin_left, unsigned margin_right) {
     Text_ptr tp = std::make_shared<Text_impl>(text);
     tp->hint_margin_left(margin_left);
     tp->hint_margin_right(margin_right);
     box_->prepend(tp, true);
+    return tp;
 }
 
 void Entry_impl::on_buffer_changed() {

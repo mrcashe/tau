@@ -32,11 +32,11 @@ namespace tau {
 Absolute_impl::Absolute_impl():
     Container_impl()
 {
-    signal_arrange().connect(fun(this, &Absolute_impl::arrange));
-    signal_size_changed().connect(fun(this, &Container_impl::queue_arrange));
-    signal_visible().connect(fun(this, &Container_impl::queue_arrange));
-    signal_display().connect(fun(this, &Absolute_impl::update_requisition));
-    signal_take_focus().connect(fun(this, &Absolute_impl::on_take_focus));
+    signal_arrange_.connect(fun(this, &Absolute_impl::arrange));
+    signal_size_changed_.connect(fun(this, &Container_impl::queue_arrange));
+    signal_visible_.connect(fun(this, &Container_impl::queue_arrange));
+    signal_display_.connect(fun(this, &Absolute_impl::update_requisition));
+    signal_take_focus_.connect(fun(this, &Absolute_impl::on_take_focus));
 }
 
 void Absolute_impl::put(Widget_ptr wp, const Point & pos, const Size & size) {
@@ -47,8 +47,8 @@ void Absolute_impl::put(Widget_ptr wp, const Point & pos, const Size & size) {
     hol.wp = wp;
     hol.pos = pos;
     hol.size = size;
-    hol.hints_cx = wp->signal_hints_changed().connect(tau::bind(fun(this, &Absolute_impl::on_child_hints_changed), wp.get()));
-    hol.req_cx = wp->signal_requisition_changed().connect(tau::bind(fun(this, &Absolute_impl::on_child_requisition_changed), wp.get()));
+    hol.hints_cx = wp->signal_hints_changed().connect(tau::bind(fun(this, &Absolute_impl::on_child_requisition), wp.get()));
+    hol.req_cx = wp->signal_requisition_changed().connect(tau::bind(fun(this, &Absolute_impl::on_child_requisition), wp.get()));
     hol.show_cx = wp->signal_show().connect(tau::bind(fun(this, &Absolute_impl::on_child_show), wp.get()));
     hol.hide_cx = wp->signal_hide().connect(tau::bind(fun(this, &Absolute_impl::on_child_hide), wp.get()));
     holders_.push_back(hol);
@@ -57,13 +57,11 @@ void Absolute_impl::put(Widget_ptr wp, const Point & pos, const Size & size) {
 }
 
 void Absolute_impl::rm_child(Holder & hol) {
-    hol.hints_cx.disconnect();
-    hol.req_cx.disconnect();
-    hol.hide_cx.disconnect();
-    hol.show_cx.disconnect();
+    hol.hints_cx.drop();
+    hol.req_cx.drop();
+    hol.hide_cx.drop();
+    hol.show_cx.drop();
     unparent_child(hol.wp.get());
-    hol.wp->update_origin(INT_MIN, INT_MIN);
-    hol.wp->update_size(0, 0);
 }
 
 void Absolute_impl::remove(Widget_impl * wi) {
@@ -78,7 +76,14 @@ void Absolute_impl::remove(Widget_impl * wi) {
 }
 
 void Absolute_impl::clear() {
-    for (Holder & hol: holders_) { rm_child(hol); }
+    for (auto & hol: holders_) {
+        hol.hints_cx.drop();
+        hol.req_cx.drop();
+        hol.show_cx.drop();
+        hol.hide_cx.drop();
+    }
+
+    unparent_all();
     holders_.clear();
     update_requisition();
     invalidate();
@@ -160,19 +165,21 @@ Size Absolute_impl::child_requisition(const Holder & hol) {
 }
 
 void Absolute_impl::update_requisition() {
-    int xmax = 0, ymax = 0;
+    if (!destroy_) {
+        int xmax = 0, ymax = 0;
 
-    for (const Holder & hol: holders_) {
-        if (!hol.wp->hidden()) {
-            Point bottom_right = hol.pos;
-            Size req = child_requisition(hol);
-            bottom_right.translate(req.iwidth(), req.iheight());
-            xmax = std::max(xmax, bottom_right.x());
-            ymax = std::max(ymax, bottom_right.y());
+        for (const Holder & hol: holders_) {
+            if (!hol.wp->hidden()) {
+                Point bottom_right = hol.pos;
+                Size req = child_requisition(hol);
+                bottom_right.translate(req.iwidth(), req.iheight());
+                xmax = std::max(xmax, bottom_right.x());
+                ymax = std::max(ymax, bottom_right.y());
+            }
         }
-    }
 
-    require_size(xmax, ymax);
+        require_size(xmax, ymax);
+    }
 }
 
 void Absolute_impl::arrange() {
@@ -193,25 +200,15 @@ void Absolute_impl::arrange() {
     if (inval) { invalidate(inval); }
 }
 
-void Absolute_impl::on_child_hints_changed(Widget_impl * wi) {
-    auto i = std::find_if(holders_.begin(), holders_.end(), [wi](Holder & hol) { return wi == hol.wp.get(); });
+void Absolute_impl::on_child_requisition(Widget_impl * wi) {
+    if (!destroy_) {
+        auto i = std::find_if(holders_.begin(), holders_.end(), [wi](Holder & hol) { return wi == hol.wp.get(); });
 
-    if (i != holders_.end()) {
-        if (!i->size) {
-            if (child_requisition(*i) != wi->size()) {
-                update_requisition();
-            }
-        }
-    }
-}
-
-void Absolute_impl::on_child_requisition_changed(Widget_impl * wi) {
-    auto i = std::find_if(holders_.begin(), holders_.end(), [wi](Holder & hol) { return wi == hol.wp.get(); });
-
-    if (i != holders_.end()) {
-        if (!i->size) {
-            if (child_requisition(*i) != wi->size()) {
-                update_requisition();
+        if (i != holders_.end()) {
+            if (!i->size) {
+                if (child_requisition(*i) != wi->size()) {
+                    update_requisition();
+                }
             }
         }
     }

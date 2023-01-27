@@ -35,7 +35,7 @@ class Bin_impl: public Container_impl {
 public:
 
     Bin_impl();
-   ~Bin_impl() { destroy_ = true; }
+   ~Bin_impl() { signal_destroy_(); }
 
     void insert(Widget_ptr wp);
     void clear();
@@ -43,12 +43,12 @@ public:
 
 private:
 
-    Widget_ptr  cp_;
-    connection  hints_cx_;
-    connection  req_cx_;
-    connection  show_cx_;
-    connection  hide_cx_;
-    connection  focus_cx_;
+    Widget_impl *   cp_ = nullptr;
+    connection      hints_cx_;
+    connection      req_cx_;
+    connection      show_cx_;
+    connection      hide_cx_;
+    connection      focus_cx_;
 
 private:
 

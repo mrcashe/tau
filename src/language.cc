@@ -1446,8 +1446,8 @@ Language::Language(const std::string & code):
     data(datas)
 {
     if (code.empty()) {
-        if (sys_locale_ptr_) {
-            data = sys_locale_ptr_->lang.data;
+        if (locale_ptr_) {
+            data = locale_ptr_->lang.data;
         }
     }
 
@@ -1475,6 +1475,11 @@ Language & Language::operator=(const Language & other) {
 }
 
 Language::~Language() {}
+
+// static
+Language Language::system() {
+    return sys_locale_ptr_ ?  sys_locale_ptr_->lang : Language();
+}
 
 std::string Language::ename() const {
     return data->ename;

@@ -46,7 +46,7 @@ struct Territory_data;
 class Territory {
 public:
 
-    /// Constructs from iso code or current locale if iso_code is empty.
+    /// Constructs from iso code or from current locale if iso_code is empty.
     Territory(const std::string & iso_code=std::string());
 
     /// Copy constructor.
@@ -57,6 +57,9 @@ public:
 
     /// Destructor.
    ~Territory();
+
+    /// Create from system default territory.
+    static Territory system();
 
     /// Compare operator.
     bool operator==(const Territory & other) const;
@@ -96,7 +99,7 @@ public:
     /// @name Constructors, operators and destructor.
     /// @{
 
-    /// Construct from ISO code or system locale (when iso_code is empty).
+    /// Construct from ISO code or from current locale (when iso_code is empty).
     Locale(const std::string & iso_code = std::string());
 
     /// Construct from components.
@@ -115,6 +118,9 @@ public:
    ~Locale();
 
     /// @}
+
+    /// Create from system default locale.
+    static Locale system();
 
     /// Wrapper around setlocale(3) libc function.
     static char * set(int category=LC_ALL, const std::string & locale=std::string());
@@ -310,6 +316,7 @@ private:
     Locale_data * data;
     void init1();
     void init2();
+    Locale(Locale_data * dataptr);
 };
 
 } // namespace tau

@@ -111,6 +111,16 @@ int Notebook_impl::remove_page(int page) {
             auto & p = pages_[upage];
             abs_->remove(p.frame.get());
             card_->remove(p.wp.get());
+            p.size1_cx.drop();
+            p.size2_cx.drop();
+            p.requisition_cx.drop();
+            p.hints_cx.drop();
+            p.mouse_down_cx.drop();
+            p.mouse_up_cx.drop();
+            p.mouse_motion_cx.drop();
+            p.show_cx.drop();
+            p.visible_cx.drop();
+            p.hide_cx.drop();
             pages_.erase(pages_.begin()+upage);
             signal_page_removed_(page);
             for (int n = pages_.size(); n > page; --n) { signal_page_reordered_(n, n-1); }
@@ -159,9 +169,10 @@ int Notebook_impl::append_page(Widget_ptr wp) {
     return append_page(wp, str_format("Page ", 1+pages_.size()));
 }
 
-int Notebook_impl::append_page(Widget_ptr wp, const ustring & title) {
+int Notebook_impl::append_page(Widget_ptr wp, const ustring & title, Widget_ptr * rptr) {
     auto tp = std::make_shared<Text_impl>(title);
     tp->hint_margin(2);
+    if (rptr) { *rptr = tp; }
     return append_page(wp, tp);
 }
 
@@ -180,10 +191,11 @@ void Notebook_impl::prepend_page(Widget_ptr wp) {
     prepend_page(wp, str_format("Page ", 1+pages_.size()));
 }
 
-void Notebook_impl::prepend_page(Widget_ptr wp, const ustring & title) {
+Widget_ptr Notebook_impl::prepend_page(Widget_ptr wp, const ustring & title) {
     auto tp = std::make_shared<Text_impl>(title);
     tp->hint_margin(2);
     prepend_page(wp, tp);
+    return tp;
 }
 
 int Notebook_impl::insert_page(Widget_ptr wp, int nth_page, Widget_ptr tp) {
@@ -204,9 +216,10 @@ int Notebook_impl::insert_page(Widget_ptr wp, int nth_page) {
     return insert_page(wp, nth_page, str_format("Page ", 1+pages_.size()));
 }
 
-int Notebook_impl::insert_page(Widget_ptr wp, int nth_page, const ustring & title) {
+int Notebook_impl::insert_page(Widget_ptr wp, int nth_page, const ustring & title, Widget_ptr * rptr) {
     auto tp = std::make_shared<Text_impl>(title);
     tp->hint_margin(2);
+    if (rptr) { *rptr = tp; }
     return insert_page(wp, nth_page, tp);
 }
 
@@ -227,9 +240,10 @@ int Notebook_impl::insert_page_after(Widget_ptr wp, Widget_ptr after_this) {
     return insert_page_after(wp, after_this, str_format("Page ", 1+pages_.size()));
 }
 
-int Notebook_impl::insert_page_after(Widget_ptr wp, Widget_ptr after_this, const ustring & title) {
+int Notebook_impl::insert_page_after(Widget_ptr wp, Widget_ptr after_this, const ustring & title, Widget_ptr * rptr) {
     auto tp = std::make_shared<Text_impl>(title);
     tp->hint_margin(2);
+    if (rptr) { *rptr = tp; }
     return insert_page_after(wp, after_this, tp);
 }
 
@@ -237,9 +251,10 @@ int Notebook_impl::insert_page_before(Widget_ptr wp, Widget_ptr before_this) {
     return insert_page_before(wp, before_this, str_format("Page ", 1+pages_.size()));
 }
 
-int Notebook_impl::insert_page_before(Widget_ptr wp, Widget_ptr before_this, const ustring & title) {
+int Notebook_impl::insert_page_before(Widget_ptr wp, Widget_ptr before_this, const ustring & title, Widget_ptr * rptr) {
     auto tp = std::make_shared<Text_impl>(title);
     tp->hint_margin(2);
+    if (rptr) { *rptr = tp; }
     return insert_page_before(wp, before_this, tp);
 }
 
@@ -315,17 +330,18 @@ void Notebook_impl::init_page(unsigned nth_page, Widget_ptr wp, Widget_ptr tp) {
     }
 
     p.frame->insert(tp);
-    p.frame->signal_size_changed().connect(fun(this, &Notebook_impl::update_tabs));
-    p.frame->signal_size_changed().connect(fun(this, &Notebook_impl::update_roller));
-    p.frame->signal_requisition_changed().connect(fun(this, &Notebook_impl::update_tabs));
-    p.frame->signal_hints_changed().connect(fun(this, &Notebook_impl::update_tabs));
-    p.frame->signal_mouse_down().connect(tau::bind(fun(this, &Notebook_impl::on_tab_mouse_down), p.frame.get()));
-    p.frame->signal_mouse_up().connect(tau::bind(fun(this, &Notebook_impl::on_tab_mouse_up), p.frame.get()));
-    p.frame->signal_mouse_motion().connect(tau::bind(fun(this, &Notebook_impl::on_tab_mouse_motion), p.frame.get()));
+    p.size1_cx = p.frame->signal_size_changed().connect(fun(this, &Notebook_impl::update_tabs));
+    p.size2_cx = p.frame->signal_size_changed().connect(fun(this, &Notebook_impl::update_roller));
+    p.requisition_cx = p.frame->signal_requisition_changed().connect(fun(this, &Notebook_impl::update_tabs));
+    p.hints_cx = p.frame->signal_hints_changed().connect(fun(this, &Notebook_impl::update_tabs));
+    p.mouse_down_cx = p.frame->signal_mouse_down().connect(tau::bind(fun(this, &Notebook_impl::on_tab_mouse_down), p.frame.get()));
+    p.mouse_up_cx = p.frame->signal_mouse_up().connect(tau::bind(fun(this, &Notebook_impl::on_tab_mouse_up), p.frame.get()));
+    p.mouse_motion_cx = p.frame->signal_mouse_motion().connect(tau::bind(fun(this, &Notebook_impl::on_tab_mouse_motion), p.frame.get()));
 
-    wp->signal_show().connect(fun(this, &Notebook_impl::update_current));
-    wp->signal_visible().connect(fun(this, &Notebook_impl::update_roller));
-    wp->signal_hide().connect(fun(this, &Notebook_impl::update_current));
+    p.show_cx = p.wp->signal_show().connect(fun(this, &Notebook_impl::update_current));
+    p.visible_cx = p.wp->signal_visible().connect(fun(this, &Notebook_impl::update_roller));
+    p.hide_cx = p.wp->signal_hide().connect(fun(this, &Notebook_impl::update_current));
+
     card_->insert(wp);
     abs_->put(p.frame, Point());
     update_frame_border();

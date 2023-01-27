@@ -132,16 +132,16 @@ void Entry::append(Widget & w, bool shrink) {
     ENTRY_IMPL->append(w.ptr(), shrink);
 }
 
-void Entry::append(const ustring & text, unsigned margin_left, unsigned margin_right) {
-    ENTRY_IMPL->append(text, margin_left, margin_right);
+Widget_ptr Entry::append(const ustring & text, unsigned margin_left, unsigned margin_right) {
+    return ENTRY_IMPL->append(text, margin_left, margin_right);
 }
 
 void Entry::prepend(Widget & w, bool shrink) {
     ENTRY_IMPL->prepend(w.ptr(), shrink);
 }
 
-void Entry::prepend(const ustring & text, unsigned margin_left, unsigned margin_right) {
-    ENTRY_IMPL->prepend(text, margin_left, margin_right);
+Widget_ptr Entry::prepend(const ustring & text, unsigned margin_left, unsigned margin_right) {
+    return ENTRY_IMPL->prepend(text, margin_left, margin_right);
 }
 
 Action & Entry::cancel_action() {

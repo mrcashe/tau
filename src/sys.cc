@@ -223,7 +223,7 @@ ustring str_env(const std::string & env, const ustring & fallback) {
 
     if (char * val = getenv(env.c_str())) {
         auto enc = Encoding();
-        res.assign(enc.is_utf8() ? ustring(val) : enc.decode(val));
+        res.assign(str_trimleft(str_trimright((enc.is_utf8() ? ustring(val) : enc.decode(val)))));
     }
 
     return res;

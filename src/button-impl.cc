@@ -212,7 +212,7 @@ void Button_base_impl::on_mouse_enter(const Point & pt) {
 void Button_base_impl::on_mouse_leave() {
     fix_press_ = false;
     timer_.stop();
-    timer_cx_.disconnect();
+    timer_cx_.drop();
     redraw();
 }
 
@@ -221,7 +221,7 @@ bool Button_base_impl::on_mouse_up(int mbt, int mm, const Point & position) {
         if (fix_press_) {
             fix_press_ = false;
             timer_.stop();
-            timer_cx_.disconnect();
+            timer_cx_.drop();
             on_release();
         }
 
@@ -405,7 +405,7 @@ void Button_impl::set_repeat_delay(unsigned first, unsigned next) {
 bool Button_impl::on_keyboard_activate() {
     hide_tooltip();
     press();
-    timer_cx_.disconnect();
+    timer_cx_.drop();
     timer_cx_ = timer_.signal_alarm().connect(fun(this, &Button_impl::on_release_timeout));
     timer_.start(140);
     return true;
@@ -413,7 +413,7 @@ bool Button_impl::on_keyboard_activate() {
 
 void Button_impl::on_release_timeout() {
     timer_.stop();
-    timer_cx_.disconnect();
+    timer_cx_.drop();
     on_release();
 }
 
@@ -425,7 +425,7 @@ void Button_impl::on_repeat_timeout() {
 
     else {
         timer_.stop();
-        timer_cx_.disconnect();
+        timer_cx_.drop();
     }
 }
 
@@ -436,7 +436,7 @@ void Button_impl::on_mouse_leave() {
 // Overrides Button_base_impl.
 void Button_impl::on_press() {
     if (repeat_) {
-        timer_cx_.disconnect();
+        timer_cx_.drop();
         timer_cx_ = timer_.signal_alarm().connect(fun(this, &Button_impl::on_repeat_timeout));
         timer_.restart(repeat_delay_);
         click();
@@ -445,7 +445,7 @@ void Button_impl::on_press() {
 
 void Button_impl::on_disable() {
     timer_.stop();
-    timer_cx_.disconnect();
+    timer_cx_.drop();
     if (pressed_) { pressed_ = false; redraw(); }
 }
 

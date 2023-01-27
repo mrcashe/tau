@@ -60,6 +60,7 @@ Container_impl::Container_impl():
 
 Container_impl::~Container_impl() {
     destroy_ = true;
+    signal_destroy_();
     unparent_all();
 }
 
@@ -106,7 +107,12 @@ void Container_impl::unparent_all() {
         end_modal_up(modal_child_);
         ungrab_mouse_up(mouse_grabber_);
         if (focused()) { grab_focus(); }
-        for (auto wp: children_) { woff_.push_back(wp); }
+
+        for (auto wp: children_) {
+            woff_.push_back(wp);
+            wp->unparent();
+        }
+
         woff_timer_.start(11, true);
         children_.clear();
         obscured_.clear();
@@ -335,7 +341,7 @@ void Container_impl::on_mouse_enter(const Point & pt) {
 // Overriden by Window_impl.
 // Overrides Widget_impl.
 bool Container_impl::grab_mouse_up(Widget_impl * caller) {
-    if (enabled()) {
+    if (!destroy_ && enabled()) {
         if (caller == mouse_grabber_) {
             return true;
         }
@@ -365,7 +371,7 @@ bool Container_impl::grab_mouse_up(Widget_impl * caller) {
 // Overriden by Window_impl.
 // Overrides Widget_impl.
 bool Container_impl::ungrab_mouse_up(Widget_impl * caller) {
-    if (caller) {
+    if (!destroy_ && caller) {
         if (caller == mouse_grabber_) {
             mouse_grabber_ = nullptr;
         }
@@ -391,10 +397,8 @@ void Container_impl::ungrab_mouse_down() {
         }
     }
 
-    if (parent_) {
-        if (this != parent_->mouse_owner()) {
-            signal_mouse_leave_();
-        }
+    if (parent_ && this != parent_->mouse_owner()) {
+        signal_mouse_leave_();
     }
 }
 
@@ -411,7 +415,7 @@ bool Container_impl::grabs_mouse() const {
 // Overrides Widget_impl.
 // Overriden by Window_impl.
 bool Container_impl::grab_modal_up(Widget_impl * caller) {
-    if (enabled()) {
+    if (!destroy_ && enabled()) {
         if (this == caller && has_modal()) {
             return true;
         }
@@ -430,7 +434,7 @@ bool Container_impl::grab_modal_up(Widget_impl * caller) {
 bool Container_impl::end_modal_up(Widget_impl * caller) {
     bool res = false;
 
-    if (caller) {
+    if (!destroy_ && caller) {
         res = (this == caller || modal_child_ == caller) && parent_ && parent_->end_modal_up(this);
 
         if (res) {
@@ -458,7 +462,6 @@ void Container_impl::set_modal_child(Widget_impl * caller) {
 
         if (this != caller) { modal_child_ = caller; }
         Widget_impl::resume_focus();
-        //if (caller) { caller->resume_focus(); }
     }
 }
 
@@ -483,7 +486,7 @@ void Container_impl::focus_child(Widget_impl * caller, int res) {
 // Overriden by Window_impl.
 // Overrides Widget_impl.
 int Container_impl::grab_focus_up(Widget_impl * caller) {
-    if (!focus_allowed() || has_modal()) { return -1; }
+    if (destroy_ || !focus_allowed() || has_modal()) { return -1; }
 
     if (!focused()) {
         if (!parent_) { return -1; }
@@ -499,21 +502,23 @@ int Container_impl::grab_focus_up(Widget_impl * caller) {
 // Overriden by Window_impl.
 // Overrides Widget_impl.
 void Container_impl::drop_focus_up(Widget_impl * caller) {
-    bool had_focus = parent_ && this == parent_->focused_child();
-    auto fc = focused_child_;
+    if (!destroy_) {
+        bool had_focus = parent_ && this == parent_->focused_child();
+        auto fc = focused_child_;
 
-    if (fc) {
-        focused_child_ = nullptr;
-        if ((fc == caller || this == caller) && fc != modal_child_) { fc->clear_focus(); }
-    }
+        if (fc) {
+            focused_child_ = nullptr;
+            if ((fc == caller || this == caller) && fc != modal_child_) { fc->clear_focus(); }
+        }
 
-    if (this != caller && focus_allowed() && had_focus && fc != modal_child_) {
-        signal_focus_in_();
-        return;
-    }
+        if (this != caller && focus_allowed() && had_focus && fc != modal_child_) {
+            signal_focus_in_();
+            return;
+        }
 
-    if (parent_ && this == parent_->focused_child()) {
-        parent_->drop_focus_up(this);
+        if (parent_ && this == parent_->focused_child()) {
+            parent_->drop_focus_up(this);
+        }
     }
 }
 
@@ -554,7 +559,7 @@ void Container_impl::clear_focus() {
 // Overriden by Window_impl.
 // Overrides Widget_impl.
 void Container_impl::set_cursor_up(Cursor_ptr cursor) {
-    if (!cursor_ && parent_) {
+    if (!destroy_ && !cursor_ && parent_) {
         parent_->set_cursor_up(cursor);
     }
 }
@@ -562,15 +567,13 @@ void Container_impl::set_cursor_up(Cursor_ptr cursor) {
 // Overriden by Window_impl.
 // Overrides Widget_impl.
 void Container_impl::unset_cursor_up() {
-    if (!cursor_hidden_) {
-        if (parent_) {
-            if (cursor_) {
-                parent_->set_cursor_up(cursor_);
-            }
+    if (!destroy_ && !cursor_hidden_ && parent_) {
+        if (cursor_) {
+            parent_->set_cursor_up(cursor_);
+        }
 
-            else {
-                parent_->unset_cursor_up();
-            }
+        else {
+            parent_->unset_cursor_up();
         }
     }
 }
@@ -578,12 +581,12 @@ void Container_impl::unset_cursor_up() {
 // Overriden by Window_impl.
 // Overrides Widget_impl.
 void Container_impl::show_cursor_up() {
-    if (parent_ && !cursor_hidden_) {
+    if (!destroy_ && parent_ && !cursor_hidden_) {
         parent_->show_cursor_up();
     }
 }
 
-void Container_impl::on_child_visibility_changed(Widget_impl * wi) {
+void Container_impl::on_child_visibility(Widget_impl * wi) {
     update_mouse_owner();
 }
 

@@ -472,7 +472,7 @@ void Navigator_impl::sort_backward() {
 }
 
 bool Navigator_impl::on_paint(Painter pr, const Rect & inval) {
-    paint_cx_.disconnect();
+    paint_cx_.drop();
     timer_.start(97);
     return false;
 }

@@ -36,6 +36,7 @@ namespace tau {
 
 /// Numeric value editor.
 ///
+/// Thread safe: @b NO
 /// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup widget_group
@@ -220,7 +221,8 @@ public:
     /// @param text text to be appended.
     /// @param margin_left left margin.
     /// @param margin_right right margin.
-    void append(const ustring & text, unsigned margin_left=0, unsigned margin_right=0);
+    /// @return pointer to the created Text widget.
+    Widget_ptr append(const ustring & text, unsigned margin_left=0, unsigned margin_right=0);
 
     /// Prepend widget before counting value.
     /// @throw user_error if w already inserted into another container.
@@ -231,7 +233,8 @@ public:
     /// @param text text to be prepended.
     /// @param margin_left left margin.
     /// @param margin_right right margin.
-    void prepend(const ustring & text, unsigned margin_left=0, unsigned margin_right=0);
+    /// @return pointer to the created Text widget.
+    Widget_ptr prepend(const ustring & text, unsigned margin_left=0, unsigned margin_right=0);
 
     /// Emits when entered text changed.
     signal<void(double)> & signal_value_changed();

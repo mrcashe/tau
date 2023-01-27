@@ -40,7 +40,7 @@ class Encoding_data;
 class Encoding {
 public:
 
-    /// Default constructor.
+    /// Construct from name or from current locale if name is empty.
     Encoding(const std::string & name=std::string());
 
     /// Copy constructor.
@@ -51,6 +51,9 @@ public:
 
     /// Destructor.
    ~Encoding();
+
+    /// Create from system default encoding.
+    static Encoding system();
 
     /// Compare operator.
     bool operator==(const Encoding & other) const;

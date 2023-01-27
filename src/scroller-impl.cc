@@ -71,8 +71,8 @@ void Scroller_impl::insert(Widget_ptr wp) {
     wp->update_origin(INT_MIN, INT_MIN);
     wp->update_size(0, 0);
     cp_ = wp;
-    req_cx_ = cp_->signal_requisition_changed().connect(fun(this, &Scroller_impl::on_child_requisition_changed));
-    hint_cx_ = cp_->signal_hints_changed().connect(fun(this, &Scroller_impl::on_child_requisition_changed));
+    req_cx_ = cp_->signal_requisition_changed().connect(fun(this, &Scroller_impl::update_requisition));
+    hint_cx_ = cp_->signal_hints_changed().connect(fun(this, &Scroller_impl::update_requisition));
     show_cx_ = cp_->signal_show().connect(fun(this, &Scroller_impl::on_child_show));
     hide_cx_ = cp_->signal_hide().connect(fun(this, &Scroller_impl::on_child_hide));
     update_requisition();
@@ -82,10 +82,10 @@ void Scroller_impl::insert(Widget_ptr wp) {
 void Scroller_impl::clear() {
     if (Widget_ptr wp = cp_) {
         cp_.reset();
-        req_cx_.disconnect();
-        hint_cx_.disconnect();
-        show_cx_.disconnect();
-        hide_cx_.disconnect();
+        req_cx_.drop();
+        hint_cx_.drop();
+        show_cx_.drop();
+        hide_cx_.drop();
         unparent_child(wp.get());
         wp->update_origin(INT_MIN, INT_MIN);
         wp->update_size(0, 0);
@@ -112,8 +112,10 @@ Size Scroller_impl::child_requisition() const {
 }
 
 void Scroller_impl::update_requisition() {
-    if (require_size(child_requisition())) {
-        signal_logical_size_changed_();
+    if (!destroy_) {
+        if (require_size(child_requisition())) {
+            signal_logical_size_changed_();
+        }
     }
 }
 
@@ -131,10 +133,6 @@ void Scroller_impl::arrange() {
     if (changed) { invalidate(); }
 }
 
-void Scroller_impl::on_child_requisition_changed() {
-    update_requisition();
-}
-
 void Scroller_impl::limit_scroll() {
     Size max = logical_size()-size();
     if (pan().x() >= max.iwidth()) { pan_to_x(max.iwidth()); }
@@ -142,16 +140,20 @@ void Scroller_impl::limit_scroll() {
 }
 
 void Scroller_impl::on_child_hide() {
-    cp_->update_origin(INT_MIN, INT_MIN);
-    cp_->update_size(0, 0);
-    pan_to(0, 0);
-    update_requisition();
-    queue_arrange();
+    if (!destroy_) {
+        cp_->update_origin(INT_MIN, INT_MIN);
+        cp_->update_size(0, 0);
+        pan_to(0, 0);
+        update_requisition();
+        queue_arrange();
+    }
 }
 
 void Scroller_impl::on_child_show() {
-    update_requisition();
-    queue_arrange();
+    if (!destroy_) {
+        update_requisition();
+        queue_arrange();
+    }
 }
 
 Size Scroller_impl::logical_size() const {

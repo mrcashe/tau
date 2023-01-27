@@ -65,9 +65,9 @@ public:
     void limit(unsigned width) { scroller_->hint_max_size(width, 0); }
 
     void append(Widget_ptr wp, bool shrink=false);
-    void append(const ustring & text, unsigned margin_left=0, unsigned margin_right=0);
+    Widget_ptr append(const ustring & text, unsigned margin_left=0, unsigned margin_right=0);
     void prepend(Widget_ptr wp, bool shrink=false);
-    void prepend(const ustring & text, unsigned margin_left=0, unsigned margin_right=0);
+    Widget_ptr prepend(const ustring & text, unsigned margin_left=0, unsigned margin_right=0);
 
     Action & cancel_action() { return edit_->cancel_action(); }
     const Action & cancel_action() const { return edit_->cancel_action(); }

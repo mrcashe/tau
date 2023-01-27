@@ -45,8 +45,8 @@ int Notebook::append_page(Widget & w) {
     return NOTEBOOK_IMPL->append_page(w.ptr());
 }
 
-int Notebook::append_page(Widget & w, const ustring & title) {
-    return NOTEBOOK_IMPL->append_page(w.ptr(), title);
+int Notebook::append_page(Widget & w, const ustring & title, Widget_ptr * rptr) {
+    return NOTEBOOK_IMPL->append_page(w.ptr(), title, rptr);
 }
 
 int  Notebook::append_page(Widget & w, Widget & title_widget) {
@@ -57,8 +57,8 @@ void Notebook::prepend_page(Widget & w) {
     NOTEBOOK_IMPL->prepend_page(w.ptr());
 }
 
-void Notebook::prepend_page(Widget & w, const ustring & title) {
-    NOTEBOOK_IMPL->prepend_page(w.ptr(), title);
+Widget_ptr Notebook::prepend_page(Widget & w, const ustring & title) {
+    return NOTEBOOK_IMPL->prepend_page(w.ptr(), title);
 }
 
 void Notebook::prepend_page(Widget & w, Widget & title_widget) {
@@ -69,8 +69,8 @@ int Notebook::insert_page(Widget & w, int nth_page) {
     return NOTEBOOK_IMPL->insert_page(w.ptr(), nth_page);
 }
 
-int Notebook::insert_page(Widget & w, int nth_page, const ustring & title) {
-    return NOTEBOOK_IMPL->insert_page(w.ptr(), nth_page, title);
+int Notebook::insert_page(Widget & w, int nth_page, const ustring & title, Widget_ptr * rptr) {
+    return NOTEBOOK_IMPL->insert_page(w.ptr(), nth_page, title, rptr);
 }
 
 int Notebook::insert_page(Widget & w, int nth_page, Widget & title_widget) {
@@ -81,8 +81,8 @@ int Notebook::insert_page_after(Widget & w, Widget & after_this) {
     return NOTEBOOK_IMPL->insert_page_after(w.ptr(), after_this.ptr());
 }
 
-int Notebook::insert_page_after(Widget & w, Widget & after_this, const ustring & title) {
-    return NOTEBOOK_IMPL->insert_page_after(w.ptr(), after_this.ptr(), title);
+int Notebook::insert_page_after(Widget & w, Widget & after_this, const ustring & title, Widget_ptr * rptr) {
+    return NOTEBOOK_IMPL->insert_page_after(w.ptr(), after_this.ptr(), title, rptr);
 }
 
 int Notebook::insert_page_after(Widget & w, Widget & after_this, Widget & title_widget) {
@@ -93,8 +93,8 @@ int Notebook::insert_page_before(Widget & w, Widget & before_this) {
     return NOTEBOOK_IMPL->insert_page_before(w.ptr(), before_this.ptr());
 }
 
-int Notebook::insert_page_before(Widget & w, Widget & before_this, const ustring & title) {
-    return NOTEBOOK_IMPL->insert_page_before(w.ptr(), before_this.ptr(), title);
+int Notebook::insert_page_before(Widget & w, Widget & before_this, const ustring & title, Widget_ptr * rptr) {
+    return NOTEBOOK_IMPL->insert_page_before(w.ptr(), before_this.ptr(), title, rptr);
 }
 
 int Notebook::insert_page_before(Widget & w, Widget & before_this, Widget & title_widget) {

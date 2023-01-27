@@ -35,7 +35,7 @@ class Card_impl: public Container_impl {
 public:
 
     Card_impl();
-   ~Card_impl() { destroy_ = true; }
+   ~Card_impl() { signal_destroy_(); }
 
     void insert(Widget_ptr wp);
     void remove_current();
@@ -50,10 +50,10 @@ private:
 
     struct Holder {
         Widget_impl *   wp;
-        connection      req_cx;
-        connection      hints_cx;
-        connection      show_cx;
-        connection      hide_cx;
+        connection      req_cx { true };
+        connection      hints_cx { true };
+        connection      show_cx { true };
+        connection      hide_cx { true };
     };
 
     using Holders = std::list<Holder>;

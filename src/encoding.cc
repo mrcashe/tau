@@ -344,8 +344,8 @@ Encoding::Encoding(const std::string & name):
     data(edata)
 {
     if (name.empty()) {
-        if (sys_locale_ptr_) {
-            data = sys_locale_ptr_->enc.data;
+        if (locale_ptr_) {
+            data = locale_ptr_->enc.data;
         }
     }
 
@@ -370,6 +370,11 @@ Encoding & Encoding::operator=(const Encoding & other) {
 }
 
 Encoding::~Encoding() {}
+
+// static
+Encoding Encoding::system() {
+    return sys_locale_ptr_ ?  sys_locale_ptr_->enc : Encoding();
+}
 
 bool Encoding::operator==(const Encoding & other) const {
     return data == other.data;

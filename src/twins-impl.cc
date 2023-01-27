@@ -95,10 +95,10 @@ void Twins_impl::insert_second(Widget_ptr wp) {
 
 void Twins_impl::rm_first() {
     if (first_) {
-        first_hints_cx_.disconnect();
-        first_req_cx_.disconnect();
-        first_show_cx_.disconnect();
-        first_hide_cx_.disconnect();
+        first_hints_cx_.drop();
+        first_req_cx_.drop();
+        first_show_cx_.drop();
+        first_hide_cx_.drop();
         unparent_child(first_);
         first_->update_origin(INT_MIN, INT_MIN);
         first_->update_size(0, 0);
@@ -108,10 +108,10 @@ void Twins_impl::rm_first() {
 
 void Twins_impl::rm_second() {
     if (second_) {
-        second_hints_cx_.disconnect();
-        second_req_cx_.disconnect();
-        second_show_cx_.disconnect();
-        second_hide_cx_.disconnect();
+        second_hints_cx_.drop();
+        second_req_cx_.drop();
+        second_show_cx_.drop();
+        second_hide_cx_.drop();
         unparent_child(second_);
         second_->update_origin(INT_MIN, INT_MIN);
         second_->update_size(0, 0);
@@ -290,7 +290,7 @@ bool Twins_impl::on_sep_mouse_down(int mbt, int mm, const Point & pt) {
 bool Twins_impl::on_sep_mouse_up(int mbt, int mm, const Point & pt) {
     if (MBT_LEFT == mbt) {
         sep_->ungrab_mouse();
-        sep_mouse_motion_cx_.disconnect();
+        sep_mouse_motion_cx_.drop();
     }
 
     return false;

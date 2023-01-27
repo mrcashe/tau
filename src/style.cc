@@ -77,8 +77,10 @@ struct Style_impl {
     }
 
     void unparent() {
-        for (auto & p: items_) { p.second->cx_.disconnect(); }
-        find_cx_.disconnect();
+        if (!find_cx_.empty()) {
+            for (auto & p: items_) { p.second->cx_.drop(); }
+            find_cx_.drop();
+        }
     }
 
     void unset(const std::string & name) {

@@ -38,136 +38,144 @@ Menu::Menu(Widget_ptr wp):
 {
 }
 
-void Menu::append(Widget & w) {
-    MENU_IMPL->append(w.ptr());
+Widget_ptr Menu::append(Widget & w) {
+    Widget_ptr wp = w.ptr();
+    MENU_IMPL->append(wp);
+    return wp;
 }
 
-void Menu::append(Action & action) {
+Widget_ptr Menu::append(Action & action) {
     Action_menu_item item(action);
-    append(item);
+    return append(item);
 }
 
-void Menu::append(Toggle_action & action, Check_style check_style, Border_style border_style) {
+Widget_ptr Menu::append(Toggle_action & action, Check_style check_style, Border_style border_style) {
     Toggle_menu_item item(action, check_style, border_style);
-    append(item);
+    return append(item);
 }
 
-void Menu::append(const ustring & label, const slot<void()> & slot_activate) {
+Widget_ptr Menu::append(const ustring & label, const slot<void()> & slot_activate) {
     Slot_menu_item item(label, slot_activate);
-    append(item);
+    return append(item);
 }
 
-void Menu::append(const ustring & label, const slot<void()> & slot_activate, const ustring & icon_name) {
+Widget_ptr Menu::append(const ustring & label, const slot<void()> & slot_activate, const ustring & icon_name) {
     Slot_menu_item item(label, slot_activate, icon_name);
-    append(item);
+    return append(item);
 }
 
-void Menu::append(const ustring & label, Menu & menu) {
+Widget_ptr Menu::append(const ustring & label, Menu & menu) {
     Submenu_item submenu(label, menu);
-    append(submenu);
+    return append(submenu);
 }
 
-void Menu::append_separator(Separator_style separator_style) {
-    MENU_IMPL->append_separator(separator_style);
+Widget_ptr Menu::append_separator(Separator_style separator_style) {
+    return MENU_IMPL->append_separator(separator_style);
 }
 
-void Menu::prepend(Widget & w) {
-    MENU_IMPL->prepend(w.ptr());
+Widget_ptr Menu::prepend(Widget & w) {
+    Widget_ptr wp = w.ptr();
+    MENU_IMPL->prepend(wp);
+    return wp;
 }
 
-void Menu::prepend(Action & action) {
+Widget_ptr Menu::prepend(Action & action) {
     Action_menu_item item(action);
-    prepend(item);
+    return prepend(item);
 }
 
-void Menu::prepend(Toggle_action & action, Check_style check_style, Border_style border_style) {
+Widget_ptr Menu::prepend(Toggle_action & action, Check_style check_style, Border_style border_style) {
     Toggle_menu_item item(action, check_style, border_style);
-    prepend(item);
+    return prepend(item);
 }
 
-void Menu::prepend(const ustring & label, const slot<void()> & slot_activate) {
+Widget_ptr Menu::prepend(const ustring & label, const slot<void()> & slot_activate) {
     Slot_menu_item item(label, slot_activate);
-    prepend(item);
+    return prepend(item);
 }
 
-void Menu::prepend(const ustring & label, const slot<void()> & slot_activate, const ustring & icon_name) {
+Widget_ptr Menu::prepend(const ustring & label, const slot<void()> & slot_activate, const ustring & icon_name) {
     Slot_menu_item item(label, slot_activate, icon_name);
-    prepend(item);
+    return prepend(item);
 }
 
-void Menu::prepend(const ustring & label, Menu & menu) {
+Widget_ptr Menu::prepend(const ustring & label, Menu & menu) {
     Submenu_item submenu(label, menu);
-    prepend(submenu);
+    return prepend(submenu);
 }
 
-void Menu::prepend_separator(Separator_style separator_style) {
-    MENU_IMPL->prepend_separator(separator_style);
+Widget_ptr Menu::prepend_separator(Separator_style separator_style) {
+    return MENU_IMPL->prepend_separator(separator_style);
 }
 
-void Menu::insert_before(Widget & w, const Widget & other) {
-    MENU_IMPL->insert_before(w.ptr(), other.ptr().get());
+Widget_ptr Menu::insert_before(Widget & w, const Widget & other) {
+    Widget_ptr wp = w.ptr();
+    MENU_IMPL->insert_before(wp, other.ptr().get());
+    return wp;
 }
 
-void Menu::insert_before(Action & action, const Widget & other) {
+Widget_ptr Menu::insert_before(Action & action, const Widget & other) {
     Action_menu_item item(action);
-    insert_before(item, other);
+    return insert_before(item, other);
 }
 
-void Menu::insert_before(Toggle_action & action, const Widget & other, Check_style check_style, Border_style border_style) {
+Widget_ptr Menu::insert_before(Toggle_action & action, const Widget & other, Check_style check_style, Border_style border_style) {
     Toggle_menu_item item(action, check_style, border_style);
-    insert_before(item, other);
+    return insert_before(item, other);
 }
 
-void Menu::insert_before(const ustring & label, const slot<void()> & slot_activate, const Widget & other) {
+Widget_ptr Menu::insert_before(const ustring & label, const slot<void()> & slot_activate, const Widget & other) {
     Slot_menu_item item(label, slot_activate);
-    insert_before(item, other);
+    return insert_before(item, other);
 }
 
-void Menu::insert_before(const ustring & label, const slot<void()> & slot_activate, const ustring & icon_name, const Widget & other) {
+Widget_ptr Menu::insert_before(const ustring & label, const slot<void()> & slot_activate, const ustring & icon_name, const Widget & other) {
     Slot_menu_item item(label, slot_activate, icon_name);
-    insert_before(item, other);
+    return insert_before(item, other);
 }
 
-void Menu::insert_before(const ustring & label, Menu & menu, const Widget & other) {
+Widget_ptr Menu::insert_before(const ustring & label, Menu & menu, const Widget & other) {
     Submenu_item item(label, menu);
-    insert_before(item, other);
+    return insert_before(item, other);
 }
 
-void Menu::insert_separator_before(const Widget & other, Separator_style separator_style) {
-    MENU_IMPL->insert_separator_before(other.ptr().get(), separator_style);
+Widget_ptr Menu::insert_separator_before(const Widget & other, Separator_style separator_style) {
+    return MENU_IMPL->insert_separator_before(other.ptr().get(), separator_style);
 }
 
-void Menu::insert_after(Widget & w, const Widget & other) {
-    MENU_IMPL->insert_after(w.ptr(), other.ptr().get());
+Widget_ptr Menu::insert_after(Widget & w, const Widget & other) {
+    Widget_ptr wp = w.ptr();
+    MENU_IMPL->insert_after(wp, other.ptr().get());
+    return wp;
 }
 
-void Menu::insert_after(Action & action, const Widget & other) {
+Widget_ptr Menu::insert_after(Action & action, const Widget & other) {
     Action_menu_item item(action);
-    insert_after(item, other);
+    return insert_after(item, other);
 }
 
-void Menu::insert_after(Toggle_action & action, const Widget & other, Check_style check_style, Border_style border_style) {
+Widget_ptr Menu::insert_after(Toggle_action & action, const Widget & other, Check_style check_style, Border_style border_style) {
     Toggle_menu_item item(action, check_style, border_style);
-    insert_after(item, other);
+    return insert_after(item, other);
 }
 
-void Menu::insert_after(const ustring & label, const slot<void()> & slot_activate, const Widget & other) {
+Widget_ptr Menu::insert_after(const ustring & label, const slot<void()> & slot_activate, const Widget & other) {
     Slot_menu_item item(label, slot_activate);
-    insert_after(item, other);
+    return insert_after(item, other);
 }
 
-void Menu::insert_after(const ustring & label, const slot<void()> & slot_activate, const ustring & icon_name, const Widget & other) {
+Widget_ptr Menu::insert_after(const ustring & label, const slot<void()> & slot_activate, const ustring & icon_name, const Widget & other) {
     Slot_menu_item item(label, slot_activate, icon_name);
-    insert_after(item, other);
+    return insert_after(item, other);
 }
 
-void Menu::insert_after(const ustring & label, Menu & menu, const Widget & other) {
+Widget_ptr Menu::insert_after(const ustring & label, Menu & menu, const Widget & other) {
     Submenu_item item(label, menu);
-    insert_after(item, other);
+    return insert_after(item, other);
 }
 
-void Menu::insert_separator_after(const Widget & other, Separator_style separator_style) {
-    MENU_IMPL->insert_separator_after(other.ptr().get(), separator_style);
+Widget_ptr Menu::insert_separator_after(const Widget & other, Separator_style separator_style) {
+    return MENU_IMPL->insert_separator_after(other.ptr().get(), separator_style);
 }
 
 void Menu::remove(Widget & w) {
@@ -416,13 +424,12 @@ Menubox::Menubox(Widget_ptr wp):
 {
 }
 
-void Menubox::popup(Toplevel & parent_window, const Point & position, Gravity gravity) {
-    auto wpp = std::dynamic_pointer_cast<Window_impl>(parent_window.ptr());
+Widget_ptr Menubox::popup(Toplevel & root, const Point & origin) {
+    return MENUBOX_IMPL->popup(std::static_pointer_cast<Window_impl>(root.ptr()).get(), impl, origin, nullptr);
+}
 
-    if (wpp) {
-        MENUBOX_IMPL->popup(wpp.get(), impl, position, gravity, nullptr);
-        MENUBOX_IMPL->grab_modal();
-    }
+Widget_ptr Menubox::popup(Toplevel & root, const Point & origin, Gravity gravity) {
+    return MENUBOX_IMPL->popup(std::static_pointer_cast<Window_impl>(root.ptr()).get(), impl, origin, gravity, nullptr);
 }
 
 } // namespace tau

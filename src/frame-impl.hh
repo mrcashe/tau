@@ -37,7 +37,7 @@ class Frame_impl: public Container_impl {
 public:
 
     Frame_impl();
-   ~Frame_impl() { destroy_ = true; }
+   ~Frame_impl() { signal_destroy_(); }
 
     explicit Frame_impl(const ustring & label);
     Frame_impl(const ustring & label, Align align);

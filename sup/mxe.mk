@@ -49,7 +49,7 @@ en-mxe-a: $(builddir)
 su-mxe-a:
 	@$(rm) $(builddir)/$(mxe_a_mk)
 
-rm-mxe-a: rm-mxe-test
+rm-mxe-a: rm-mxe-test-a
 	@if [ -e "$(builddir)/$(mxe_a_mk)" ]; then $(MAKE) -C $(builddir) -f $(mxe_a_mk) rm; fi
 	@$(rm) $(builddir)/$(mxe_a_mk)
 
@@ -59,7 +59,7 @@ en-mxe-so: $(builddir)
 su-mxe-so:
 	@$(rm) $(builddir)/$(mxe_so_mk)
 
-rm-mxe-so:
+rm-mxe-so: rm-mxe-test-so
 	@if [ -e $(builddir)/$(mxe_so_mk) ]; then $(MAKE) -C $(builddir) -f $(mxe_so_mk) rm; fi
 	@$(rm) $(builddir)/$(mxe_so_mk)
 

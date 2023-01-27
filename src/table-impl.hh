@@ -38,7 +38,7 @@ class Table_impl: public Container_impl {
 public:
 
     Table_impl();
-   ~Table_impl() { destroy_ = true; }
+   ~Table_impl() { signal_destroy_(); }
 
     void put(Widget_ptr wp, int x, int y, unsigned xspan=1, unsigned yspan=1, bool xsh=false, bool ysh=false);
 

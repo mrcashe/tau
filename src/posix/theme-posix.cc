@@ -143,6 +143,9 @@ void Theme_posix::boot() {
     add_pixmap_dir("/usr/share/icons");
     add_icon_dir("/usr/share/icons");
 
+    add_icon_dir(path_build(path_home(), ".icons"));
+    add_cursor_dir(path_build(path_home(), ".icons"));
+
     add_pixmap_dir("/usr/local/share/pixmaps");
     add_pixmap_dir("/usr/local/share/icons");
     add_icon_dir("/usr/local/share/icons");

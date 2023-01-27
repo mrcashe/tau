@@ -461,15 +461,27 @@ Locale_data sys_locale_ = {
     .sdata      = sdata_
 };
 
+Locale_data locale_ = {
+    .spec       = "C",
+    .lang       = Language("C"),
+    .terr       = Territory(),
+    .enc        = Encoding("ASCII"),
+    .iocharset  = Encoding("ASCII"),
+    .mod        = "",
+    .sdata      = sdata_
+};
+
 Locale_data * sys_locale_ptr_ = nullptr;
+Locale_data * locale_ptr_ = nullptr;
 
 Locale::Locale(const std::string & spec):
-    data(sys_locale_ptr_)
+    data(locale_ptr_)
 {
     if (spec.empty()) {
         if (!data) {
-            data = sys_locale_ptr_ = &sys_locale_;
-            init1();
+            if (!sys_locale_ptr_) { data = sys_locale_ptr_ = &sys_locale_; init1(); }
+            if (!locale_ptr_) { locale_ = sys_locale_; locale_ptr_ = &locale_; }
+            data = locale_ptr_;
             init2();
         }
     }
@@ -482,6 +494,15 @@ Locale::Locale(const std::string & spec):
     }
 }
 
+Locale::Locale(Locale_data * dataptr):
+    data(dataptr)
+{
+}
+
+// static
+Locale Locale::system() {
+    return sys_locale_ptr_ ?  Locale(sys_locale_ptr_) : Locale();
+}
 
 void Locale::init2() {
     auto end = data->spec.find_first_of("-_");
@@ -558,7 +579,7 @@ Locale & Locale::operator=(const Locale & other) {
 }
 
 Locale::~Locale() {
-    if (data !=  sys_locale_ptr_) { delete data; }
+    if ((data != sys_locale_ptr_) && (data != locale_ptr_)) { delete data; }
 }
 
 bool Locale::operator==(const Locale & other) const {
@@ -578,7 +599,6 @@ char * Locale::set(int category, const std::string & locale) {
 
     if (result) {
         if (!locale.empty() && lc.code() != locale) {
-            lc.data = sys_locale_ptr_ = &sys_locale_;
             lc.data->spec = locale;
             lc.init2();
         }

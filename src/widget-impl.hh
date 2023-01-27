@@ -338,6 +338,7 @@ public:
     signal<bool()> & signal_take_focus() { return signal_take_focus_; }
     signal<void()> & signal_geometry_notify() { return signal_geometry_notify_; }
     signal<Action_base *(char32_t, int)> & signal_lookup_action() { return signal_lookup_action_; }
+    signal<void(bool)> & signal_shut() { return signal_shut_; }
 
 protected:
 
@@ -380,6 +381,7 @@ protected:
     signal<void()> signal_display_;
     signal<void()> signal_unparent_;
     signal<void()> signal_destroy_;
+    signal<void(bool)> signal_shut_;
     signal<bool()> signal_take_focus_;
     signal<void()> signal_pdata_changed_;
     signal<void()> signal_geometry_notify_;
@@ -431,12 +433,13 @@ private:
     connection  parent_cx_;
     connection  unparent_cx_;
     connection  display_cx_;
-    connection  show_cx_;
-    connection  hide_cx_;
+    connection  visible_cx_;
+    connection  invisible_cx_;
+    connection  shut_cx_;
     connection  lookup_action_cx_;
 
     connection  cursor_theme_cx_;
-    connection  size_notify_cx_;
+    connection  geometry_notify_cx_;
     connection  pdata_cx_;
 
 private:
@@ -455,6 +458,7 @@ private:
     void on_tooltip_close();
     void on_tooltip_mouse_leave();
     void on_action_accel_added(Accel & accel);
+    void on_shut(bool yes);
 };
 
 } // namespace tau

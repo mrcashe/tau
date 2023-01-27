@@ -32,10 +32,10 @@ namespace tau {
 Bin_impl::Bin_impl():
     Container_impl()
 {
-    signal_arrange().connect(fun(this, &Bin_impl::arrange));
-    signal_size_changed().connect(fun(this, &Bin_impl::arrange));
-    signal_visible().connect(fun(this, &Bin_impl::arrange));
-    signal_display().connect(fun(this, &Bin_impl::update_requisition));
+    signal_arrange_.connect(fun(this, &Bin_impl::arrange));
+    signal_size_changed_.connect(fun(this, &Bin_impl::arrange));
+    signal_visible_.connect(fun(this, &Bin_impl::arrange));
+    signal_display_.connect(fun(this, &Bin_impl::update_requisition));
 }
 
 void Bin_impl::insert(Widget_ptr wp) {
@@ -43,7 +43,7 @@ void Bin_impl::insert(Widget_ptr wp) {
     wp->update_origin(INT_MIN, INT_MIN);
     wp->update_size(0, 0);
     make_child(wp);
-    cp_ = wp;
+    cp_ = wp.get();
     hints_cx_ = cp_->signal_hints_changed().connect(fun(this, &Bin_impl::update_requisition));
     req_cx_ = cp_->signal_requisition_changed().connect(fun(this, &Bin_impl::update_requisition));
     show_cx_ = cp_->signal_show().connect(fun(this, &Bin_impl::on_child_show));
@@ -54,32 +54,32 @@ void Bin_impl::insert(Widget_ptr wp) {
 }
 
 void Bin_impl::clear() {
-    if (Widget_ptr wp = cp_) {
-        cp_.reset();
-        hints_cx_.disconnect();
-        req_cx_.disconnect();
-        show_cx_.disconnect();
-        hide_cx_.disconnect();
-        focus_cx_.disconnect();
-        unparent_child(wp.get());
-        wp->update_origin(INT_MIN, INT_MIN);
-        wp->update_size(0, 0);
+    if (cp_) {
+        hints_cx_.drop();
+        req_cx_.drop();
+        show_cx_.drop();
+        hide_cx_.drop();
+        focus_cx_.drop();
+        unparent_child(cp_);
+        cp_ = nullptr;
         update_requisition();
         invalidate();
     }
 }
 
 void Bin_impl::update_requisition() {
-    Size rs;
+    if (!destroy_) {
+        Size rs;
 
-    if (cp_ && !cp_->hidden()) {
-        Size rq = cp_->required_size();
-        rs += cp_->margin_hint();
-        if (rq) { rs += rq; }
-        else { rs.increase(1, 1); }
+        if (cp_ && !cp_->hidden()) {
+            Size rq = cp_->required_size();
+            rs += cp_->margin_hint();
+            if (rq) { rs += rq; }
+            else { rs.increase(1, 1); }
+        }
+
+        require_size(rs);
     }
-
-    require_size(rs);
 }
 
 void Bin_impl::arrange() {

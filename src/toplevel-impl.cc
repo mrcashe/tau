@@ -52,7 +52,7 @@ void Toplevel_impl::set_title(const ustring & title) {
 }
 
 void Toplevel_impl::set_icon(Pixmap_ptr icon) {
-    icon_theme_cx_.disconnect();
+    icon_theme_cx_.drop();
     winface_->set_icon(icon);
 }
 
@@ -77,7 +77,7 @@ void Toplevel_impl::on_icon_theme_changed() {
 void Toplevel_impl::set_icon_from_file(const ustring & path) {
     try {
         if (auto pix = Pixmap_impl::load_from_file(path)) {
-            icon_theme_cx_.disconnect();
+            icon_theme_cx_.drop();
             winface_->set_icon(pix);
         }
     }

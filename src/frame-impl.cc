@@ -82,12 +82,12 @@ Frame_impl::Frame_impl(const ustring & label, Align align, Border_style bs, unsi
 }
 
 void Frame_impl::init() {
-    signal_arrange().connect(fun(this, &Frame_impl::arrange));
-    signal_size_changed().connect(fun(this, &Frame_impl::arrange));
-    signal_visible().connect(fun(this, &Frame_impl::arrange));
-    signal_display().connect(fun(this, &Frame_impl::update_requisition));
-    signal_paint().connect(fun(this, &Frame_impl::on_paint));
-    signal_backpaint().connect(fun(this, &Frame_impl::on_backpaint), true);
+    signal_arrange_.connect(fun(this, &Frame_impl::arrange));
+    signal_size_changed_.connect(fun(this, &Frame_impl::arrange));
+    signal_visible_.connect(fun(this, &Frame_impl::arrange));
+    signal_display_.connect(fun(this, &Frame_impl::update_requisition));
+    signal_paint_.connect(fun(this, &Frame_impl::on_paint));
+    signal_backpaint_.connect(fun(this, &Frame_impl::on_backpaint), true);
 }
 
 void Frame_impl::init_border_style(Border_style bs, unsigned width, int radius) {
@@ -114,11 +114,11 @@ void Frame_impl::insert(Widget_ptr wp) {
 
 void Frame_impl::clear() {
     if (auto wp = cp_) {
-        child_hints_cx_.disconnect();
-        child_req_cx_.disconnect();
-        child_hide_cx_.disconnect();
-        child_show_cx_.disconnect();
-        child_focus_cx_.disconnect();
+        child_hints_cx_.drop();
+        child_req_cx_.drop();
+        child_hide_cx_.drop();
+        child_show_cx_.drop();
+        child_focus_cx_.drop();
         cp_ = nullptr;
         unparent_child(wp);
         wp->update_origin(INT_MIN, INT_MIN);
@@ -146,10 +146,10 @@ void Frame_impl::set_label(Widget_ptr wp) {
 void Frame_impl::unset_label() {
     if (auto wp = label_) {
         lb_.reset();
-        label_hints_cx_.disconnect();
-        label_req_cx_.disconnect();
-        label_hide_cx_.disconnect();
-        label_show_cx_.disconnect();
+        label_hints_cx_.drop();
+        label_req_cx_.drop();
+        label_hide_cx_.drop();
+        label_show_cx_.drop();
         label_ = nullptr;
         unparent_child(wp);
         wp->update_origin(INT_MIN, INT_MIN);

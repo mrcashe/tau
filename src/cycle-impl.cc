@@ -165,11 +165,12 @@ void Cycle_impl::append(Widget_ptr wp, bool shrink) {
     itable_->put(wp, rng.xmax, 0, 1, 1, shrink, false);
 }
 
-void Cycle_impl::append(const ustring & text, unsigned margin_left_hint, unsigned margin_right_hint) {
+Widget_ptr Cycle_impl::append(const ustring & text, unsigned margin_left, unsigned margin_right) {
     Text_ptr tp = std::make_shared<Text_impl>(text);
-    tp->hint_margin_left(margin_left_hint);
-    tp->hint_margin_right(margin_right_hint);
+    tp->hint_margin_left(margin_left);
+    tp->hint_margin_right(margin_right);
     append(tp, true);
+    return tp;
 }
 
 void Cycle_impl::prepend(Widget_ptr wp, bool shrink) {
@@ -178,11 +179,12 @@ void Cycle_impl::prepend(Widget_ptr wp, bool shrink) {
     itable_->put(wp, rng.xmin-1, 0, 1, 1, shrink, false);
 }
 
-void Cycle_impl::prepend(const ustring & text, unsigned margin_left_hint, unsigned margin_right_hint) {
+Widget_ptr Cycle_impl::prepend(const ustring & text, unsigned margin_left, unsigned margin_right) {
     Text_ptr tp = std::make_shared<Text_impl>(text);
-    tp->hint_margin_left(margin_left_hint);
-    tp->hint_margin_right(margin_right_hint);
+    tp->hint_margin_left(margin_left);
+    tp->hint_margin_right(margin_right);
     prepend(tp, true);
+    return tp;
 }
 
 } // namespace tau

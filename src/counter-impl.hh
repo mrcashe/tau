@@ -127,16 +127,16 @@ public:
         entry_->append(wp, shrink);
     }
 
-    void append(const ustring & text, unsigned margin_left=0, unsigned margin_right=0) {
-        entry_->append(text, margin_left, margin_right);
+    Widget_ptr append(const ustring & text, unsigned margin_left=0, unsigned margin_right=0) {
+        return entry_->append(text, margin_left, margin_right);
     }
 
     void prepend(Widget_ptr wp, bool shrink=false) {
         entry_->prepend(wp, shrink);
     }
 
-    void prepend(const ustring & text, unsigned margin_left=0, unsigned margin_right=0) {
-        entry_->prepend(text, margin_left, margin_right);
+    Widget_ptr prepend(const ustring & text, unsigned margin_left=0, unsigned margin_right=0) {
+        return entry_->prepend(text, margin_left, margin_right);
     }
 
     signal<void(double)> & signal_value_changed() {

@@ -309,6 +309,15 @@ public:
     /// Remove all sections.
     void clear();
 
+    /// Lock file (disable modification).
+    void lock();
+
+    /// Unlock file (enable modification).
+    void unlock();
+
+    /// Test if locked.
+    bool locked() const;
+
     /// Gets "signal_changed".
     signal<void()> & signal_changed();
 

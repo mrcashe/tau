@@ -99,10 +99,10 @@ void Edit_impl::disallow_edit() {
 
 // Overrides Text_impl.
 void Edit_impl::assign(Buffer buf) {
-    edit_insert_cx_.disconnect();
-    edit_replace_cx_.disconnect();
-    edit_erase_cx_.disconnect();
-    flush_cx_.disconnect();
+    edit_insert_cx_.drop();
+    edit_replace_cx_.drop();
+    edit_erase_cx_.drop();
+    flush_cx_.drop();
 
     undo_.clear();
     undo_index_ = 0;

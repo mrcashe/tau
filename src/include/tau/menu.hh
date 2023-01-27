@@ -358,88 +358,88 @@ class Menu: public Container {
 public:
 
     /// Append widget.
-    void append(Widget & w);
+    Widget_ptr append(Widget & w);
 
     /// Append Action_menu_item.
-    void append(Action & action);
+    Widget_ptr append(Action & action);
 
     /// Append Toggle_menu_item.
-    void append(Toggle_action & action, Check_style check_style=CHECK_VSTYLE, Border_style border_style=BORDER_INSET);
+    Widget_ptr append(Toggle_action & action, Check_style check_style=CHECK_VSTYLE, Border_style border_style=BORDER_INSET);
 
     /// Append Submenu_item.
-    void append(const ustring & label, Menu & menu);
+    Widget_ptr append(const ustring & label, Menu & menu);
 
     /// Append Slot_menu_item.
-    void append(const ustring & label, const slot<void()> & slot_activate);
+    Widget_ptr append(const ustring & label, const slot<void()> & slot_activate);
 
     /// Append Slot_menu_item with icon.
-    void append(const ustring & label, const slot<void()> & slot_activate, const ustring & icon_name);
+    Widget_ptr append(const ustring & label, const slot<void()> & slot_activate, const ustring & icon_name);
 
     /// Append Separator.
-    void append_separator(Separator_style separator_style=SEPARATOR_GROOVE);
+    Widget_ptr append_separator(Separator_style separator_style=SEPARATOR_GROOVE);
 
     /// Prepend widget.
-    void prepend(Widget & w);
+    Widget_ptr prepend(Widget & w);
 
     /// Prepend Action_menu_item.
-    void prepend(Action & action);
+    Widget_ptr prepend(Action & action);
 
     /// Prepend Toggle_menu_item.
-    void prepend(Toggle_action & action, Check_style check_style=CHECK_VSTYLE, Border_style border_style=BORDER_INSET);
+    Widget_ptr prepend(Toggle_action & action, Check_style check_style=CHECK_VSTYLE, Border_style border_style=BORDER_INSET);
 
     /// Prpend Submenu_item.
-    void prepend(const ustring & label, Menu & menu);
+    Widget_ptr prepend(const ustring & label, Menu & menu);
 
     /// Prepend Slot_menu_item.
-    void prepend(const ustring & label, const slot<void()> & slot_activate);
+    Widget_ptr prepend(const ustring & label, const slot<void()> & slot_activate);
 
     /// Prepend Slot_menu_item with icon.
-    void prepend(const ustring & label, const slot<void()> & slot_activate, const ustring & icon_name);
+    Widget_ptr prepend(const ustring & label, const slot<void()> & slot_activate, const ustring & icon_name);
 
     /// Prepend Separator.
-    void prepend_separator(Separator_style separator_style=SEPARATOR_GROOVE);
+    Widget_ptr prepend_separator(Separator_style separator_style=SEPARATOR_GROOVE);
 
     /// Insert widget before other widget.
-    void insert_before(Widget & w, const Widget & other);
+    Widget_ptr insert_before(Widget & w, const Widget & other);
 
     /// Insert Action_menu_item before other widget.
-    void insert_before(Action & action, const Widget & other);
+    Widget_ptr insert_before(Action & action, const Widget & other);
 
     /// Insert Toggle_menu_item before other widget.
-    void insert_before(Toggle_action & action, const Widget & other, Check_style check_style=CHECK_VSTYLE, Border_style border_style=BORDER_INSET);
+    Widget_ptr insert_before(Toggle_action & action, const Widget & other, Check_style check_style=CHECK_VSTYLE, Border_style border_style=BORDER_INSET);
 
     /// Insert Submenu_item before other widget.
-    void insert_before(const ustring & label, Menu & menu, const Widget & other);
+    Widget_ptr insert_before(const ustring & label, Menu & menu, const Widget & other);
 
     /// Insert Slot_menu_item before other widget.
-    void insert_before(const ustring & label, const slot<void()> & slot_activate, const Widget & other);
+    Widget_ptr insert_before(const ustring & label, const slot<void()> & slot_activate, const Widget & other);
 
     /// Insert Slot_menu_item with icon before other widget.
-    void insert_before(const ustring & label, const slot<void()> & slot_activate, const ustring & icon_name, const Widget & other);
+    Widget_ptr insert_before(const ustring & label, const slot<void()> & slot_activate, const ustring & icon_name, const Widget & other);
 
     /// Insert Separator before other widget.
-    void insert_separator_before(const Widget & other, Separator_style separator_style=SEPARATOR_GROOVE);
+    Widget_ptr insert_separator_before(const Widget & other, Separator_style separator_style=SEPARATOR_GROOVE);
 
     /// Insert widget after other widget.
-    void insert_after(Widget & w, const Widget & other);
+    Widget_ptr insert_after(Widget & w, const Widget & other);
 
     /// Insert Action_menu_item after other widget.
-    void insert_after(Action & action, const Widget & other);
+    Widget_ptr insert_after(Action & action, const Widget & other);
 
     /// Insert Toggle_menu_item after other widget.
-    void insert_after(Toggle_action & action, const Widget & other, Check_style check_style=CHECK_VSTYLE, Border_style border_style=BORDER_INSET);
+    Widget_ptr insert_after(Toggle_action & action, const Widget & other, Check_style check_style=CHECK_VSTYLE, Border_style border_style=BORDER_INSET);
 
     /// Insert Submenu_item after other widget.
-    void insert_after(const ustring & label, Menu & menu, const Widget & other);
+    Widget_ptr insert_after(const ustring & label, Menu & menu, const Widget & other);
 
     /// Insert Slot_menu_item after other widget.
-    void insert_after(const ustring & label, const slot<void()> & slot_activate, const Widget & other);
+    Widget_ptr insert_after(const ustring & label, const slot<void()> & slot_activate, const Widget & other);
 
     /// Insert Slot_menu_item with icon after other widget.
-    void insert_after(const ustring & label, const slot<void()> & slot_activate, const ustring & icon_name, const Widget & other);
+    Widget_ptr insert_after(const ustring & label, const slot<void()> & slot_activate, const ustring & icon_name, const Widget & other);
 
     /// Insert Separator after other widget.
-    void insert_separator_after(const Widget & other, Separator_style separator_style=SEPARATOR_GROOVE);
+    Widget_ptr insert_separator_after(const Widget & other, Separator_style separator_style=SEPARATOR_GROOVE);
 
     /// Remove widget.
     void remove(Widget & w);
@@ -498,7 +498,10 @@ public:
     Menubox(Widget_ptr wp);
 
     /// %Popup menu.
-    void popup(Toplevel & parent, const Point & position, Gravity gravity=GRAVITY_NONE);
+    Widget_ptr popup(Toplevel & root, const Point & origin);
+
+    /// %Popup menu.
+    Widget_ptr popup(Toplevel & root, const Point & origin, Gravity gravity);
 };
 
 /// %Menu with items arranged horizontally.

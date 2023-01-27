@@ -35,7 +35,7 @@ class Roller_impl: public Box_impl {
 public:
 
     explicit Roller_impl(Orientation orient, bool autohide=true);
-   ~Roller_impl() { destroy_ = true; }
+   ~Roller_impl() { signal_destroy_(); }
 
     void set_autohide();
     void unset_autohide();

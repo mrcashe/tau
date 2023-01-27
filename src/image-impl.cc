@@ -62,7 +62,7 @@ void Image_impl::init() {
 }
 
 void Image_impl::clear() {
-    for (auto & ff: film_) { ff.changed_cx.disconnect(); }
+    for (auto & ff: film_) { ff.changed_cx.drop(); }
     film_.clear();
     cur_ = 0;
     invalidate();

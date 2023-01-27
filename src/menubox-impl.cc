@@ -111,21 +111,53 @@ void Menubox_impl::mark_item(Menu_item_impl * ip, bool select) {
     }
 }
 
-void Menubox_impl::popup(Window_impl * root, Widget_ptr self, const Point & origin, Gravity gravity, Menu_impl * pmenu) {
+Window_ptr Menubox_impl::popup(Window_impl * root, Widget_ptr self, const Point & origin, Menu_impl * pmenu) {
+    Point pos;
+    Gravity gravity;
+
+    if (OR_RIGHT == orientation()) {
+        pos = to_parent(root, origin);
+        gravity = GRAVITY_TOP_LEFT;
+    }
+
+    else {
+        int y = origin.y()-margin_top_hint()-2;  // FIXME from where this '2'?
+        Point p1 = to_parent(root, Point(size().width()+margin_right_hint(), y));
+        Point p2 = to_parent(root, Point(-margin_left_hint(), y));
+
+        if (root->size().iwidth()-p1.x() >= p2.x()) {
+            pos = p1;
+            gravity = GRAVITY_TOP_LEFT;
+        }
+
+        else {
+            pos = p2;
+            gravity = GRAVITY_TOP_RIGHT;
+        }
+    }
+
+    return popup(root, self, origin, gravity, pmenu);
+}
+
+Window_ptr Menubox_impl::popup(Window_impl * root, Widget_ptr self, const Point & origin, Gravity gravity, Menu_impl * pmenu) {
     if (root) {
         if (auto dp = root->display()) {
             gravity_ = gravity;
             pmenu_ = pmenu;
             auto wip = dp->create_popup(dp, root, origin, gravity);
-            wip->style().redirect("menu/background", "background");
             wip->insert(self);
+            wip->style().redirect(STYLE_MENU_BACKGROUND, STYLE_BACKGROUND);
             wip->signal_mouse_down().connect(fun(this, &Menubox_impl::on_popup_mouse_down), true);
             wip->show();
             grab_modal();
             wip->grab_mouse();
             select_item(current_item());
+            // std::cout << this << " popup " << table_->children().size() << " " << signal_visible_.size() << std::endl;
+            return wip;
         }
     }
+
+    return nullptr;
 }
 
 // Quit menu if user press mouse button somewhere outside any menu.
@@ -156,7 +188,7 @@ bool Menubox_impl::on_popup_mouse_down(int mbt, int mm, const Point & pt) {
 
 void Menubox_impl::quit() {
     Menu_impl::quit();
-    if (auto wip = window()) { wip->close(); }
+    if (auto wip = window()) { wip->clear(); wip->close(); }
 }
 
 bool Menubox_impl::on_table_mouse_down(int mbt, int mm, const Point & pt) {

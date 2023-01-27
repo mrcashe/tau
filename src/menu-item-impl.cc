@@ -111,7 +111,7 @@ void Action_menu_impl::update_accels() {
 
     if (!accels.empty()) {
         Accel & accel = accels.front();
-        accel_changed_cx_.disconnect();
+        accel_changed_cx_.drop();
         accel_changed_cx_ = accel.signal_changed().connect(tau::bind(fun(this, &Action_menu_impl::on_accel_changed), std::ref(accel)));
         accel_label_->show();
         accel_label_->assign(accel.label());
@@ -230,7 +230,7 @@ void Toggle_menu_impl::update_accels() {
 
     if (!accels.empty()) {
         Accel & accel = accels.front();
-        accel_changed_cx_.disconnect();
+        accel_changed_cx_.drop();
         accel_changed_cx_ = accel.signal_changed().connect(tau::bind(fun(this, &Toggle_menu_impl::on_accel_changed), std::ref(accel)));
         accel_label_->show();
         accel_label_->assign(accel.label());

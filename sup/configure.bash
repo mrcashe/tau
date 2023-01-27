@@ -481,7 +481,7 @@ if test -z $which_doxygen; then
 else
     echo "include $supdir/doc.mk" >>$conf_mk
     tmp=$(mktemp)
-    doxyinput="$topdir/README.md $srcdir/include $srcdir/include/tau $topdir/doc/doxygen"
+    doxyinput="$topdir/README.md $srcdir/include $topdir/doc/doxygen"
     echo "s+PROJECT_NUMBER *=.*+PROJECT_NUMBER = $version+" >>$tmp
     echo "s+OUTPUT_DIRECTORY *=.*+OUTPUT_DIRECTORY = $doxydir+" >>$tmp
     echo "s+EXAMPLE_PATH *=.*+EXAMPLE_PATH = $topdir+" >>$tmp

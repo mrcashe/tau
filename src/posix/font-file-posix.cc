@@ -545,9 +545,9 @@ private:
 
                     // Otherwise, they are points.
                     else {
-                        std::cerr << "!! FIXME: load_glyph(): " << path_ << "\n";
-                        std::cerr << "!! FIXME: load_glyph(): Subglyph positioning by points not yet implemented.\n";
-                        std::cerr << "!! FIXME: load_glyph(): Subglyph #" << gindex << " will not be merged.\n";
+                        std::cerr << "!! FIXME: Font_file_posix::load_glyph(): " << path_ << "\n";
+                        std::cerr << "!! FIXME: Font_file_posix::load_glyph(): Subglyph positioning by points not yet implemented.\n";
+                        std::cerr << "!! FIXME: Font_file_posix::load_glyph(): Subglyph #" << gindex << " will not be merged.\n";
                         enable_merge = false;
                     }
 
@@ -559,9 +559,9 @@ private:
                         double s = conv_2_dot_14(u16(b+ofs)); ofs += 2;
 
                         if (enable_merge) {
-                            std::cerr << "!! FIXME: load_glyph(): " << path_ << "\n";
-                            std::cerr << "!! FIXME: load_glyph(): Simple subglyph scaling is untested.\n";
-                            std::cerr << "!! FIXME: load_glyph(): Subglyph #" << gindex << " has scale of " << s << ".\n";
+                            std::cerr << "!! FIXME: Font_file_posix::load_glyph(): " << path_ << "\n";
+                            std::cerr << "!! FIXME: Font_file_posix::load_glyph(): Simple subglyph scaling is untested.\n";
+                            std::cerr << "!! FIXME: Font_file_posix::load_glyph(): Subglyph #" << gindex << " has scale of " << s << ".\n";
                             sub_master->scale(Vector(s, s));
                         }
                     }
@@ -574,9 +574,9 @@ private:
                         double sy = conv_2_dot_14(u16(b+ofs)); ofs += 2;
 
                         if (enable_merge) {
-                            std::cerr << "!! FIXME: load_glyph(): " << path_ << "\n";
-                            std::cerr << "!! FIXME: load_glyph(): Subglyph scaling is untested.\n";
-                            std::cerr << "!! FIXME: load_glyph(): Subglyph #" << gindex << " has scale of " << sx << ":" << sy << ".\n";
+                            std::cerr << "!! FIXME: Font_file_posix::load_glyph(): " << path_ << "\n";
+                            std::cerr << "!! FIXME: Font_file_posix::load_glyph(): Subglyph scaling is untested.\n";
+                            std::cerr << "!! FIXME: Font_file_posix::load_glyph(): Subglyph #" << gindex << " has scale of " << sx << ":" << sy << ".\n";
                             sub_master->scale(Vector(sx, sy));
                         }
                     }
@@ -584,17 +584,17 @@ private:
                     // We have 2x2.
                     // If set there is a 2-by-2 transstr_formation that will be used to scale the component in 2.14 str_format.
                     else if (0x0080 & flags) {
-                        if (ofs+7 >= loca.len) { throw bad_font(str_format(path_notdir(path_), ": Compound GLYF: insufficient space for 2x2 scale: ", ofs+7, " >= ", loca.len)); }
+                        if (ofs+7 >= loca.len) { throw bad_font(str_format("Font_file_posix::load_glyph(): ", path_, ": Compound GLYF: insufficient space for 2x2 scale: ", ofs+7, " >= ", loca.len)); }
                         double xx = conv_2_dot_14(u16(b+ofs)); ofs += 2;
                         double xy = conv_2_dot_14(u16(b+ofs)); ofs += 2;
                         double yx = conv_2_dot_14(u16(b+ofs)); ofs += 2;
                         double yy = conv_2_dot_14(u16(b+ofs)); ofs += 2;
 
                         if (enable_merge) {
-                            std::cerr << "!! FIXME: load_glyph(): " << path_ << "\n";
-                            std::cerr << "!! FIXME: load_glyph(): 2x2 subglyph scaling is untested.\n";
-                            std::cerr << "!! FIXME: load_glyph(): Subglyph #" << gindex << " has scale of " << xx << ":" << xy << ":" << yx << ":" << yy << ".\n";
-                            std::cerr << "!! FIXME: load_glyph(): Subglyph #" << gindex << " will not be merged.\n";
+                            std::cerr << "!! FIXME: Font_file_posix::load_glyph(): " << path_ << "\n";
+                            std::cerr << "!! FIXME: Font_file_posix::load_glyph(): 2x2 subglyph scaling is untested.\n";
+                            std::cerr << "!! FIXME: Font_file_posix::load_glyph(): Subglyph #" << gindex << " has scale of " << xx << ":" << xy << ":" << yx << ":" << yy << ".\n";
+                            std::cerr << "!! FIXME: Font_file_posix::load_glyph(): Subglyph #" << gindex << " will not be merged.\n";
                         }
 
                         enable_merge = false;
@@ -667,27 +667,27 @@ private:
         auto ei = entries_.find("MAXP");
 
         if (ei == entries_.end()) {
-            throw bad_font(str_format(path_notdir(path_), ": missing MAXP table"));
+            throw bad_font(str_format("Font_file_posix::load_maxp(): ", path_, ": missing MAXP table"));
         }
 
         Entry & ent = ei->second;
         is.seekg(ent.ofs, std::ios::beg);
 
         if (is.tellg() != ent.ofs) {
-            throw bad_font(str_format(path_notdir(path_), ": failed to seek to MAXP table"));
+            throw bad_font(str_format("Font_file_posix::load_maxp(): ", path_, ": failed to seek to MAXP table"));
         }
 
         char b[ent.len];
         is.read(b, ent.len);
 
         if (ent.len != std::size_t(is.gcount())) {
-            throw bad_font(str_format(path_notdir(path_), ": failed to read MAXP table"));
+            throw bad_font(str_format("Font_file_posix::load_maxp(): ", path_, ": failed to read MAXP table"));
         }
 
         // Table version (+0).
         uint32_t ww = u32(b);
         if (0x00010000 != ww) {
-            throw bad_font(str_format("MAXP table version ", std::hex, std::setw(8), std::setfill('0'), ww, " unsupported"));
+            throw bad_font(str_format("Font_file_posix::load_maxp(): ", path_, ": MAXP table version ", std::hex, std::setw(8), std::setfill('0'), ww, " unsupported"));
         }
 
         gcount_ = u16(b+4);
@@ -711,21 +711,21 @@ private:
         auto ei = entries_.find("HMTX");
 
         if (ei == entries_.end()) {
-            throw bad_font(str_format(path_notdir(path_), ": missing HMTX table"));
+            throw bad_font(str_format("Font_file_posix::load_hmtx(): ", path_, ": missing HMTX table"));
         }
 
         auto ent = ei->second;
         is.seekg(ent.ofs, std::ios::beg);
 
         if (is.tellg() != ent.ofs) {
-            throw bad_font(str_format(path_notdir(path_), ": failed to seek to HMTX table"));
+            throw bad_font(str_format("Font_file_posix::load_hmtx(): ", path_, ": failed to seek to HMTX table"));
         }
 
         char b[ent.len];
         is.read(b, ent.len);
 
         if (ent.len != std::size_t(is.gcount())) {
-            throw bad_font(str_format(path_notdir(path_), ": failed to read HMTX table"));
+            throw bad_font(str_format("Font_file_posix::load_hmtx(): ", path_, ": failed to read HMTX table"));
         }
 
         uint32_t hmto = 0;              // horz long metrics current offset, bytes.
@@ -767,35 +767,35 @@ private:
         auto ei = entries_.find("HHEA");
 
         if (ei == entries_.end()) {
-            throw bad_font(str_format(path_notdir(path_), ": missing HHEA table"));
+            throw bad_font(str_format("Font_file_posix::load_hhea(): ", path_, ": missing HHEA table"));
         }
 
         auto ent = ei->second;
         is.seekg(ent.ofs, std::ios::beg);
 
         if (is.tellg() != ent.ofs) {
-            throw bad_font(str_format(path_notdir(path_), ": failed to seek to HHEA table"));
+            throw bad_font(str_format("Font_file_posix::load_hhea(): ", path_, ": failed to seek to HHEA table"));
         }
 
         char hhea[ent.len];
         is.read(hhea, ent.len);
 
         if (ent.len != std::size_t(is.gcount())) {
-            throw bad_font(str_format(path_notdir(path_), ": failed to read HHEA table"));
+            throw bad_font(str_format("Font_file_posix::load_hhea(): ", path_, ": failed to read HHEA table"));
         }
 
         // Table version (+0).
         uint32_t ww = u32(hhea);
 
         if (0x00010000 != ww) {
-            throw bad_font(str_format(path_notdir(path_), ": HHEA table version ", std::hex, std::setw(8), std::setfill('0'), ww, " unsupported"));
+            throw bad_font(str_format("Font_file_posix::load_hhea(): ", path_, ": HHEA table version ", std::hex, std::setw(8), std::setfill('0'), ww, " unsupported"));
         }
 
         // HMTX metric data str_format (0 for current str_format) (+32).
         int16_t i = u16(hhea+32);
 
         if (0 != i) {
-            throw bad_font(str_format(path_notdir(path_), ": HHEA metric data str_format ", std::hex, std::setw(4), std::setfill('0'), i, " unsupported"));
+            throw bad_font(str_format("Font_file_posix::load_hhea(): ", path_, ": HHEA metric data str_format ", std::hex, std::setw(4), std::setfill('0'), i, " unsupported"));
         }
 
         hhea_.ascent = u16(hhea+4);                        // Ascender (+4)
@@ -815,34 +815,34 @@ private:
         auto ei = entries_.find("LOCA");
 
         if (ei == entries_.end()) {
-            throw bad_font(str_format(path_notdir(path_), ": missing LOCA table"));
+            throw bad_font(str_format("Font_file_posix::load_loca(): ", path_, ": missing LOCA table"));
         }
 
         Entry & ent = ei->second;
         is.seekg(ent.ofs, std::ios::beg);
 
         if (is.tellg() != ent.ofs) {
-            throw bad_font(str_format(path_notdir(path_), ": failed to seek to LOCA table"));
+            throw bad_font(str_format("Font_file_posix::load_loca(): ", path_, ": failed to seek to LOCA table"));
         }
 
         char b[ent.len];
         is.read(b, ent.len);
 
         if (ent.len != std::size_t(is.gcount())) {
-            throw bad_font(str_format(path_notdir(path_), ": failed to read LOCA table"));
+            throw bad_font(str_format("Font_file_posix::load_loca(): ", path_, ": failed to read LOCA table"));
         }
 
         uint32_t cs = checksum(b, ent.len);
 
         if (cs != ent.cs) {
-            throw bad_font(str_format(path_notdir(path_), ": checksum mismatch for LOCA table, (0x",
+            throw bad_font(str_format("Font_file_posix::load_loca(): ", path_, ": checksum mismatch for LOCA table, (0x",
                                       std::hex, std::setw(8), std::setfill('0'), cs, " != 0x", std::setw(8), ent.cs, ")"));
         }
 
         ei = entries_.find("GLYF");
 
         if (ei == entries_.end()) {
-            throw bad_font(str_format(path_notdir(path_), ": missing GLYF table"));
+            throw bad_font(str_format("Font_file_posix::load_loca(): ", path_, ": missing GLYF table"));
         }
 
         uint32_t glyf_len = ei->second.len;
@@ -882,32 +882,32 @@ private:
         auto ei = entries_.find("CMAP");
 
         if (ei == entries_.end()) {
-            throw bad_font(str_format(path_notdir(path_), ": missing CMAP table"));
+            throw bad_font(str_format("Font_file_posix::load_cmap(): ", path_, ": missing CMAP table"));
         }
 
         Entry & ent = ei->second;
         is.seekg(ent.ofs, std::ios::beg);
 
         if (is.tellg() != ent.ofs) {
-            throw bad_font(str_format(path_notdir(path_), ": failed to seek to CMAP table"));
+            throw bad_font(str_format("Font_file_posix::load_cmap(): ", path_, ": failed to seek to CMAP table"));
         }
 
         char b[ent.len];
         is.read(b, ent.len);
 
         if (ent.len != std::size_t(is.gcount())) {
-            throw bad_font(str_format(path_notdir(path_), ": failed to read CMAP table"));
+            throw bad_font(str_format("Font_file_posix::load_cmap(): ", path_, ": failed to read CMAP table"));
         }
 
         if (0 != u16(b)) {
-            throw bad_font(str_format(path_notdir(path_), ": CMAP table version ",
+            throw bad_font(str_format("Font_file_posix::load_cmap(): ", path_, ": CMAP table version ",
                                       std::hex, std::setw(4), std::setfill('0'), u16(b), " unsupported"));
         }
 
         uint16_t n_cmap = u16(b+2);
 
         if (0 == n_cmap) {
-            throw bad_font(str_format(path_notdir(path_), ": no character tables found"));
+            throw bad_font(str_format("Font_file_posix::load_cmap(): ", path_, ": no character tables found"));
         }
 
         uint32_t ofs = 4;
@@ -959,42 +959,42 @@ private:
         auto ei = entries_.find("HEAD");
 
         if (ei == entries_.end()) {
-            throw bad_font(str_format(path_notdir(path_), ": missing HEAD table"));
+            throw bad_font(str_format("Font_file_posix::load_head(): ", path_, ": missing HEAD table"));
         }
 
         Entry & ent = ei->second;
         is.seekg(ent.ofs, std::ios::beg);
 
         if (is.tellg() != ent.ofs) {
-            throw bad_font(str_format(path_notdir(path_), ": failed to seek to HEAD table"));
+            throw bad_font(str_format("Font_file_posix::load_head(): ", path_, ": failed to seek to HEAD table"));
         }
 
         char b[ent.len];
         is.read(b, ent.len);
 
         if (ent.len != std::size_t(is.gcount())) {
-            throw bad_font(str_format(path_notdir(path_), ": failed to read HEAD table"));
+            throw bad_font(str_format("Font_file_posix::load_head(): ", path_, ": failed to read HEAD table"));
         }
 
         // Table version number.
         uint32_t ww = u32(b);
 
         if (0x00010000 != ww) {
-            throw bad_font(str_format(path_notdir(path_), ": HEAD tabel version 0x",
+            throw bad_font(str_format("Font_file_posix::load_head(): ", path_, ": HEAD tabel version 0x",
                                       std::hex, std::setw(8), std::setfill('0'), ww, " unsupported"));
         }
 
         // Magic number (+12).
         ww = u32(b+12);
         if (0x5f0f3cf5 != ww) {
-            throw bad_font(str_format(path_notdir(path_), ": HEAD table magic number mismatch (0x",
+            throw bad_font(str_format("Font_file_posix::load_head(): ", path_, ": HEAD table magic number mismatch (0x",
                                       std::hex, std::setw(8), std::setfill('0'), ww, " provided)"));
         }
 
         // Glyph data str_format (+52), must be 0.
         int16_t gstr_format = u16(b+52);
         if (0x0000 != gstr_format) {
-            throw bad_font(str_format(path_notdir(path_), ": HEAD table glyph data str_format 0x",
+            throw bad_font(str_format("Font_file_posix::load_head(): ", path_, ": HEAD table glyph data str_format 0x",
                                       std::hex, std::setw(8), std::setfill('0'), gstr_format, " unsupported"));
         }
 
@@ -1016,7 +1016,7 @@ private:
         upm_ = u16(b+18);
 
         if (upm_ < 16 || upm_ > 16384) {
-            throw bad_font(str_format(path_notdir(path_), ": Units per EM (", upm_, ") is out of range"));
+            throw bad_font(str_format("Font_file_posix::load_head(): ", path_, ": Units per EM (", upm_, ") is out of range"));
         }
 
         // Created (+20, 8bytes).

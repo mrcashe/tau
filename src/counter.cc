@@ -190,16 +190,16 @@ void Counter::append(Widget & w, bool shrink) {
     COUNTER_IMPL->append(w.ptr(), shrink);
 }
 
-void Counter::append(const ustring & text, unsigned margin_left_hint, unsigned margin_right_hint) {
-    COUNTER_IMPL->append(text, margin_left_hint, margin_right_hint);
+Widget_ptr Counter::append(const ustring & text, unsigned margin_left_hint, unsigned margin_right_hint) {
+    return COUNTER_IMPL->append(text, margin_left_hint, margin_right_hint);
 }
 
 void Counter::prepend(Widget & w, bool shrink) {
     COUNTER_IMPL->prepend(w.ptr(), shrink);
 }
 
-void Counter::prepend(const ustring & text, unsigned margin_left_hint, unsigned margin_right_hint) {
-    COUNTER_IMPL->prepend(text, margin_left_hint, margin_right_hint);
+Widget_ptr Counter::prepend(const ustring & text, unsigned margin_left_hint, unsigned margin_right_hint) {
+    return COUNTER_IMPL->prepend(text, margin_left_hint, margin_right_hint);
 }
 
 signal<void(double)> & Counter::signal_value_changed() {

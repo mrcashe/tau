@@ -1070,8 +1070,8 @@ Territory::Territory(const std::string & iso_code):
     data(data_)
 {
     if (iso_code.empty()) {
-        if (sys_locale_ptr_) {
-            data = sys_locale_ptr_->terr.data;
+        if (locale_ptr_) {
+            data = locale_ptr_->terr.data;
         }
     }
 
@@ -1094,6 +1094,11 @@ Territory & Territory::operator=(const Territory & other) {
 }
 
 Territory::~Territory() {}
+
+// static
+Territory Territory::system() {
+    return sys_locale_ptr_ ?  sys_locale_ptr_->terr : Territory();
+}
 
 bool Territory::operator==(const Territory & other) const {
     return data == other.data;

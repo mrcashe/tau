@@ -54,6 +54,9 @@ public:
     /// Destructor.
    ~Language();
 
+    /// Create from system default language.
+    Language system();
+
     /// Compare operator.
     bool operator==(const Language & other) const;
 

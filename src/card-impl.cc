@@ -33,11 +33,11 @@ namespace tau {
 Card_impl::Card_impl():
     Container_impl()
 {
-    signal_arrange().connect(fun(this, &Card_impl::arrange));
-    signal_take_focus().connect(fun(this, &Card_impl::on_take_focus));
-    signal_size_changed().connect(fun(this, &Card_impl::arrange));
-    signal_visible().connect(fun(this, &Card_impl::arrange));
-    signal_display().connect(fun(this, &Card_impl::update_requisition));
+    signal_arrange_.connect(fun(this, &Card_impl::arrange));
+    signal_take_focus_.connect(fun(this, &Card_impl::on_take_focus));
+    signal_size_changed_.connect(fun(this, &Card_impl::arrange));
+    signal_visible_.connect(fun(this, &Card_impl::arrange));
+    signal_display_.connect(fun(this, &Card_impl::update_requisition));
 }
 
 void Card_impl::insert(Widget_ptr wp) {
@@ -81,15 +81,8 @@ void Card_impl::remove_current() {
 }
 
 void Card_impl::rm_child(Holder & hol) {
-    hol.wp->signal_unselect()();
     hol.wp->hide();
-    hol.req_cx.disconnect();
-    hol.hints_cx.disconnect();
-    hol.show_cx.disconnect();
-    hol.hide_cx.disconnect();
     unparent_child(hol.wp);
-    hol.wp->update_origin(INT_MIN, INT_MIN);
-    hol.wp->update_size(0, 0);
 }
 
 void Card_impl::remove(Widget_impl * wi) {
@@ -107,8 +100,8 @@ void Card_impl::remove(Widget_impl * wi) {
 }
 
 void Card_impl::clear() {
-    for (auto & hol: holders_) { rm_child(hol); }
     holders_.clear();
+    unparent_all();
     invalidate();
     update_requisition();
 }
@@ -123,9 +116,11 @@ Size Card_impl::child_requisition(const Holder & hol) {
 }
 
 void Card_impl::update_requisition() {
-    Size req;
-    for (Holder & hol: holders_) { req |= child_requisition(hol); }
-    require_size(req);
+    if (!destroy_) {
+        Size req;
+        for (Holder & hol: holders_) { req |= child_requisition(hol); }
+        require_size(req);
+    }
 }
 
 void Card_impl::arrange() {

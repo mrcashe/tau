@@ -36,26 +36,26 @@ class Notebook_impl: public Box_impl {
 public:
 
     Notebook_impl(Tab_pos tab_pos=TAB_TOP);
-   ~Notebook_impl() { destroy_ = true; }
+   ~Notebook_impl() { signal_destroy_(); }
 
     int  append_page(Widget_ptr wp);
-    int  append_page(Widget_ptr wp, const ustring & title);
+    int  append_page(Widget_ptr wp, const ustring & title, Widget_ptr * rptr=nullptr);
     int  append_page(Widget_ptr wp, Widget_ptr title);
 
     void prepend_page(Widget_ptr wp);
-    void prepend_page(Widget_ptr wp, const ustring & title);
+    Widget_ptr prepend_page(Widget_ptr wp, const ustring & title);
     void prepend_page(Widget_ptr wp, Widget_ptr tp);
 
     int insert_page(Widget_ptr wp, int nth_page);
-    int insert_page(Widget_ptr wp, int nth_page, const ustring & title);
+    int insert_page(Widget_ptr wp, int nth_page, const ustring & title, Widget_ptr * rptr=nullptr);
     int insert_page(Widget_ptr wp, int nth_page, Widget_ptr tp);
 
     int insert_page_after(Widget_ptr wp, Widget_ptr after_this);
-    int insert_page_after(Widget_ptr wp, Widget_ptr after_this, const ustring & title);
+    int insert_page_after(Widget_ptr wp, Widget_ptr after_this, const ustring & title, Widget_ptr * rptr=nullptr);
     int insert_page_after(Widget_ptr wp, Widget_ptr after_this, Widget_ptr tp);
 
     int insert_page_before(Widget_ptr wp, Widget_ptr before_this);
-    int insert_page_before(Widget_ptr wp, Widget_ptr before_this, const ustring & title);
+    int insert_page_before(Widget_ptr wp, Widget_ptr before_this, const ustring & title, Widget_ptr * rptr=nullptr);
     int insert_page_before(Widget_ptr wp, Widget_ptr before_this, Widget_ptr tp);
 
     int  remove_page(Widget_ptr wp);
@@ -127,6 +127,18 @@ private:
         Widget_ptr          wp;
         Widget_ptr          title;
         Frame_ptr           frame;
+
+        connection          size1_cx;
+        connection          size2_cx;
+        connection          requisition_cx;
+        connection          hints_cx;
+        connection          mouse_down_cx;
+        connection          mouse_up_cx;
+        connection          mouse_motion_cx;
+
+        connection          show_cx;
+        connection          visible_cx;
+        connection          hide_cx;
     };
 
     Frame_ptr               frame_;

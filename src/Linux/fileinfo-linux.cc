@@ -46,11 +46,7 @@ public:
             if (mon_) { mon_->signal_notify().connect(fun(signal_watch_)); }
         }
 
-        if (mon_) {
-            std::cout << "Watch " << uri_ << std::endl;
-        }
-
-        else {
+        if (!mon_) {
             std::cerr << "** Fileinfo_linux: failed to watch file " << uri_ << std::endl;
         }
 

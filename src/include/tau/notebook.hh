@@ -91,9 +91,10 @@ public:
     /// Appends a page to notebook.
     /// @param w the widget to be appended.
     /// @param title the title to be used in tab.
+    /// @param rptr where to put returned pointer to the created Text widget [optional].
     /// @return a number of added page.
     /// @throw user_error if widget already inserted into another container.
-    int append_page(Widget & w, const ustring & title);
+    int append_page(Widget & w, const ustring & title, Widget_ptr * rptr=nullptr);
 
     /// Appends a page to notebook.
     /// @param w the widget to be appended.
@@ -110,8 +111,9 @@ public:
     /// Prepends a page to notebook.
     /// @param w the widget to be prepended.
     /// @param title the title to be used in tab.
+    /// @return pointer to the created Text widget.
     /// @throw user_error if widget already inserted into another container.
-    void prepend_page(Widget & w, const ustring & title);
+    Widget_ptr prepend_page(Widget & w, const ustring & title);
 
     /// Prepends a page to notebook.
     /// @param w the widget to be prepended.
@@ -130,9 +132,10 @@ public:
     /// @param w the widget to be inserted.
     /// @param nth_page the page number for the new page.
     /// @param title the title to be used in tab.
+    /// @param rptr where to put returned pointer to the created Text widget [optional].
     /// @return a number of added page.
     /// @throw user_error if widget already inserted into another container.
-    int insert_page(Widget & w, int nth_page, const ustring & title);
+    int insert_page(Widget & w, int nth_page, const ustring & title, Widget_ptr * rptr=nullptr);
 
     /// Inserts a page to notebook.
     /// @param w the widget to be inserted.
@@ -153,9 +156,10 @@ public:
     /// @param w the widget to be inserted.
     /// @param after_this the new widget will be inserted after this widget.
     /// @param title the title to be used in tab.
+    /// @param rptr where to put returned pointer to the created Text widget [optional].
     /// @return a number of added page.
     /// @throw user_error if widget already inserted into another container.
-    int insert_page_after(Widget & w, Widget & after_this, const ustring & title);
+    int insert_page_after(Widget & w, Widget & after_this, const ustring & title, Widget_ptr * rptr=nullptr);
 
     /// Inserts a page to notebook.
     /// @param w the widget to be inserted.
@@ -176,9 +180,10 @@ public:
     /// @param w the widget to be inserted.
     /// @param before_this the new widget will be inserted before this widget.
     /// @param title the title to be used in tab.
+    /// @param rptr where to put returned pointer to the created Text widget [optional].
     /// @return a number of added page.
     /// @throw user_error if widget already inserted into another container.
-    int insert_page_before(Widget & w, Widget & before_this, const ustring & title);
+    int insert_page_before(Widget & w, Widget & before_this, const ustring & title, Widget_ptr * rptr=nullptr);
 
     /// Inserts a page to notebook.
     /// @param w the widget to be inserted.

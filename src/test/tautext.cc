@@ -38,6 +38,7 @@ tau::Key_file               kstate_;
 std::vector<tau::ustring>   args_;
 int                         line_ = -1;
 int                         col_ = -1;
+std::vector<long long>      geom_ { 4 };
 
 } // anonymous namespace
 
@@ -274,6 +275,8 @@ struct Main: tau::Toplevel {
         update_title();
         set_icon("tau", 48);
         show_cx_ = signal_show().connect(tau::fun(this, &Main::on_show));
+        signal_size_changed().connect(tau::fun(this, &Main::on_geometry));
+        signal_position_changed().connect(tau::fun(this, &Main::on_geometry));
     }
 
    ~Main() {
@@ -282,13 +285,23 @@ struct Main: tau::Toplevel {
         }
     }
 
+    void on_geometry() {
+        tau::Point pos = position();
+        tau::Size  sz  = size();
+        geom_[0] = pos.x();
+        geom_[1] = pos.y();
+        geom_[2] = sz.iwidth();
+        geom_[3] = sz.iheight();
+        kstate_.set_integers(kstate_.root(), "geometry", geom_);
+    }
+
     void open_recent(const tau::ustring & path) {
         int page = open_file(path);
         if (page >= 0) { notebook_.show_page(page); }
     }
 
     void on_show() {
-        show_cx_.disconnect();
+        show_cx_.drop();
 
         if (!args_.empty()) {
             if (args_.size() > 1) {
@@ -358,7 +371,7 @@ struct Main: tau::Toplevel {
             pg.finfo.signal_watch(tau::FILE_EVENTS).connect(tau::bind(tau::fun(this, &Main::on_watch), std::cref(pg)));
             pg.page = notebook_.append_page(pg.table, pg.tab);
             loop_.signal_alarm(16754).connect(tau::fun(this, &Main::save_metas));
-            session_cx_.disconnect();
+            session_cx_.drop();
             session_cx_ = loop_.signal_alarm(22118).connect(tau::fun(this, &Main::save_session));
             touch_recent(pg.metaid);
             unset_cursor();
@@ -493,7 +506,7 @@ struct Main: tau::Toplevel {
     }
 
     void save_session() {
-        session_cx_.disconnect();
+        session_cx_.drop();
         int page = 1, npages = notebook_.page_count();
         uint64_t current_metaid = 0;
 
@@ -535,7 +548,7 @@ struct Main: tau::Toplevel {
                 tau::Key_file kf(tau::path_build(datadir_, "metas.ini"));
 
                 for (const tau::ustring & s: kf.list_sections()) {
-                    if (tau::file_exists(s)) {
+                    if (tau::Fileinfo(s).is_regular()) {
                         tau::Key_section & sect = kf.section(s);
                         auto now = tau::Timeval::now();
                         Meta_holder hol;
@@ -603,15 +616,15 @@ struct Main: tau::Toplevel {
     void on_edit_focus_out(Page & pg) {
         edit_undo_action_.disable();
         edit_redo_action_.disable();
-        pg.on_edit_focus_in_cx.disconnect();
-        pg.enable_redo_cx.disconnect();
-        pg.on_edit_focus_out_cx.disconnect();
-        pg.disable_redo_cx.disconnect();
+        pg.on_edit_focus_in_cx.drop();
+        pg.enable_redo_cx.drop();
+        pg.on_edit_focus_out_cx.drop();
+        pg.disable_redo_cx.drop();
     }
 
     void on_utimer(Page & pg) {
         update_pos(pg);
-        pg.meta_cx.disconnect();
+        pg.meta_cx.drop();
         pg.meta_cx = loop_.signal_alarm(7735).connect(tau::bind(tau::fun(this, &Main::save_metadata), std::ref(pg)));
     }
 
@@ -765,7 +778,7 @@ struct Main: tau::Toplevel {
     }
 
     void save_metadata(Page & pg) {
-        pg.meta_cx.disconnect();
+        pg.meta_cx.drop();
 
         if (!pg.path.empty()) {
             tau::Key_file kf;
@@ -859,7 +872,7 @@ struct Main: tau::Toplevel {
             Page & pg = *iter;
 
             if (page == pg.page) {
-                pg.encoding_cx.disconnect();
+                pg.encoding_cx.drop();
                 if (!pg.path.empty()) { save_metadata(pg); }
                 pages_.erase(iter);
                 break;
@@ -902,7 +915,7 @@ struct Main: tau::Toplevel {
 
                 view_increase_font_master_action_.enable();
                 view_decrease_font_master_action_.enable();
-                session_cx_.disconnect();
+                session_cx_.drop();
                 session_cx_ = loop_.signal_alarm(16754).connect(tau::fun(this, &Main::save_session));
                 return;
             }
@@ -966,7 +979,7 @@ struct Main: tau::Toplevel {
     void close_page(Page & pg) {
         if (0 != pg.metaid) {
             if (!pg.path.empty()) { save_metadata(pg); }
-            session_cx_.disconnect();
+            session_cx_.drop();
             session_cx_ = loop_.signal_alarm(9054).connect(tau::fun(this, &Main::save_session));
             notebook_.remove_page(pg.table);
         }
@@ -1025,7 +1038,7 @@ struct Main: tau::Toplevel {
             pg.rows_value.assign(tau::str_format(pg.lines));
         }
 
-        pg.meta_cx.disconnect();
+        pg.meta_cx.drop();
         pg.meta_cx = loop_.signal_alarm(7439).connect(tau::bind(tau::fun(this, &Main::save_metadata), std::ref(pg)));
     }
 
@@ -1327,7 +1340,7 @@ struct Main: tau::Toplevel {
     }
 
     void on_edit_font_changed(Page & pg) {
-        pg.meta_cx.disconnect();
+        pg.meta_cx.drop();
         pg.meta_cx = loop_.signal_alarm(5767).connect(tau::bind(tau::fun(this, &Main::save_metadata), std::ref(pg)));
         pg.font_size = pg.edit.style().font("font").size();
     }
@@ -1544,15 +1557,14 @@ int main(int argc, char * argv[]) {
         auto state_path = tau::path_build(tau::path_user_config_dir(), tau::program_name(), "state.ini");
         tau::path_mkdir(tau::path_dirname(state_path));
         kstate_.load(state_path);
-        auto v = kstate_.get_integers(kstate_.root(), "geometry");
+        geom_ = kstate_.get_integers(kstate_.root(), "geometry");
         tau::Rect bounds;
-        if (v.size() > 3) { bounds.set(tau::Point(v[0], v[1]), tau::Size(v[2], v[3])); }
+        bounds.set(tau::Point(geom_[0], geom_[1]), tau::Size(geom_[2], geom_[3]));
         Main w(bounds);
         tau::Timer timer(tau::fun(kstate_, static_cast<void (tau::Key_file::*)()>(&tau::Key_file::save)));
         kstate_.signal_changed().connect(tau::bind(tau::fun(timer, &tau::Timer::start), 7401, false));
         tau::Loop().run();
-        std::vector<long long> iv = { w.position().x(), w.position().y(), w.size().iwidth(), w.size().iheight() };
-        kstate_.set_integers(kstate_.root(), "geometry", iv);
+        kstate_.set_integers(kstate_.root(), "geometry", geom_);
         kstate_.save();
     }
 

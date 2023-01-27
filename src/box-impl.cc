@@ -36,11 +36,11 @@ Box_impl::Box_impl(Orientation orient, unsigned spacing):
     spacing_(spacing),
     orient_(orient)
 {
-    signal_arrange().connect(fun(this, &Box_impl::arrange));
-    signal_size_changed().connect(fun(this, &Box_impl::arrange));
-    signal_visible().connect(fun(this, &Box_impl::arrange));
-    signal_display().connect(fun(this, &Box_impl::update_requisition));
-    signal_take_focus().connect(fun(this, &Box_impl::on_take_focus));
+    signal_arrange_.connect(fun(this, &Box_impl::arrange));
+    signal_size_changed_.connect(fun(this, &Box_impl::arrange));
+    signal_visible_.connect(fun(this, &Box_impl::arrange));
+    signal_display_.connect(fun(this, &Box_impl::update_requisition));
+    signal_take_focus_.connect(fun(this, &Box_impl::on_take_focus));
 
     next_action_.connect_master_action(ACTION_FOCUS_NEXT);
     prev_action_.connect_master_action(ACTION_FOCUS_PREVIOUS);
@@ -211,7 +211,7 @@ void Box_impl::arrange() {
     if (inval) { invalidate(inval); }
 }
 
-void Box_impl::on_child_requisition_changed(Widget_impl * wi) {
+void Box_impl::on_child_requisition(Widget_impl * wi) {
     if (!destroy_) {
         update_requisition();
         queue_arrange();
@@ -242,84 +242,66 @@ void Box_impl::new_child(Holder & hol, Widget_ptr wp, bool shrink) {
     wp->update_size(0, 0);
     hol.wp = wp.get();
     hol.sh = shrink;
-    hol.hints_cx = wp->signal_hints_changed().connect(tau::bind(fun(this, &Box_impl::on_child_requisition_changed), wp.get()));
-    hol.req_cx = wp->signal_requisition_changed().connect(tau::bind(fun(this, &Box_impl::on_child_requisition_changed), wp.get()));
+    hol.hints_cx = wp->signal_hints_changed().connect(tau::bind(fun(this, &Box_impl::on_child_requisition), wp.get()));
+    hol.req_cx = wp->signal_requisition_changed().connect(tau::bind(fun(this, &Box_impl::on_child_requisition), wp.get()));
     hol.show_cx = wp->signal_show().connect(tau::bind(fun(this, &Box_impl::on_child_show), wp.get()));
     hol.hide_cx = wp->signal_hide().connect(tau::bind(fun(this, &Box_impl::on_child_hide), wp.get()));
+    update_requisition();
+    queue_arrange();
 }
 
 void Box_impl::rm_child(Holder & hol) {
-    hol.hints_cx.disconnect();
-    hol.req_cx.disconnect();
-    hol.hide_cx.disconnect();
-    hol.show_cx.disconnect();
     unparent_child(hol.wp);
-    hol.wp->update_origin(INT_MIN, INT_MIN);
-    hol.wp->update_size(0, 0);
     update_requisition();
     queue_arrange();
 }
 
 void Box_impl::append(Widget_ptr wp, bool shrink) {
     if (wp) {
-        Holder hol;
-        new_child(hol, wp, shrink);
-        holders_.push_back(hol);
-        update_requisition();
-        queue_arrange();
+        holders_.emplace_back();
+        new_child(holders_.back(), wp, shrink);
     }
 }
 
 void Box_impl::prepend(Widget_ptr wp, bool shrink) {
     if (wp) {
-        Holder hol;
-        new_child(hol, wp, shrink);
-        holders_.push_front(hol);
-        update_requisition();
-        queue_arrange();
+        holders_.emplace_front();
+        new_child(holders_.front(), wp, shrink);
     }
 }
 
 void Box_impl::insert_before(Widget_ptr wp, const Widget_impl * other, bool shrink) {
     if (wp) {
-        auto iter = holders_.begin();
+        auto i = holders_.begin();
 
-        while (iter != holders_.end()) {
-            if (other == iter->wp) { break; }
-            ++iter;
+        while (i != holders_.end()) {
+            if (other == i->wp) { break; }
+            ++i;
         }
 
-        Holder hol;
-        new_child(hol, wp, shrink);
-        holders_.insert(iter, hol);
-        update_requisition();
-        queue_arrange();
+        new_child(*holders_.emplace(i), wp, shrink);
     }
 }
 
 void Box_impl::insert_after(Widget_ptr wp, const Widget_impl * other, bool shrink) {
     if (wp) {
-        auto iter = holders_.begin();
+        auto i = holders_.begin();
 
-        while (iter != holders_.end()) {
-            if (other == iter->wp) { ++iter; break; }
-            ++iter;
+        while (i != holders_.end()) {
+            if (other == i->wp) { ++i; break; }
+            ++i;
         }
 
-        Holder hol;
-        new_child(hol, wp, shrink);
-        holders_.insert(iter, hol);
-        update_requisition();
-        queue_arrange();
+        new_child(*holders_.emplace(i), wp, shrink);
     }
 }
 
 void Box_impl::remove(Widget_impl * wp) {
     if (wp) {
-        for (auto iter = holders_.begin(); iter != holders_.end(); ++iter) {
-            if (wp == iter->wp) {
-                rm_child(*iter);
-                holders_.erase(iter);
+        for (auto i = holders_.begin(); i != holders_.end(); ++i) {
+            if (wp == i->wp) {
+                rm_child(*i);
+                holders_.erase(i);
                 break;
             }
         }
@@ -329,20 +311,20 @@ void Box_impl::remove(Widget_impl * wp) {
 void Box_impl::remove_after(const Widget_impl * other) {
     if (other) {
         if (holders_.size() > 1) {
-            auto iter = holders_.begin();
+            auto i = holders_.begin();
 
-            for (; iter != holders_.end(); ++iter) {
-                if (other == iter->wp) {
+            for (; i != holders_.end(); ++i) {
+                if (other == i->wp) {
                     break;
                 }
             }
 
-            if (holders_.end() != iter) {
-                ++iter;
+            if (holders_.end() != i) {
+                ++i;
 
-                if (holders_.end() != iter) {
-                    rm_child(*iter);
-                    holders_.erase(iter);
+                if (holders_.end() != i) {
+                    rm_child(*i);
+                    holders_.erase(i);
                 }
             }
         }
@@ -352,19 +334,19 @@ void Box_impl::remove_after(const Widget_impl * other) {
 void Box_impl::remove_before(const Widget_impl * other) {
     if (other) {
         if (holders_.size() > 1) {
-            auto iter = holders_.begin();
+            auto i = holders_.begin();
 
-            for (; iter != holders_.end(); ++iter) {
-                if (other == iter->wp) {
+            for (; i != holders_.end(); ++i) {
+                if (other == i->wp) {
                     break;
                 }
             }
 
-            if (holders_.end() != iter) {
-                if (holders_.begin() != iter) {
-                    --iter;
-                    rm_child(*iter);
-                    holders_.erase(iter);
+            if (holders_.end() != i) {
+                if (holders_.begin() != i) {
+                    --i;
+                    rm_child(*i);
+                    holders_.erase(i);
                 }
             }
         }
@@ -387,10 +369,10 @@ void Box_impl::remove_back() {
 
 void Box_impl::clear() {
     if (!holders_.empty()) {
-        for (auto & h: holders_) { rm_child(h); }
         holders_.clear();
-        invalidate();
+        unparent_all();
         update_requisition();
+        invalidate();
     }
 }
 

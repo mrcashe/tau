@@ -35,7 +35,7 @@ class Absolute_impl: public Container_impl {
 public:
 
     Absolute_impl();
-   ~Absolute_impl() { destroy_ = true; }
+   ~Absolute_impl() { signal_destroy_(); }
 
    void put(Widget_ptr wp, const Point & pos, const Size & size=Size());
    void put(Widget_ptr wp, const Point & pos, unsigned width, unsigned height) { put(wp, pos, Size(width, height)); }
@@ -77,8 +77,7 @@ private:
     void rm_child(Holder & hol);
     Size child_requisition(const Holder & hol);
 
-    void on_child_hints_changed(Widget_impl * wi);
-    void on_child_requisition_changed(Widget_impl * wi);
+    void on_child_requisition(Widget_impl * wi);
     void on_child_hide(Widget_impl * wi);
     void on_child_show(Widget_impl * wi);
     bool on_take_focus();

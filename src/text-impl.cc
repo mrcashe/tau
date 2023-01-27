@@ -354,12 +354,12 @@ void Text_impl::insert_range(Buffer_citer b, Buffer_citer e) {
 // Overriden by Edit_impl.
 void Text_impl::assign(Buffer buf) {
     clear();
-    insert_cx_.disconnect();
-    replace_cx_.disconnect();
-    erase_cx_.disconnect();
-    insert_move_cx_.disconnect();
-    replace_move_cx_.disconnect();
-    erase_move_cx_.disconnect();
+    insert_cx_.drop();
+    replace_cx_.drop();
+    erase_cx_.drop();
+    insert_move_cx_.drop();
+    replace_move_cx_.drop();
+    erase_move_cx_.drop();
     buffer_ = buf;
     init_buffer();
     signal_caret_motion_();

@@ -78,10 +78,10 @@ void Table_impl::remove(Widget_impl * wp) {
 
         if (i != holders_.end()) {
             wipe_holder(i->second);
-            i->second.hints_cx.disconnect();
-            i->second.req_cx.disconnect();
-            i->second.hide_cx.disconnect();
-            i->second.show_cx.disconnect();
+            i->second.hints_cx.drop();
+            i->second.req_cx.drop();
+            i->second.hide_cx.drop();
+            i->second.show_cx.drop();
             unparent_child(wp);
             wp->update_origin(INT_MIN, INT_MIN);
             wp->update_size(0, 0);
@@ -1879,7 +1879,7 @@ void Table_impl::unmark_all() {
         invalidate(range_bounds(m));
 
         for (auto wp: children_within_range(m.xmin, m.ymin, m.xmax, m.ymax)) {
-            wp->style().unset("background");
+            wp->style().unset(STYLE_BACKGROUND);
             wp->signal_unselect()();
         }
     }
@@ -1895,7 +1895,6 @@ std::vector<Table::Span> Table_impl::marks() const {
 }
 
 bool Table_impl::on_take_focus() {
-//     std::cout << this << " tf: " << focused_child_ << '\n';
     if (focused_child_ && focused_child_->take_focus()) {
         return true;
     }
@@ -1904,7 +1903,6 @@ bool Table_impl::on_take_focus() {
         Holder & hol = i->second;
 
         if (hol.wp->take_focus()) {
-//             std::cout << "  " << this << " TF: " << hol.wp << '\n';
             return true;
         }
     }
@@ -1918,13 +1916,14 @@ void Table_impl::clear() {
     unmark_all();
     unselect();
 
-    for (auto i = holders_.begin(); i != holders_.end(); ++i) {
-        Holder & hol = i->second;
-        unparent_child(hol.wp);
-        hol.wp->update_origin(INT_MIN, INT_MIN);
-        hol.wp->update_size(0, 0);
+    for (auto & hol: holders_) {
+        hol.second.hints_cx.drop();
+        hol.second.req_cx.drop();
+        hol.second.show_cx.drop();
+        hol.second.hide_cx.drop();
     }
 
+    unparent_all();
     holders_.clear();
     cols_.clear();
     rows_.clear();
@@ -1934,7 +1933,7 @@ void Table_impl::clear() {
 
 void Table_impl::on_async_clear() {
     if (holders_.empty()) {
-        async_clear_cx_.disconnect();
+        async_clear_cx_.drop();
         cols_.clear();
         rows_.clear();
         require_size(0);

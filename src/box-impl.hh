@@ -37,7 +37,7 @@ class Box_impl: public Container_impl {
 public:
 
     explicit Box_impl(Orientation orient, unsigned spacing=0);
-   ~Box_impl() { destroy_ = true; }
+   ~Box_impl() { signal_destroy_(); }
 
     Align align() const { return align_; }
     void set_align(Align align);
@@ -96,10 +96,10 @@ private:
         Widget_impl *   wp;
         bool            sh = false;
         Size            req;
-        connection      hints_cx;
-        connection      req_cx;
-        connection      show_cx;
-        connection      hide_cx;
+        connection      hints_cx { true };
+        connection      req_cx { true };
+        connection      show_cx { true };
+        connection      hide_cx { true };
     };
 
     std::list<Holder>   holders_;
@@ -128,7 +128,7 @@ private:
     void focus_next();
     void focus_previous();
 
-    void on_child_requisition_changed(Widget_impl * wi);
+    void on_child_requisition(Widget_impl * wi);
     void on_child_show(Widget_impl * wi);
     void on_child_hide(Widget_impl * wi);
     bool on_take_focus();

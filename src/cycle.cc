@@ -57,16 +57,16 @@ void Cycle::append(Widget & w, bool shrink) {
     CYCLE_IMPL->append(w.ptr(), shrink);
 }
 
-void Cycle::append(const ustring & text, unsigned margin_left_hint, unsigned margin_right_hint) {
-    CYCLE_IMPL->append(text, margin_left_hint, margin_right_hint);
+Widget_ptr Cycle::append(const ustring & text, unsigned margin_left, unsigned margin_right) {
+    return CYCLE_IMPL->append(text, margin_left, margin_right);
 }
 
 void Cycle::prepend(Widget & w, bool shrink) {
     CYCLE_IMPL->prepend(w.ptr(), shrink);
 }
 
-void Cycle::prepend(const ustring & text, unsigned margin_left_hint, unsigned margin_right_hint) {
-    CYCLE_IMPL->prepend(text, margin_left_hint, margin_right_hint);
+Widget_ptr Cycle::prepend(const ustring & text, unsigned margin_left, unsigned margin_right) {
+    return CYCLE_IMPL->prepend(text, margin_left, margin_right);
 }
 
 void Cycle::remove(Widget & w) {

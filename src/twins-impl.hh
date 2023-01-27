@@ -35,7 +35,7 @@ class Twins_impl: public Container_impl {
 public:
 
     explicit Twins_impl(Orientation orient, double ratio=0.5);
-   ~Twins_impl() { destroy_ = true; }
+   ~Twins_impl() { signal_destroy_(); }
 
     void insert_first(Widget_ptr wp);
     void insert_second(Widget_ptr wp);

@@ -46,23 +46,27 @@ template <class functor_type, typename R, typename... Args> struct slot_impl_F;
 
 class trackable;
 
+/// Functore base, untyped.
+/// @ingroup signal_group
 class functor_base {
-    trackable * target_ = nullptr;
-
-public:
-
-    virtual bool empty() const { return true; }
-    virtual void reset() { target_ = nullptr; }
-    virtual trackable * target() { return target_; }
-
 protected:
+
+    trackable * target_ = nullptr;
 
     functor_base(trackable * target=nullptr):
         target_(target)
     {
     }
+
+public:
+
+    virtual bool empty() const { return true; }
+    virtual void reset() { target_ = nullptr; }
+    trackable * target() { return target_; }
 };
 
+/// Functor for static functions and std::function objects.
+/// @ingroup signal_group
 template<typename R, typename... Args>
 class fun_functor<R(Args...)>: public functor_base {
     using function_type = std::function<R(Args...)>;
@@ -77,11 +81,6 @@ public:
     {
     }
 
-    fun_functor(function_type && fun):
-        fun_(std::move(fun))
-    {
-    }
-
     R operator()(Args... args) const {
         return fun_ ? fun_(args...) : R();
     }
@@ -91,13 +90,14 @@ public:
     }
 
     void reset() override {
-        fun_ = nullptr;
         functor_base::reset();
+        fun_ = nullptr;
     }
 };
 
 template <bool is_trackable, class Class> class mem_functor_base;
 
+/// @ingroup signal_group
 template <class Class>
 class mem_functor_base<false, Class>: public functor_base {
 protected:
@@ -105,6 +105,7 @@ protected:
     mem_functor_base(Class * obj) {}
 };
 
+/// @ingroup signal_group
 template <class Class>
 class mem_functor_base<true, Class>: public functor_base {
 protected:
@@ -115,6 +116,7 @@ protected:
     }
 };
 
+/// @ingroup signal_group
 template <class Class, typename R, typename... Args>
 class mem_functor<Class, R(Args...)>: public mem_functor_base<std::is_base_of<trackable, Class>::value, Class> {
     using base_type = mem_functor_base<std::is_base_of<trackable, Class>::value, Class>;
@@ -134,13 +136,6 @@ public:
     {
     }
 
-    mem_functor(Class * obj, function_type && fun):
-        base_type(obj),
-        obj_(obj),
-        fun_(std::move(fun))
-    {
-    }
-
     R operator()(Args... args) const {
         return fun_ ? fun_(obj_, args...) : R();
     }
@@ -155,15 +150,16 @@ public:
     }
 };
 
+/// @ingroup signal_group
 template <class tuple_type, class functor_type>
 class bind_functor: public functor_base {
     using R = typename functor_type::result_type;
     tuple_type   tuple_;
     functor_type functor_;
 
-    template<class Tuple, std::size_t... index>
-    R call_functor(Tuple && tuple, std::index_sequence<index...>) const {
-        return functor_(std::get<index>(std::move(tuple))...);
+    template<class Tuple, std::size_t... index_type>
+    R helper(Tuple && tuple, std::index_sequence<index_type...>) const {
+        return functor_(std::get<index_type>(tuple)...);
     }
 
 public:
@@ -172,35 +168,36 @@ public:
         tuple_(tuple),
         functor_(functor)
     {
+        this->target_ = functor_.target();
     }
 
     bind_functor(tuple_type && tuple, const functor_type & functor):
         tuple_(std::move(tuple)),
         functor_(functor)
     {
+        this->target_ = functor_.target();
     }
 
-    bind_functor(tuple_type & tuple, functor_type && functor):
+    bind_functor(const tuple_type & tuple, functor_type && functor):
         tuple_(tuple),
         functor_(std::move(functor))
     {
+        this->target_ = functor_.target();
     }
 
     bind_functor(tuple_type && tuple, functor_type && functor):
         tuple_(std::move(tuple)),
         functor_(std::move(functor))
     {
+        this->target_ = functor_.target();
     }
 
     template <typename... Args>
     R operator()(Args... args) const {
         auto tuple = std::tuple_cat(std::make_tuple(args...), tuple_);
         using index_type = std::make_index_sequence<std::tuple_size<decltype(tuple)>::value>;
-        return call_functor(tuple, index_type());
-    }
-
-    trackable * target() override {
-        return functor_.target();
+        auto index = index_type();
+        return helper(tuple, index);
     }
 
     bool empty() const override {
@@ -220,11 +217,11 @@ using slot_ptr = std::shared_ptr<slot_impl>;
 /// Basic functionality for untyped %slot (abstract).
 /// @ingroup signal_group
 class slot_base {
-    friend slot_impl;
-    friend signal_base;
+    friend struct slot_impl;
+    friend class signal_base;
 
     void disconnect();
-    void link(signal_base * signal) { signal_ = signal; }
+    void link(signal_base * signal);
 
 public:
 
@@ -241,6 +238,7 @@ protected:
 /// @ingroup signal_group
 class trackable {
     std::list<slot_impl *> slots_;
+
     friend slot_impl;
 
     void track(slot_impl * s);
@@ -248,38 +246,61 @@ class trackable {
 
 public:
 
-    trackable() = default;
+    /// Default constructor.
+    trackable();
+
+    /// Copy cosntructor.
+    /// This constructor does not copy slots from src.
     trackable(const trackable & src);
+
+    /// Copy operator.
+    /// This operator does not copy slots from src.
     trackable & operator=(const trackable & src);
+
+    /// Move cosntructor.
+    /// This constructor does not copy slots from src.
+    trackable(trackable && src);
+
+    /// Move operator.
+    /// This operator does not copy slots from src.
+    trackable & operator=(trackable && src);
+
+    /// Destructor.
+    /// Disconnects all connected slots.
    ~trackable();
 };
 
+/// Slot implementation base, untyped.
+/// @ingroup signal_group
 struct slot_impl {
-    virtual ~slot_impl() {}
+    virtual ~slot_impl();
 
-    slot_impl(slot_base * slot=nullptr);
+    slot_impl(slot_base * base);
     slot_impl(const slot_impl & other) = delete;
     slot_impl(slot_impl && other) = delete;
     slot_impl & operator=(const slot_impl & other) = delete;
     slot_impl & operator=(slot_impl && other) = delete;
 
-    virtual slot_ptr clone(slot_base * slot=nullptr) const = 0;
-    virtual void reset() = 0;
-    virtual trackable * target() = 0;
+    virtual slot_ptr clone(slot_base * base) const = 0;
+    virtual void reset();
     virtual bool empty() const = 0;
 
     bool blocked() const;
     void block();
     void unblock();
-    void link(slot_base * slot);
+    void link(slot_base * base);
     void disconnect();
-    void track();
+    void track(trackable * target);
     void untrack();
 
-    slot_base * slot_ = nullptr;
+    slot_base * base_ = nullptr;
     unsigned    blocked_ = 0;
+    trackable * target_ = nullptr;
 };
 
+
+/// Slot implementation base, typed by result and arguments type.
+/// @ingroup signal_group
 template <typename R, typename... Args>
 struct slot_impl_T<R(Args...)>: slot_impl {
     slot_impl_T(slot_base * slot):
@@ -290,16 +311,18 @@ struct slot_impl_T<R(Args...)>: slot_impl {
     virtual R operator()(Args... args) = 0;
 };
 
+/// Slot implementation base, typed by functor, result and arguments type.
 template <class functor_type, typename R, typename... Args>
+/// @ingroup signal_group
 struct slot_impl_F<functor_type, R(Args...)>: slot_impl_T<R(Args...)> {
     using self_type = slot_impl_F<functor_type, R(Args...)>;
     functor_type functor_;
 
-    slot_impl_F(const functor_type & functor, slot_base * slot=nullptr):
-        slot_impl_T<R(Args...)>(slot),
+    slot_impl_F(const functor_type & functor, slot_base * base):
+        slot_impl_T<R(Args...)>(base),
         functor_(functor)
     {
-        this->track();
+        this->track(functor_.target());
     }
 
    ~slot_impl_F() {
@@ -310,16 +333,13 @@ struct slot_impl_F<functor_type, R(Args...)>: slot_impl_T<R(Args...)> {
         return !this->blocked() ? functor_(args...) : R();
     }
 
-    slot_ptr clone(slot_base * s=nullptr) const override {
-        return std::make_shared<self_type>(functor_, s);
+    slot_ptr clone(slot_base * base) const override {
+        return std::make_shared<self_type>(functor_, base);
     }
 
     void reset() override {
+        slot_impl::reset();
         functor_.reset();
-    }
-
-    trackable * target() override {
-        return functor_.target();
     }
 
     bool empty() const override {
@@ -335,15 +355,14 @@ class slot<R(Args...)>: public slot_base {
 
 public:
 
-    /// The default constructor.
-    /// Creates an empty %slot.
-    slot() = default;
-
-    /// Call functor.
+    /// Call holding functor.
     R operator()(Args... args) const {
         using impl_type = slot_impl_T<R(Args...)>;
         return impl_ ? static_cast<impl_type &>(*impl_)(args...) : R();
     }
+
+    /// Default constructor.
+    slot() = default;
 
     /// Constructor with functor.
     template <class functor_type>
@@ -359,13 +378,6 @@ public:
         }
     }
 
-    /// Move constructor.
-    slot(slot && other) {
-        impl_ = other.impl_;
-        other.impl_.reset();
-        if (impl_) { impl_->link(this); }
-    }
-
     /// Copy operator.
     slot & operator=(const slot & other) {
         if (this != &other) {
@@ -373,14 +385,6 @@ public:
             if (other.impl_) { impl_ = other.impl_->clone(this); }
         }
 
-        return *this;
-    }
-
-    /// Move operator.
-    slot & operator=(slot && other) {
-        impl_ = other.impl_;
-        other.impl_.reset();
-        if (impl_) { impl_->link(this); }
         return *this;
     }
 
@@ -395,19 +399,38 @@ class connection {
 public:
 
     /// Default constructor.
-    connection() = default;
+    /// @param autodrop if @b true, call drop() while destruction or assignment.
+    connection(bool autodrop=false);
 
     /// Copy constructor.
-    connection(const connection & other) = default;
+    connection(const connection & other);
 
-    /// Copy operator.
-    connection & operator=(const connection & other) = default;
+    /// Move constructor.
+    connection(connection && other);
 
-    /// @private
-    connection(slot_ptr slot);
+    /// Assignment operator.
+    /// This operator does not copy @a autodrop property from other.
+    /// For addition, it calls drop() if @a autodrop property is set before actual copying.
+    connection & operator=(const connection & other);
 
-    /// Disconnect slots from %signal.
-    void disconnect();
+    /// Move operator.
+    /// This operator does not copy @a autodrop property from other.
+    /// For addition, it calls drop() if @a autodrop property is set before actual copying.
+    connection & operator=(connection && other);
+
+    /// Destructor.
+   ~connection();
+
+    /// Disconnect connected %slot from the %signal.
+    void drop();
+
+    /// Set autodrop.
+    /// @param yes if @b true, call drop() while destruction or assignment.
+    /// @note autodrop property disabled by default.
+    void set_autodrop(bool yes=true);
+
+    /// Test if autodrop property is set.
+    bool autodrop() const;
 
     /// Test if %connection has been blocked by calling block() method.
     /// By default, the %connection is not blocked.
@@ -428,38 +451,44 @@ public:
 
     /// Test if empty.
     /// The %connection is empty when constructed using default constructor
-    /// or after disconnect() has been called.
+    /// or after drop has been called.
     bool empty() const;
 
 private:
 
-    slot_ptr slot_;
+    slot_ptr    slot_;
+    bool        autodrop_ = false;
+
+    friend class slot_base;
+
+    connection(slot_ptr slot);
 };
 
 /// Basic functionality for untyped %signal (abstract).
 /// @ingroup signal_group
 class signal_base: public trackable {
+public:
+
     virtual void erase(slot_base * slot) = 0;
-    friend slot_base;
+    virtual ~signal_base();
 
 protected:
 
-    virtual ~signal_base();
     signal_base() = default;
-    connection link(slot_base & slot) { slot.link(this); return slot.cx(); }
+    connection link(slot_base & slot);
 };
 
 template <class Slot, typename R, typename... Args>
 struct signal_emitter<Slot, R(Args...)> {
     R operator()(std::shared_ptr<Slot> * p, std::size_t n, Args... args) {
-        R last = R();
+        R any = R();
 
         while (n--) {
-            last = (*p++)->operator()(args...);
-            if (last) { break; }
+            any = (*p++)->operator()(args...);
+            if (any) { break; }
         }
 
-        return last;
+        return any;
     }
 };
 
@@ -485,15 +514,16 @@ class signal<R(Args...)>: public signal_base {
     using impl_type = slot_impl_T<R(Args...)>;
     using emitter_type = signal_emitter<impl_type, R(Args...)>;
     std::list<slot_type> slots_;
+    std::size_t size_ = 0;
 
     void erase(slot_base * s) override {
         slots_.remove(*static_cast<slot_type *>(s));
+        size_ = slots_.size();
     }
 
 public:
 
     /// Default constructor.
-    /// Creates an empty %signal.
     signal() = default;
 
     /// Copy constructor.
@@ -502,36 +532,23 @@ public:
     /// Copy operator.
     signal & operator=(const signal & other) = default;
 
-    /// Move constructor.
-    signal(signal && other):
-        slots_(std::move(other.slots_))
-    {
-    }
-
-    /// Move operator.
-    signal & operator=(signal && other) {
-        slots_ = std::move(other.slots_);
-        return *this;
-    }
-
     /// Merge signals.
     void operator+=(const signal & other) {
         if (this != &other) {
-            for (const slot_type & slot: other.slots_) {
-                slots_.emplace_back(slot);
-            }
+            for (auto & slot: other.slots_) { slots_.emplace_back(slot); }
+            size_ = slots_.size();
         }
     }
 
     /// Test if empty.
     bool empty() const {
-        return slots_.empty();
+        return 0 == size_;
     }
 
     /// Count slots connected.
     /// @return connected slot count.
     std::size_t size() const {
-        return slots_.size();
+        return size_;
     }
 
     /// Connect slot using %slot's copy constructor.
@@ -541,11 +558,13 @@ public:
     connection connect(const slot_type & slot, bool prepend=false) {
         if (!prepend) {
             slots_.emplace_back(slot);
+            ++size_;
             return link(slots_.back());
         }
 
         else {
             slots_.emplace_front(slot);
+            ++size_;
             return link(slots_.front());
         }
     }
@@ -557,22 +576,23 @@ public:
     connection connect(slot_type && slot, bool prepend=false) {
         if (!prepend) {
             slots_.emplace_back(std::move(slot));
+            ++size_;
             return link(slots_.back());
         }
 
         else {
             slots_.emplace_front(std::move(slot));
+            ++size_;
             return link(slots_.front());
         }
     }
 
     /// Emit the %signal.
     R operator()(Args... args) {
-        if (std::size_t n = slots_.size()) {
+        if (0 != size_) {
             using ptr_type = std::shared_ptr<impl_type>;
-            n = std::min(n, (512*1024U)/sizeof(ptr_type));
+            std::size_t n = std::min(size_, (512*1024U)/sizeof(ptr_type)), nn = n;
             ptr_type tmp[n], * d = tmp;
-            std::size_t nn = n;
 
             for (auto i = slots_.begin(); nn && i != slots_.end(); ++i, --nn) {
                 *(d++) = std::static_pointer_cast<impl_type>(i->impl_);
@@ -585,7 +605,7 @@ public:
     }
 };
 
-/// Create functor from pointer to the static function.
+/// Create functor from pointer to static function.
 /// @ingroup signal_group
 template <typename R, typename... Args>
 inline fun_functor<R(Args...)>

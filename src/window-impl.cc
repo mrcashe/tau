@@ -64,12 +64,12 @@ Point Window_impl::to_window(const Point & pt) const {
 
 // Overrides Widget_impl.
 Point Window_impl::to_root(const Point & pt) const {
-    return parent_ ? parent_->to_root(pt+origin())-parent_->scroll_position() : pt;
+    return !destroy_ && parent_ ? parent_->to_root(pt+origin())-parent_->scroll_position() : pt;
 }
 
 // Overrides Widget_impl.
 bool Window_impl::has_modal() const {
-    return this == display()->modal_window();
+    return !destroy_ && this == display()->modal_window();
 }
 
 // Overrides Container_impl.
@@ -83,7 +83,7 @@ bool Window_impl::grab_modal_up(Widget_impl * caller) {
         return caller == this && !modal_child_;
     }
 
-    if (display()->grab_modal(this)) {
+    if (!destroy_ && display()->grab_modal(this)) {
         Widget_impl::resume_focus();
         if (caller != this) { set_modal_child(caller); }
         return true;
@@ -95,7 +95,7 @@ bool Window_impl::grab_modal_up(Widget_impl * caller) {
 // Overrides Container_impl.
 // Overrides Widget_impl.
 bool Window_impl::end_modal_up(Widget_impl * caller) {
-    if (caller && display()->end_modal(this)) {
+    if (!destroy_ && caller && display()->end_modal(this)) {
         if (auto mc = modal_child_) {
             if (mc == caller) {
                 modal_child_ = nullptr;
@@ -112,7 +112,7 @@ bool Window_impl::end_modal_up(Widget_impl * caller) {
 // Overrides Container_impl.
 // Overrides Widget_impl.
 int Window_impl::grab_focus_up(Widget_impl * caller) {
-    if (has_modal()) { return -1; }
+    if (destroy_ || has_modal()) { return -1; }
 
     int res = 1;
 
@@ -150,7 +150,7 @@ void Window_impl::handle_client_area(const Rect & r) {
 // Overrides Container_impl.
 // Overrides Widget_impl.
 bool Window_impl::grab_mouse_up(Widget_impl * caller) {
-    if (enabled()) {
+    if (!destroy_ && enabled()) {
         if (caller != mouse_grabber_) {
             ungrab_mouse_down();
             mouse_grabber_ = this != caller ? caller : nullptr;
@@ -166,7 +166,7 @@ bool Window_impl::grab_mouse_up(Widget_impl * caller) {
 // Overrides Container_impl.
 // Overrides Widget_impl.
 bool Window_impl::ungrab_mouse_up(Widget_impl * caller) {
-    if (caller) {
+    if (!destroy_ && caller) {
         if (caller == mouse_grabber_) {
             mouse_grabber_ = nullptr;
         }
@@ -187,19 +187,25 @@ bool Window_impl::ungrab_mouse_up(Widget_impl * caller) {
 // Overrides Container_impl.
 // Overrides Widget_impl.
 bool Window_impl::grabs_mouse() const {
-    return !mouse_grabber_ && this == display()->mouse_grabber();
+    return !destroy_ && !mouse_grabber_ && this == display()->mouse_grabber();
 }
 
 // Overrides Widget_impl.
 bool Window_impl::hover() const {
-    return this == display()->mouse_owner() || this == display()->mouse_grabber();
+    return !destroy_ && (this == display()->mouse_owner() || this == display()->mouse_grabber());
 }
 
 // Overrides Widget_impl.
 Point Window_impl::where_mouse() const {
-    Point co = client_area().origin();
-    if (auto pw = parent_window()) { return pw->where_mouse()-position()-co; }
-    return display()->where_mouse()-position()-co;
+    Point pt(INT_MIN, INT_MIN);
+
+    if (!destroy_) {
+        Point co = client_area().origin();
+        if (auto pw = parent_window()) { return pw->where_mouse()-position()-co; }
+        pt.set(display()->where_mouse()-position()-co);
+    }
+
+    return pt;
 }
 
 void Window_impl::move(const Point & pt) { winface_->move(pt); }
@@ -218,19 +224,21 @@ bool Window_impl::cursor_visible() const {
 
 // Overrides Widget_impl.
 void Window_impl::set_cursor_up(Cursor_ptr cursor) {
-    if (!cursor_ || cursor_ == cursor) {
+    if (!destroy_ && (!cursor_ || cursor_ == cursor)) {
         winface_->set_cursor(cursor);
     }
 }
 
 // Overrides Widget_impl.
 void Window_impl::unset_cursor_up() {
-    if (cursor_) {
-        winface_->set_cursor(cursor_);
-    }
+    if (!destroy_) {
+        if (cursor_) {
+            winface_->set_cursor(cursor_);
+        }
 
-    else {
-        winface_->unset_cursor();
+        else {
+            winface_->unset_cursor();
+        }
     }
 }
 
@@ -252,7 +260,7 @@ bool Window_impl::has_window() const {
 
 void Window_impl::on_tooltip_close() {
     tooltip_.reset();
-    tooltip_cx_.disconnect();
+    tooltip_cx_.drop();
     tooltip_widget_ = nullptr;
 }
 
@@ -361,7 +369,7 @@ Window_ptr Window_impl::open_tooltip(Widget_impl * caller, Widget_ptr tooltip) {
 void Window_impl::close_tooltip(Widget_impl * caller) {
     if (caller == tooltip_widget_) {
         if (tooltip_) { tooltip_->close(); }
-        tooltip_cx_.disconnect();
+        tooltip_cx_.drop();
         tooltip_widget_ = nullptr;
     }
 }

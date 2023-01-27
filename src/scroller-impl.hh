@@ -36,7 +36,7 @@ class Scroller_impl: public Container_impl {
 public:
 
     Scroller_impl();
-   ~Scroller_impl() { destroy_ = true; }
+   ~Scroller_impl() { signal_destroy_(); }
 
     void insert(Widget_ptr wp);
     void clear();
@@ -115,7 +115,6 @@ private:
 
     bool on_mouse_down(int mbt, int mm, const Point & pt);
     bool on_mouse_wheel(int delta, int mm, const Point & pt);
-    void on_child_requisition_changed();
     void on_child_show();
     void on_child_hide();
     bool on_take_focus();

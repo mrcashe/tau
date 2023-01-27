@@ -26,10 +26,15 @@
 
 #include <tau/signal.hh>
 #include <algorithm>
+#include <iostream>
 
 namespace tau {
 
+trackable::trackable() {}
+
 trackable::trackable(const trackable & src) {}
+
+trackable::trackable(trackable && src) {}
 
 trackable::~trackable() {
     for (auto s: slots_) { s->reset(); s->disconnect(); }
@@ -46,6 +51,10 @@ void trackable::untrack(slot_impl * s) {
 }
 
 trackable & trackable::operator=(const trackable & src) {
+    return *this;
+}
+
+trackable & trackable::operator=(trackable && src) {
     return *this;
 }
 
@@ -70,6 +79,10 @@ void slot_base::disconnect() {
     }
 }
 
+void slot_base::link(signal_base * signal) {
+    signal_ = signal;
+}
+
 connection slot_base::cx() {
     return connection(impl_);
 }
@@ -77,18 +90,69 @@ connection slot_base::cx() {
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
 
+connection::connection(bool autodrop):
+    autodrop_(autodrop)
+{
+}
+
+connection::~connection() {
+    if (autodrop_) {
+        // std::cout << this << " connection::drop() " << slot_.get() << "\n";
+        drop();
+    }
+}
+
+connection::connection(const connection & other):
+    slot_(other.slot_),
+    autodrop_(other.autodrop_)
+{
+}
+
+connection::connection(connection && other):
+    slot_(other.slot_)
+{
+    other.slot_.reset();
+}
+
+connection & connection::operator=(const connection & other) {
+    if (this != &other) {
+        if (autodrop_) { drop(); }
+        slot_ = other.slot_;
+    }
+
+    return *this;
+}
+
+connection & connection::operator=(connection && other) {
+    if (this != &other) {
+        if (autodrop_) { drop(); }
+        slot_ = other.slot_;
+        other.slot_.reset();
+    }
+
+    return *this;
+}
+
 connection::connection(slot_ptr slot):
     slot_(slot)
 {
 }
 
-void connection::disconnect() {
+void connection::drop() {
     if (slot_) {
         slot_->untrack();
-        slot_->disconnect();
         slot_->reset();
+        slot_->disconnect();
         slot_.reset();
     }
+}
+
+void connection::set_autodrop(bool yes) {
+    autodrop_ = yes;
+}
+
+bool connection::autodrop() const {
+    return autodrop_;
 }
 
 bool connection::blocked() const {
@@ -111,14 +175,15 @@ bool connection::empty() const {
     return !slot_ || slot_->empty();
 }
 
-
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
 
-slot_impl::slot_impl(slot_base * slot):
-    slot_(slot)
+slot_impl::slot_impl(slot_base * base):
+    base_(base)
 {
 }
+
+slot_impl::~slot_impl() {}
 
 bool slot_impl::blocked() const {
     return 0 != blocked_;
@@ -135,28 +200,40 @@ void slot_impl::unblock() {
 }
 
 // Called by owning slot.
-void slot_impl::link(slot_base * slot) {
-    slot_ = slot;
+void slot_impl::link(slot_base * base) {
+    base_ = base;
+    // std::cout << this << " slot_impl::link " << base_ << std::endl;
 }
 
 // Called by connection and trackable.
 void slot_impl::disconnect() {
-    if (auto s = slot_) {
-        slot_ = nullptr;
-        s->disconnect();
+    if (auto base = base_) {
+        base_ = nullptr;
+        base->disconnect();
     }
 }
 
-void slot_impl::track() {
-    if (target()) {
-        target()->track(this);
-    }
+void slot_impl::track(trackable * target) {
+    target_ = target;
+    if (target_) { target_->track(this); }
 }
 
 void slot_impl::untrack() {
-    if (target()) {
-        target()->untrack(this);
+    if (target_) {
+        target_->untrack(this);
     }
+}
+
+void slot_impl::reset() {
+    target_ = nullptr;
+}
+
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+
+connection signal_base::link(slot_base & slot) {
+    slot.link(this);
+    return slot.cx();
 }
 
 } // namespace tau

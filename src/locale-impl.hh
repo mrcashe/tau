@@ -75,6 +75,7 @@ struct Locale_data {
 };
 
 extern Locale_data * sys_locale_ptr_;
+extern Locale_data * locale_ptr_;
 
 } // namespace tau
 
