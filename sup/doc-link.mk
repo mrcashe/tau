@@ -27,13 +27,26 @@
 all:
 
 install:
-	@if [ -d $(doxydir) ]; then $(cpr) $(doxydir)/html $(doc_prefix); fi
+	@if [ -d $(doxydir) ]; then \
+	    $(mkdir) $(doc_prefix); \
+	    $(cpr) $(doxydir)/html $(doc_prefix)/html; \
+	    $(cp) $(doxydir)/*.pdf $(doc_prefix); \
+	fi
 
 uninstall:
-	@$(rmr) "$(doc_prefix)/html/"
+	@$(rmr) "$(doc_prefix)/html/" "$(doc_prefix)/*.pdf"
 
 clean:
 	@$(rmr) "$(doxydir)"
 
+.PHONY: doc
+
 doc:
-	@if test -n $(doxygen); then (cd $(topdir) && $(doxygen) "$(confdir)/Doxyfile"); fi
+	@if test -n $(doxygen); then \
+	    (cd $(topdir) && $(doxygen) "$(confdir)/Doxyfile"); \
+	    if [ -d $(builddir)/doxygen/latex ]; then \
+		gmake -C $(builddir)/doxygen/latex pdf; \
+		[ ! -e $(builddir)/doxygen/latex/refman.pdf ] && gmake -C $(builddir)/doxygen/latex; \
+		mv -f $(builddir)/doxygen/latex/refman.pdf $(builddir)/doxygen/tau-$(Major_).$(Minor_).$(Micro_).pdf; \
+	    fi;\
+	fi

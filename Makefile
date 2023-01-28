@@ -36,7 +36,7 @@ export hh_src = $(srcdir)/include
 CXXFLAGS += -I$(hh_src) -I$(srcdir)
 
 BUILD_TARGETS = all-build install-build uninstall-build clean-build
-.PHONY: $(BUILD_TARGETS) rm xz test-links
+.PHONY: $(BUILD_TARGETS) rm xz dist test-links icheck
 
 $(BUILD_TARGETS): $(builddir)
 	@target=`echo $@ | sed s/-build//`;\
@@ -68,6 +68,24 @@ xz:
 	    tau/share tau/doc tau/src tau/sup \
 	    tau/AUTHORS* tau/configure tau/COPYING* tau/Makefile* \
 	    tau/README* tau/VERSION
+
+icheck:
+	@bash -c $(supdir)/icheck.bash
+
+dist: en-doc doc
+	@cwd=$(PWD); \
+	cd ../; \
+	tar -cJf tau-$(Major_).$(Minor_).$(Micro_).tar.xz \
+	    tau/share tau/doc tau/src tau/sup \
+	    tau/AUTHORS* tau/configure tau/COPYING* tau/Makefile* \
+	    tau/README* tau/VERSION; \
+	cd $(builddir)/doxygen; \
+	pdf=''; \
+	if [ -d $(builddir)/doxygen/latex ]; then pdf='*.pdf'; fi; \
+	doc="tau-$(Major_).$(Minor_).$(Micro_)-doc.tar.xz"; \
+	tar -cJf $$doc html $$pdf; \
+	mv -f $$doc $$cwd/..;\
+	cd $$cwd
 
 .PHONY: en-host su-host rm-host en-a en-so en-test su-a su-so su-test rm-a rm-so rm-test
 

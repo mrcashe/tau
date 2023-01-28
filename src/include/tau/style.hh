@@ -65,14 +65,10 @@ public:
     void unset();
 
     /// Get format string.
-    ustring format() const {
-        return fmt_;
-    }
+    ustring format() const;
 
     /// Get "signal_changed".
-    signal<void()> & signal_changed() {
-        return signal_changed_;
-    }
+    signal<void()> & signal_changed();
 
 private:
 
@@ -97,10 +93,7 @@ private:
 class Font_style {
 public:
 
-    Font_style(Style_item & si):
-        si_(si)
-    {
-    }
+    Font_style(Style_item & si);
 
     /// Get font specification string.
     ustring spec() const;
@@ -155,10 +148,7 @@ private:
 class Color_style {
 public:
 
-    Color_style(Style_item & si):
-        si_(si)
-    {
-    }
+    Color_style(Style_item & si);
 
     /// Get color value.
     Color get() const;

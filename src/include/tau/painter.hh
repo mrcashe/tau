@@ -56,7 +56,7 @@ public:
     operator bool() const;
 
     /// Reset implementation pointer.
-    void reset() { impl.reset(); }
+    void reset();
 
     /// Set font.
     /// @note This method does not work on pure %Painter.

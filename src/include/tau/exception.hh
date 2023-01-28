@@ -39,7 +39,7 @@ namespace tau {
 class exception {
 public:
 
-    virtual ~exception() throw() {}
+    virtual ~exception() throw();
     virtual ustring what() const = 0;
 };
 
@@ -50,14 +50,14 @@ class internal_error: public exception {
 
 public:
 
-    explicit internal_error(const ustring & msg): msg_(msg) {}
-    ustring what() const override { return msg_; }
+    explicit internal_error(const ustring & msg);
+    ustring what() const override;
 };
 
 /// Library user error.
 /// @ingroup throw_group
 struct user_error: public internal_error {
-    user_error(const ustring & msg): internal_error("user error: "+msg) {}
+    user_error(const ustring & msg);
 };
 
 /// Operating system error.
@@ -69,32 +69,32 @@ class sys_error: public exception {
 public:
 
     explicit sys_error(const ustring & extra_msg=ustring());
-    ustring what() const override { return str_format("system error, code is ", gerror_, ": ", msg_); }
-    int gerror() const { return gerror_; }
+    ustring what() const override;
+    int gerror() const;
 };
 
 /// Graphics system error.
 /// @ingroup throw_group
 struct graphics_error: public internal_error {
-    explicit graphics_error(const ustring & msg): internal_error("graphics error: "+msg) {}
+    explicit graphics_error(const ustring & msg);
 };
 
 /// Bad document.
 /// @ingroup throw_group
 struct bad_doc: public internal_error {
-    explicit bad_doc(const ustring & msg): internal_error(msg) {}
+    explicit bad_doc(const ustring & msg);
 };
 
 /// Bad font.
 /// @ingroup throw_group
 struct bad_font: public internal_error {
-    explicit bad_font(const ustring & msg): internal_error(msg) {}
+    explicit bad_font(const ustring & msg);
 };
 
 /// Bad image.
 /// @ingroup throw_group
 struct bad_pixmap: public internal_error {
-    explicit bad_pixmap(const ustring & path): internal_error("bad pixmap: "+path) {}
+    explicit bad_pixmap(const ustring & path);
 };
 
 } // namespace tau

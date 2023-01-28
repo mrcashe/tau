@@ -103,6 +103,10 @@ Vector Matrix::transform_distance(double dx, double dy) const {
     return Vector(x, y);
 }
 
+Vector Matrix::transform_distance(const Vector & vec) const {
+    return transform_distance(vec.x(), vec.y());
+}
+
 Vector Matrix::transform(const Vector & vec) const {
     double x = xx_*vec.x()+yx_*vec.y()+x0_;
     double y = yy_*vec.y()+xy_*vec.x()+y0_;

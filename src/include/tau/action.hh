@@ -115,7 +115,7 @@ public:
 
     /// @}
     /// Get label.
-    ustring label() const { return label_; }
+    ustring label() const;
 
     /// Set label.
     void set_label(const ustring & label);
@@ -130,7 +130,7 @@ public:
 
     /// Determines whether action enabled or not.
     /// %Master_action is enabled (sensitive) by default.
-    bool enabled() const { return enabled_; }
+    bool enabled() const;
 
     /// Show action.
     /// %Master_action is shown by default.
@@ -142,13 +142,13 @@ public:
 
     /// Determines whether action visible or not.
     /// %Master_action is visible by default.
-    bool visible() const { return visible_; }
+    bool visible() const;
 
     /// Assign an icon name.
     void set_icon_name(const ustring & icon_name);
 
     /// Get icon name.
-    ustring icon_name() const { return icon_name_; }
+    ustring icon_name() const;
 
     /// Set tooltip.
     void set_tooltip(const ustring & tooltip);
@@ -157,7 +157,7 @@ public:
     void unset_tooltip();
 
     /// Get tooltip.
-    ustring tooltip() const { return tooltip_; }
+    ustring tooltip() const;
 
     /// Add accelerator.
     void add_accel(char32_t kc, int km=0);
@@ -177,34 +177,34 @@ public:
     void clear_accels();
 
     /// %List accelerators.
-    std::vector<Accel> accels() const { return accels_; }
+    std::vector<Accel> accels() const;
 
     /// Signal emitted when action becomes disabled.
-    signal<void()> & signal_disable() { return signal_disable_; }
+    signal<void()> & signal_disable();
 
     /// Signal emitted when action becomes enabled.
-    signal<void()> & signal_enable() { return signal_enable_; }
+    signal<void()> & signal_enable();
 
     /// Signal emitted when action becomes hidden.
-    signal<void()> & signal_hide() { return signal_hide_; }
+    signal<void()> & signal_hide();
 
     /// Signal emitted when action becomes visible using show() method.
-    signal<void()> & signal_show() { return signal_show_; }
+    signal<void()> & signal_show();
 
     /// Signal emitted when new accelerator added using add_accel() method.
-    signal<void(const Accel & accel)> & signal_accel_added() { return signal_accel_added_; }
+    signal<void(const Accel & accel)> & signal_accel_added();
 
     /// Signal emitted when accelerator removed using remove_accel() method.
-    signal<void(const Accel & accel)> & signal_accel_removed() { return signal_accel_removed_; }
+    signal<void(const Accel & accel)> & signal_accel_removed();
 
     /// Signal emitted when label changed using set_label() method.
-    signal<void(const ustring &)> & signal_label_changed() { return signal_label_changed_; }
+    signal<void(const ustring &)> & signal_label_changed();
 
     /// Signal emitted when label changed using set_icon_name() method.
-    signal<void(const ustring &)> & signal_icon_changed() { return signal_icon_changed_; }
+    signal<void(const ustring &)> & signal_icon_changed();
 
     /// Signal emitted when tooltip changed using one of set_tooltip() methods.
-    signal<void(const ustring &)> & signal_tooltip_changed() { return signal_tooltip_changed_; }
+    signal<void(const ustring &)> & signal_tooltip_changed();
 
 private:
 
@@ -339,7 +339,7 @@ public:
 
     /// Determines whether action enabled or not.
     /// %Action is enabled (sensitive) by default.
-    bool enabled() const { return !disabled_ && !frozen_; }
+    bool enabled() const;
 
     /// Show action.
     /// %Action is shown by default.
@@ -351,7 +351,7 @@ public:
 
     /// Determines whether action visible or not.
     /// %Action is visible by default.
-    bool visible() const { return !hidden_ && !disappeared_; }
+    bool visible() const;
 
     /// Connect master action.
     void connect_master_action(Master_action & master_action);
@@ -369,7 +369,7 @@ public:
     Action_base * lookup(char32_t kc, int km);
 
     /// Get label.
-    ustring label() const { return label_; }
+    ustring label() const;
 
     /// Set label.
     void set_label(const ustring & label);
@@ -378,7 +378,7 @@ public:
     void set_icon_name(const ustring & icon_name);
 
     /// Get icon name.
-    ustring icon_name() const { return icon_name_; }
+    ustring icon_name() const;
 
     /// Set tooltip.
     void set_tooltip(const ustring & tooltip_text);
@@ -387,7 +387,7 @@ public:
     void unset_tooltip();
 
     /// Get tooltip.
-    ustring tooltip() const { return tooltip_; }
+    ustring tooltip() const;
 
     /// Add accelerator.
     void add_accel(char32_t kc, int km=0);
@@ -407,41 +407,41 @@ public:
     void clear_accels();
 
     /// %List accels.
-    std::vector<Accel> & accels() { return accels_; }
+    std::vector<Accel> & accels();
 
     /// Signal emitted when action becomes disabled.
-    signal<void()> & signal_disable() { return signal_disable_; }
+    signal<void()> & signal_disable();
 
     /// Signal emitted when action becomes enabled.
-    signal<void()> & signal_enable() { return signal_enable_; }
+    signal<void()> & signal_enable();
 
     /// Signal emitted when action becomes hidden.
-    signal<void()> & signal_hide() { return signal_hide_; }
+    signal<void()> & signal_hide();
 
     /// Signal emitted when action becomes visible using show() method.
-    signal<void()> & signal_show() { return signal_show_; }
+    signal<void()> & signal_show();
 
     /// Signal emitted when new accelerator added using add_accel() method.
-    signal<void(Accel &)> & signal_accel_added() { return signal_accel_added_; }
+    signal<void(Accel &)> & signal_accel_added();
 
     /// Signal emitted when accelerator removed using remove_accel() method.
     /// Slot prototype:
     /// ~~~~~~~~~~~~~~~
     /// void on_accel_removed(char32_t key_code, int key_modifier);
     /// ~~~~~~~~~~~~~~~
-    signal<void(Accel &)> & signal_accel_removed() { return signal_accel_removed_; }
+    signal<void(Accel &)> & signal_accel_removed();
 
     /// Signal emitted when label changed using set_label() method.
-    signal<void(const ustring &)> & signal_label_changed() { return signal_label_changed_; }
+    signal<void(const ustring &)> & signal_label_changed();
 
     /// Signal emitted when label changed using set_icon_name() method.
-    signal<void(const ustring &)> & signal_icon_changed() { return signal_icon_changed_; }
+    signal<void(const ustring &)> & signal_icon_changed();
 
     /// Signal emitted when tooltip changed using one of set_tooltip() methods.
-    signal<void(const ustring &)> & signal_tooltip_changed() { return signal_tooltip_changed_; }
+    signal<void(const ustring &)> & signal_tooltip_changed();
 
     /// Signal emitted when action destroyed.
-    signal<void()> & signal_destroy() { return signal_destroy_; }
+    signal<void()> & signal_destroy();
 
 protected:
 

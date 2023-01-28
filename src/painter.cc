@@ -56,6 +56,10 @@ Painter::operator bool() const {
     return nullptr != impl;
 }
 
+void Painter::reset() {
+    impl.reset();
+}
+
 void Painter::set_font(Font font) {
     if (impl) {
         impl->set_font(Font_impl::strip(font));

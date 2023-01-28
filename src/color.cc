@@ -344,6 +344,47 @@ Color::Color(const ustring & text, double alpha) {
     set(text, alpha);
 }
 
+double Color::red() const {
+    return red_;
+}
+
+double Color::green() const {
+    return green_;
+}
+
+double Color::blue() const {
+    return blue_;
+}
+
+double Color::alpha() const {
+    return alpha_;
+}
+
+double Color::hue() const {
+    return hue_;
+}
+
+double Color::saturation() const {
+    return sat_;
+}
+
+double Color::value() const {
+    return value_;
+}
+
+Color & Color::operator=(const ustring & text) {
+    set(text);
+    return *this;
+}
+
+bool Color::operator==(const Color & other) const {
+    return red_ == other.red_ && green_ == other.green_ && blue_ == other.blue_ && alpha_ == other.alpha_;
+}
+
+bool Color::operator!=(const Color & other) const {
+    return red_ != other.red_ || green_ != other.green_ || blue_ != other.blue_ || alpha_ != other.alpha_;
+}
+
 void Color::set(double red, double green, double blue, double alpha) {
     red_ = std::max(0.0, std::min(1.0, red));
     green_ = std::max(0.0, std::min(1.0, green));

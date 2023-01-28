@@ -95,55 +95,34 @@ public:
     void set_value(double value);
 
     /// Get red component, range is 0.0...1.0.
-    double red() const {
-        return red_;
-    }
+    double red() const;
 
     /// Get green component, range is 0.0...1.0.
-    double green() const {
-        return green_;
-    }
+    double green() const;
 
     /// Get blue component, range is 0.0...1.0.
-    double blue() const {
-        return blue_;
-    }
+    double blue() const;
 
     /// Get alpha channel value, range is 0.0...1.0.
-    double alpha() const {
-        return alpha_;
-    }
+    double alpha() const;
 
     /// Get hue component, range is 0.0...1.0.
-    double hue() const {
-        return hue_;
-    }
+    double hue() const;
 
     /// Get saturation component, range is 0.0...1.0.
-    double saturation() const {
-        return sat_;
-    }
+    double saturation() const;
 
     /// Get value component, range is 0.0...1.0.
-    double value() const {
-        return value_;
-    }
+    double value() const;
 
     /// Assignment from HTML-like string.
-    Color & operator=(const ustring & text) {
-        set(text);
-        return *this;
-    }
+    Color & operator=(const ustring & text);
 
     /// Compare operator.
-    bool operator==(const Color & other) const {
-        return red_ == other.red_ && green_ == other.green_ && blue_ == other.blue_ && alpha_ == other.alpha_;
-    }
+    bool operator==(const Color & other) const;
 
     /// Compare operator.
-    bool operator!=(const Color & other) const {
-        return red_ != other.red_ || green_ != other.green_ || blue_ != other.blue_ || alpha_ != other.alpha_;
-    }
+    bool operator!=(const Color & other) const;
 
     /// Get ARGB32 data as 32-bit value, range 0...255 for every component.
     uint32_t argb32() const;

@@ -24,6 +24,7 @@
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ----------------------------------------------------------------------------
 
+#include <tau/exception.hh>
 #include <tau/fileinfo.hh>
 #include <tau/locale.hh>
 #include <tau/string.hh>
@@ -228,6 +229,26 @@ ustring str_env(const std::string & env, const ustring & fallback) {
 
     return res;
 }
+
+exception::~exception() {}
+
+internal_error::internal_error(const ustring & msg): msg_(msg) {}
+
+ustring internal_error::what() const { return msg_; }
+
+user_error::user_error(const ustring & msg): internal_error("user error: "+msg) {}
+
+ustring sys_error::what() const { return str_format("system error, code is ", gerror_, ": ", msg_); }
+int sys_error::gerror() const { return gerror_; }
+
+graphics_error::graphics_error(const ustring & msg): internal_error("graphics error: "+msg) {}
+
+bad_doc::bad_doc(const ustring & msg): internal_error(msg) {}
+
+bad_font::bad_font(const ustring & msg): internal_error(msg) {}
+
+bad_pixmap::bad_pixmap(const ustring & path): internal_error("bad pixmap: "+path) {}
+
 
 } // namespace tau
 

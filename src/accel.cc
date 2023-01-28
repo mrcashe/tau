@@ -60,6 +60,18 @@ void Accel::assign(char32_t kc, int km) {
     }
 }
 
+Accel::operator bool() const {
+    return !empty();
+}
+
+bool Accel::operator==(const Accel & other) {
+    return equals(other.spec());
+}
+
+bool Accel::operator!=(const Accel & other) {
+    return !equals(other.spec());
+}
+
 void Accel::assign(const ustring & spec) {
     key_spec_from_string(spec, kc_, km_);
     if (0 == kc_) { std::cerr << "** Accel::assign(spec): failed to resolve specification " << spec << std::endl; }
@@ -83,8 +95,20 @@ void Accel::disable() {
     }
 }
 
+bool Accel::enabled() const {
+    return !disabled_;
+}
+
 bool Accel::empty() const {
     return 0 == kc_;
+}
+
+char32_t Accel::key_code() const {
+    return kc_;
+}
+
+int Accel::key_modifier() const {
+    return km_;
 }
 
 void Accel::get_keys(char32_t & kc, int & km) const {
@@ -105,6 +129,22 @@ bool Accel::equals(const ustring & spec) const {
     int      km;
     key_spec_from_string(spec, kc, km);
     return equals(kc, km);
+}
+
+connection Accel::connect(slot<bool()> slot_activate) {
+    return signal_activate_.connect(slot_activate);
+}
+
+signal<void()> & Accel::signal_changed() {
+    return signal_changed_;
+}
+
+signal<void()> & Accel::signal_enable() {
+    return signal_enable_;
+}
+
+signal<void()> & Accel::signal_disable() {
+    return signal_disable_;
 }
 
 } // namespace tau

@@ -46,7 +46,7 @@ template <class functor_type, typename R, typename... Args> struct slot_impl_F;
 
 class trackable;
 
-/// Functore base, untyped.
+/// Functor base, untyped.
 /// @ingroup signal_group
 class functor_base {
 protected:

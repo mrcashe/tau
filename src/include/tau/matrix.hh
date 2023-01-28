@@ -79,7 +79,7 @@ public:
     Vector transform_distance(double dx, double dy) const;
 
     /// Transform distance.
-    Vector transform_distance(const Vector & vec) const { return transform_distance(vec.x(), vec.y()); }
+    Vector transform_distance(const Vector & vec) const;
 
     /// Test if has unity scale.
     bool has_unity_scale() const;

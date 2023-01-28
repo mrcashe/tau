@@ -99,6 +99,10 @@ void Master_action::set_label(const ustring & label) {
     }
 }
 
+ustring Master_action::label() const {
+    return label_;
+}
+
 void Master_action::enable() {
     if (!enabled_) {
         enabled_ = true;
@@ -111,6 +115,10 @@ void Master_action::disable() {
         enabled_ = false;
         signal_disable_();
     }
+}
+
+bool Master_action::enabled() const {
+    return enabled_;
 }
 
 void Master_action::show() {
@@ -127,11 +135,19 @@ void Master_action::hide() {
     }
 }
 
+bool Master_action::visible() const {
+    return visible_;
+}
+
 void Master_action::set_icon_name(const ustring & icon_name) {
     if (icon_name_ != icon_name) {
         icon_name_ = icon_name;
         signal_icon_changed_(icon_name_);
     }
+}
+
+ustring Master_action::icon_name() const {
+    return icon_name_;
 }
 
 void Master_action::set_tooltip(const ustring & tooltip) {
@@ -146,6 +162,10 @@ void Master_action::unset_tooltip() {
         tooltip_.clear();
         signal_tooltip_changed_(tooltip_);
     }
+}
+
+ustring Master_action::tooltip() const {
+    return tooltip_;
 }
 
 void Master_action::add_accel(char32_t kc, int km) {
@@ -187,6 +207,46 @@ void Master_action::remove_accels(const ustring & key_specs) {
 void Master_action::clear_accels() {
     for (auto & accel: accels_) { signal_accel_removed_(accel); }
     accels_.clear();
+}
+
+std::vector<Accel> Master_action::accels() const {
+    return accels_;
+}
+
+signal<void()> & Master_action::signal_disable() {
+    return signal_disable_;
+}
+
+signal<void()> & Master_action::signal_enable() {
+    return signal_enable_;
+}
+
+signal<void()> & Master_action::signal_hide() {
+    return signal_hide_;
+}
+
+signal<void()> & Master_action::signal_show() {
+    return signal_show_;
+}
+
+signal<void(const Accel & accel)> & Master_action::signal_accel_added() {
+    return signal_accel_added_;
+}
+
+signal<void(const Accel & accel)> & Master_action::signal_accel_removed() {
+    return signal_accel_removed_;
+}
+
+signal<void(const ustring &)> & Master_action::signal_label_changed() {
+    return signal_label_changed_;
+}
+
+signal<void(const ustring &)> & Master_action::signal_icon_changed() {
+    return signal_icon_changed_;
+}
+
+signal<void(const ustring &)> & Master_action::signal_tooltip_changed() {
+    return signal_tooltip_changed_;
 }
 
 // ----------------------------------------------------------------------------
@@ -273,6 +333,10 @@ void Action_base::set_label(const ustring & label) {
     }
 }
 
+ustring Action_base::label() const {
+    return label_;
+}
+
 void Action_base::enable() {
     if (disabled_) {
         disabled_ = false;
@@ -299,6 +363,10 @@ void Action_base::freeze() {
         frozen_ = true;
         if (!disabled_) { on_disable(); signal_disable_(); }
     }
+}
+
+bool Action_base::enabled() const {
+    return !disabled_ && !frozen_;
 }
 
 void Action_base::show() {
@@ -329,11 +397,19 @@ void Action_base::disappear() {
     }
 }
 
+bool Action_base::visible() const {
+    return !hidden_ && !disappeared_;
+}
+
 void Action_base::set_icon_name(const ustring & icon_name) {
     if (icon_name_ != icon_name) {
         icon_name_ = icon_name;
         signal_icon_changed_(icon_name_);
     }
+}
+
+ustring Action_base::icon_name() const {
+    return icon_name_;
 }
 
 void Action_base::set_tooltip(const ustring & tooltip) {
@@ -348,6 +424,10 @@ void Action_base::unset_tooltip() {
         tooltip_.clear();
         signal_tooltip_changed_(tooltip_);
     }
+}
+
+ustring Action_base::tooltip() const {
+    return tooltip_;
 }
 
 void Action_base::add_accel(char32_t kc, int km) {
@@ -459,6 +539,50 @@ Action_base * Action_base::lookup(char32_t kc, int km) {
     }
 
     return nullptr;
+}
+
+std::vector<Accel> & Action_base::accels() {
+    return accels_;
+}
+
+signal<void()> & Action_base::signal_disable() {
+    return signal_disable_;
+}
+
+signal<void()> & Action_base::signal_enable() {
+    return signal_enable_;
+}
+
+signal<void()> & Action_base::signal_hide() {
+    return signal_hide_;
+}
+
+signal<void()> & Action_base::signal_show() {
+    return signal_show_;
+}
+
+signal<void(Accel &)> & Action_base::signal_accel_added() {
+    return signal_accel_added_;
+}
+
+signal<void(Accel &)> & Action_base::signal_accel_removed() {
+    return signal_accel_removed_;
+}
+
+signal<void(const ustring &)> & Action_base::signal_label_changed() {
+    return signal_label_changed_;
+}
+
+signal<void(const ustring &)> & Action_base::signal_icon_changed() {
+    return signal_icon_changed_;
+}
+
+signal<void(const ustring &)> & Action_base::signal_tooltip_changed() {
+    return signal_tooltip_changed_;
+}
+
+signal<void()> & Action_base::signal_destroy() {
+    return signal_destroy_;
 }
 
 // ----------------------------------------------------------------------------

@@ -192,6 +192,14 @@ void Style_item::set(const ustring & val) {
     }
 }
 
+ustring Style_item::format() const {
+    return fmt_;
+}
+
+signal<void()> & Style_item::signal_changed() {
+    return signal_changed_;
+}
+
 bool Style_item::is_set() const {
     return set_ || !value_.empty();
 }
@@ -219,6 +227,11 @@ void Style_item::set_pvalue(const ustring & pvalue) {
 
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
+
+Font_style::Font_style(Style_item & si):
+    si_(si)
+{
+}
 
 ustring Font_style::spec() const {
     ustring val = si_.get(), fam = font_family_from_spec(val), face = font_face_from_spec(val);
@@ -320,6 +333,11 @@ void Font_style::operator=(const ustring & s) {
 
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
+
+Color_style::Color_style(Style_item & si):
+    si_(si)
+{
+}
 
 Color Color_style::get() const {
     return Color(si_.get());

@@ -97,6 +97,7 @@ usage() {
     echo "  --mxe-target=<TARGET>    set MXE target"
     echo "  --disable-mxe            disable MXE building"
     echo "  --disable-doc            disable documentation generation"
+    echo "  --disable-pdf            disable pdf documentation generation"
     echo "  --enable-static          enable static library building"
     echo "  --enable-test            enable test suite building"
     echo "  --enable-devel           enable development files creation and install"
@@ -137,6 +138,7 @@ PREFIX=''
 CXXFLAGS='-std=c++14 -Wall'
 disable_doc='NO'
 disable_mxe='NO'
+disable_pdf='NO'
 enable_static='NO'
 enable_test='NO'
 enable_devel='NO'
@@ -200,6 +202,10 @@ for opt in $opts; do
             disable_doc='YES'
         ;;
 
+        --disable-pdf)
+            disable_pdf='YES'
+        ;;
+
         --disable-mxe)
             disable_mxe='YES'
         ;;
@@ -234,6 +240,7 @@ chk_which 'tr' 'tr' 'MANDATORY'
 chk_which 'grep' 'grep' 'MANDATORY'
 chk_which 'tar' 'tar' 'OPTIONAL'
 chk_which 'xz' 'xz' 'OPTIONAL'
+chk_which 'latex' 'latex' 'OPTIONAL'
 
 verfile="$topdir/VERSION"
 
@@ -263,7 +270,7 @@ hh_prefix="$PREFIX/include/tau-$Major_.$Minor_"
 share_prefix="$PREFIX/share/tau-$Major_.$Minor_"
 
 # ---------------------------------------------------------------------------
-# Compilers, archivers and other binutils checking.
+# Compilers, archivers and other code related tools checking.
 # ---------------------------------------------------------------------------
 
 chk_which 'cxx' 'c++ g++ clang++' 'MANDATORY'
@@ -272,6 +279,7 @@ chk_which 'ar' 'ar' 'MANDATORY'
 chk_which 'strip' 'strip' 'MANDATORY'
 chk_which 'pkgconfig' 'pkg-config' 'MANDATORY'
 chk_which 'make' 'gmake' 'MANDATORY'
+chk_which 'ctags' 'ctags' 'OPTIONAL'
 
 # ---------------------------------------------------------------------------
 # Packages.
@@ -487,6 +495,9 @@ else
     echo "s+EXAMPLE_PATH *=.*+EXAMPLE_PATH = $topdir+" >>$tmp
     echo "s+INPUT *=.*+INPUT = $doxyinput+" >>$tmp
     echo "s+IMAGE_PATH *=.*+IMAGE_PATH = $shdir/pixmaps $shdir/icons/actions/12 $shdir/icons/actions/22 $shdir/icons/devices/22 $shdir/icons/places/22+" >>$tmp
+    if [ 'YES' != "$disable_pdf" ] && [ -n "$which_latex" ]; then
+        echo "s+GENERATE_LATEX *=.*+GENERATE_LATEX = YES+" >>$tmp
+    fi
     sed -f "$tmp" "$topdir/doc/Doxyfile" >"$confdir/Doxyfile"
     rm -f $tmp
 fi

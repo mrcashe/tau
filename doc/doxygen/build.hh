@@ -24,6 +24,8 @@
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ----------------------------------------------------------------------------
 
+namespace tau {
+
 /**
 
 @page Build
@@ -62,11 +64,12 @@ The generated configuration files collected within `./conf` subdirectory.
 <tr><td><em>\--conf-targets=\<TARGETS\>   </em><td>@ref post_subsect "set post-configure targets"
 <tr><td><em>\--mxe-prefix=\<PREFIX\>      </em><td>@ref mxepfx_subsect "set MXE prefix"
 <tr><td><em>\--mxe-target=\<TARGET\>      </em><td>@ref mxetrg_subsect "set MXE target"
-<tr><td><em>\--disable-mxe                </em><td>@ref mxedis_subsect "disable MXE building"
 <tr><td><em>\--disable-doc                </em><td>@ref docdis_subsect "disable documentation generation"
+<tr><td><em>\--disable-mxe                </em><td>@ref mxedis_subsect "disable MXE building"
+<tr><td><em>\--disable-pdf                </em><td>disable pdf documentation generation
+<tr><td><em>\--enable-devel               </em><td>@ref endevel_subsect "enable development files creation and install"
 <tr><td><em>\--enable-static              </em><td>@ref ena_subsect "enable static library building"
 <tr><td><em>\--enable-test                </em><td>@ref entest_subsect "enable test suite building"
-<tr><td><em>\--enable-devel               </em><td>@ref endevel_subsect "enable development files creation and install"
 </table>
 
 @subsection prefix_subsect \--prefix=\<PREFIX\>
@@ -160,19 +163,147 @@ Here is the contents of my `configure.argv` file:
 --enable-devel
 ~~~
 
-@note here is in the example you can see the `--conf-prefix=` option used twice. This is
+@note here is in the example you can see the `--conf-targets=` option used twice. This is
 because `bash` splits given arguments by spaces and newlines, so if you want to assign more
-than one post-configure target, use `--conf-prefix=` option repeatedly with only one argument.
+than one post-configure target, use `--conf-targets=` option repeatedly with only one argument.
 
 @section make_sect Make
 Detailed information about make process
+Series of targets named like <b>en-*</b>, <b>su-*</b> and <b>rm-*</b> provided, here is
+@a en- for enable/resume feature, @a su- for suspend feature, @a rm- for disable/remove feature.
 
 @subsection make_targets Make targets summary
+<table>
+<tr><th>Target                  <th>Meaning
+<tr><td>@a en-host-a            <td>Enable static library building for host platform.
+<tr><td>@a su-host-a            <td>Suspend static library building for host platform.
+<tr><td>@a rm-host-a            <td>Disable and remove static library building for host platform.
+<tr><td>@a en-host-so           <td>Enable shared library building for host platform.
+<tr><td>@a su-host-so           <td>Suspend shared library building for host platform.
+<tr><td>@a rm-host-so           <td>Disable and remove shared library building for host platform.
+<tr><td>@a en-host-test-a       <td>Enable test suite building with static linkage for host platform.
+<tr><td>@a su-host-test-a       <td>Suspend test suite building with static linkage for host platform.
+<tr><td>@a rm-host-test-a       <td>Disable and remove test suite building with static linkage for host platform.
+<tr><td>@a en-host-test-so      <td>Enable test suite building with shared linkage for host platform.
+<tr><td>@a su-host-test-so      <td>Suspend test suite building with shared linkage for host platform.
+<tr><td>@a rm-host-test-so      <td>Disable and remove test suite building with shared linkage for host platform.
+<tr><td>@a en-host-test         <td>Enable test suite building with static or shared linkage for host platform.
+<tr><td>@a su-host-test         <td>Suspend test suite building for host platform.
+<tr><td>@a rm-host-test         <td>Disable and remove test suite building for host platform.
+<tr><td>@a en-mxe-a             <td>Enable static library building for MXE platform.
+<tr><td>@a su-mxe-a             <td>Suspend static library building for MXE platform.
+<tr><td>@a rm-mxe-a             <td>Disable and remove static library building for MXE platform.
+<tr><td>@a en-mxe-so            <td>Enable shared library building for MXE platform.
+<tr><td>@a su-mxe-so            <td>Suspend shared library building for MXE platform.
+<tr><td>@a rm-mxe-so            <td>Disable and remove shared library building for MXE platform.
+<tr><td>@a en-mxe-test-a        <td>Enable test suite building with static linkage for MXE platform.
+<tr><td>@a su-mxe-test-a        <td>Suspend test suite building with static linkage for MXE platform.
+<tr><td>@a rm-mxe-test-a        <td>Disable and remove test suite building with static linkage for MXE platform.
+<tr><td>@a en-mxe-test-so       <td>Enable test suite building with shared linkage for MXE platform.
+<tr><td>@a su-mxe-test-so       <td>Suspend test suite building with shared linkage for MXE platform.
+<tr><td>@a rm-mxe-test-so       <td>Disable and remove test suite building with shared linkage for MXE platform.
+<tr><td>@a en-mxe-test          <td>Enable test suite building with static or shared linkage for MXE platform.
+<tr><td>@a su-mxe-test          <td>Suspend test suite building for MXE platform.
+<tr><td>@a rm-mxe-test          <td>Disable and remove test suite building for MXE platform.
+<tr><td>@a en-a                 <td>Enable static library building for all platforms.
+<tr><td>@a en-so                <td>Enable shared library building for all platforms.
+<tr><td>@a en-test              <td>Enable test suite building for all platforms.
+<tr><td>@a en-test-a            <td>Enable test suite building with static linkage for all platforms.
+<tr><td>@a en-test-so           <td>Enable test suite building with shared linkage for all platforms.
+<tr><td>@a su-a                 <td>Suspend static library building for all platforms.
+<tr><td>@a su-so                <td>Suspend shared library building for all platforms.
+<tr><td>@a su-test              <td>Suspend test suite building for all platforms.
+<tr><td>@a rm-a                 <td>Disable and remove static library building for all platforms.
+<tr><td>@a rm-so                <td>Disable and remove shared library building for all platforms.
+<tr><td>@a rm-test              <td>Disable and remove test suite building for all platforms.
+<tr><td>@a en-dev               <td>Enable development files generation and install.
+<tr><td>@a su-dev               <td>Disable development files generation and install.
+<tr><td>@a rm-dev               <td>Disable development files generation and install.
+<tr><td>@a en-devel             <td>Enable development files generation and install.
+<tr><td>@a su-devel             <td>Disable development files generation and install.
+<tr><td>@a rm-devel             <td>Disable development files generation and install.
+<tr><td>@a en-doc               <td>Enable documentation generation and install.
+<tr><td>@a su-doc               <td>Disable documentation generation and install, remove generated documentation.
+<tr><td>@a rm-doc               <td>Disable documentation generation and install, remove generated documentation.
+<tr><td>@a doc                  <td>Generate documentation if enabled.
+<tr><td>@a rm                   <td>Disable and remove all, `configure` invocation needed to enable.
+<tr><td>@a clean                <td>Remove all built object files, libraries and documentation.
+<tr><td>@a install              <td>Install everything enabled at the moment.
+<tr><td>@a uninstall            <td>Uninstall everything enabled at the moment.
+<tr><td>@a all                  <td>Build everything enabled at the moment.
+</table>
 
 @section install_sect Install
-Detailed information about installation process
+The installation is made on the directory specified by <b><em>--prefix</em></b> parameter of the
+`configure` script or to the default directory which is `/usr/local`.
+
+@subsection install_shared Shared libraries
+The Unix shared library will be installed (if enabled) into <b><em>PREFIX</em></b>/lib subdirectory.
+There are 3 files will be installed:
+
+- The library itself, named as <em>libtau.so.@link Major_ @endlink.@link Minor_ @endlink.@link Micro_ @endlink</em>, for example, `libtau.so.0.3.0`;
+- Symlink to the library named <em>libtau.so.@link Major_ @endlink.@link Minor_ @endlink</em>, so-called @a soname, for example, `libtau.so.0.3`;
+- Symlink to the @a soname named <em>libtau-@link Major_ @endlink.@link Minor_ @endlink.so</em>, so-called linker name, for example, `libtau-0.3.so`.
+
+This is unusual practice to name soname and linker symlinks with two-component version suffix, but since this release is the very first,
+I consider this approach quite justified at the moment. This will allow you to have several versions of the library at once.
+
+The Windows (MXE) DLL will be installed into <b><em>PREFIX</em></b>/bin subdirectory.
+The DLL's name is <em>libtau-@link Major_ @endlink.@link Minor_ @endlink-<b>MXE_TARGET</b>.dll</em>,
+for example, `tau-0.3-i686-w64-mingw32.static.dll`.
+
+@subsection install_sstatic Static libraries
+Both Unix and Windows (MXE) static libraries will be installed (if enabled) into
+<b><em>PREFIX</em></b>/lib subdirectory.
+
+-   Unix library name is <em>libtau-@link Major_ @endlink.@link Minor_ @endlink.a</em>,
+    for example, `tau-0.3.a`;
+-   Windows library name is <em>libtau-@link Major_ @endlink.@link Minor_ @endlink-<b>MXE_TARGET</b>-mxe.a</em>,
+    for example, `tau-0.3-i686-w64-mingw32.static-mxe.a`.
+
+@subsection install_test Test/Demo executable binaries
+Binaries will be installed (if enabled) into <b><em>PREFIX</em></b>/bin subdirectory.
+
+-   The Unix names are @a taudemo, @a tautext, @a tauhello and so on.
+-   The Windows names are <em>taudemo-<b>MXE_TARGET</b>-mxe.exe</em> and so on, for
+    example, `taudemo-i686-w64-mingw32-mxe.exe`.
+
+@subsection install_hh C++ Headers
+The header files will be installed (if enabled by @a en-dev gmake target) into
+<b><em>PREFIX</em></b>/include/tau-@link Major_ @endlink.@link Minor_ @endlink subdirectory, for
+example, `/usr/local/include/tau-0.3`.
+
+@subsection install_pc pkg-config files
+The `.pc` files will be installed (if enabled by @a en-dev gmake target) into:
+
+-   <b><em>PREFIX</em></b>/lib/pkgconfig subdirectory on Linux;
+-   <b><em>PREFIX</em></b>/libdata/pkgconfig subdirectory on FreeBSD.
+
+Unix `.pc` file name is tau-@link Major_ @endlink.@link Minor_ @endlink.pc, for example, `tau-0.3.pc`. <br>
+Windows `.pc` file name is tau-@link Major_ @endlink.@link Minor_ @endlink-<b>MXE_TARGET</b>-mxe.pc,
+for example, `tau-0.3-i686-w64-mingw32.static-mxe.pc`.
+
+The package name for use with `pkg-config` is:
+
+-   tau-@link Major_ @endlink.@link Minor_ @endlink for Unix, for example, `tau-0.3`;
+-   tau-@link Major_ @endlink.@link Minor_ @endlink-<b>MXE_TARGET</b>-mxe, for example,
+    `tau-0.3-i686-w64-mingw32.static-mxe`.
+
+@subsection install_doc Documentation files
+Documentation will be installed into
+<b><em>PREFIX</em></b>/share/doc/tau-@link Major_ @endlink.@link Minor_ @endlink subdirectory, for
+example, `/usr/local/share/doc/tau-0.3`. The Doxygen documentation will be installed only if
+enabled by `gmake en-doc` and generated by `gmake doc`. The `.pdf` file will be installed in case
+host system has installed texlive tools and `configure --disable-pdf` option was not specified.
+
+@subsection install_share Share stuff
+Everything located into project's `./share` subdirectory will be copied into
+<b><em>PREFIX</em></b>/share/tau-@link Major_ @endlink.@link Minor_ @endlink subdirectory,
+for example, `/usr/local/share/tau-0.3`, regardless of any gmake's `en-*` or `su-*` targets used.
 
 @section uninstall_sect Uninstall
-Detailed information about deinstallation process
+Everything that was installed will be removed.
 
 **/
+
+}

@@ -83,7 +83,7 @@ public:
     bool empty() const;
 
     /// Test if not empty (assigned).
-    operator bool() const { return !empty(); }
+    operator bool() const;
 
     /// Compare.
     /// @param kc key code, see #Key_codes enum.
@@ -96,10 +96,10 @@ public:
     bool equals(const ustring & spec) const;
 
     /// Compare.
-    bool operator==(const Accel & other) { return equals(other.spec()); }
+    bool operator==(const Accel & other);
 
     /// Compare.
-    bool operator!=(const Accel & other) { return !equals(other.spec()); }
+    bool operator!=(const Accel & other);
 
     /// Assign new key code and modifiers.
     /// @param kc key code, see #Key_codes enum.
@@ -113,10 +113,10 @@ public:
     void assign(const ustring & spec);
 
     /// Gets key code.
-    char32_t key_code() const { return kc_; }
+    char32_t key_code() const;
 
     /// Gets key modifier.
-    int key_modifier() const { return km_; }
+    int key_modifier() const;
 
     /// Gets assigned key codes.
     /// @param[out] kc key code, see #Key_codes enum.
@@ -138,36 +138,28 @@ public:
     void disable();
 
     /// Determines whether accelerator disabled.
-    bool disabled() const { return disabled_; }
+    bool enabled() const;
 
     /// @private
     bool handle_accel(char32_t kc, int km);
 
     /// Connect slot to the internal signal.
-    connection connect(slot<bool()> slot_activate) {
-        return signal_activate_.connect(slot_activate);
-    }
+    connection connect(slot<bool()> slot_activate);
 
     /// Signal emitted when key value changed.
     /// Slot prototype:
     /// void on_change();
-    signal<void()> & signal_changed() {
-        return signal_changed_;
-    }
+    signal<void()> & signal_changed();
 
     /// Signal emitted when accelerator becomes enabled.
     /// Slot prototype:
     /// void on_accel_enable();
-    signal<void()> & signal_enable() {
-        return signal_enable_;
-    }
+    signal<void()> & signal_enable();
 
     /// Signal emitted when accelerator becomes disabled.
     /// Slot prototype:
     /// void on_accel_disable();
-    signal<void()> & signal_disable() {
-        return signal_disable_;
-    }
+    signal<void()> & signal_disable();
 
 private:
 
