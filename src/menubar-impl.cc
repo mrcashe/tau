@@ -74,11 +74,11 @@ void Menubar_impl::child_menu_right() {
 
 void Menubar_impl::mark_item(Menu_item_impl * ip, bool select) {
     if (select) {
-        ip->style().get("background").set(style().get("select/background").get());
+        ip->style().get(STYLE_BACKGROUND).set(style().get(STYLE_SELECT_BACKGROUND).get());
     }
 
     else {
-        ip->style().get("background").unset();
+        ip->style().get(STYLE_BACKGROUND).unset();
     }
 }
 
@@ -86,7 +86,6 @@ bool Menubar_impl::on_item_mouse_down(int mbt, int mm, const Point & pt, Menu_it
     if (MBT_LEFT == mbt && !(mm & (MM_CONTROL|MM_SHIFT))) {
         if (auto ip = item_ptr(item)) {
             if (current_item_ != ip) { unselect_current(); select_item(ip); }
-            end_modal();
             activate_current();
         }
 
@@ -159,7 +158,6 @@ void Menubar_impl::clear() {
 
 void Menubar_impl::activate() {
     if (enabled()) {
-        if (auto wip = root()) { rfocus_ = wip->focus_owner(); }
         grab_modal();
         select_item(current_item());
         open_current();

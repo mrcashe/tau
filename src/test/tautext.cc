@@ -38,7 +38,7 @@ tau::Key_file               kstate_;
 std::vector<tau::ustring>   args_;
 int                         line_ = -1;
 int                         col_ = -1;
-std::vector<long long>      geom_ { 0, 0, 0, 0 };
+std::vector<long long>      geom_;
 
 } // anonymous namespace
 
@@ -277,11 +277,19 @@ struct Main: tau::Toplevel {
         show_cx_ = signal_show().connect(tau::fun(this, &Main::on_show));
         signal_size_changed().connect(tau::fun(this, &Main::on_geometry));
         signal_position_changed().connect(tau::fun(this, &Main::on_geometry));
+        menubar_.signal_quit().connect(tau::fun(this, &Main::on_menu_quit));
     }
 
    ~Main() {
         if (wpop_) {
             delete wpop_;
+        }
+    }
+
+    void on_menu_quit() {
+        if (notebook_.visible()) {
+            auto i = std::find_if(pages_.begin(), pages_.end(), [this](auto & pg) { return notebook_.current_page() == pg.page; } );
+            if (i != pages_.end()) { i->edit.grab_focus(); }
         }
     }
 
@@ -1557,7 +1565,8 @@ int main(int argc, char * argv[]) {
         auto state_path = tau::path_build(tau::path_user_data_dir(), tau::program_name(), "state.ini");
         tau::path_mkdir(tau::path_dirname(state_path));
         kstate_.load(state_path);
-        if (kstate_.has_key(kstate_.root(), "geometry")) { geom_ = kstate_.get_integers(kstate_.root(), "geometry"); }
+        geom_ = kstate_.get_integers(kstate_.root(), "geometry");
+        if (4 != geom_.size()) { geom_ = { 0, 0, 0, 0 }; }
         tau::Rect bounds;
         bounds.set(tau::Point(geom_[0], geom_[1]), tau::Size(geom_[2], geom_[3]));
         Main w(bounds);

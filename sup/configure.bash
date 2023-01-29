@@ -43,7 +43,7 @@ chk_which() {
     p=''
 
     for cmd in $2; do
-        p=$(which $cmd)
+        p=$(which $cmd 2>/dev/null)
         [ -n $p ] && break;
     done;
 
@@ -327,7 +327,7 @@ if test -n "$headers_required"; then
 
     for h in $headers_required; do
         echo -n "  searching for header file '$h'..."
-        paths=$(find /usr -name "$h")
+        paths=$(find /usr -name "$h" 2>/dev/null)
 
         if test -z "$paths"; then
             printf "$red_color NOT FOUND\n"
@@ -533,6 +533,7 @@ echo ""                                      >>$confcc
 echo "namespace tau {"                       >>$confcc
 echo ""                                      >>$confcc
 echo "Sysinfo sysinfo_ = {"                  >>$confcc
+echo "    .bytes    = 0,"                    >>$confcc
 echo "    .Major    = $Major_,"              >>$confcc
 echo "    .Minor    = $Minor_,"              >>$confcc
 echo "    .Micro    = $Micro_,"              >>$confcc
@@ -576,6 +577,7 @@ if test -n "$mxe_prefix"; then
     echo "namespace tau {"                   >>$confcc
     echo ""                                  >>$confcc
     echo "Sysinfo sysinfo_ = {"              >>$confcc
+    echo "    .bytes     = 0,"               >>$confcc
     echo "    .Major     = $Major_,"         >>$confcc
     echo "    .Minor     = $Minor_,"         >>$confcc
     echo "    .Micro     = $Micro_,"         >>$confcc

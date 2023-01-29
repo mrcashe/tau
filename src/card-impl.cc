@@ -163,20 +163,24 @@ void Card_impl::on_child_hide(Widget_impl * wi) {
 }
 
 void Card_impl::on_child_show(Widget_impl * wi) {
-    if (!shut_) {
-        showing_ = wi;
+    showing_ = wi;
 
-        if (!hiding_ && holders_.size() > 1) {
-            for (auto i = holders_.begin(); i != holders_.end(); ++i) {
-                if (i->wp != wi) { i->wp->hide(); }
+    if (!shut_) {
+        if (!hiding_) {
+            for (auto & hol:  holders_) {
+                if (hol.wp != wi) {
+                    hol.wp->hide();
+                }
             }
+
+            arrange();
         }
 
-        if (!hiding_) { arrange(); }
         wi->signal_select()();
         if (focused()) { wi->take_focus(); }
-        showing_ = nullptr;
     }
+
+    showing_ = nullptr;
 }
 
 void Card_impl::show_next() {

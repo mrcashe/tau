@@ -324,7 +324,6 @@ void Menu_impl::quit() {
     close_submenu();
     unselect_current();
     unset_parent_menu();
-    if (rfocus_) { rfocus_->take_focus(); }
     signal_quit_();
 }
 

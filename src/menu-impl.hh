@@ -96,7 +96,6 @@ protected:
     Menu_item_impl *    marked_item_ = nullptr;
     Action              enter_action_ { "Enter", fun(this, &Menu_impl::activate_current) };
     Action              cancel_action_ { "Escape", fun(this, &Menu_impl::cancel) };
-    Widget_ptr          rfocus_; // where focus should be returned on quit.
     signal<void()>      signal_quit_;
 
 protected:
