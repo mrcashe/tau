@@ -47,13 +47,31 @@ public:
     virtual void child_menu_left() = 0;
     virtual void child_menu_right() = 0;
 
-    // Overriden by Menubox_impl.
-    virtual void quit();
+    void quit();
 
-    virtual Widget_ptr append_separator(Separator_style separator_style=SEPARATOR_GROOVE) = 0;
-    virtual Widget_ptr prepend_separator(Separator_style separator_style=SEPARATOR_GROOVE) = 0;
-    virtual Widget_ptr insert_separator_before(const Widget_impl * other, Separator_style separator_style=SEPARATOR_GROOVE) = 0;
-    virtual Widget_ptr insert_separator_after(const Widget_impl * other, Separator_style separator_style=SEPARATOR_GROOVE) = 0;
+    Widget_ptr append_separator(Separator_style separator_style=SEPARATOR_GROOVE) {
+        Separator_ptr sp = std::make_shared<Separator_impl>(separator_style);
+        append(sp);
+        return sp;
+    }
+
+    Widget_ptr prepend_separator(Separator_style separator_style=SEPARATOR_GROOVE) {
+        Separator_ptr sp = std::make_shared<Separator_impl>(separator_style);
+        prepend(sp);
+        return sp;
+    }
+
+    Widget_ptr insert_separator_before(const Widget_impl * other, Separator_style separator_style=SEPARATOR_GROOVE) {
+        Separator_ptr sp = std::make_shared<Separator_impl>(separator_style);
+        insert_before(sp, other);
+        return sp;
+    }
+
+    Widget_ptr insert_separator_after(const Widget_impl * other, Separator_style separator_style=SEPARATOR_GROOVE) {
+        Separator_ptr sp = std::make_shared<Separator_impl>(separator_style);
+        insert_after(sp, other);
+        return sp;
+    }
 
     Menu_impl * parent_menu() { return pmenu_; }
     const Menu_impl * parent_menu() const { return pmenu_; }
@@ -78,6 +96,7 @@ protected:
     Menu_item_impl *    marked_item_ = nullptr;
     Action              enter_action_ { "Enter", fun(this, &Menu_impl::activate_current) };
     Action              cancel_action_ { "Escape", fun(this, &Menu_impl::cancel) };
+    Widget_ptr          rfocus_; // where focus should be returned on quit.
     signal<void()>      signal_quit_;
 
 protected:
@@ -399,34 +418,6 @@ public:
     void clear() override;
 
     // Overrides pure Menu_impl.
-    Widget_ptr append_separator(Separator_style separator_style=SEPARATOR_GROOVE) override {
-        Separator_ptr sp = std::make_shared<Separator_impl>(separator_style);
-        append(sp);
-        return sp;
-    }
-
-    // Overrides pure Menu_impl.
-    Widget_ptr prepend_separator(Separator_style separator_style=SEPARATOR_GROOVE) override {
-        Separator_ptr sp = std::make_shared<Separator_impl>(separator_style);
-        prepend(sp);
-        return sp;
-    }
-
-    // Overrides pure Menu_impl.
-    Widget_ptr insert_separator_before(const Widget_impl * other, Separator_style separator_style=SEPARATOR_GROOVE) override {
-        Separator_ptr sp = std::make_shared<Separator_impl>(separator_style);
-        insert_before(sp, other);
-        return sp;
-    }
-
-    // Overrides pure Menu_impl.
-    Widget_ptr insert_separator_after(const Widget_impl * other, Separator_style separator_style=SEPARATOR_GROOVE) override {
-        Separator_ptr sp = std::make_shared<Separator_impl>(separator_style);
-        insert_after(sp, other);
-        return sp;
-    }
-
-    // Overrides pure Menu_impl.
     void child_menu_cancel() override;
 
     // Overrides pure Menu_impl.
@@ -484,34 +475,6 @@ public:
     void clear() override;
 
     // Overrides pure Menu_impl.
-    Widget_ptr append_separator(Separator_style separator_style=SEPARATOR_GROOVE) override {
-        Separator_ptr sp = std::make_shared<Separator_impl>(separator_style);
-        append(sp);
-        return sp;
-    }
-
-    // Overrides pure Menu_impl.
-    Widget_ptr prepend_separator(Separator_style separator_style=SEPARATOR_GROOVE) override {
-        Separator_ptr sp = std::make_shared<Separator_impl>(separator_style);
-        prepend(sp);
-        return sp;
-    }
-
-    // Overrides pure Menu_impl.
-    Widget_ptr insert_separator_before(const Widget_impl * other, Separator_style separator_style=SEPARATOR_GROOVE) override {
-        Separator_ptr sp = std::make_shared<Separator_impl>(separator_style);
-        insert_before(sp, other);
-        return sp;
-    }
-
-    // Overrides pure Menu_impl.
-    Widget_ptr insert_separator_after(const Widget_impl * other, Separator_style separator_style=SEPARATOR_GROOVE) override {
-        Separator_ptr sp = std::make_shared<Separator_impl>(separator_style);
-        insert_after(sp, other);
-        return sp;
-    }
-
-    // Overrides pure Menu_impl.
     void child_menu_cancel() override;
 
     // Overrides pure Menu_impl.
@@ -519,9 +482,6 @@ public:
 
     // Overrides pure Menu_impl.
     void child_menu_right() override;
-
-    // Overrides Menu_impl.
-    void quit() override;
 
     Window_ptr popup(Window_impl * parent_window, Widget_ptr self, const Point & position, Gravity gravity, Menu_impl * pmenu);
     Window_ptr popup(Window_impl * parent_window, Widget_ptr self, const Point & position, Menu_impl * pmenu);

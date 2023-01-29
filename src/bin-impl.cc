@@ -68,7 +68,7 @@ void Bin_impl::clear() {
 }
 
 void Bin_impl::update_requisition() {
-    if (!destroy_) {
+    if (!shut_) {
         Size rs;
 
         if (cp_ && !cp_->hidden()) {
@@ -94,7 +94,7 @@ void Bin_impl::arrange() {
 }
 
 void Bin_impl::on_child_show() {
-    if (!destroy_) {
+    if (!shut_) {
         update_requisition();
         arrange();
         if (focused() && cp_) { cp_->take_focus(); }
@@ -102,7 +102,7 @@ void Bin_impl::on_child_show() {
 }
 
 void Bin_impl::on_child_hide() {
-    if (!destroy_) {
+    if (!shut_) {
         cp_->update_origin(INT_MIN, INT_MIN);
         cp_->update_size(0, 0);
         update_requisition();

@@ -41,6 +41,14 @@ Container::Container(std::nullptr_t):
 {
 }
 
+Widget_ptr Container::focus_owner() {
+    return CONTAINER_IMPL->focus_owner();
+}
+
+Widget_cptr Container::focus_owner() const {
+    return CONTAINER_IMPL->focus_owner();
+}
+
 std::vector<Widget_ptr> Container::children() const {
     return CONTAINER_IMPL->children();
 }
@@ -55,6 +63,22 @@ void Container::make_child(Widget & w) {
 
 void Container::unparent_child(Widget & w) {
     CONTAINER_IMPL->unparent_child(w.ptr().get());
+}
+
+bool Container::update_child_bounds(Widget & w, const Rect & bounds) {
+    return CONTAINER_IMPL->update_child_bounds(w.ptr().get(), bounds);
+}
+
+bool Container::update_child_bounds(Widget & w, const Point & origin, const Size & sz) {
+    return CONTAINER_IMPL->update_child_bounds(w.ptr().get(), origin, sz);
+}
+
+bool Container::update_child_bounds(Widget & w, int x, int y, const Size & sz) {
+    return CONTAINER_IMPL->update_child_bounds(w.ptr().get(), x, y, sz);
+}
+
+bool Container::update_child_bounds(Widget & w, int x, int y, unsigned width, unsigned height) {
+    return CONTAINER_IMPL->update_child_bounds(w.ptr().get(), x, y, width, height);
 }
 
 signal<void()> & Container::signal_arrange() {

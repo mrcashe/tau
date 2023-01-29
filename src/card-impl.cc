@@ -116,7 +116,7 @@ Size Card_impl::child_requisition(const Holder & hol) {
 }
 
 void Card_impl::update_requisition() {
-    if (!destroy_) {
+    if (!shut_) {
         Size req;
         for (Holder & hol: holders_) { req |= child_requisition(hol); }
         require_size(req);
@@ -140,7 +140,7 @@ void Card_impl::on_child_hide(Widget_impl * wi) {
     wi->update_origin(INT_MIN, INT_MIN);
     wi->update_size(0, 0);
 
-    if (!destroy_) {
+    if (!shut_) {
         hiding_ = wi;
 
         if (holders_.size() > 1) {
@@ -170,7 +170,7 @@ void Card_impl::on_child_hide(Widget_impl * wi) {
 }
 
 void Card_impl::on_child_show(Widget_impl * wi) {
-    if (!destroy_) {
+    if (!shut_) {
         showing_ = wi;
 
         if (holders_.size() > 1) {

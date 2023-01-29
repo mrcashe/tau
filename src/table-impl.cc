@@ -94,7 +94,7 @@ void Table_impl::remove(Widget_impl * wp) {
 
 // Both hints & requisitions come here.
 void Table_impl::on_child_requisition_changed(Widget_impl * wi) {
-    if (destroy_) { return; }
+    if (shut_) { return; }
 //     Size was_req = required_size(), req = get_requisition();
 //
 //     if (was_req == req) {
@@ -108,7 +108,7 @@ void Table_impl::on_child_requisition_changed(Widget_impl * wi) {
 }
 
 void Table_impl::on_child_show(Widget_impl * wi) {
-    if (!destroy_) {
+    if (!shut_) {
         auto i = holders_.find(wi);
 
         if (i != holders_.end()) {
@@ -133,7 +133,7 @@ void Table_impl::on_child_show(Widget_impl * wi) {
 }
 
 void Table_impl::on_child_hide(Widget_impl * wi) {
-    if (!destroy_) {
+    if (!shut_) {
         auto i = holders_.find(wi);
 
         if (i != holders_.end()) {
@@ -847,6 +847,8 @@ void Table_impl::align_column(int xx, Align xalign) {
         Col col;
         col.align_set = true;
         col.xalign = xalign;
+        col.left = columns_left_;
+        col.right = columns_right_;
         cols_[xx] = col;
     }
 }
@@ -889,6 +891,8 @@ void Table_impl::align_row(int yy, Align yalign) {
         Row row;
         row.align_set = true;
         row.yalign = yalign;
+        row.top = rows_top_;
+        row.bottom = rows_bottom_;
         rows_[yy] = row;
     }
 }
@@ -977,6 +981,8 @@ void Table_impl::dist_holder(Holder & hol) {
             col.ref = 1;
             col.shrank = hol.xsh ? 1 : 0;
             col.visible = hol.wp->hidden() ? 0 : 1;
+            col.left = columns_left_;
+            col.right = columns_right_;
             cols_[xx] = col;
         }
     }
@@ -996,6 +1002,8 @@ void Table_impl::dist_holder(Holder & hol) {
             row.ref = 1;
             row.shrank = hol.ysh ? 1 : 0;
             row.visible = hol.wp->hidden() ? 0 : 1;
+            row.top = rows_top_;
+            row.bottom = rows_bottom_;
             rows_[yy] = row;
         }
     }
@@ -1010,12 +1018,12 @@ void Table_impl::set_column_margin(int xx, unsigned left, unsigned right) {
 
         if (col.left != left) {
             col.left = left;
-            changed = true;
+            if (0 != col.ref) { changed = true; }
         }
 
         if (col.right != right) {
             col.right = right;
-            changed = true;
+            if (0 != col.ref) { changed = true; }
         }
 
         if (changed) {
@@ -1041,12 +1049,12 @@ void Table_impl::set_row_margin(int yy, unsigned top, unsigned bottom) {
 
         if (row.top != top) {
             row.top = top;
-            changed = true;
+            if (0 != row.ref) { changed = true; }
         }
 
         if (row.bottom != bottom) {
             row.bottom = bottom;
-            changed = true;
+            if (0 != row.ref) { changed = true; }
         }
 
         if (changed) {
@@ -1060,6 +1068,56 @@ void Table_impl::set_row_margin(int yy, unsigned top, unsigned bottom) {
         row.top = top;
         row.bottom = bottom;
         rows_[yy] = row;
+    }
+}
+
+void Table_impl::set_columns_margin(unsigned left, unsigned right) {
+    if (columns_left_ != left || columns_right_ != right) {
+        columns_left_ = left;
+        columns_right_ = right;
+        bool changed = false;
+
+        for (auto & col: cols_) {
+            if (col.second.left != left) {
+                col.second.left = left;
+                if (0 != col.second.ref) { changed = true; }
+            }
+
+            if (col.second.right != right) {
+                col.second.right = right;
+                if (0 != col.second.ref) { changed = true; }
+            }
+        }
+
+        if (changed) {
+            update_requisition();
+            queue_arrange();
+        }
+    }
+}
+
+void Table_impl::set_rows_margin(unsigned top, unsigned bottom) {
+    if (rows_top_ != top || rows_bottom_ != bottom) {
+        rows_top_ = top;
+        rows_bottom_ = bottom;
+        bool changed = false;
+
+        for (auto & row: rows_) {
+            if (row.second.top != top) {
+                row.second.top = top;
+                if (0 != row.second.ref) { changed = true; }
+            }
+
+            if (row.second.bottom != bottom) {
+                row.second.bottom = bottom;
+                if (0 != row.second.ref) { changed = true; }
+            }
+        }
+
+        if (changed) {
+            update_requisition();
+            queue_arrange();
+        }
     }
 }
 
@@ -1272,6 +1330,8 @@ void Table_impl::set_column_width(int xx, unsigned usize) {
     else {
         Col col;
         col.usize = usize;
+        col.left = columns_left_;
+        col.right = columns_right_;
         cols_[xx] = col;
     }
 }
@@ -1300,6 +1360,8 @@ void Table_impl::set_row_height(int yy, unsigned usize) {
     else {
         Row row;
         row.usize = usize;
+        row.top = rows_top_;
+        row.bottom = rows_bottom_;
         rows_[yy] = row;
     }
 }
@@ -1326,6 +1388,8 @@ void Table_impl::set_min_column_width(int xx, unsigned umin) {
     else {
         Col col;
         col.umin = umin;
+        col.left = columns_left_;
+        col.right = columns_right_;
         cols_[xx] = col;
     }
 }
@@ -1352,6 +1416,8 @@ void Table_impl::set_min_row_height(int yy, unsigned umin) {
     else {
         Row row;
         row.umin = umin;
+        row.top = rows_top_;
+        row.bottom = rows_bottom_;
         rows_[yy] = row;
     }
 }
@@ -1378,6 +1444,8 @@ void Table_impl::set_max_column_width(int xx, unsigned umax) {
     else {
         Col col;
         col.umax = umax;
+        col.left = columns_left_;
+        col.right = columns_right_;
         cols_[xx] = col;
     }
 }
@@ -1404,6 +1472,8 @@ void Table_impl::set_max_row_height(int yy, unsigned umax) {
     else {
         Row row;
         row.umax = umax;
+        row.top = rows_top_;
+        row.bottom = rows_bottom_;
         rows_[yy] = row;
     }
 }
@@ -1929,25 +1999,6 @@ void Table_impl::clear() {
     rows_.clear();
     require_size(0);
     invalidate();
-}
-
-void Table_impl::on_async_clear() {
-    if (holders_.empty()) {
-        async_clear_cx_.drop();
-        cols_.clear();
-        rows_.clear();
-        require_size(0);
-        invalidate();
-        return;
-    }
-
-    Holder & hol = holders_.begin()->second;
-    holders_.erase(holders_.begin());
-    unparent_child(hol.wp);
-    hol.wp->update_origin(INT_MIN, INT_MIN);
-    hol.wp->update_size(0, 0);
-
-    std::cout << this << " Table_impl::on_async_clear(): wp=" << hol.wp << ", " << holders_.size() << " remaining\n";
 }
 
 } // namespace tau

@@ -595,7 +595,7 @@ of all possible at the moment values. All of them (except "Space", U+0020) are n
 <tr><td>@link KC_PASTE                      @endlink<td>@link KC_PASTE_NAME                     @endlink<td>@b Paste                    <td>Paste
 <tr><td>@link KC_LDIR                       @endlink<td>@link KC_LDIR_NAME                      @endlink<td>@b DirectionL               <td>Left Direction
 <tr><td>@link KC_RDIR                       @endlink<td>@link KC_RDIR_NAME                      @endlink<td>@b DirectionR               <td>Right Direction
-<tr><td>@link KC_MULTI_KEY                  @endlink<td>@link KC_MULTI_KEY_NAME                 @endlink<td>@b Multi                    <td>Multi
+<tr><td>@link KC_MULTI                      @endlink<td>@link KC_MULTI_NAME                     @endlink<td>@b Multi                    <td>Multi
 <tr><td>@link KC_CODE_INPUT                 @endlink<td>@link KC_CODE_INPUT_NAME                @endlink<td>@b CodeInput                <td>Code Input
 <tr><td>@link KC_SINGLE_CANDIDATE           @endlink<td>@link KC_SINGLE_CANDIDATE_NAME          @endlink<td>@b SingleCandidate          <td>Single Candidate
 <tr><td>@link KC_MULTIPLE_CANDIDATE         @endlink<td>@link KC_MULTIPLE_CANDIDATE_NAME        @endlink<td>@b MultipleCandidate        <td>Multiple Candidate

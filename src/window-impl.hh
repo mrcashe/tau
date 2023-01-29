@@ -204,7 +204,7 @@ protected:
 protected:
 
     Window_impl();
-   ~Window_impl() { destroy_ = true; }
+   ~Window_impl() { signal_destroy_(); }
 
 private:
 

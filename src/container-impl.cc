@@ -59,7 +59,6 @@ Container_impl::Container_impl():
 }
 
 Container_impl::~Container_impl() {
-    destroy_ = true;
     signal_destroy_();
     unparent_all();
 }
@@ -103,7 +102,7 @@ void Container_impl::unparent_all() {
         wp->unparent();
     }
 
-    if (!destroy_) {
+    if (!shut_) {
         end_modal_up(modal_child_);
         ungrab_mouse_up(mouse_grabber_);
         if (focused()) { grab_focus(); }
@@ -162,7 +161,7 @@ void Container_impl::handle_backpaint(Painter pr, const Rect & inval) {
 }
 
 void Container_impl::on_obscure(Widget_impl * wi, bool yes) {
-    if (!destroy_) {
+    if (!shut_) {
         if (yes) { obscured_.push_back(wi); }
         else { obscured_.remove(wi); }
     }
@@ -246,7 +245,7 @@ bool Container_impl::handle_key_up(char32_t kc, int km) {
 
 // Private.
 Widget_impl * Container_impl::mouse_target(const Point & pt) {
-    if (!destroy_) {
+    if (!shut_) {
         if (mouse_grabber_) {
             return mouse_grabber_;
         }
@@ -288,7 +287,7 @@ void Container_impl::set_mouse_owner(Widget_impl * wi, const Point & pt) {
 }
 
 void Container_impl::update_mouse_owner() {
-    if (!destroy_) {
+    if (!shut_) {
         Widget_impl * mt = nullptr;
         Point pt = where_mouse();
         if (hover()) { mt = mouse_target(pt); }
@@ -341,7 +340,7 @@ void Container_impl::on_mouse_enter(const Point & pt) {
 // Overriden by Window_impl.
 // Overrides Widget_impl.
 bool Container_impl::grab_mouse_up(Widget_impl * caller) {
-    if (!destroy_ && enabled()) {
+    if (!shut_ && enabled()) {
         if (caller == mouse_grabber_) {
             return true;
         }
@@ -371,7 +370,7 @@ bool Container_impl::grab_mouse_up(Widget_impl * caller) {
 // Overriden by Window_impl.
 // Overrides Widget_impl.
 bool Container_impl::ungrab_mouse_up(Widget_impl * caller) {
-    if (!destroy_ && caller) {
+    if (!shut_ && caller) {
         if (caller == mouse_grabber_) {
             mouse_grabber_ = nullptr;
         }
@@ -415,7 +414,7 @@ bool Container_impl::grabs_mouse() const {
 // Overrides Widget_impl.
 // Overriden by Window_impl.
 bool Container_impl::grab_modal_up(Widget_impl * caller) {
-    if (!destroy_ && enabled()) {
+    if (!shut_ && enabled()) {
         if (this == caller && has_modal()) {
             return true;
         }
@@ -434,7 +433,7 @@ bool Container_impl::grab_modal_up(Widget_impl * caller) {
 bool Container_impl::end_modal_up(Widget_impl * caller) {
     bool res = false;
 
-    if (!destroy_ && caller) {
+    if (!shut_ && caller) {
         res = (this == caller || modal_child_ == caller) && parent_ && parent_->end_modal_up(this);
 
         if (res) {
@@ -486,7 +485,7 @@ void Container_impl::focus_child(Widget_impl * caller, int res) {
 // Overriden by Window_impl.
 // Overrides Widget_impl.
 int Container_impl::grab_focus_up(Widget_impl * caller) {
-    if (destroy_ || !focus_allowed() || has_modal()) { return -1; }
+    if (shut_ || !focusable() || has_modal()) { return -1; }
 
     if (!focused()) {
         if (!parent_) { return -1; }
@@ -502,7 +501,7 @@ int Container_impl::grab_focus_up(Widget_impl * caller) {
 // Overriden by Window_impl.
 // Overrides Widget_impl.
 void Container_impl::drop_focus_up(Widget_impl * caller) {
-    if (!destroy_) {
+    if (!shut_) {
         bool had_focus = parent_ && this == parent_->focused_child();
         auto fc = focused_child_;
 
@@ -511,7 +510,7 @@ void Container_impl::drop_focus_up(Widget_impl * caller) {
             if ((fc == caller || this == caller) && fc != modal_child_) { fc->clear_focus(); }
         }
 
-        if (this != caller && focus_allowed() && had_focus && fc != modal_child_) {
+        if (this != caller && focusable() && had_focus && fc != modal_child_) {
             signal_focus_in_();
             return;
         }
@@ -559,7 +558,7 @@ void Container_impl::clear_focus() {
 // Overriden by Window_impl.
 // Overrides Widget_impl.
 void Container_impl::set_cursor_up(Cursor_ptr cursor) {
-    if (!destroy_ && !cursor_ && parent_) {
+    if (!shut_ && !cursor_ && parent_) {
         parent_->set_cursor_up(cursor);
     }
 }
@@ -567,7 +566,7 @@ void Container_impl::set_cursor_up(Cursor_ptr cursor) {
 // Overriden by Window_impl.
 // Overrides Widget_impl.
 void Container_impl::unset_cursor_up() {
-    if (!destroy_ && !cursor_hidden_ && parent_) {
+    if (!shut_ && !cursor_hidden_ && parent_) {
         if (cursor_) {
             parent_->set_cursor_up(cursor_);
         }
@@ -581,7 +580,7 @@ void Container_impl::unset_cursor_up() {
 // Overriden by Window_impl.
 // Overrides Widget_impl.
 void Container_impl::show_cursor_up() {
-    if (!destroy_ && parent_ && !cursor_hidden_) {
+    if (!shut_ && parent_ && !cursor_hidden_) {
         parent_->show_cursor_up();
     }
 }
@@ -643,9 +642,81 @@ void Container_impl::on_woff_timer() {
 // Overrides Widget_impl.
 // Overriden by Dialog_impl.
 bool Container_impl::running() const {
-    if (Widget_impl::running()) { return true; }
-    for (auto wp: children_) { if (wp->running()) return true; }
-    return false;
+    return Widget_impl::running() || std::any_of(children_.begin(), children_.end(), [](auto wp) { return wp->running(); } );
+}
+
+Widget_ptr Container_impl::focus_owner() {
+    if (focused()) {
+        auto fc = modal_child_;
+        auto ci = dynamic_cast<Container_impl *>(fc);
+
+        if (ci) {
+            if (auto wp = ci->focus_owner()) {
+                return wp;
+            }
+        }
+
+        fc = focused_child_;
+        ci = dynamic_cast<Container_impl *>(fc);
+
+        if (ci) {
+            if (auto wp = ci->focus_owner()) {
+                return wp;
+            }
+        }
+
+        if (modal_child_) { fc = modal_child_; }
+        auto i = std::find_if(children_.begin(), children_.end(), [fc](auto wp) { return wp.get() == fc; } );
+        if (i != children_.end()) { return *i; }
+    }
+
+    return nullptr;
+}
+
+Widget_cptr Container_impl::focus_owner() const {
+    if (focused()) {
+        auto fc = modal_child_;
+        auto ci = dynamic_cast<Container_impl *>(fc);
+
+        if (ci) {
+            if (auto wp = ci->focus_owner()) {
+                return wp;
+            }
+        }
+
+        fc = focused_child_;
+        ci = dynamic_cast<Container_impl *>(fc);
+
+        if (ci) {
+            if (auto wp = ci->focus_owner()) {
+                return wp;
+            }
+        }
+
+        if (modal_child_) { fc = modal_child_; }
+        auto i = std::find_if(children_.begin(), children_.end(), [fc](auto wp) { return wp.get() == fc; } );
+        if (i != children_.end()) { return *i; }
+    }
+
+    return nullptr;
+}
+
+bool Container_impl::update_child_bounds(Widget_impl * wp, const Rect & bounds) {
+    return update_child_bounds(wp, bounds.origin(), bounds.size());
+}
+
+bool Container_impl::update_child_bounds(Widget_impl * wp, const Point & origin, const Size & sz) {
+    bool changed = wp->update_origin(origin);
+    if (wp->update_size(sz)) { changed = true; }
+    return changed;
+}
+
+bool Container_impl::update_child_bounds(Widget_impl * wp, int x, int y, const Size & sz) {
+    return update_child_bounds(wp, Point(x, y), sz);
+}
+
+bool Container_impl::update_child_bounds(Widget_impl * wp, int x, int y, unsigned w, unsigned h) {
+    return update_child_bounds(wp, Point(x, y), Size(w, h));
 }
 
 } // namespace tau

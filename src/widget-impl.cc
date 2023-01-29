@@ -91,7 +91,7 @@ Widget_impl::~Widget_impl() {
 }
 
 void Widget_impl::on_shut(bool yes) {
-    destroy_ = yes;
+    shut_ = yes;
 }
 
 // Overriden by Popup_impl.
@@ -115,7 +115,7 @@ void Widget_impl::unparent() {
     hide_tooltip();
     bool vis = visible();
     enabled_ = disabled_ = frozen_ = upshow_ = false;
-    if (!destroy_ && vis) { signal_invisible_(); }
+    if (!shut_ && vis) { signal_invisible_(); }
     style_.unparent();
     parent_cx_.drop();
     unparent_cx_.drop();
@@ -158,28 +158,28 @@ void Widget_impl::on_action_accel_added(Accel & accel) {
 void Widget_impl::enable() {
     if (disabled_) {
         disabled_ = false;
-        if (!destroy_ && !frozen_) { signal_enable_(); }
+        if (!shut_ && !frozen_) { signal_enable_(); }
     }
 }
 
 void Widget_impl::thaw() {
     if (frozen_) {
         frozen_ = false;
-        if (!destroy_ && !disabled_) { signal_enable_(); }
+        if (!shut_ && !disabled_) { signal_enable_(); }
     }
 }
 
 void Widget_impl::disable() {
     if (!disabled_) {
         disabled_ = true;
-        if (!destroy_ && !frozen_) { signal_disable_(); }
+        if (!shut_ && !frozen_) { signal_disable_(); }
     }
 }
 
 void Widget_impl::freeze() {
     if (!frozen_) {
         frozen_ = true;
-        if (!destroy_ && !disabled_) { signal_disable_(); }
+        if (!shut_ && !disabled_) { signal_disable_(); }
     }
 }
 
@@ -191,7 +191,7 @@ void Widget_impl::show() {
     if (hidden_) {
         hidden_ = false;
 
-        if (!destroy_ && !disappeared_) {
+        if (!shut_ && !disappeared_) {
             signal_show_();
             if (visible()) { signal_visible_(); }
         }
@@ -202,7 +202,7 @@ void Widget_impl::appear() {
     if (disappeared_) {
         disappeared_ = false;
 
-        if (!destroy_ && !hidden_) {
+        if (!shut_ && !hidden_) {
             signal_show_();
             if (visible()) { signal_visible_(); }
         }
@@ -214,7 +214,7 @@ void Widget_impl::hide() {
         bool was_visible = visible();
         hidden_ = true;
 
-        if (!destroy_ && !disappeared_) {
+        if (!shut_ && !disappeared_) {
             signal_hide_();
             if (was_visible) { signal_invisible_(); }
         }
@@ -226,7 +226,7 @@ void Widget_impl::disappear() {
         bool was_visible = visible();
         disappeared_ = true;
 
-        if (!destroy_ && !hidden_) {
+        if (!shut_ && !hidden_) {
             signal_hide_();
             if (was_visible) { signal_invisible_(); }
         }
@@ -251,7 +251,7 @@ Rect Widget_impl::exposed_area() const {
 
 // Overriden by Window_impl.
 void Widget_impl::invalidate(const Rect & r) {
-    if (!destroy_ && parent_) {
+    if (!shut_ && parent_) {
         Rect inval(r ? r : visible_area());
         inval &= exposed_area();
 
@@ -264,13 +264,13 @@ void Widget_impl::invalidate(const Rect & r) {
 
 // Overriden by Container_impl.
 bool Widget_impl::hover() const {
-    return !destroy_ && parent_ && (this == parent_->mouse_grabber() || this == parent_->mouse_owner());
+    return !shut_ && parent_ && (this == parent_->mouse_grabber() || this == parent_->mouse_owner());
 }
 
 bool Widget_impl::hint_margin_left(unsigned left) {
     if (margin_left_hint_ != left) {
         margin_left_hint_ = left;
-        if (!destroy_) { signal_hints_changed_(); }
+        if (!shut_) { signal_hints_changed_(); }
         return true;
     }
 
@@ -280,7 +280,7 @@ bool Widget_impl::hint_margin_left(unsigned left) {
 bool Widget_impl::hint_margin_right(unsigned right) {
     if (margin_right_hint_ != right) {
         margin_right_hint_ = right;
-        if (!destroy_) { signal_hints_changed_(); }
+        if (!shut_) { signal_hints_changed_(); }
         return true;
     }
 
@@ -290,7 +290,7 @@ bool Widget_impl::hint_margin_right(unsigned right) {
 bool Widget_impl::hint_margin_top(unsigned top) {
     if (margin_top_hint_ != top) {
         margin_top_hint_ = top;
-        if (!destroy_) { signal_hints_changed_(); }
+        if (!shut_) { signal_hints_changed_(); }
         return true;
     }
 
@@ -300,7 +300,7 @@ bool Widget_impl::hint_margin_top(unsigned top) {
 bool Widget_impl::hint_margin_bottom(unsigned bottom) {
     if (margin_bottom_hint_ != bottom) {
         margin_bottom_hint_ = bottom;
-        if (!destroy_) { signal_hints_changed_(); }
+        if (!shut_) { signal_hints_changed_(); }
         return true;
     }
 
@@ -330,7 +330,7 @@ bool Widget_impl::hint_margin(unsigned left, unsigned right, unsigned top, unsig
         changed = true;
     }
 
-    if (!destroy_ && changed) {
+    if (!shut_ && changed) {
         signal_hints_changed_();
     }
 
@@ -342,7 +342,7 @@ bool Widget_impl::hint_margin(unsigned w) {
 }
 
 bool Widget_impl::hint_size(const Size & sz) {
-    if (size_hint_.update(sz) && !destroy_) {
+    if (size_hint_.update(sz) && !shut_) {
         signal_hints_changed_();
         return true;
     }
@@ -355,7 +355,7 @@ bool Widget_impl::hint_size(unsigned width, unsigned height) {
 }
 
 bool Widget_impl::hint_min_size(const Size & sz) {
-    if (min_size_hint_.update(sz) && !destroy_) {
+    if (min_size_hint_.update(sz) && !shut_) {
         signal_hints_changed_();
         return true;
     }
@@ -368,7 +368,7 @@ bool Widget_impl::hint_min_size(unsigned width, unsigned height) {
 }
 
 bool Widget_impl::hint_max_size(const Size & sz) {
-    if (max_size_hint_.update(sz) && !destroy_) {
+    if (max_size_hint_.update(sz) && !shut_) {
         signal_hints_changed_();
         return true;
     }
@@ -381,7 +381,7 @@ bool Widget_impl::hint_max_size(unsigned width, unsigned height) {
 }
 
 bool Widget_impl::require_size(const Size & size) {
-    if (required_size_.update(size) && !destroy_) {
+    if (required_size_.update(size) && !shut_) {
         signal_requisition_changed_();
         return true;
     }
@@ -396,7 +396,7 @@ bool Widget_impl::require_size(unsigned width, unsigned height) {
 bool Widget_impl::update_origin(const Point & pt) {
     bool changed = origin_.update(pt);
 
-    if (!destroy_) {
+    if (!shut_) {
         if (changed) { signal_origin_changed_(); }
         else { update_pdata(); }
     }
@@ -408,7 +408,7 @@ bool Widget_impl::update_size(const Size & size) {
     Size was_size = size_;
     bool changed = size_.update(size);
 
-    if (!destroy_) {
+    if (!shut_) {
         update_pdata();
 
         if (changed) {
@@ -454,7 +454,7 @@ Painter Widget_impl::painter() {
 // Overriden by Container_impl.
 // Overriden by Window_impl.
 bool Widget_impl::grab_mouse_up(Widget_impl *) {
-    if (!destroy_ && enabled() && parent_) {
+    if (!shut_ && enabled() && parent_) {
         if (this == parent_->mouse_grabber()) { return true; }
         return parent_->grab_mouse_up(this);
     }
@@ -479,7 +479,7 @@ bool Widget_impl::grab_mouse() {
 // Overriden by Container_impl.
 // Overriden by Window_impl.
 bool Widget_impl::ungrab_mouse_up(Widget_impl *) {
-    return !destroy_ && parent_ && parent_->ungrab_mouse_up(this);
+    return !shut_ && parent_ && parent_->ungrab_mouse_up(this);
 }
 
 bool Widget_impl::ungrab_mouse() {
@@ -501,55 +501,55 @@ bool Widget_impl::grabs_mouse() const {
 
 // Overriden by Window_impl.
 Point Widget_impl::where_mouse() const {
-    return !destroy_ && parent_ ? parent_->where_mouse()-origin() : Point(INT_MIN, INT_MIN);
+    return !shut_ && parent_ ? parent_->where_mouse()-origin() : Point(INT_MIN, INT_MIN);
 }
 
 // Overriden by Window_impl.
 Point Widget_impl::to_screen(const Point & pt) const {
-    return !destroy_ && parent_ ? parent_->to_screen(pt+origin())-parent_->scroll_position() : pt;
+    return !shut_ && parent_ ? parent_->to_screen(pt+origin())-parent_->scroll_position() : pt;
 }
 
 // Overriden by Window_impl.
 // Overriden by Toplevel_impl.
 // Overriden by Popup_impl.
 Point Widget_impl::to_root(const Point & pt) const {
-    return !destroy_ && parent_ ? parent_->to_root(pt+origin())-parent_->scroll_position() : pt;
+    return !shut_ && parent_ ? parent_->to_root(pt+origin())-parent_->scroll_position() : pt;
 }
 
 // Overriden by Window_impl.
 Point Widget_impl::to_window(const Point & pt) const {
     if (INT_MIN != worigin_.x()) { return pt+worigin_; }
-    return !destroy_ && parent_ ? parent_->to_window(pt+origin())-parent_->scroll_position() : pt;
+    return !shut_ && parent_ ? parent_->to_window(pt+origin())-parent_->scroll_position() : pt;
 }
 
 Point Widget_impl::to_parent(const Point & pt) const {
-    return !destroy_ && parent_ ? pt+origin_-parent_->scroll_position() : pt;
+    return !shut_ && parent_ ? pt+origin_-parent_->scroll_position() : pt;
 }
 
 // Overriden by Popup_impl.
 // Overriden by Toplevel_impl.
 Window_impl * Widget_impl::root() {
-    return !destroy_ && parent_ ? parent_->root() : nullptr;
+    return !shut_ && parent_ ? parent_->root() : nullptr;
 }
 
 // Overriden by Popup_impl.
 // Overriden by Toplevel_impl.
 const Window_impl * Widget_impl::root() const {
-    return !destroy_ && parent_ ? parent_->root() : nullptr;
+    return !shut_ && parent_ ? parent_->root() : nullptr;
 }
 
 // Overriden by Window_impl.
 Window_impl * Widget_impl::window() {
-    return !destroy_ && parent_ ? parent_->window() : nullptr;
+    return !shut_ && parent_ ? parent_->window() : nullptr;
 }
 
 // Overriden by Window_impl.
 const Window_impl * Widget_impl::window() const {
-    return !destroy_ && parent_ ? parent_->window() : nullptr;
+    return !shut_ && parent_ ? parent_->window() : nullptr;
 }
 
 Point Widget_impl::to_parent(const Container_impl * ci, const Point & pt) const {
-    if (!destroy_ && parent_) {
+    if (!shut_ && parent_) {
         if (parent_ == ci) {
             return pt+origin_;
         }
@@ -726,7 +726,7 @@ void Widget_impl::scroll_to_y(int y) {
 // Overriden by Container_impl.
 // Overriden by Window_impl.
 bool Widget_impl::grab_modal_up(Widget_impl * caller) {
-    return !destroy_ && focus_allowed() && parent_ && parent_->grab_modal_up(this);
+    return !shut_ && focusable() && parent_ && parent_->grab_modal_up(this);
 }
 
 bool Widget_impl::grab_modal() {
@@ -741,7 +741,7 @@ bool Widget_impl::grab_modal() {
 // Overriden by Container_impl.
 // Overriden by Window_impl.
 bool Widget_impl::end_modal_up(Widget_impl * ) {
-    return !destroy_ && parent_ && parent_->end_modal_up(this);
+    return !shut_ && parent_ && parent_->end_modal_up(this);
 }
 
 void Widget_impl::end_modal() {
@@ -756,7 +756,7 @@ bool Widget_impl::has_modal() const {
 // Overriden by Container_impl.
 // Overriden by Window_impl.
 int Widget_impl::grab_focus_up(Widget_impl *) {
-    return !destroy_ && focus_allowed() && parent_ ? parent_->grab_focus_up(this) : -1;
+    return !shut_ && focusable() && parent_ ? parent_->grab_focus_up(this) : -1;
 }
 
 bool Widget_impl::grab_focus() {
@@ -771,13 +771,13 @@ bool Widget_impl::grab_focus() {
 }
 
 bool Widget_impl::take_focus() {
-    return !hidden() && enabled() && focus_allowed() && signal_take_focus_();
+    return !hidden() && enabled() && focusable() && signal_take_focus_();
 }
 
 // Overriden by Container_impl.
 // Overriden by Window_impl.
 void Widget_impl::drop_focus_up(Widget_impl *) {
-    if (!destroy_ && parent_ && this == parent_->focused_child()) {
+    if (!shut_ && parent_ && this == parent_->focused_child()) {
         parent_->drop_focus_up(this);
     }
 }
@@ -813,8 +813,14 @@ void Widget_impl::allow_focus() {
 }
 
 void Widget_impl::disallow_focus() {
-    focus_allowed_ = false;
-    clear_focus();
+    if (focus_allowed_) {
+        focus_allowed_ = false;
+        clear_focus();
+    }
+}
+
+bool Widget_impl::focusable() const {
+    return focus_allowed_;
 }
 
 Size Widget_impl::margin_hint() const {
@@ -839,12 +845,12 @@ Rect Widget_impl::visible_area() const {
 
 // Overriden by Window_impl.
 Display_ptr Widget_impl::display() {
-    return !destroy_ && parent_ ? parent_->display() : nullptr;
+    return !shut_ && parent_ ? parent_->display() : nullptr;
 }
 
 // Overriden by Window_impl.
 Display_cptr Widget_impl::display() const {
-    return !destroy_ && parent_ ? parent_->display() : nullptr;
+    return !shut_ && parent_ ? parent_->display() : nullptr;
 }
 
 void Widget_impl::update_cursor() {
@@ -858,7 +864,7 @@ void Widget_impl::update_cursor() {
 // Overriden by Container_impl.
 // Overriden by Window_impl.
 void Widget_impl::set_cursor_up(Cursor_ptr cursor) {
-    if (!destroy_ && parent_) {
+    if (!shut_ && parent_) {
         parent_->set_cursor_up(cursor);
     }
 }
@@ -866,7 +872,7 @@ void Widget_impl::set_cursor_up(Cursor_ptr cursor) {
 // Overriden by Container_impl.
 // Overriden by Window_impl.
 void Widget_impl::unset_cursor_up() {
-    if (!destroy_ && parent_) {
+    if (!shut_ && parent_) {
         parent_->unset_cursor_up();
     }
 }
@@ -907,7 +913,7 @@ void Widget_impl::unset_cursor() {
 // Overriden by Container_impl.
 // Overriden by Window_impl.
 void Widget_impl::show_cursor_up() {
-    if (!destroy_ && parent_ && hover()) {
+    if (!shut_ && parent_ && hover()) {
         parent_->show_cursor_up();
     }
 }
@@ -921,7 +927,7 @@ void Widget_impl::show_cursor() {
 
 // Overriden by Window_impl.
 void Widget_impl::hide_cursor_up() {
-    if (!destroy_ && parent_ && hover()) {
+    if (!shut_ && parent_ && hover()) {
         parent_->hide_cursor_up();
     }
 }
@@ -939,12 +945,12 @@ bool Widget_impl::cursor_hidden() const {
 
 // Overriden by Window_impl.
 bool Widget_impl::cursor_visible() const {
-    return !cursor_hidden() && visible() && !destroy_ && parent_ && parent_->cursor_visible();
+    return !cursor_hidden() && visible() && !shut_ && parent_ && parent_->cursor_visible();
 }
 
 // Overriden by Window_impl.
 void Widget_impl::quit_dialog() {
-    if (!destroy_ && parent_) { parent_->quit_dialog(); }
+    if (!shut_ && parent_) { parent_->quit_dialog(); }
 }
 
 // Overriden by Container_impl.
@@ -977,7 +983,7 @@ void Widget_impl::handle_backpaint(Painter pr, const Rect & inval) {
 
 // Overriden by Window_impl.
 bool Widget_impl::has_window() const {
-    return !destroy_ && parent_ && parent_->has_window();
+    return !shut_ && parent_ && parent_->has_window();
 }
 
 bool Widget_impl::has_parent() const {
@@ -1022,7 +1028,7 @@ void Widget_impl::update_pdata() {
     if (visible()) {
         cr.set(size_);
 
-        if (!destroy_ && parent_) {
+        if (!shut_ && parent_) {
             po += parent_->poffset();
             Widget_impl * wi = this;
 

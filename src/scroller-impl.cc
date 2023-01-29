@@ -112,7 +112,7 @@ Size Scroller_impl::child_requisition() const {
 }
 
 void Scroller_impl::update_requisition() {
-    if (!destroy_) {
+    if (!shut_) {
         if (require_size(child_requisition())) {
             signal_logical_size_changed_();
         }
@@ -140,7 +140,7 @@ void Scroller_impl::limit_scroll() {
 }
 
 void Scroller_impl::on_child_hide() {
-    if (!destroy_) {
+    if (!shut_) {
         cp_->update_origin(INT_MIN, INT_MIN);
         cp_->update_size(0, 0);
         pan_to(0, 0);
@@ -150,7 +150,7 @@ void Scroller_impl::on_child_hide() {
 }
 
 void Scroller_impl::on_child_show() {
-    if (!destroy_) {
+    if (!shut_) {
         update_requisition();
         queue_arrange();
     }

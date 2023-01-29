@@ -163,14 +163,14 @@ void Text_impl::update_font() {
             font_height_ = std::ceil(fonts_.front().ascent())+std::ceil(std::fabs(fonts_.front().descent()));
             space_width_ = std::ceil(pr_.text_size(U" ").x());
 
-            for (std::size_t ri = 0; ri < lines_.size(); ++ri) {
-                Line & line = lines_[ri];
-                calc_line(line);
+            for (std::size_t ri = 0; ri < rows_.size(); ++ri) {
+                Row & line = rows_[ri];
+                calc_row(line);
             }
 
-            arrange_lines();
-            text_width_ = calc_width(0, lines());
-            text_height_ = calc_height(0, lines());
+            arrange_rows();
+            text_width_ = calc_width(0, rows());
+            text_height_ = calc_height(0, rows());
             invalidate();
         }
     }
@@ -233,15 +233,15 @@ void Text_impl::on_focus_in() {
 
 void Text_impl::on_buffer_replace(Buffer_citer b, Buffer_citer e, const std::u32string & replaced) {
     if (b.row() == e.row()) {
-        Line & ln = lines_[b.row()];
+        Row & ln = rows_[b.row()];
         int h0 = ln.ascent+ln.descent;
-        load_lines(b.row(), b.row());
+        load_rows(b.row(), b.row());
         int h1 = ln.ascent+ln.descent;
-        if (ln.width < text_width_) { text_width_ = calc_width(0, lines_.size()); }
+        if (ln.width < text_width_) { text_width_ = calc_width(0, rows_.size()); }
         e.move_to_eol();
-        if (h1 != h0) { translate_lines(b.row()+1, lines_.size(), h1-h0); e = buffer_.cend(); }
+        if (h1 != h0) { translate_lines(b.row()+1, rows_.size(), h1-h0); e = buffer_.cend(); }
         update_requisition();
-        align_lines(b.row(), b.row());
+        align_rows(b.row(), b.row());
         update_range(b, e);
     }
 }
@@ -270,18 +270,18 @@ Painter Text_impl::wipe_area(int x1, int y1, int x2, int y2, Painter pr) {
 void Text_impl::on_buffer_erase(Buffer_citer b, Buffer_citer e, const std::u32string & erased) {
     if (e < b) { std::swap(b, e); }
 
-    if (e.row() >= lines_.size() || buffer_.empty()) {
+    if (e.row() >= rows_.size() || buffer_.empty()) {
         clear();
         return;
     }
 
     if (e.row() == b.row()) {
-        Line & row = lines_[b.row()];
+        Row & row = rows_[b.row()];
         int h0 = row.ascent+row.descent;
         int y1 = oy_+row.ybase-row.ascent;
         int y2 = oy_+row.ybase+row.descent;
 
-        load_lines(b.row(), b.row());
+        load_rows(b.row(), b.row());
         int h1 = row.ascent+row.descent;
         y1 = std::min(y1, oy_+row.ybase-row.ascent);
         y2 = std::max(y2, oy_+row.ybase+row.descent);
@@ -291,24 +291,24 @@ void Text_impl::on_buffer_erase(Buffer_citer b, Buffer_citer e, const std::u32st
             b.move_to_sol();
         }
 
-        if (row.width < text_width_) { text_width_ = calc_width(0, lines_.size()); }
+        if (row.width < text_width_) { text_width_ = calc_width(0, rows_.size()); }
         e.move_to_eol();
-        if (h1 != h0) { translate_lines(b.row()+1, lines_.size(), h1-h0); e = buffer_.cend(); }
+        if (h1 != h0) { translate_lines(b.row()+1, rows_.size(), h1-h0); e = buffer_.cend(); }
     }
 
     else {
         int hdel = calc_height(b.row()+1, e.row());
         int wdel = calc_width(b.row()+1, e.row());
-        lines_.erase(lines_.begin()+b.row(), lines_.begin()+e.row());
-        translate_lines(b.row(), lines_.size(), -hdel);
-        load_lines(b.row(), e.row());
+        rows_.erase(rows_.begin()+b.row(), rows_.begin()+e.row());
+        translate_lines(b.row(), rows_.size(), -hdel);
+        load_rows(b.row(), e.row());
         text_height_ = std::max(0, text_height_-hdel);
-        if (wdel >= text_width_) { text_width_ = calc_width(0, lines()); }
+        if (wdel >= text_width_) { text_width_ = calc_width(0, rows()); }
         e = buffer_.cend();
     }
 
     update_requisition();
-    bool aligned = align_lines(0, lines());
+    bool aligned = align_rows(0, rows());
     if (aligned) { b.move_to_sol(); e.move_to_eol(); }
     update_range(b, e);
 }
@@ -332,18 +332,18 @@ void Text_impl::insert_range(Buffer_citer b, Buffer_citer e) {
     wipe_caret();
     std::size_t nlines = e.row()-b.row();
 
-    if (lines_.empty()) {
-        lines_.emplace_back();
+    if (rows_.empty()) {
+        rows_.emplace_back();
     }
 
     while (nlines--) {
-        lines_.emplace(lines_.begin()+b.row());
+        rows_.emplace(rows_.begin()+b.row());
     }
 
-    load_lines(b.row(), e.row());
-    arrange_lines();
-    text_width_ = calc_width(0, lines_.size()-1);
-    text_height_ = calc_height(0, lines_.size()-1);
+    load_rows(b.row(), e.row());
+    arrange_rows();
+    text_width_ = calc_width(0, rows_.size()-1);
+    text_height_ = calc_height(0, rows_.size()-1);
     align_all();
     update_requisition();
     if (e.row() > b.row()) { e = buffer_.cend(); }
@@ -383,7 +383,7 @@ void Text_impl::clear() {
     }
 
     buffer_.clear();
-    lines_.clear();
+    rows_.clear();
     sel_.reset();
     esel_.reset();
     msel_.reset();
@@ -415,7 +415,7 @@ ustring Text_impl::text() const {
 void Text_impl::set_spacing(unsigned spc) {
     if (spacing_ != spc) {
         spacing_ = spc;
-        if (align_lines(0, lines())) { invalidate(); }
+        if (align_rows(0, rows())) { invalidate(); }
     }
 }
 
@@ -427,7 +427,7 @@ void Text_impl::set_text_align(Align xalign, Align yalign) {
     }
 }
 
-bool Text_impl::align_lines(std::size_t first, std::size_t last) {
+bool Text_impl::align_rows(std::size_t first, std::size_t last) {
     bool changed = false;
 
     if (va_) {
@@ -441,8 +441,8 @@ bool Text_impl::align_lines(std::size_t first, std::size_t last) {
 
         if (oy_ != oy) { oy_ = oy; changed = true; }
 
-        for (std::size_t n = first; n < lines_.size() && n <= last; ++n) {
-            Line & line = lines_[n];
+        for (std::size_t n = first; n < rows_.size() && n <= last; ++n) {
+            Row & line = rows_[n];
             int ex = w-line.width, ox = 0;
 
             if (ex > 0) {
@@ -458,20 +458,20 @@ bool Text_impl::align_lines(std::size_t first, std::size_t last) {
 }
 
 void Text_impl::align_all() {
-    if (align_lines(0, lines())) {
+    if (align_rows(0, rows())) {
         invalidate();
     }
 }
 
 void Text_impl::translate_lines(std::size_t first, std::size_t last, int dy) {
     if (last < first) { std::swap(first, last); }
-    for (std::size_t n = first; n < lines_.size() && n <= last; ++n) { lines_[n].ybase += dy; }
+    for (std::size_t n = first; n < rows_.size() && n <= last; ++n) { rows_[n].ybase += dy; }
 }
 
-void Text_impl::arrange_lines() {
+void Text_impl::arrange_rows() {
     int ybase = 0;
 
-    for (Line & line: lines_) {
+    for (Row & line: rows_) {
         line.ybase = ybase+line.ascent;
         ybase += line.ascent+line.descent+spacing_;
     }
@@ -532,14 +532,14 @@ void Text_impl::update_selection(Buffer_citer i, Buffer_citer j) {
 }
 
 void Text_impl::update_range(Buffer_citer b, Buffer_citer e) {
-    if (b && e && b.row() < lines_.size() && e.row() < lines_.size()) {
+    if (b && e && b.row() < rows_.size() && e.row() < rows_.size()) {
         if (e < b) { std::swap(b, e); }
         if (0 == e.row()) { --e; }
 
-        const Line & line1 = lines_[b.row()], line2 = lines_[e.row()];
+        const Row & line1 = rows_[b.row()], line2 = rows_[e.row()];
         int y1 = oy_+line1.ybase-line1.ascent;
         int y2 = oy_+line2.ybase+line2.descent;
-        if (e.row() >= lines_.size()-1) { y2 = va_.bottom(); }
+        if (e.row() >= rows_.size()-1) { y2 = va_.bottom(); }
         int x1 = va_.left(), x2 = va_.right();
 
         if (b.row() == e.row()) {
@@ -556,11 +556,11 @@ void Text_impl::calc_all_ellipsis() {
 
     if (WRAP_NONE != wrap_) {
         ellipsis_width_ = text_size(ellipsis_).width();
-        for (auto & row: lines_) { calc_ellipsis(row); }
+        for (auto & row: rows_) { calc_ellipsis(row); }
     }
 }
 
-void Text_impl::calc_ellipsis(Line & line) {
+void Text_impl::calc_ellipsis(Row & line) {
     line.ellipsized.clear();
 
     if (0 != ellipsis_width_ && va_.iwidth() >= ellipsis_width_ && line.ncols > 1) {
@@ -613,7 +613,7 @@ void Text_impl::calc_ellipsis(Line & line) {
     }
 }
 
-void Text_impl::calc_line(Line & line) {
+void Text_impl::calc_row(Row & line) {
     line.ascent = 0;
     line.descent = 0;
     line.width = 0;
@@ -657,9 +657,9 @@ void Text_impl::calc_line(Line & line) {
     calc_ellipsis(line);
 }
 
-void Text_impl::load_lines(std::size_t ln, std::size_t last) {
-    for (; ln < lines_.size() && ln <= last; ++ln) {
-        Line & line = lines_[ln];
+void Text_impl::load_rows(std::size_t ln, std::size_t last) {
+    for (; ln < rows_.size() && ln <= last; ++ln) {
+        Row & line = rows_[ln];
         line.frags.clear();
         line.ncols = 0;
         Buffer_citer b = buffer_.citer(ln, 0), e = b;
@@ -671,17 +671,17 @@ void Text_impl::load_lines(std::size_t ln, std::size_t last) {
         frag.start = 0;
         frag.ncols = line.text.size();
 
-        calc_line(line);
+        calc_row(line);
     }
 }
 
 int Text_impl::calc_height(std::size_t first, std::size_t last) {
     if (last < first) { std::swap(first, last); }
     int h = 0;
-    std::size_t nrows = lines_.size();
+    std::size_t nrows = rows_.size();
 
     for (std::size_t n = first; n < nrows && n <= last; ) {
-        const Line & row = lines_[n];
+        const Row & row = rows_[n];
         h += row.ascent+row.descent;
         if (++n < nrows) { h += spacing_; }
     }
@@ -693,8 +693,8 @@ int Text_impl::calc_width(std::size_t first, std::size_t last) {
     if (last < first) { std::swap(first, last); }
     int w = 0;
 
-    for (std::size_t n = first; n < lines_.size() && n <= last; ++n) {
-        const Line & row = lines_[n];
+    for (std::size_t n = first; n < rows_.size() && n <= last; ++n) {
+        const Row & row = rows_[n];
         w = std::max(w, row.width);
     }
 
@@ -706,8 +706,8 @@ void Text_impl::update_caret() {
     int x1 = 0, x2 = 0, y1 = oy_, y2 = y1;
 
     if (!buffer_.empty()) {
-        if (caret_.row() < lines_.size()) {
-            const Line & row = lines_[caret_.row()];
+        if (caret_.row() < rows_.size()) {
+            const Row & row = rows_[caret_.row()];
             x1 = x_at_col(row, caret_.col());
             y1 += row.ybase-row.ascent;
             y2 += row.ybase+row.descent;
@@ -785,9 +785,9 @@ void Text_impl::wipe_caret() {
 }
 
 void Text_impl::scroll_to_caret() {
-    if (caret_enabled_ && !buffer_.empty() && caret_.row() < lines_.size() && va_) {
+    if (caret_enabled_ && !buffer_.empty() && caret_.row() < rows_.size() && va_) {
         Point ofs(va_.origin());
-        const Line & row = lines_[caret_.row()];
+        const Row & row = rows_[caret_.row()];
         int y1 = oy_+row.ybase-row.ascent;
         int y2 = oy_+row.ybase+row.descent;
         int x1 = x_at_col(caret_.row(), caret_.col());
@@ -886,8 +886,8 @@ void Text_impl::hide_caret() {
 std::size_t Text_impl::hinted_pos(std::size_t ri) {
     int x1 = 0;
 
-    if (xhint_ > 0 && ri < lines_.size()) {
-        const Line & row = lines_[ri];
+    if (xhint_ > 0 && ri < rows_.size()) {
+        const Row & row = rows_[ri];
 
         for (std::size_t n = 1; n < row.ncols; ++n) {
             int x2 = x_at_col(row, n);
@@ -915,19 +915,19 @@ std::size_t Text_impl::hinted_pos(std::size_t ri) {
     return x1;
 }
 
-int Text_impl::x_at_col(const Line & row, std::size_t col) const {
+int Text_impl::x_at_col(const Row & row, std::size_t col) const {
     return row.ox+(col < row.ncols ? row.poss[col] : row.width);
 }
 
 int Text_impl::x_at_col(std::size_t ri, std::size_t col) const {
-    if (ri < lines_.size()) {
-        return x_at_col(lines_[ri], col);
+    if (ri < rows_.size()) {
+        return x_at_col(rows_[ri], col);
     }
 
     return 0;
 }
 
-std::size_t Text_impl::col_at_x(const Line & line, int x) const {
+std::size_t Text_impl::col_at_x(const Row & line, int x) const {
     std::size_t col = 0;
     x -= line.ox;
 
@@ -950,38 +950,38 @@ std::size_t Text_impl::col_at_x(const Line & line, int x) const {
 }
 
 std::size_t Text_impl::col_at_x(std::size_t ri, int x) const {
-    if (ri < lines_.size()) {
-        return col_at_x(lines_[ri], x);
+    if (ri < rows_.size()) {
+        return col_at_x(rows_[ri], x);
     }
 
     return 0;
 }
 
 std::size_t Text_impl::row_at_y(int y) const {
-    if (y >= 0 && !lines_.empty()) {
-        for (std::size_t ri = 0; ri < lines_.size(); ++ri) {
-            const Line & row = lines_[ri];
+    if (y >= 0 && !rows_.empty()) {
+        for (std::size_t ri = 0; ri < rows_.size(); ++ri) {
+            const Row & row = rows_[ri];
             int ymax = oy_+row.ybase+row.descent;
             if (y < ymax) { return ri; }
         }
 
-        return lines_.size()-1;
+        return rows_.size()-1;
     }
 
     return 0;
 }
 
 int Text_impl::baseline(std::size_t ri) const {
-    if (ri < lines_.size()) {
-        return lines_[ri].ybase;
+    if (ri < rows_.size()) {
+        return rows_[ri].ybase;
     }
 
     return 0;
 }
 
-void Text_impl::get_line_bounds(std::size_t ln, int & top, int & bottom) const {
-    if (ln < lines_.size()) {
-        const Line & line = lines_[ln];
+void Text_impl::get_row_bounds(std::size_t ln, int & top, int & bottom) const {
+    if (ln < rows_.size()) {
+        const Row & line = rows_[ln];
         top = oy_+line.ybase-line.ascent;
         bottom = oy_+line.ybase+line.descent;
     }
@@ -997,7 +997,7 @@ Buffer_citer Text_impl::iter_from_point(const Point & pt) {
     return iter(ln, col);
 }
 
-void Text_impl::paint_ellipsized(const Line & line, Painter pr) {
+void Text_impl::paint_ellipsized(const Row & line, Painter pr) {
     int ybase = oy_+line.ybase;
     wipe_area(va_.left(), ybase-line.ascent, va_.right(), ybase+line.descent, pr);
     pr.move_to(0, ybase);
@@ -1006,7 +1006,7 @@ void Text_impl::paint_ellipsized(const Line & line, Painter pr) {
     pr.stroke();
 }
 
-void Text_impl::paint_line(const Line & line, std::size_t ln, std::size_t pos, Painter pr) {
+void Text_impl::paint_row(const Row & line, std::size_t ln, std::size_t pos, Painter pr) {
     pos = std::min(pos, line.ncols);
     std::size_t scol = std::max(pos, col_at_x(line, va_.left()));           // Starting column.
     std::size_t ecol = std::min(line.ncols, 1+col_at_x(line, va_.right())); // Ending column.
@@ -1111,13 +1111,13 @@ void Text_impl::redraw(const Rect & r, Painter pr) {
         bool caret_exposed = caret_exposed_;
         wipe_caret();
         pr.push();
-        std::size_t ln = row_at_y(r.top()), len = lines_.size();
-        const Line * lp = lines_.data()+ln;
+        std::size_t ln = row_at_y(r.top()), len = rows_.size();
+        const Row * lp = rows_.data()+ln;
 
         for (; ln < len; ++ln, ++lp) {
             if (r.bottom() <= oy_+lp->ybase-lp->ascent) { break; }
             if (!lp->ellipsized.empty()) { paint_ellipsized(*lp, pr); }
-            else { paint_line(*lp, ln, col_at_x(*lp, r.x()), pr); }
+            else { paint_row(*lp, ln, col_at_x(*lp, r.x()), pr); }
         }
 
         pr.pop();
@@ -1225,8 +1225,8 @@ void Text_impl::unselect() {
     }
 }
 
-std::size_t Text_impl::lines() const {
-    return buffer_.lines();
+std::size_t Text_impl::rows() const {
+    return buffer_.rows();
 }
 
 Painter Text_impl::priv_painter() {
@@ -1353,7 +1353,7 @@ void Text_impl::down() {
     if (caret_) {
         std::size_t dest_row = caret_.row()+1;
 
-        if (dest_row < lines()) {
+        if (dest_row < rows()) {
             Buffer_citer i = caret_;
             std::size_t pos = 0 != xhint_ ? hinted_pos(dest_row) : i.col();
             i.move_to(dest_row, pos);
@@ -1495,20 +1495,20 @@ void Text_impl::select_to_eof() {
 
 void Text_impl::page_up() {
     if (va_ && caret_) {
-        std::size_t nrows = lines_.size(), ri = caret_.row();
+        std::size_t nrows = rows_.size(), ri = caret_.row();
 
         if (ri < nrows && ri > 0) {
-            const Line & row1 = lines_[ri];
+            const Row & row1 = rows_[ri];
             int yb = oy_+row1.ybase-va_.height(), y2 = std::max(0, yb);
             std::size_t ri2;
 
             for (ri2 = ri; ri2 > 0; --ri2) {
-                const Line & row2 = lines_[ri2-1];
+                const Row & row2 = rows_[ri2-1];
                 if (oy_+row2.ybase <= y2) break;
             }
 
             if (ri2 > 0) {
-                const Line & row3 = lines_[ri2];
+                const Row & row3 = rows_[ri2];
                 int top1 = oy_+row1.ybase-row1.ascent;
                 int top3 = oy_+row3.ybase-row3.ascent;
                 Point sp;
@@ -1549,20 +1549,20 @@ void Text_impl::select_page_up() {
 
 void Text_impl::page_down() {
     if (va_ && caret_) {
-        std::size_t nrows = lines(), ri = caret_.row();
+        std::size_t nrows = rows(), ri = caret_.row();
 
         if (ri < nrows) {
-            const Line & row1 = lines_[ri];
+            const Row & row1 = rows_[ri];
             int y2 = oy_+va_.height()+row1.ybase;
             std::size_t ri2;
 
             for (ri2 = ri; ri2 < nrows; ++ri2) {
-                const Line & row2 = lines_[ri2+1];
+                const Row & row2 = rows_[ri2+1];
                 if (oy_+row2.ybase >= y2) break;
             }
 
             if (ri2 < nrows) {
-                const Line & row3 = lines_[ri2];
+                const Row & row3 = rows_[ri2];
                 int top1 = oy_+row1.ybase-row1.ascent;
                 int bottom3 = oy_+row3.ybase+row3.descent;
                 Point sp;

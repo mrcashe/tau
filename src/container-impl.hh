@@ -115,6 +115,9 @@ public:
     const Widget_impl * mouse_grabber() const { return mouse_grabber_; }
     const Widget_impl * mouse_owner() const { return mouse_owner_; }
 
+    Widget_ptr focus_owner();
+    Widget_cptr focus_owner() const;
+
     std::vector<Widget_ptr> children() { return children_; }
 
     signal<void()> & signal_arrange() { return signal_arrange_; }
@@ -137,6 +140,10 @@ protected:
     void unparent_all();
     void focus_child(Widget_impl * wi, int res);
     void set_modal_child(Widget_impl * wi);
+    bool update_child_bounds(Widget_impl * wp, const Rect & bounds);
+    bool update_child_bounds(Widget_impl * wp, const Point & origin, const Size & sz);
+    bool update_child_bounds(Widget_impl * wp, int x, int y, const Size & sz);
+    bool update_child_bounds(Widget_impl * wp, int x, int y, unsigned w, unsigned h);
 
     // Overrides Widget_impl.
     void resume_focus() override;

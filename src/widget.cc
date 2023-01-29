@@ -258,8 +258,8 @@ bool Widget::focused() const {
     return impl->focused();
 }
 
-bool Widget::focus_allowed() const {
-    return impl->focus_allowed();
+bool Widget::focusable() const {
+    return impl->focusable();
 }
 
 bool Widget::grab_focus() {

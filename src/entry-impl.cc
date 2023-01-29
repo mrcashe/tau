@@ -121,7 +121,9 @@ void Entry_impl::set_text_align(Align align) {
 }
 
 Align Entry_impl::text_align() const {
-    return edit_->horizontal_text_align();
+    Align xalign, yalign;
+    edit_->get_text_align(xalign, yalign);
+    return xalign;
 }
 
 ustring Entry_impl::text() const {

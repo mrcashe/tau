@@ -246,7 +246,7 @@ There are 3 files will be installed:
 - Symlink to the @a soname named <em>libtau-@link Major_ @endlink.@link Minor_ @endlink.so</em>, so-called linker name, for example, `libtau-0.3.so`.
 
 This is unusual practice to name soname and linker symlinks with two-component version suffix, but since this release is the very first,
-I consider this approach quite justified at the moment. This will allow you to have several versions of the library at once.
+I consider this approach quite correct at the moment. This will allow you to have several versions of the library at once.
 
 The Windows (MXE) DLL will be installed into <b><em>PREFIX</em></b>/bin subdirectory.
 The DLL's name is <em>libtau-@link Major_ @endlink.@link Minor_ @endlink-<b>MXE_TARGET</b>.dll</em>,

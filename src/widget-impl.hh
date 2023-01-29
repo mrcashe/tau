@@ -205,7 +205,7 @@ public:
     void  disallow_focus();
     bool  grab_focus();
     void  drop_focus();
-    bool  focus_allowed() const { return focus_allowed_; }
+    bool  focusable() const;
     bool  focused() const { return focused_; }
     bool  take_focus();
     bool  grab_mouse();
@@ -345,7 +345,8 @@ protected:
     Container_impl *    parent_ = nullptr;
     Cursor_ptr          cursor_;
     bool                cursor_hidden_ = false;
-    bool                destroy_ = false;
+    bool                focus_allowed_ = false;
+    bool                shut_ = false;
     bool                hidden_ = false;
     Style               style_;
 
@@ -417,7 +418,6 @@ private:
     Size        max_size_hint_;
     Size        required_size_;
 
-    bool        focus_allowed_ = false;
     bool        focused_ = false;
     bool        upshow_ = false;
     bool        enabled_ = false;

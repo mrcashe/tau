@@ -103,8 +103,8 @@ public:
     /// Clear buffer.
     void clear();
 
-    /// Get line count.
-    std::size_t lines() const;
+    /// Get row count.
+    std::size_t rows() const;
 
     /// Get text.
     ustring text() const;
@@ -177,14 +177,15 @@ public:
     /// @sa set_spacing.
     unsigned spacing() const;
 
-    /// Set text align.
+    /// Set text alignment.
+    /// @param xalign horizontal text alignment.
+    /// @param yalign vertical text alignment.
     void set_text_align(Align xalign, Align yalign=ALIGN_CENTER);
 
-    /// Get horizontal align.
-    Align horizontal_text_align() const;
-
-    /// Get vertical align.
-    Align vertical_text_align() const;
+    /// Get text alignment.
+    /// @param[out] xalign horizontal text alignment.
+    /// @param[out] yalign vertical text alignment.
+    void get_text_align(Align & xalign, Align & yalign);
 
     /// Set word wrap mode.
     void set_wrap_mode(Wrap_mode wrap_mode);
@@ -214,40 +215,40 @@ public:
     bool caret_enabled() const;
 
     /// Get X coordinate of specified column.
-    /// @param ri the row (line) index, starting with 0.
+    /// @param row the row index, starting with 0.
     /// @param col the column (character) index within row, starting with 0.
     /// @return the X column (character) coordinate.
     /// If there are no such column, the return value is 0.
-    int x_at_col(std::size_t ri, std::size_t col) const;
+    int x_at_col(std::size_t row, std::size_t col) const;
 
-    /// Get column index from known row (line) index and X coordinate.
-    /// @param ri the row (line) index, starting with 0.
+    /// Get column index from known row index and X coordinate.
+    /// @param row the row index, starting with 0.
     /// @param x the X coordinate, starting with 0.
     /// @return the column (character) index.
     /// If specified row does not exist, the return value is 0.
     /// If specified X coordinate is out of row coordinate range, the return value is 0.
-    std::size_t col_at_x(std::size_t ri, int x) const;
+    std::size_t col_at_x(std::size_t row, int x) const;
 
-    /// Get row (line) index from Y coordinate.
+    /// Get row index from Y coordinate.
     /// @param y the Y coordinate.
-    /// @return the row (line) index, starting with 0.
+    /// @return the row index, starting with 0.
     /// If specified Y coordinate is above used space, the last row returned.
     /// If text buffer is empty or specified Y coordinate negative, the return value is 0.
     std::size_t row_at_y(int y) const;
 
-    /// Get baseline coordinate of the specified row (line).
-    /// @param ri the row (line) index, starting with 0.
+    /// Get baseline coordinate of the specified row.
+    /// @param row the row index, starting with 0.
     /// @return the baseline Y coordinate, starting with 0.
     /// If specified row index is out of range, the returning value is 0.
     /// If specified row index is valid and row exists, the returning value can not be 0.
-    int baseline(std::size_t ri) const;
+    int baseline(std::size_t row) const;
 
-    /// Get row (line) bounds.
-    /// @param ri the row (line) index, starting with 0.
+    /// Get row bounds.
+    /// @param row the row index, starting with 0.
     /// @param top a reference to the returning top Y coordinate.
     /// @param bottom a reference to the returning bottom Y coordinate.
-    /// If specified row does not exist, the returning value are equals to zero.
-    void get_line_bounds(std::size_t ri, int & top, int & bottom) const;
+    /// If specified row does not exist, the returning values are 0.
+    void get_row_bounds(std::size_t row, int & top, int & bottom) const;
 
     /// @name Accessors to established actions.
     /// @{

@@ -165,7 +165,7 @@ Size Absolute_impl::child_requisition(const Holder & hol) {
 }
 
 void Absolute_impl::update_requisition() {
-    if (!destroy_) {
+    if (!shut_) {
         int xmax = 0, ymax = 0;
 
         for (const Holder & hol: holders_) {
@@ -201,7 +201,7 @@ void Absolute_impl::arrange() {
 }
 
 void Absolute_impl::on_child_requisition(Widget_impl * wi) {
-    if (!destroy_) {
+    if (!shut_) {
         auto i = std::find_if(holders_.begin(), holders_.end(), [wi](Holder & hol) { return wi == hol.wp.get(); });
 
         if (i != holders_.end()) {

@@ -45,6 +45,12 @@ public:
     /// Force children arrange.
     void queue_arrange();
 
+    /// Get focus owner.
+    Widget_ptr focus_owner();
+
+    /// Get focus owner.
+    Widget_cptr focus_owner() const;
+
     /// Get children.
     std::vector<Widget_ptr> children() const;
 
@@ -62,6 +68,11 @@ protected:
     void make_child(Widget & w);
 
     void unparent_child(Widget & w);
+
+    bool update_child_bounds(Widget & w, const Rect & bounds);
+    bool update_child_bounds(Widget & w, const Point & origin, const Size & sz);
+    bool update_child_bounds(Widget & w, int x, int y, const Size & sz);
+    bool update_child_bounds(Widget & w, int x, int y, unsigned width, unsigned height);
 
     signal<void()> & signal_arrange();
 

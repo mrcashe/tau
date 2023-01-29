@@ -241,7 +241,7 @@ bool Menu_impl::open_current() {
 
     submenu_ = mp;
     end_modal();
-    if (parent_) { parent_->ungrab_mouse(); }
+    ungrab_mouse();
     mp->popup(toplevel, mp, pos, gravity, this);
     return true;
 }
@@ -314,6 +314,7 @@ bool Menu_impl::has_enabled_items() const {
 void Menu_impl::cancel() {
     auto pmenu = unset_parent_menu();
     end_modal();
+    ungrab_mouse();
     quit();
     if (pmenu) { pmenu->child_menu_cancel(); }
 }
@@ -323,6 +324,7 @@ void Menu_impl::quit() {
     close_submenu();
     unselect_current();
     unset_parent_menu();
+    if (rfocus_) { rfocus_->take_focus(); }
     signal_quit_();
 }
 
@@ -349,6 +351,7 @@ Menu_impl * Menu_impl::unset_parent_menu() {
 void Menu_impl::pass_quit() {
     auto pmenu = unset_parent_menu();
     end_modal();
+    ungrab_mouse();
     quit();
     if (pmenu) { pmenu->pass_quit(); }
 }

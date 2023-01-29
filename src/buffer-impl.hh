@@ -59,7 +59,7 @@ struct Buffer_impl {
 
     char32_t at(std::size_t row, std::size_t col) const;
     std::size_t size() const;
-    std::size_t lines() const;
+    std::size_t rows() const;
     std::size_t length(std::size_t r1, std::size_t c1, std::size_t r2, std::size_t c2) const;
     std::size_t length(std::size_t row) const;
     void change_encoding(const Encoding & enc);

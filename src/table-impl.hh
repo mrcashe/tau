@@ -130,6 +130,19 @@ public:
     void set_row_margin(int y, unsigned top, unsigned bottom);
     void get_row_margin(int y, unsigned & top, unsigned & bottom) const;
 
+    void set_columns_margin(unsigned left, unsigned right);
+    void set_rows_margin(unsigned top, unsigned bottom);
+
+    void get_columns_margin(unsigned & left, unsigned & right) const {
+        left = columns_left_;
+        right = columns_right_;
+    }
+
+    void get_rows_margin(unsigned & top, unsigned & bottom) const {
+        top = rows_top_;
+        bottom = rows_bottom_;
+    }
+
     int column_at_x(int x) const;
     int row_at_y(int y) const;
 
@@ -229,6 +242,10 @@ private:
 
     unsigned            xspacing_ = 0;
     unsigned            yspacing_ = 0;
+    unsigned            columns_left_ = 0;
+    unsigned            columns_right_ = 0;
+    unsigned            rows_top_ = 0;
+    unsigned            rows_bottom_ = 0;
 
     Align               xalign_ = ALIGN_CENTER;
     Align               yalign_ = ALIGN_CENTER;
@@ -263,7 +280,6 @@ private:
     void on_child_show(Widget_impl * wi);
     void on_child_hide(Widget_impl * wi);
     bool on_take_focus();
-    void on_async_clear();
 };
 
 } // namespace tau

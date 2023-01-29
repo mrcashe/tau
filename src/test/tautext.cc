@@ -586,7 +586,7 @@ struct Main: tau::Toplevel {
 
         if (i) {
             pg.row_value.assign(tau::str_format(1+i.row()));
-            pg.rows_value.assign(tau::str_format(std::max(std::size_t(1), pg.edit.buffer().lines())));
+            pg.rows_value.assign(tau::str_format(std::max(std::size_t(1), pg.edit.buffer().rows())));
             pg.col_value.assign(tau::str_format(1+i.col()));
             pg.uni_value.assign(tau::key_code_to_string(*i));
         }
@@ -712,7 +712,7 @@ struct Main: tau::Toplevel {
             box.append(of, true);
             box.append(pg.rows_value, true);
             pg.rows_value.set_tooltip("Shows total line count\nwithin text file.");
-            pg.lines = pg.edit.buffer().lines();
+            pg.lines = pg.edit.buffer().rows();
             pg.rows_value.assign(tau::str_format(pg.lines));
         }
 
@@ -1031,7 +1031,7 @@ struct Main: tau::Toplevel {
     }
 
     void on_edit_changed(Page & pg) {
-        std::size_t lines = pg.edit.buffer().lines();
+        std::size_t lines = pg.edit.buffer().rows();
 
         if (lines != pg.lines) {
             pg.lines = lines;
@@ -1554,7 +1554,7 @@ int main(int argc, char * argv[]) {
     }
 
     try {
-        auto state_path = tau::path_build(tau::path_user_config_dir(), tau::program_name(), "state.ini");
+        auto state_path = tau::path_build(tau::path_user_data_dir(), tau::program_name(), "state.ini");
         tau::path_mkdir(tau::path_dirname(state_path));
         kstate_.load(state_path);
         geom_ = kstate_.get_integers(kstate_.root(), "geometry");

@@ -270,8 +270,9 @@ void Fileman_impl::on_dir_changed(const ustring & path) {
             pathbox_->prepend(button, true);
             q = path_dirname(p);
             if (q == p) { break; }
-            pathbox_->prepend(std::make_shared<Text_impl>(ustring(1, path_slash_)), true);
             p = q;
+            ustring slash(1, path_slash_);
+            if (p != slash) { pathbox_->prepend(std::make_shared<Text_impl>(slash), true); }
         }
     }
 }

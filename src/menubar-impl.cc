@@ -25,6 +25,7 @@
 // ----------------------------------------------------------------------------
 
 #include <menu-impl.hh>
+#include <window-impl.hh>
 #include <iostream>
 
 namespace tau {
@@ -78,14 +79,6 @@ void Menubar_impl::mark_item(Menu_item_impl * ip, bool select) {
 
     else {
         ip->style().get("background").unset();
-    }
-}
-
-void Menubar_impl::activate() {
-    if (enabled()) {
-        grab_modal();
-        select_item(current_item());
-        open_current();
     }
 }
 
@@ -162,6 +155,15 @@ void Menubar_impl::remove(Widget_impl * wp) {
 void Menubar_impl::clear() {
     items_.clear();
     box_->clear();
+}
+
+void Menubar_impl::activate() {
+    if (enabled()) {
+        if (auto wip = root()) { rfocus_ = wip->focus_owner(); }
+        grab_modal();
+        select_item(current_item());
+        open_current();
+    }
 }
 
 } // namespace tau

@@ -212,14 +212,14 @@ void Box_impl::arrange() {
 }
 
 void Box_impl::on_child_requisition(Widget_impl * wi) {
-    if (!destroy_) {
+    if (!shut_) {
         update_requisition();
         queue_arrange();
     }
 }
 
 void Box_impl::on_child_hide(Widget_impl * wi) {
-    if (!destroy_) {
+    if (!shut_) {
         wi->update_origin(INT_MIN, INT_MIN);
         wi->update_size(0, 0);
         update_requisition();
@@ -229,7 +229,7 @@ void Box_impl::on_child_hide(Widget_impl * wi) {
 }
 
 void Box_impl::on_child_show(Widget_impl * wi) {
-    if (!destroy_) {
+    if (!shut_) {
         update_requisition();
         queue_arrange();
         invalidate();

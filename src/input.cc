@@ -133,7 +133,7 @@ const struct { char32_t kc; const char * name; } keydb_[] = {
     { tau::KC_HELP,                     tau::KC_HELP_NAME                       },
     { tau::KC_LDIR,                     tau::KC_LDIR_NAME                       },
     { tau::KC_RDIR,                     tau::KC_RDIR_NAME                       },
-    { tau::KC_MULTI_KEY,                tau::KC_MULTI_KEY_NAME                  },
+    { tau::KC_MULTI,                    tau::KC_MULTI_NAME                      },
     { tau::KC_CODE_INPUT,               tau::KC_CODE_INPUT_NAME                 },
     { tau::KC_SINGLE_CANDIDATE,         tau::KC_SINGLE_CANDIDATE_NAME           },
     { tau::KC_MULTIPLE_CANDIDATE,       tau::KC_MULTIPLE_CANDIDATE_NAME         },
@@ -430,7 +430,7 @@ const char * KC_PASTE_NAME                          = "Paste";
 const char * KC_LDIR_NAME                           = "DirectionL";
 const char * KC_RDIR_NAME                           = "DirectionR";
 const char * KC_CODE_INPUT_NAME                     = "CodeInput";
-const char * KC_MULTI_KEY_NAME                      = "Multi";
+const char * KC_MULTI_NAME                          = "Multi";
 const char * KC_SINGLE_CANDIDATE_NAME               = "SingleCandidate";
 const char * KC_MULTIPLE_CANDIDATE_NAME             = "MultipleCandidate";
 const char * KC_PREVIOUS_CANDIDATE_NAME             = "PreviousCandidate";

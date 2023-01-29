@@ -39,6 +39,7 @@ Menubox_impl::Menubox_impl():
     hint_margin(3);
 
     table_ = std::make_shared<Table_impl>();
+    table_->set_columns_margin(2, 2);
     table_->signal_mouse_down().connect(fun(this, &Menubox_impl::on_table_mouse_down));
     table_->signal_mouse_motion().connect(fun(this, &Menubox_impl::on_table_mouse_motion));
     insert(table_);
@@ -82,19 +83,19 @@ void Menubox_impl::on_right() {
 void Menubox_impl::child_menu_cancel() {
     close_submenu();
     grab_modal();
-    if (auto wnd = window()) { wnd->grab_mouse(); }
+    grab_mouse();
 }
 
 void Menubox_impl::child_menu_left() {
     close_submenu();
     grab_modal();
-    if (auto wnd = window()) { wnd->grab_mouse(); }
+    grab_mouse();
 }
 
 void Menubox_impl::child_menu_right() {
     close_submenu();
     grab_modal();
-    if (auto wnd = window()) { wnd->grab_mouse(); }
+    grab_mouse();
 }
 
 void Menubox_impl::mark_item(Menu_item_impl * ip, bool select) {
@@ -148,11 +149,11 @@ Window_ptr Menubox_impl::popup(Window_impl * root, Widget_ptr self, const Point 
             wip->insert(self);
             wip->style().redirect(STYLE_MENU_BACKGROUND, STYLE_BACKGROUND);
             wip->signal_mouse_down().connect(fun(this, &Menubox_impl::on_popup_mouse_down), true);
+            signal_quit_.connect(fun(wip, &Window_impl::close));
             wip->show();
             grab_modal();
-            wip->grab_mouse();
+            grab_mouse();
             select_item(current_item());
-            // std::cout << this << " popup " << table_->children().size() << " " << signal_visible_.size() << std::endl;
             return wip;
         }
     }
@@ -165,7 +166,7 @@ bool Menubox_impl::on_popup_mouse_down(int mbt, int mm, const Point & pt) {
     if (auto wip = window()) {
         if (!Rect(wip->size()).contains(pt)) {
             end_modal();
-            wip->ungrab_mouse();
+            ungrab_mouse();
             Point spt = wip->to_screen(pt);
 
             for (auto m = parent_menu(); m; m = m->parent_menu()) {
@@ -174,6 +175,7 @@ bool Menubox_impl::on_popup_mouse_down(int mbt, int mm, const Point & pt) {
                 if (Rect(worg, m->size()).contains(spt)) {
                     m->close_submenu();
                     m->grab_modal();
+                    m->grab_mouse();
                     m->signal_mouse_down()(mbt, mm, spt-worg);
                     return true;
                 }
@@ -186,14 +188,7 @@ bool Menubox_impl::on_popup_mouse_down(int mbt, int mm, const Point & pt) {
     return false;
 }
 
-void Menubox_impl::quit() {
-    Menu_impl::quit();
-    if (auto wip = window()) { wip->clear(); wip->close(); }
-}
-
 bool Menubox_impl::on_table_mouse_down(int mbt, int mm, const Point & pt) {
-    if (auto wip = window()) { wip->grab_mouse(); }
-
     if (MBT_LEFT == mbt && !(mm & (MM_CONTROL|MM_SHIFT))) {
         for (auto ip: items_) {
             if (ip->enabled() && ip->visible()) {
@@ -202,7 +197,7 @@ bool Menubox_impl::on_table_mouse_down(int mbt, int mm, const Point & pt) {
                 if (y >= ymin && y < ymax) {
                     if (current_item_ != ip) { unselect_current(); select_item(ip); }
                     end_modal();
-                    if (auto wip = window()) { wip->ungrab_mouse(); }
+                    ungrab_mouse();
                     activate_current();
                     break;
                 }
@@ -233,11 +228,11 @@ void Menubox_impl::on_table_mouse_motion(int mm, const Point & pt) {
 }
 
 void Menubox_impl::put_widget(Widget_ptr wp, int row) {
+    table_->set_row_margin(row, 2, 2);
+
     if (auto ip = std::dynamic_pointer_cast<Menu_item_impl>(wp)) {
         wp->hint_margin(2, 2, 0, 0);
         table_->put(wp, 1, row, 1, 1, true, true);
-        table_->set_column_margin(1, 2, 2);
-        table_->set_row_margin(row, 2, 2);
         table_->align(wp.get(), ALIGN_START, ALIGN_CENTER);
 
         if (auto img_part = std::dynamic_pointer_cast<Menu_image>(ip)) {
@@ -245,8 +240,6 @@ void Menubox_impl::put_widget(Widget_ptr wp, int row) {
                 image->hint_margin(2, 2, 0, 0);
                 if (ip->disabled()) { image->disable(); }
                 table_->put(image, 0, row, 1, 1, true, true);
-                table_->set_column_margin(0, 2, 2);
-                table_->set_row_margin(row, 2, 2);
                 ip->signal_enable().connect(fun(image, &Widget_impl::enable));
                 ip->signal_disable().connect(fun(image, &Widget_impl::disable));
             }
@@ -257,8 +250,6 @@ void Menubox_impl::put_widget(Widget_ptr wp, int row) {
             arrow->hint_margin(2, 0, 0, 0);
             if (ip->disabled()) { arrow->disable(); }
             table_->put(arrow, 2, row, 1, 1, true, true);
-            table_->set_column_margin(2, 2, 2);
-            table_->set_row_margin(row, 2, 2);
             table_->align(arrow.get(), ALIGN_END, ALIGN_CENTER);
             ip->signal_enable().connect(fun(arrow, &Widget_impl::enable));
             ip->signal_disable().connect(fun(arrow, &Widget_impl::disable));
@@ -269,8 +260,6 @@ void Menubox_impl::put_widget(Widget_ptr wp, int row) {
             accel_text->hint_margin(2, 0, 0, 0);
             if (ip->disabled()) { accel_text->disable(); }
             table_->put(accel_text, 2, row, 1, 1, true, true);
-            table_->set_column_margin(2, 2, 2);
-            table_->set_row_margin(row, 2, 2);
             table_->align(accel_text.get(), ALIGN_END, ALIGN_CENTER);
             ip->signal_enable().connect(fun(accel_text, &Widget_impl::enable));
             ip->signal_disable().connect(fun(accel_text, &Widget_impl::disable));
@@ -281,8 +270,6 @@ void Menubox_impl::put_widget(Widget_ptr wp, int row) {
             accel_text->hint_margin(2, 0, 0, 0);
             if (ip->disabled()) { accel_text->disable(); }
             table_->put(accel_text, 2, row, 1, 1, true, true);
-            table_->set_column_margin(2, 2, 2);
-            table_->set_row_margin(row, 2, 2);
             table_->align(accel_text.get(), ALIGN_END, ALIGN_CENTER);
             ip->signal_enable().connect(fun(accel_text, &Widget_impl::enable));
             ip->signal_disable().connect(fun(accel_text, &Widget_impl::disable));
@@ -291,8 +278,6 @@ void Menubox_impl::put_widget(Widget_ptr wp, int row) {
                 check->hint_margin(2, 2, 0, 0);
                 if (ip->disabled()) { check->disable(); }
                 table_->put(check, 0, row, 1, 1, true, true);
-                table_->set_column_margin(0, 2, 2);
-                table_->set_row_margin(row, 2, 2);
                 ip->signal_enable().connect(fun(check, &Widget_impl::enable));
                 ip->signal_disable().connect(fun(check, &Widget_impl::disable));
             }
@@ -303,8 +288,6 @@ void Menubox_impl::put_widget(Widget_ptr wp, int row) {
                 check->hint_margin(2, 2, 0, 0);
                 if (ip->disabled()) { check->disable(); }
                 table_->put(check, 0, row, 1, 1, true, true);
-                table_->set_column_margin(0, 2, 2);
-                table_->set_row_margin(row, 2, 2);
                 ip->signal_enable().connect(fun(check, &Widget_impl::enable));
                 ip->signal_disable().connect(fun(check, &Widget_impl::disable));
             }
@@ -319,8 +302,6 @@ void Menubox_impl::put_widget(Widget_ptr wp, int row) {
         if (rng.xmax > rng.xmin) { w = rng.xmax-rng.xmin; }
         else { rng.xmin = 0, w = 1; }
         table_->put(wp, rng.xmin, row, w, 1, false, true);
-        table_->set_column_margin(rng.xmin, 2, 2);
-        table_->set_row_margin(row, 2, 2);
     }
 
     update_separators();

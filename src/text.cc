@@ -73,8 +73,8 @@ const Buffer Text::buffer() const {
     return TEXT_IMPL->buffer();
 }
 
-std::size_t Text::lines() const {
-    return TEXT_IMPL->lines();
+std::size_t Text::rows() const {
+    return TEXT_IMPL->rows();
 }
 
 void Text::assign(const ustring & s) {
@@ -137,16 +137,12 @@ unsigned Text::spacing() const {
     return TEXT_IMPL->spacing();
 }
 
-void Text::set_text_align(Align halign, Align valign) {
-    TEXT_IMPL->set_text_align(halign, valign);
+void Text::set_text_align(Align xalign, Align yalign) {
+    TEXT_IMPL->set_text_align(xalign, yalign);
 }
 
-Align Text::horizontal_text_align() const {
-    return TEXT_IMPL->horizontal_text_align();
-}
-
-Align Text::vertical_text_align() const {
-    return TEXT_IMPL->vertical_text_align();
+void Text::get_text_align(Align & xalign, Align & yalign) {
+    TEXT_IMPL->get_text_align(xalign, yalign);
 }
 
 void Text::set_wrap_mode(Wrap_mode wrap_mode) {
@@ -201,8 +197,8 @@ int Text::baseline(std::size_t ri) const {
     return TEXT_IMPL->baseline(ri);
 }
 
-void Text::get_line_bounds(std::size_t ri, int & top, int & bottom) const {
-    TEXT_IMPL->get_line_bounds(ri, top, bottom);
+void Text::get_row_bounds(std::size_t ri, int & top, int & bottom) const {
+    TEXT_IMPL->get_row_bounds(ri, top, bottom);
 }
 
 Action & Text::move_left_action() {

@@ -393,8 +393,8 @@ public:
     /// Get size in unicode characters in between two iterators.
     std::size_t length(Buffer_citer begin, Buffer_citer end) const;
 
-    /// Get line count.
-    std::size_t lines() const;
+    /// Get row count.
+    std::size_t rows() const;
 
     /// Test if empty.
     bool empty() const;

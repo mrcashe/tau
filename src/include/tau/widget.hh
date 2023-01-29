@@ -811,8 +811,8 @@ public:
     /// By default, focusing is disallowed.
     void disallow_focus();
 
-    /// Determine if focusing allowed.
-    bool focus_allowed() const;
+    /// Test if focusable.
+    bool focusable() const;
 
     /// Causes widget to have the keyboard focus.
     /// @return @b true on success.

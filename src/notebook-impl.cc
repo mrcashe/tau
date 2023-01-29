@@ -425,7 +425,7 @@ void Notebook_impl::update_current() {
 }
 
 void Notebook_impl::update_tabs() {
-    if (!destroy_ && ! in_arrange_) {
+    if (!shut_ && ! in_arrange_) {
         in_arrange_ = true;
 
         if (!empty() && tabs_visible_) {

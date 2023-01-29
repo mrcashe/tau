@@ -237,6 +237,22 @@ void Table::get_row_margin(int y, unsigned & top, unsigned & bottom) const {
     TABLE_IMPL->get_row_margin(y, top, bottom);
 }
 
+void Table::set_columns_margin(unsigned left, unsigned right) {
+    TABLE_IMPL->set_columns_margin(left, right);
+}
+
+void Table::set_rows_margin(unsigned top, unsigned bottom) {
+    TABLE_IMPL->set_rows_margin(top, bottom);
+}
+
+void Table::get_columns_margin(unsigned & left, unsigned & right) const {
+    TABLE_IMPL->get_columns_margin(left, right);
+}
+
+void Table::get_rows_margin(unsigned & top, unsigned & bottom) const {
+    TABLE_IMPL->get_rows_margin(top, bottom);
+}
+
 Rect Table::bounds(int x, int y, unsigned xspan, unsigned yspan) const {
     return TABLE_IMPL->bounds(x, y, xspan, yspan);
 }

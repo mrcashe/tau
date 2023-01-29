@@ -67,7 +67,13 @@ public:
     void unselect();
 
     void set_spacing(unsigned spc);
-    void set_text_align(Align halign, Align valign);
+    void set_text_align(Align xalign, Align yalign);
+
+    void get_text_align(Align & xalign, Align & yalign) {
+        xalign = xalign_;
+        yalign = yalign_;
+    }
+
     Size text_size(const ustring & s);
     Size text_size(const std::u32string & s);
 
@@ -75,7 +81,7 @@ public:
     void move_to(std::size_t row, std::size_t col);
     Buffer_citer caret() const;
     Buffer_citer iter(std::size_t row, std::size_t col) const;
-    std::size_t lines() const;
+    std::size_t rows() const;
 
     void enable_caret();
     void disable_caret();
@@ -84,13 +90,11 @@ public:
     std::size_t col_at_x(std::size_t ri, int x) const;
     std::size_t row_at_y(int y) const;
     int baseline(std::size_t ri) const;
-    void get_line_bounds(std::size_t ri, int & top, int & bottom) const;
+    void get_row_bounds(std::size_t ri, int & top, int & bottom) const;
 
     Buffer buffer() { return buffer_; }
     const Buffer & buffer() const { return buffer_; }
     int spacing() const { return spacing_; }
-    Align horizontal_text_align() const { return xalign_; }
-    Align vertical_text_align() const { return yalign_; }
     void set_wrap_mode(Wrap_mode wrap_mode);
     Wrap_mode wrap_mode() const { return wrap_; }
     bool caret_enabled() const { return caret_enabled_; }
@@ -256,8 +260,8 @@ private:
     // Character positions (in pixels).
     using Poss  = std::vector<int>;
 
-    // Line structure.
-    struct Line {
+    // Row structure.
+    struct Row {
         std::size_t     ncols   = 0;            // Number of columns (characters).
         int             width   = 0;            // Width in pixels.
         int             ascent  = 0;            // Ascent in pixels.
@@ -270,9 +274,9 @@ private:
         Poss            poss;
     };
 
-    using Lines = std::vector<Line>;
+    using Rows = std::vector<Row>;
 
-    Lines               lines_;
+    Rows                rows_;
     Buffer_citer        msel_;                  // Mouse selection start.
     Buffer_citer        emsel_;                 // Mouse selection last.
     bool                caret_visible_ = false;
@@ -315,22 +319,22 @@ private:
     void refresh_caret();
 
     Buffer_citer iter_from_point(const Point & pt);
-    int x_at_col(const Line & row, std::size_t col) const;
-    std::size_t col_at_x(const Line & row, int x) const;
+    int x_at_col(const Row & row, std::size_t col) const;
+    std::size_t col_at_x(const Row & row, int x) const;
     std::size_t hinted_pos(std::size_t ri);
-    void arrange_lines();
+    void arrange_rows();
     int  calc_height(std::size_t first, std::size_t last);
     int  calc_width(std::size_t first, std::size_t last);
-    void calc_line(Line & line);
-    void calc_ellipsis(Line & line);
+    void calc_row(Row & row);
+    void calc_ellipsis(Row & row);
     void calc_all_ellipsis();
-    bool align_lines(std::size_t first, std::size_t last);
+    bool align_rows(std::size_t first, std::size_t last);
     void align_all();
-    void load_lines(std::size_t first, std::size_t last);
+    void load_rows(std::size_t first, std::size_t last);
     void translate_lines(std::size_t first, std::size_t last, int dy);
     void insert_range(Buffer_citer b, Buffer_citer e);
-    void paint_line(const Line & line, std::size_t ln, std::size_t pos, Painter pr);
-    void paint_ellipsized(const Line & line, Painter pr);
+    void paint_row(const Row & row, std::size_t ri, std::size_t pos, Painter pr);
+    void paint_ellipsized(const Row & row, Painter pr);
     void redraw(const Rect & r, Painter pr=Painter());
     Painter wipe_area(int x1, int y1, int x2, int y2, Painter pr=Painter());
     Painter priv_painter();

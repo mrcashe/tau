@@ -286,7 +286,7 @@ const std::map<uint32_t, char32_t> kc_translate_ = {
     { XKB_KEY_SunAudioRaiseVolume,              tau::KC_VOLUME_UP                   },
     { XKB_KEY_SunAudioLowerVolume,              tau::KC_VOLUME_DOWN                 },
     { XKB_KEY_SunAudioMute,                     tau::KC_VOLUME_MUTE                 },
-    { XKB_KEY_Multi_key,                        tau::KC_MULTI_KEY                   },
+    { XKB_KEY_Multi_key,                        tau::KC_MULTI                       },
     { XKB_KEY_Codeinput,                        tau::KC_CODE_INPUT                  },
     { XKB_KEY_SingleCandidate,                  tau::KC_SINGLE_CANDIDATE            },
     { XKB_KEY_MultipleCandidate,                tau::KC_MULTIPLE_CANDIDATE          },

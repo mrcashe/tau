@@ -203,8 +203,8 @@ std::size_t Buffer::length(Buffer_citer b, Buffer_citer e) const {
     return impl->length(b.row(), b.col(), e.row(), e.col());
 }
 
-std::size_t Buffer::lines() const {
-    return impl->lines();
+std::size_t Buffer::rows() const {
+    return impl->rows();
 }
 
 bool Buffer::empty() const {
@@ -234,8 +234,8 @@ Buffer_citer Buffer::cbegin() const {
 Buffer_citer Buffer::cend() const {
     std::size_t row = 0, col = 0;
 
-    if (0 != lines()) {
-        row = lines()-1;
+    if (0 != rows()) {
+        row = rows()-1;
         col = impl->length(row);
     }
 

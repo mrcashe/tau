@@ -89,10 +89,10 @@ public:
     /// Scale by factors.
     void scale(double sx, double sy, double sz=1.0);
 
-    /// Translate (offset) the cureve.
+    /// Translate (offset) the curve.
     void translate(const Vector & v);
 
-    /// Translate (offset) the cureve.
+    /// Translate (offset) the curve.
     void translate(double ox, double oy=0.0, double oz=0.0);
 
     /// Trnsform by Matrix.

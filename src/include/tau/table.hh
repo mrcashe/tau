@@ -50,10 +50,18 @@ public:
     /// Repsents span within Table.
     /// It may be widget's span or table's span.
     struct Span {
-        int     xmin = INT_MAX;         ///< Minimal column index.
-        int     ymin = INT_MAX;         ///< Minimal row index.
-        int     xmax = INT_MIN;         ///< Maximal column index outside of specified range.
-        int     ymax = INT_MIN;         ///< Maximal row index outside of specified range.
+
+        /// Minimal column index.
+        int     xmin = INT_MAX;
+
+        /// Minimal row index.
+        int     ymin = INT_MAX;
+
+        /// Maximal column index outside of specified range.
+        int     xmax = INT_MIN;
+
+        /// Maximal row index outside of specified range.
+        int     ymax = INT_MIN;
     };
 
     /// Default constructor.
@@ -342,10 +350,31 @@ public:
     /// @param[out] right where to store right margin width in pixels.
     void get_column_margin(int x, unsigned & left, unsigned & right) const;
 
+    /// Get row margins.
     /// @param[in] y the row coordinate in cells.
     /// @param[out] top where to store top margin width in pixels.
     /// @param[out] bottom where to store bottom margin width in pixels.
     void get_row_margin(int y, unsigned & top, unsigned & bottom) const;
+
+    /// Set all columns margins.
+    /// @param left the left margin in pixels.
+    /// @param right the left margin in pixels.
+    void set_columns_margin(unsigned left, unsigned right);
+
+    /// Set all rows margins.
+    /// @param top the top margin in pixels.
+    /// @param bottom the bottom margin in pixels.
+    void set_rows_margin(unsigned top, unsigned bottom);
+
+    /// Get columns margins.
+    /// @param[out] left where to store left margin width in pixels.
+    /// @param[out] right where to store right margin width in pixels.
+    void get_columns_margin(unsigned & left, unsigned & right) const;
+
+    /// Get rows margins.
+    /// @param[out] top where to store top margin width in pixels.
+    /// @param[out] bottom where to store bottom margin width in pixels.
+    void get_rows_margin(unsigned & top, unsigned & bottom) const;
 
     /// Get range bounds in pixels for the specified range.
     /// @param x the X coordinate in cells of top left corner.

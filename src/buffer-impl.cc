@@ -112,7 +112,7 @@ void Buffer_citer::set(const Buffer_citer & other, std::size_t row, std::size_t 
 }
 
 char32_t Buffer_citer::operator*() const {
-    if (impl->buf && row() < impl->buf->lines() && col() < impl->buf->length(row())) {
+    if (impl->buf && row() < impl->buf->rows() && col() < impl->buf->length(row())) {
         return impl->buf->at(row(), col());
     }
 
@@ -141,7 +141,7 @@ std::u32string Buffer_citer::text32(std::size_t nchars) const {
     std::u32string res;
 
     if (impl->buf && !eof()) {
-        std::size_t r = row(), c = col(), nlines = impl->buf->lines(), len = impl->buf->length(r);
+        std::size_t r = row(), c = col(), nlines = impl->buf->rows(), len = impl->buf->length(r);
 
         while (0 != nchars--) {
             res += impl->buf->at(r, c++);
@@ -165,7 +165,7 @@ Buffer_citer & Buffer_citer::operator++() {
             ++impl->col;
         }
 
-        else if (1+row() < impl->buf->lines()) {
+        else if (1+row() < impl->buf->rows()) {
             ++impl->row;
             impl->col = 0;
         }
@@ -266,7 +266,7 @@ bool Buffer_citer::eol() const {
 
 bool Buffer_citer::eof() const {
     if (impl->buf) {
-        std::size_t nrows = impl->buf->lines();
+        std::size_t nrows = impl->buf->rows();
 
         if (0 == nrows) {
             return true;
@@ -303,13 +303,13 @@ void Buffer_citer::move_to(size_t row, size_t col) {
             impl->col = 0;
         }
 
-        else if (row < impl->buf->lines()) {
+        else if (row < impl->buf->rows()) {
             impl->row = row;
             impl->col = std::min(col, impl->buf->length(row));
         }
 
         else {
-            impl->row = impl->buf->lines()-1;
+            impl->row = impl->buf->rows()-1;
             impl->col = impl->buf->length(impl->row);
         }
     }
@@ -317,7 +317,7 @@ void Buffer_citer::move_to(size_t row, size_t col) {
 
 void Buffer_citer::move_to_col(size_t col) {
     if (impl->buf) {
-        if (impl->row < impl->buf->lines()) {
+        if (impl->row < impl->buf->rows()) {
             impl->col = std::min(col, impl->buf->length(impl->row));
         }
     }
@@ -346,7 +346,7 @@ void Buffer_citer::move_backward_line() {
 
 void Buffer_citer::move_forward_line() {
     if (impl->buf) {
-        size_t nrows = impl->buf->lines();
+        size_t nrows = impl->buf->rows();
 
         if (0 != nrows) {
             if (1+row() < nrows) {
@@ -670,7 +670,7 @@ std::size_t Buffer_impl::size() const {
     return sz;
 }
 
-std::size_t Buffer_impl::lines() const {
+std::size_t Buffer_impl::rows() const {
     return rows_.size();
 }
 
