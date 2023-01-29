@@ -389,6 +389,20 @@ void Window_impl::update() {
     winface_->update();
 }
 
+// Overrides Container_impl.
+Widget_ptr Window_impl::focus_owner() {
+    if (parent_) { return Container_impl::focus_owner(); }
+    if (auto cp = Container_impl::focus_owner()) { return cp; }
+    return display() ? display()->winptr(this) : nullptr;
+}
+
+// Overrides Container_impl.
+Widget_cptr Window_impl::focus_owner() const {
+    if (parent_) { return Container_impl::focus_owner(); }
+    if (auto cp = Container_impl::focus_owner()) { return cp; }
+    return display() ? display()->winptr(this) : nullptr;
+}
+
 } // namespace tau
 
 //END

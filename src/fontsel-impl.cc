@@ -144,10 +144,10 @@ void Fontsel_impl::init() {
 
     auto theme = Theme_impl::root();
     auto pa = theme->find_action(ACTION_FOCUS_NEXT);
-    if (pa) { next_.connect_master_action(*pa); }
+    if (pa) { next_.set_master_action(*pa); }
 
     pa = theme->find_action(ACTION_FOCUS_PREVIOUS);
-    if (pa) { prev_.connect_master_action(*pa); }
+    if (pa) { prev_.set_master_action(*pa); }
 
     apply_.disable();
     apply_.connect(tau::fun(this, &Fontsel_impl::on_apply));

@@ -115,10 +115,15 @@ public:
     const Widget_impl * mouse_grabber() const { return mouse_grabber_; }
     const Widget_impl * mouse_owner() const { return mouse_owner_; }
 
-    Widget_ptr focus_owner();
-    Widget_cptr focus_owner() const;
+    // Overriden by Window_impl.
+    virtual Widget_ptr focus_owner();
+
+    // Overriden by Window_impl.
+    virtual Widget_cptr focus_owner() const;
 
     std::vector<Widget_ptr> children() { return children_; }
+    Widget_ptr cptr(Widget_impl * wi);
+    Widget_cptr cptr(const Widget_impl * wi) const;
 
     signal<void()> & signal_arrange() { return signal_arrange_; }
     signal<void()> & signal_children_changed() { return signal_children_changed_; }

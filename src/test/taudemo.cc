@@ -36,7 +36,7 @@
 
 namespace {
 
-tau::Key_file state_;
+tau::Key_file kstate_;
 std::vector<std::thread> threads_;
 
 } // anonymous namespace
@@ -110,6 +110,10 @@ struct Main: tau::Toplevel {
         return notebook_.append_page(list, pages_[pg].title);
     }
 
+    void on_twins_ratio(double ratio, const tau::ustring & key) {
+        kstate_.set_double(kstate_.root(), key, ratio);
+    }
+
     int init_twins_page(int pg) {
         tau::Text label(pages_[pg].title);
         label.set_tooltip("This page shows\nthe Twins container example");
@@ -126,7 +130,8 @@ struct Main: tau::Toplevel {
         table.style().get("background").set("PeachPuff");
         frame.insert(table);
 
-        {   tau::Twins twins(tau::OR_DOWN, 0.4);
+        {   tau::Twins twins(tau::OR_DOWN, kstate_.get_double(kstate_.root(), "ratio_1", 0.4));
+            twins.signal_ratio_changed().connect(tau::bind(tau::fun(this, &Main::on_twins_ratio), "ratio_1"));
             table.put(twins, 0, 0);
             tau::Text first("First@OR_DOWN"), second("Second@OR_DOWN");
             first.style().get("background").set("LightBlue");
@@ -137,7 +142,8 @@ struct Main: tau::Toplevel {
             twins.insert_second(second);
         }
 
-        {   tau::Twins twins(tau::OR_UP, 0.4);
+        {   tau::Twins twins(tau::OR_UP, kstate_.get_double(kstate_.root(), "ratio_2", 0.4));
+            twins.signal_ratio_changed().connect(tau::bind(tau::fun(this, &Main::on_twins_ratio), "ratio_2"));
             table.put(twins, 0, 1);
             tau::Text first("First@OR_UP"), second("Second@OR_UP");
             first.style().get("background").set("LightBlue");
@@ -148,7 +154,8 @@ struct Main: tau::Toplevel {
             twins.insert_second(second);
         }
 
-        {   tau::Twins twins(tau::OR_LEFT, 0.4);
+        {   tau::Twins twins(tau::OR_LEFT, kstate_.get_double(kstate_.root(), "ratio_3", 0.4));
+            twins.signal_ratio_changed().connect(tau::bind(tau::fun(this, &Main::on_twins_ratio), "ratio_3"));
             table.put(twins, 1, 0);
             tau::Text first("First@OR_LEFT"), second("Second@OR_LEFT");
             first.style().get("background").set("LightBlue");
@@ -159,7 +166,8 @@ struct Main: tau::Toplevel {
             twins.insert_second(second);
         }
 
-        {   tau::Twins twins(tau::OR_RIGHT, 0.4);
+        {   tau::Twins twins(tau::OR_RIGHT, kstate_.get_double(kstate_.root(), "ratio_4", 0.4));
+            twins.signal_ratio_changed().connect(tau::bind(tau::fun(this, &Main::on_twins_ratio), "ratio_4"));
             table.put(twins, 1, 1);
             tau::Text first("First@OR_RIGHT"), second("Second@OR_RIGHT");
             first.style().get("background").set("LightBlue");
@@ -171,6 +179,10 @@ struct Main: tau::Toplevel {
         }
 
         return page;
+    }
+
+    void on_bps_changed(const tau::ustring & s) {
+        kstate_.set_string(kstate_.root(), "bps", s);
     }
 
     int init_controls_page(int pg) {
@@ -203,10 +215,10 @@ struct Main: tau::Toplevel {
         {
             tau::Text label("tau::Counter", tau::ALIGN_START);
             table.put(label, 0, row);
-            tau::Counter counter(state_.get_integer(state_.root(), "counter"), 247, 1);
+            tau::Counter counter(kstate_.get_integer(kstate_.root(), "counter"), 247, 1);
             counter.append("rpm", 2, 2);
             table.put(counter, 7, row, 1, 1, true, true);
-            auto on_changed = [](double val) { state_.set_integer(state_.root(), "counter", val); };
+            auto on_changed = [](double val) { kstate_.set_integer(kstate_.root(), "counter", val); };
             counter.signal_value_changed().connect(tau::fun(std::function<void(double)>(on_changed)));
         }
 
@@ -214,9 +226,9 @@ struct Main: tau::Toplevel {
         {
             tau::Text label("tau::Check(tau::CHECK_XSTYLE)", tau::ALIGN_START);
             table.put(label, 0, row, 4, 1);
-            tau::Check check(tau::CHECK_XSTYLE, tau::BORDER_SOLID, state_.get_boolean(state_.root(), "xcheck"));
+            tau::Check check(tau::CHECK_XSTYLE, tau::BORDER_SOLID, kstate_.get_boolean(kstate_.root(), "xcheck"));
             table.put(check, 7, row, 1, 1, true, true);
-            auto on_changed = [](bool checked) { state_.set_boolean(state_.root(), "xcheck", checked); };
+            auto on_changed = [](bool checked) { kstate_.set_boolean(kstate_.root(), "xcheck", checked); };
             check.signal_check().connect(tau::bind(tau::fun(std::function<void(bool)>(on_changed)), true));
             check.signal_uncheck().connect(tau::bind(tau::fun(std::function<void(bool)>(on_changed)), false));
         }
@@ -225,9 +237,9 @@ struct Main: tau::Toplevel {
         {
             tau::Text label("tau::Check(tau::CHECK_VSTYLE)", tau::ALIGN_START);
             table.put(label, 0, row, 4, 1);
-            tau::Check check(tau::CHECK_VSTYLE, state_.get_boolean(state_.root(), "vcheck"));
+            tau::Check check(tau::CHECK_VSTYLE, kstate_.get_boolean(kstate_.root(), "vcheck"));
             table.put(check, 7, row, 1, 1, true, true);
-            auto on_changed = [](bool checked) { state_.set_boolean(state_.root(), "vcheck", checked); };
+            auto on_changed = [](bool checked) { kstate_.set_boolean(kstate_.root(), "vcheck", checked); };
             check.signal_check().connect(tau::bind(tau::fun(std::function<void(bool)>(on_changed)), true));
             check.signal_uncheck().connect(tau::bind(tau::fun(std::function<void(bool)>(on_changed)), false));
         }
@@ -255,11 +267,21 @@ struct Main: tau::Toplevel {
             cycle.append("bps", 2, 2);
 
             const long bauds[] = { 1200, 2400, 4800, 9600, 14400, 19200, 28800, 38400, 57600, 115200, 230400, 460800, 0 };
+            tau::Widget_ptr wp;
+            auto current = kstate_.get_string(kstate_.root(), "bps");
 
             for (int i = 0; 0 != bauds[i]; ++i) {
-                tau::Text label(tau::str_format(bauds[i]));
-                label.style().get("background").set("yellow");
+                auto s = tau::str_format(bauds[i]);
+                tau::Text label(s);
+                label.signal_select().connect(tau::bind(tau::fun(this, &Main::on_bps_changed), s));
+                label.style().get(tau::STYLE_BACKGROUND).set(tau::COLOR_YELLOW);
                 cycle.add(label);
+                if (s == current) { wp = label.ptr(); }
+            }
+
+            if (wp) {
+                tau::Widget w(wp);
+                w.show();
             }
         }
 
@@ -369,11 +391,11 @@ struct Main: tau::Toplevel {
     }
 
     void on_colorsel(const tau::Color & c) {
-        state_.set_string(state_.root(), "colorsel", c.html());
+        kstate_.set_string(kstate_.root(), "colorsel", c.html());
     }
 
     int init_colorsel_page(int pg) {
-        tau::Colorsel colorsel(tau::Color(state_.get_string(state_.root(), "colorsel", "Blue")));
+        tau::Colorsel colorsel(tau::Color(kstate_.get_string(kstate_.root(), "colorsel", "Blue")));
         colorsel.cancel_action().disable();
         colorsel.hint_margin(4);
         colorsel.signal_color_changed().connect(tau::fun(this, &Main::on_colorsel));
@@ -401,11 +423,11 @@ struct Main: tau::Toplevel {
     }
 
     void save_pages() {
-        tau::Key_section & sect = state_.section("pages");
+        tau::Key_section & sect = kstate_.section("pages");
 
         for (auto & pg: pages_) {
-            state_.set_integer(sect, pg.title, pg.page);
-            if (pg.page == notebook_.current_page()) { state_.set_string(sect, "current", pg.title); }
+            kstate_.set_integer(sect, pg.title, pg.page);
+            if (pg.page == notebook_.current_page()) { kstate_.set_string(sect, "current", pg.title); }
         }
     }
 
@@ -435,21 +457,21 @@ struct Main: tau::Toplevel {
         if (xmin >= 200 && ymin >= 200) {
             hint_min_size(xmin, ymin);
             std::vector<long long> v = { xmin, ymin };
-            state_.set_integers(state_.section("main"), "min_size", v);
+            kstate_.set_integers(kstate_.section("main"), "min_size", v);
         }
 
         else {
-            state_.remove_key(state_.section("main"), "min_size");
+            kstate_.remove_key(kstate_.section("main"), "min_size");
         }
 
         if (xmax >= 300 && ymax >= 300) {
             hint_max_size(xmax, ymax);
             std::vector<long long> v = { xmax, ymax };
-            state_.set_integers(state_.section("main"), "max_size", v);
+            kstate_.set_integers(kstate_.section("main"), "max_size", v);
         }
 
         else {
-            state_.remove_key(state_.section("main"), "max_size");
+            kstate_.remove_key(kstate_.section("main"), "max_size");
         }
     }
 
@@ -479,7 +501,7 @@ struct Main: tau::Toplevel {
 
     void on_geometry_changed() {
         std::vector<long long> v = { position().x(), position().y(), size().iwidth(), size().iheight() };
-        state_.set_integers(state_.section("main"), "geometry", v);
+        kstate_.set_integers(kstate_.section("main"), "geometry", v);
     }
 
     // ----------------------------------------------------------------------
@@ -490,12 +512,12 @@ struct Main: tau::Toplevel {
         Toplevel(bounds)
     {
         {
-            auto v = state_.get_integers(state_.section("main"), "min_size");
+            auto v = kstate_.get_integers(kstate_.section("main"), "min_size");
             if (v.size() > 1) { hint_min_size(v[0], v[1]); }
         }
 
         {
-            auto v = state_.get_integers(state_.section("main"), "max_size");
+            auto v = kstate_.get_integers(kstate_.section("main"), "max_size");
             if (v.size() > 1) { hint_max_size(v[0], v[1]); }
         }
 
@@ -580,19 +602,19 @@ struct Main: tau::Toplevel {
         loop_.signal_alarm(107, true).connect(tau::fun(this, &Main::on_timer));
 
         set_icon("tau", 48);
-        tau::Key_section & sect = state_.section("pages");
+        tau::Key_section & sect = kstate_.section("pages");
         std::map<int, int> m;
         int ifb = pages_.size();
 
         for (auto & pg: pages_) {
-            m[state_.get_integer(sect, pg.title, ifb++)] = pg.page;
+            m[kstate_.get_integer(sect, pg.title, ifb++)] = pg.page;
         }
 
         for (auto & mp: m) {
             pages_[mp.second].page = pages_[mp.second].x(mp.second);
         }
 
-        tau::ustring ctitle = state_.get_string(sect, "current", pages_[0].title);
+        tau::ustring ctitle = kstate_.get_string(sect, "current", pages_[0].title);
 
         for (auto & pg: pages_) {
             if (pg.title == ctitle) {
@@ -609,7 +631,7 @@ struct Main: tau::Toplevel {
 
 void run() {
     try {
-        auto v = state_.get_integers(state_.section("main"), "geometry");
+        auto v = kstate_.get_integers(kstate_.section("main"), "geometry");
         tau::Rect bounds;
         if (v.size() > 3) { bounds.set(tau::Point(v[0], v[1]), tau::Size(v[2], v[3])); }
         Main wnd(bounds);
@@ -631,14 +653,14 @@ void run() {
 }
 
 int main(int argc, char * argv[]) {
-    auto p = tau::path_build(tau::path_user_config_dir(), tau::program_name(), "state.ini");
+    auto p = tau::path_build(tau::path_user_data_dir(), tau::program_name(), "state.ini");
     tau::path_mkdir(tau::path_dirname(p));
-    state_ = tau::Key_file(p);
-    tau::Timer timer(tau::fun(state_, static_cast<void (tau::Key_file::*)()>(&tau::Key_file::save)));
-    state_.signal_changed().connect(tau::bind(tau::fun(timer, &tau::Timer::start), 6789, false));
+    kstate_ = tau::Key_file(p);
+    tau::Timer timer(tau::fun(kstate_, static_cast<void (tau::Key_file::*)()>(&tau::Key_file::save)));
+    kstate_.signal_changed().connect(tau::bind(tau::fun(timer, &tau::Timer::start), 6789, false));
     run();
     for (auto & thr: threads_) { thr.join(); }
-    state_.save();
+    kstate_.save();
     return 0;
 }
 

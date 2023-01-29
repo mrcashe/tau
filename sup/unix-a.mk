@@ -27,7 +27,7 @@
 srcdirs += $(posix_srcdir) $(xcb_srcdir) $(unix_srcdir) $(confdir)/$(plat) $(srcdir)/a $(posix_srcdir)/a
 VPATH = $(srcdirs)
 sources = $(foreach dir, $(srcdirs), $(wildcard $(dir)/*.cc))
-objects = $(addprefix $(unix_a_builddir)/, $(addsuffix .o, $(basename $(notdir $(sources)))))
+objects = $(addprefix $(unix_a_builddir)/, $(addsuffix .o, $(sort $(basename $(notdir $(sources))))))
 CXXFLAGS += -O0 -g
 
 all: $(unix_adir) $(unix_a_builddir) $(unix_a)

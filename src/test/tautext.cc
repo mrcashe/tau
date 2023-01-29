@@ -38,7 +38,7 @@ tau::Key_file               kstate_;
 std::vector<tau::ustring>   args_;
 int                         line_ = -1;
 int                         col_ = -1;
-std::vector<long long>      geom_ { 4 };
+std::vector<long long>      geom_ { 0, 0, 0, 0 };
 
 } // anonymous namespace
 
@@ -670,20 +670,20 @@ struct Main: tau::Toplevel {
         signal_modified_.connect(tau::fun(pg.edit, &tau::Edit::modified));
         pg.edit.cancel_action().disable();
 
-        pg.zin_action.connect_master_action(view_increase_font_master_action_);
+        pg.zin_action.set_master_action(view_increase_font_master_action_);
         pg.edit.connect_action(pg.zin_action);
         pg.zin_action.connect(tau::bind(tau::fun(this, &Main::on_edit_increase_font), std::ref(pg)));
 
-        pg.zout_action.connect_master_action(view_decrease_font_master_action_);
+        pg.zout_action.set_master_action(view_decrease_font_master_action_);
         pg.edit.connect_action(pg.zout_action);
         pg.zout_action.connect(tau::bind(tau::fun(this, &Main::on_edit_decrease_font), std::ref(pg)));
 
-        pg.edit.select_all_action().connect_master_action(edit_select_all_master_action_);
-        pg.edit.copy_action().connect_master_action(edit_copy_master_action_);
-        pg.edit.cut_action().connect_master_action(edit_cut_master_action_);
-        pg.edit.paste_action().connect_master_action(edit_paste_master_action_);
-        pg.edit.undo_action().connect_master_action(edit_undo_master_action_);
-        pg.edit.redo_action().connect_master_action(edit_redo_master_action_);
+        pg.edit.select_all_action().set_master_action(edit_select_all_master_action_);
+        pg.edit.copy_action().set_master_action(edit_copy_master_action_);
+        pg.edit.cut_action().set_master_action(edit_cut_master_action_);
+        pg.edit.paste_action().set_master_action(edit_paste_master_action_);
+        pg.edit.undo_action().set_master_action(edit_undo_master_action_);
+        pg.edit.redo_action().set_master_action(edit_redo_master_action_);
 
         tau::Scroller scroller;
         tau::Slider vslider(scroller), hslider(scroller);
@@ -1521,7 +1521,7 @@ struct Main: tau::Toplevel {
 
             tau::Fontsel fsel(tau::font_size_change(font_spec_, font_size));
             fsel.hint_margin(4, 4, 4, 0);
-            fsel.hint_max_size(0, 480);
+            fsel.hint_max_size(0, 3*size().height()/4);
             tape_box.append(fsel, true);
             fsel.signal_font_activated().connect(tau::fun(this, &Main::set_font));
             fsel.cancel_action().connect(tau::fun(this, &Main::close_pop));
@@ -1557,7 +1557,7 @@ int main(int argc, char * argv[]) {
         auto state_path = tau::path_build(tau::path_user_data_dir(), tau::program_name(), "state.ini");
         tau::path_mkdir(tau::path_dirname(state_path));
         kstate_.load(state_path);
-        geom_ = kstate_.get_integers(kstate_.root(), "geometry");
+        if (kstate_.has_key(kstate_.root(), "geometry")) { geom_ = kstate_.get_integers(kstate_.root(), "geometry"); }
         tau::Rect bounds;
         bounds.set(tau::Point(geom_[0], geom_[1]), tau::Size(geom_[2], geom_[3]));
         Main w(bounds);

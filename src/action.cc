@@ -315,7 +315,7 @@ Action_base::Action_base(char32_t kc, int km, const ustring & label, const ustri
 Action_base::Action_base(Master_action & master_action):
     trackable()
 {
-    connect_master_action(master_action);
+    set_master_action(master_action);
 }
 
 Action_base::~Action_base() {
@@ -485,16 +485,16 @@ void Action_base::on_disable() {
     for (auto & accel: accels_) { accel.disable(); }
 }
 
-void Action_base::connect_master_action(Master_action & master_action) {
-    master_action.signal_accel_added().connect(fun(this, &Action_base::on_accel_added));
-    master_action.signal_accel_removed().connect(fun(this, &Action_base::on_accel_removed));
-    master_action.signal_enable().connect(fun(this, &Action_base::thaw));
-    master_action.signal_disable().connect(fun(this, &Action_base::freeze));
-    master_action.signal_show().connect(fun(this, &Action_base::appear));
-    master_action.signal_hide().connect(fun(this, &Action_base::disappear));
-    master_action.signal_label_changed().connect(fun(this, &Action_base::set_label));
-    master_action.signal_icon_changed().connect(fun(this, &Action_base::set_icon_name));
-    master_action.signal_tooltip_changed().connect(fun(this, &Action_base::set_tooltip));
+void Action_base::set_master_action(Master_action & master_action) {
+    accel_added_cx_ = master_action.signal_accel_added().connect(fun(this, &Action_base::on_accel_added));
+    accel_removed_cx_ = master_action.signal_accel_removed().connect(fun(this, &Action_base::on_accel_removed));
+    enable_cx_ = master_action.signal_enable().connect(fun(this, &Action_base::thaw));
+    disable_cx_ = master_action.signal_disable().connect(fun(this, &Action_base::freeze));
+    show_cx_ = master_action.signal_show().connect(fun(this, &Action_base::appear));
+    hide_cx_ = master_action.signal_hide().connect(fun(this, &Action_base::disappear));
+    label_changed_cx_ = master_action.signal_label_changed().connect(fun(this, &Action_base::set_label));
+    icon_changed_cx_ = master_action.signal_icon_changed().connect(fun(this, &Action_base::set_icon_name));
+    tooltip_changed_cx_ = master_action.signal_tooltip_changed().connect(fun(this, &Action_base::set_tooltip));
 
     for (Accel & accel: master_action.accels()) {
         char32_t kc; int km;
@@ -509,14 +509,14 @@ void Action_base::connect_master_action(Master_action & master_action) {
     set_tooltip(master_action.tooltip());
 }
 
-void Action_base::connect_master_action(Master_action * master_action) {
+void Action_base::set_master_action(Master_action * master_action) {
     if (master_action) {
-        connect_master_action(*master_action);
+        set_master_action(*master_action);
     }
 }
 
-void Action_base::connect_master_action(const ustring & name) {
-    connect_master_action(Theme_impl::root()->find_action(name));
+void Action_base::set_master_action(const ustring & name) {
+    set_master_action(Theme_impl::root()->find_action(name));
 }
 
 void Action_base::on_accel_added(const Accel & accel) {

@@ -47,13 +47,13 @@ Scroller_impl::Scroller_impl():
 
     auto theme = Theme_impl::root();
     auto ma = theme->find_action(ACTION_PAN_LEFT);
-    if (ma) { pan_left_action_.connect_master_action(*ma); }
+    if (ma) { pan_left_action_.set_master_action(*ma); }
     ma = theme->find_action(ACTION_PAN_RIGHT);
-    if (ma) { pan_right_action_.connect_master_action(*ma); }
+    if (ma) { pan_right_action_.set_master_action(*ma); }
     ma = theme->find_action(ACTION_PAN_UP);
-    if (ma) { pan_up_action_.connect_master_action(*ma); }
+    if (ma) { pan_up_action_.set_master_action(*ma); }
     ma = theme->find_action(ACTION_PAN_DOWN);
-    if (ma) { pan_down_action_.connect_master_action(*ma); }
+    if (ma) { pan_down_action_.set_master_action(*ma); }
 
     connect_action(pan_left_action_);
     connect_action(pan_right_action_);

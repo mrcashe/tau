@@ -163,6 +163,12 @@ public:
     // Overrides Widget_impl.
     Painter painter() override;
 
+    // Overrides Container_impl.
+    Widget_ptr focus_owner() override;
+
+    // Overrides Container_impl.
+    Widget_cptr focus_owner() const override;
+
     // Overriden by Dialog_impl.
     virtual void close();
 

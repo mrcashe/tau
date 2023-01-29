@@ -645,57 +645,47 @@ bool Container_impl::running() const {
     return Widget_impl::running() || std::any_of(children_.begin(), children_.end(), [](auto wp) { return wp->running(); } );
 }
 
+Widget_ptr Container_impl::cptr(Widget_impl * wi) {
+    auto i = std::find_if(children_.begin(), children_.end(), [wi](auto wp) { return wp.get() == wi; } );
+    return i != children_.end() ? *i : nullptr;
+}
+
+Widget_cptr Container_impl::cptr(const Widget_impl * wi) const {
+    auto i = std::find_if(children_.begin(), children_.end(), [wi](auto wp) { return wp.get() == wi; } );
+    return i != children_.end() ? *i : nullptr;
+}
+
+// Overriden by Window_impl.
 Widget_ptr Container_impl::focus_owner() {
     if (focused()) {
-        auto fc = modal_child_;
-        auto ci = dynamic_cast<Container_impl *>(fc);
+        auto fc = modal_child_ ? modal_child_ : focused_child_;
 
-        if (ci) {
+        if (auto ci = dynamic_cast<Container_impl *>(fc)) {
             if (auto wp = ci->focus_owner()) {
                 return wp;
             }
         }
 
-        fc = focused_child_;
-        ci = dynamic_cast<Container_impl *>(fc);
-
-        if (ci) {
-            if (auto wp = ci->focus_owner()) {
-                return wp;
-            }
-        }
-
-        if (modal_child_) { fc = modal_child_; }
-        auto i = std::find_if(children_.begin(), children_.end(), [fc](auto wp) { return wp.get() == fc; } );
-        if (i != children_.end()) { return *i; }
+        if (auto cp = cptr(fc)) { return cp; }
+        if (parent_) { return parent_->cptr(this); }
     }
 
     return nullptr;
 }
 
+// Overriden by Window_impl.
 Widget_cptr Container_impl::focus_owner() const {
     if (focused()) {
-        auto fc = modal_child_;
-        auto ci = dynamic_cast<Container_impl *>(fc);
+        auto fc = modal_child_ ? modal_child_ : focused_child_;
 
-        if (ci) {
+        if (auto ci = dynamic_cast<const Container_impl *>(fc)) {
             if (auto wp = ci->focus_owner()) {
                 return wp;
             }
         }
 
-        fc = focused_child_;
-        ci = dynamic_cast<Container_impl *>(fc);
-
-        if (ci) {
-            if (auto wp = ci->focus_owner()) {
-                return wp;
-            }
-        }
-
-        if (modal_child_) { fc = modal_child_; }
-        auto i = std::find_if(children_.begin(), children_.end(), [fc](auto wp) { return wp.get() == fc; } );
-        if (i != children_.end()) { return *i; }
+        if (auto cp = cptr(fc)) { return cp; }
+        if (parent_) { return parent_->cptr(this); }
     }
 
     return nullptr;

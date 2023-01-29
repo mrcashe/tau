@@ -353,14 +353,14 @@ public:
     /// %Action is visible by default.
     bool visible() const;
 
-    /// Connect master action.
-    void connect_master_action(Master_action & master_action);
+    /// Set master action.
+    void set_master_action(Master_action & master_action);
 
-    /// Connect master action with checking pointer to @b nullptr.
-    void connect_master_action(Master_action * master_action);
+    /// Set master action with checking pointer to @b nullptr.
+    void set_master_action(Master_action * master_action);
 
-    /// Connect master action by name.
-    void connect_master_action(const ustring & name);
+    /// Set master action by name.
+    void set_master_action(const ustring & name);
 
     /// Lookup accelerators.
     /// @param kc the key code, see #Key_codes enum.
@@ -445,6 +445,10 @@ public:
 
 protected:
 
+    virtual bool on_accel() = 0;
+
+private:
+
     using Accels = std::vector<Accel>;
 
     bool                  disabled_ = false;
@@ -467,9 +471,15 @@ protected:
     signal<void(const ustring &)> signal_tooltip_changed_;
     signal<void()>        signal_destroy_;
 
-protected:
-
-    virtual bool on_accel() = 0;
+    connection            accel_added_cx_ { true };
+    connection            accel_removed_cx_ { true };
+    connection            enable_cx_ { true };
+    connection            disable_cx_ { true };
+    connection            show_cx_ { true };
+    connection            hide_cx_ { true };
+    connection            label_changed_cx_ { true };
+    connection            icon_changed_cx_ { true };
+    connection            tooltip_changed_cx_ { true };
 
 private:
 

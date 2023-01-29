@@ -32,7 +32,7 @@ yellow_color=''
 no_color=''
 CHK_FILE=''
 
-# Check program existance using 'which' command.
+# Check program existence using 'which' command.
 # Here is:
 #   $1 is for variable name, which has form of 'which_$1', for example, 'which_pkgconfig'.
 #   $2 is for searching command name (or names), for example, 'pkg-config'.
@@ -50,12 +50,12 @@ chk_which() {
     if test -z $p; then
         if [ 'MANDATORY' == $3 ]; then
             printf "$red_color NOT FOUND\n"
-            echo "$arg0: existance of '${arr[0]}' is mandatory, configure failed, exitting with status 1" 1>&2
+            echo "$arg0: existence of '${arr[0]}' is mandatory, configure failed, exitting with status 1" 1>&2
             printf "$no_color"
             exit 1
         else
             printf "$yellow_color NOT FOUND\n"
-            echo "$arg0: existance of '${arr[0]}' is optional, corresponding feature will be disabled"
+            echo "$arg0: existence of '${arr[0]}' is optional, corresponding feature will be disabled"
             printf "$no_color"
             eval which_$1=''
         fi
@@ -65,7 +65,7 @@ chk_which() {
     fi
 }
 
-# Check file existance.
+# Check file existence.
 #   $1 is path to the file.
 #   $2 is 'MANDATORY' for strict dependency and everything else for optional dependency.
 chk_file() {
@@ -75,12 +75,12 @@ chk_file() {
         printf "$green_color$1$no_color\n"
     elif [ 'MANDATORY' == $2 ]; then
         printf "$red_color NOT FOUND\n"
-        echo "$arg0: existance of '$1' is mandatory, configure failed, exitting with status 1" 1>&2
+        echo "$arg0: existence of '$1' is mandatory, configure failed, exitting with status 1" 1>&2
         printf $no_color
         exit 1
     else
         printf "$yellow_color NOT FOUND\n"
-        echo "$arg0: existance of '$1' is optional, corresponding feature will be disabled"
+        echo "$arg0: existence of '$1' is optional, corresponding feature will be disabled"
         printf $no_color
         CHK_FILE='YES'
     fi
@@ -323,7 +323,7 @@ fi
 
 if test -n "$headers_required"; then
     echo ""
-    echo "$arg0: checking for header files existance..."
+    echo "$arg0: checking for header files existence..."
 
     for h in $headers_required; do
         echo -n "  searching for header file '$h'..."
@@ -350,7 +350,7 @@ echo ""
 mxe_syslibs=''
 
 if [ 'YES' != "$disable_mxe" ]; then
-    echo -n "$arg0: checking for optional M cross environment existance..."
+    echo -n "$arg0: checking for optional M cross environment existence..."
 
     if test -z $mxe_prefix; then
         mxe_prefix=$(which "$mxe_target-g++")
@@ -386,16 +386,16 @@ fi
 if test -n "$mxe_prefix"; then
     CHK_FILE='NO'
 
-    # Checking for MXE tools existance
+    # Checking for MXE tools existence
     echo ""
-    echo "$arg0: checking for MXE tools existance..."
+    echo "$arg0: checking for MXE tools existence..."
     chk_file "$mxe_prefix/bin/$mxe_target-g++" 'OPTIONAL'
     chk_file "$mxe_prefix/bin/$mxe_target-ar" 'OPTIONAL'
     chk_file "$mxe_prefix/bin/$mxe_target-strip" 'OPTIONAL'
 
-    # Checking for MXE libraries existance
+    # Checking for MXE libraries existence
     echo ""
-    echo "$arg0: checking for MXE libraries existance..."
+    echo "$arg0: checking for MXE libraries existence..."
 
     if [ 'YES' != "$CHK_FILE" ]; then
         mxe_syslibs='libgdi32.a libmsimg32.a libole32.a libshlwapi.a'
