@@ -76,7 +76,7 @@ public:
     /// Get implementation object.
     Element_cptr ptr() const;
 
-    /// Test for attributes existance.
+    /// Test for attributes existence.
     bool has_attributes() const;
 
     /// List attributes.
@@ -430,7 +430,7 @@ public:
     ///
     /// If document was created using load_from_file() method, this call will
     /// save it back. If document was not loaded from file that way, the user_error
-    /// will be trown.
+    /// will be thrown.
     ///
     /// @param indent_size number of spaces to be added for node indentation.
     ///

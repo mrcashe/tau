@@ -109,7 +109,7 @@ public:
     Timeval mtime() const;
 
     /// Remove file (unlink).
-    /// @param opts the options (reserved but not yet impelmented).
+    /// @param opts the options (reserved but not yet implemented).
     /// @param slot_async if not pure, remove file asynchronously (reserved but not yet implemented).
     /// @throw sys_error in case of operating system error.
     void rm(int opts=0, slot<void(int)> slot_async=slot<void(int)>());

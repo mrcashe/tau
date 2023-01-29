@@ -63,10 +63,10 @@ public:
     /// Compare operator.
     bool operator!=(const Language & other) const;
 
-    /// Gets longest availabale ISO 639 code.
+    /// Gets longest available ISO 639 code.
     std::string code() const;
 
-    /// Gets shortest availabale ISO 639 code.
+    /// Gets shortest available ISO 639 code.
     std::string shortest() const;
 
     /// Gets ISO 639-1 two-letter code.

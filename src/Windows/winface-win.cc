@@ -174,7 +174,7 @@ void Winface_win::set_fullscreen(bool yes) {
 
     if (tpl_) {
         if (!tpl_->hidden()) {
-            if (yes && !tpl_->fullscreened()) {
+            if (yes && !tpl_->full_screened()) {
                 if (GetWindowRect(hwnd_, &keep_rect_)) {
                     MONITORINFO mi;
                     HMONITOR monitor = MonitorFromWindow(hwnd_, MONITOR_DEFAULTTONEAREST);
@@ -201,7 +201,7 @@ void Winface_win::set_fullscreen(bool yes) {
                 }
             }
 
-            else if (!yes && tpl_->fullscreened()) {
+            else if (!yes && tpl_->full_screened()) {
                 SetWindowLong(hwnd_, GWL_STYLE, keep_style_);
                 SetWindowPos(hwnd_, HWND_NOTOPMOST, keep_rect_.left, keep_rect_.top, keep_rect_.right-keep_rect_.left, keep_rect_.bottom-keep_rect_.top, SWP_NOCOPYBITS|SWP_SHOWWINDOW);
                 tpl_->handle_fullscreen(false);
@@ -215,7 +215,6 @@ void Winface_win::set_cursor(Cursor_ptr cursor) {
     if (auto wcursor = std::dynamic_pointer_cast<Cursor_win>(cursor)) {
         HCURSOR hc = wcursor->handle();
         if (hc) { SetCursor(hc); }
-        //std::cout << "set_cursor " << hc << "\n";
     }
 }
 
@@ -224,7 +223,6 @@ void Winface_win::unset_cursor() {
     HCURSOR hcursor = icursor_;
     if (!hcursor) { hcursor = LoadCursor(NULL, IDC_ARROW); }
     if (hcursor) { SetCursor(hcursor); }
-    //std::cout << "unset_cursor " << hcursor << "\n";
 }
 
 // Overrides pure Winface.

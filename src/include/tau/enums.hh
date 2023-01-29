@@ -289,7 +289,7 @@ enum Check_style {
 /// @ingroup enum_group
 enum File_flags {
 
-    /// Nothing specified/happend.
+    /// Nothing specified/happens.
     FILE_NOTHING        = 0x00000000,
 
     /// File or directory was accessed.
@@ -432,7 +432,7 @@ enum Action_items {
     /// Use accelerators provided by action.
     ACTION_ACCEL    = 1 << 1,
 
-    /// Use tooltip provided by action.
+    /// Use tool tip provided by action.
     ACTION_TOOLTIP  = 1 << 2,
 
     /// Use icon provided by action.
@@ -447,7 +447,7 @@ enum Action_items {
     /// Don't use accelerator(s).
     ACTION_NO_ACCEL = (ACTION_ALL & ~ACTION_ACCEL),
 
-    /// Don't use tooltip.
+    /// Don't use tool tip.
     ACTION_NO_TOOLTIP = (ACTION_ALL & ~ACTION_TOOLTIP),
 
     /// Don't use icon.

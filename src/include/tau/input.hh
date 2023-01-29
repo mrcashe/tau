@@ -24,7 +24,7 @@
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ----------------------------------------------------------------------------
 
-/// @file input.hh Keyboard and mouse enums and functions.
+/// @file input.hh Keyboard and mouse enumerations and functions.
 
 #ifndef TAU_INPUT_HH
 #define TAU_INPUT_HH
@@ -436,25 +436,25 @@ enum Key_codes {
     /// ISO Lock.
     KC_ISO_LOCK                 = 0x300000B0,
 
-    /// Level2 Latch.
+    /// Level 2 Latch.
     KC_LEVEL2_LATCH             = 0x300000C0,
 
-    /// Level3 Shift.
+    /// Level 3 Shift.
     KC_LEVEL3_SHIFT             = 0x300000D0,
 
-    /// Level3 Latch.
+    /// Level 3 Latch.
     KC_LEVEL3_LATCH             = 0x300000E0,
 
-    /// Level3 Lock.
+    /// Level 3 Lock.
     KC_LEVEL3_LOCK              = 0x300000F0,
 
-    /// Level5 Shift.
+    /// Level 5 Shift.
     KC_LEVEL5_SHIFT             = 0x30000100,
 
-    /// Level5 Latch.
+    /// Level 5 Latch.
     KC_LEVEL5_LATCH             = 0x30000110,
 
-    /// Level5 Lock.
+    /// Level 5 Lock.
     KC_LEVEL5_LOCK              = 0x30000120,
 
     /// Group Shift.
@@ -676,7 +676,7 @@ enum Key_codes {
     /// Launch video player.
     KC_VIDEO                    = 0x30000460,
 
-    /// Launch music applicaton.
+    /// Launch music application.
     KC_MUSIC                    = 0x30000462,
 
     /// %Display battery information.
@@ -740,7 +740,7 @@ enum Key_codes {
     /// Alias for Henkan_Mode.
     KC_HENKAN                   = 0x41000030,
 
-    /// to Romaji.
+    /// To Romaji.
     KC_ROMAJI                   = 0x41000040,
 
     /// To Hiragana.
@@ -933,7 +933,7 @@ enum Key_codes {
     KC_SHIFT_LOCK               = 0x800002D0
 };
 
-/// @name Const access string variables providing key modifiers names
+/// @name Constant access string variables providing key modifiers names
 /// @sa @ref kbd_sect
 /// @sa @ref km_sect
 /// @{
@@ -992,7 +992,7 @@ extern const char * KM_CAPS_NAME;
 
 /// @}
 
-/// @name Const access string variables providing key code names
+/// @name Constant access string variables providing key code names
 /// @sa @ref kbd_sect
 /// @sa @ref kc_sect
 /// @{

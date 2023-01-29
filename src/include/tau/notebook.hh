@@ -83,13 +83,13 @@ public:
 
     /// @}
     /// Appends a page to notebook.
-    /// @param w the widget to be appended.
+    /// @param w the widget for append.
     /// @return a number of added page.
     /// @throw user_error if widget already inserted into another container.
     int append_page(Widget & w);
 
     /// Appends a page to notebook.
-    /// @param w the widget to be appended.
+    /// @param w the widget for append.
     /// @param title the title to be used in tab.
     /// @param rptr where to put returned pointer to the created Text widget [optional].
     /// @return a number of added page.
@@ -97,26 +97,26 @@ public:
     int append_page(Widget & w, const ustring & title, Widget_ptr * rptr=nullptr);
 
     /// Appends a page to notebook.
-    /// @param w the widget to be appended.
+    /// @param w the widget for append.
     /// @param title_widget the widget to be drawn in the tab.
     /// @return a number of added page.
     /// @throw user_error if any widget already inserted into another container.
     int append_page(Widget & w, Widget & title_widget);
 
     /// Prepends a page to notebook.
-    /// @param w the widget to be prepended.
+    /// @param w the widget for prepend.
     /// @throw user_error if widget already inserted into another container.
     void prepend_page(Widget & w);
 
     /// Prepends a page to notebook.
-    /// @param w the widget to be prepended.
+    /// @param w the widget for prepend.
     /// @param title the title to be used in tab.
     /// @return pointer to the created Text widget.
     /// @throw user_error if widget already inserted into another container.
     Widget_ptr prepend_page(Widget & w, const ustring & title);
 
     /// Prepends a page to notebook.
-    /// @param w the widget to be prepended.
+    /// @param w the widget for prepend.
     /// @param title_widget the widget to be drawn in the tab.
     /// @throw user_error if any widget already inserted into another container.
     void prepend_page(Widget & w, Widget & title_widget);

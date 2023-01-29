@@ -95,7 +95,7 @@ public:
     /// Translate (offset) the curve.
     void translate(double ox, double oy=0.0, double oz=0.0);
 
-    /// Trnsform by Matrix.
+    /// Transform by Matrix.
     void transform(const Matrix & mat);
 
 private:

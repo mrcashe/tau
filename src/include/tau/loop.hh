@@ -90,7 +90,7 @@ public:
     /// Signal alarm.
     signal<void()> & signal_alarm(int timeout_ms, bool periodical=false);
 
-    /// Signal emitted when disk partititon mounted or unmounted.
+    /// Signal emitted when disk partition mounted or unmounted.
     /// Slot prototype:
     /// ~~~~~~~~~~~~~~~
     /// void on_mount(int file_flags, const ustring & path).

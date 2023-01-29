@@ -34,7 +34,7 @@
 
 namespace tau {
 
-/// Single dimension scrolling container with autohiding scrolling arrows.
+/// Single dimension scrolling container with automatically hiding scrolling arrows.
 ///
 /// @note This class is a wrapper around its implementation shared pointer.
 ///

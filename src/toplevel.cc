@@ -94,8 +94,8 @@ void Toplevel::unfullscreen() {
     TOPLEVEL_IMPL->unfullscreen();
 }
 
-bool Toplevel::fullscreened() const {
-    return TOPLEVEL_IMPL->fullscreened();
+bool Toplevel::full_screened() const {
+    return TOPLEVEL_IMPL->full_screened();
 }
 
 void Toplevel::maximize() {

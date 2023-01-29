@@ -86,16 +86,13 @@ void Card_impl::rm_child(Holder & hol) {
 }
 
 void Card_impl::remove(Widget_impl * wi) {
-    for (auto i = holders_.begin(); i != holders_.end(); ++i) {
-        Holder & hol = *i;
+    auto i = std::find_if(holders_.begin(), holders_.end(), [wi](auto & hol) { return hol.wp == wi; } );
 
-        if (hol.wp == wi) {
-            rm_child(hol);
-            holders_.erase(i);
-            update_requisition();
-            queue_arrange();
-            return;
-        }
+    if (i != holders_.end()) {
+        rm_child(*i);
+        holders_.erase(i);
+        update_requisition();
+        queue_arrange();
     }
 }
 
@@ -124,65 +121,59 @@ void Card_impl::update_requisition() {
 }
 
 void Card_impl::arrange() {
-    bool changed = false;
+    auto i = std::find_if(holders_.begin(), holders_.end(), [](auto & hol) { return !hol.wp->hidden(); } );
 
-    for (Holder & hol: holders_) {
-        if (!hol.wp->hidden()) {
-            if (hol.wp->update_origin(hol.wp->margin_origin())) { changed = true; }
-            if (hol.wp->update_size(size()-hol.wp->margin_hint())) { changed = true; }
+    if (i != holders_.end()) {
+        if (update_child_bounds(i->wp, i->wp->margin_origin(), size()-i->wp->margin_hint())) {
+            invalidate();
         }
     }
-
-    if (changed) { invalidate(); }
 }
 
 void Card_impl::on_child_hide(Widget_impl * wi) {
-    wi->update_origin(INT_MIN, INT_MIN);
-    wi->update_size(0, 0);
+    hiding_ = wi;
+    update_child_bounds(wi, INT_MIN, INT_MIN, Size());
 
     if (!shut_) {
-        hiding_ = wi;
+        if (!showing_) {
+            if (holders_.size() > 1) {
+                auto i = std::find_if(holders_.begin(), holders_.end(), [wi](auto & hol) { return wi == hol.wp; } );
 
-        if (holders_.size() > 1) {
-            if (!showing_) {
-                for (auto i = holders_.begin(); i != holders_.end(); ++i) {
-                    if (i->wp == wi) {
-                        auto j = i++;    // keep iter.
+                if (i != holders_.end()) {
+                    auto j = i++;    // keep iter.
 
-                        if (i != holders_.end()) { // try to show next child.
-                            i->wp->show();
-                        }
+                    if (i != holders_.end()) { // try to show next child.
+                        i->wp->show();
+                    }
 
-                        else if (j != holders_.begin()) {
-                            --j;
-                            j->wp->show();
-                        }
-
-                        break;
+                    else if (j != holders_.begin()) {
+                        --j;
+                        j->wp->show();
                     }
                 }
             }
+
+            arrange();
         }
 
-        if (!showing_) { arrange(); }
-        hiding_ = nullptr;
+        wi->signal_unselect()();
     }
+
+    hiding_ = nullptr;
 }
 
 void Card_impl::on_child_show(Widget_impl * wi) {
     if (!shut_) {
         showing_ = wi;
 
-        if (holders_.size() > 1) {
-            if (!hiding_) {
-                for (auto i = holders_.begin(); i != holders_.end(); ++i) {
-                    if (i->wp != wi) { i->wp->hide(); }
-                }
+        if (!hiding_ && holders_.size() > 1) {
+            for (auto i = holders_.begin(); i != holders_.end(); ++i) {
+                if (i->wp != wi) { i->wp->hide(); }
             }
-
         }
 
         if (!hiding_) { arrange(); }
+        wi->signal_select()();
         if (focused()) { wi->take_focus(); }
         showing_ = nullptr;
     }

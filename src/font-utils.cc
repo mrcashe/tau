@@ -106,7 +106,7 @@ ustring font_face_from_spec(const std::vector<ustring> & specv) {
         if (is_face(s)) {
             for (pos = 0; pos < s.size() && U'=' == s[pos]; ++pos) {}
             ustring t(s.substr(pos));
-            if (!str_similar("Mono", t) && !str_similar(t, rv)) { rv.push_back(t); }
+            if (!str_similar(t, "Mono Regular", U' ') && !str_similar(t, rv)) { rv.push_back(t); }
         }
     }
 

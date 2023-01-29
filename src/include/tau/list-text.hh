@@ -128,7 +128,7 @@ public:
     /// Remove rows having specified text.
     void remove_text(const ustring & str);
 
-    /// Unselect all.
+    /// Clear selection.
     void unselect();
 
     /// Test if empty.

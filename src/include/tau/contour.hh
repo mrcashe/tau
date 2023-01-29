@@ -153,13 +153,13 @@ public:
     /// Get begin iterator.
     iterator begin();
 
-    /// Get begin const iterator.
+    /// Get begin constant iterator.
     const_iterator begin() const;
 
     /// Get end iterator.
     iterator end();
 
-    /// Get end const iterator.
+    /// Get end constant iterator.
     const_iterator end() const;
 
     /// Get maximal order value.

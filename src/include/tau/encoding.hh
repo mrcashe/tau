@@ -67,10 +67,10 @@ public:
     /// Gets encoding name.
     std::string name() const;
 
-    /// Test if unicode.
+    /// Test if Unicode.
     bool is_unicode() const;
 
-    /// Test if multibyte.
+    /// Test if multi byte.
     bool is_multibyte() const;
 
     /// Test if UTF-8.

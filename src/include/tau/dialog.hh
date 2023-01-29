@@ -50,7 +50,7 @@ public:
     /// Constructs %Dialog with top level window obtained from the w.
     /// In case widget w is not inserted into hierarchy with Toplevel at the top,
     /// an exception throws. To prevent %exception throwing, test Toplevel
-    /// existance with Widget::has_window() method.
+    /// existence with Widget::has_window() method.
     /// @throw graphics_error if unable to obtain top level window.
     Dialog(Widget & w, const Rect & bounds=Rect());
 
@@ -58,7 +58,7 @@ public:
     /// Constructs %Dialog with top level window obtained from the w.
     /// In case widget w not inserted into hierarchy with Toplevel at the top,
     /// an exception throws. To prevent %exception throwing, test Toplevel
-    /// existance with Widget::has_window() method.
+    /// existence with Widget::has_window() method.
     /// @throw graphics_error if unable to obtain top level window.
     Dialog(Widget & w, const ustring & title, const Rect & bounds=Rect());
 

@@ -58,7 +58,7 @@ namespace tau {
 /// change the behavior of the widget using the signal handlers that are emitted
 /// by the widget.
 ///
-/// Another issue is we can not obtain widget's parent from %Widget itself.
+/// Another issue is we can not obtain widget parent from %Widget itself.
 /// This is a consequence of the fact that we do not store a pointer to a possibly
 /// inherited object in the data structures of the library. However, this is a
 /// small drawback with the proper construction of the program code - the nice
@@ -110,14 +110,14 @@ public:
     Widget_cptr ptr() const;
 
     /// @name Size, position and coordinates
-    /// Methods related to widget's size, position and coordinates control.
+    /// Methods related to widget size, position and coordinates control.
     ///
     /// The library limits the user to the placement of widgets.
     /// The position and size of the widget are completely controlled by the parent container.
     /// Most containers allocate space automatically. And only the Absolute container allows
     /// you to freely manipulate the position and size of your widgets.
     ///
-    /// %Widget can inform its parent container about preffered widget size by using set of
+    /// %Widget can inform its parent container about preferred widget size by using set of
     /// <em>hint-methods</em>. For example, the Image widget changes its hints when the pixmap under it
     /// grows up or down. The parent container may or may not take in account that hints. For example,
     /// the Bin container always allocates all available space to its single child
@@ -189,7 +189,7 @@ protected:
 
 public:
 
-    /// Signal is emitted when widget's owner (parent) changes widget coordinates.
+    /// Signal is emitted when widget owner (parent) changes widget coordinates.
     /// Slot prototype:
     /// ~~~~~~~~~~~~
     /// void on_origin_changed();
@@ -250,7 +250,7 @@ public:
     /// set to zero width (no margins). If widget has assigned margins, that margins
     /// are reserved by owning Container and belongs to that container.
     ///
-    /// Most of containers are take in account widget's margins, but some of them are not.
+    /// Most of containers are take in account widget margins, but some of them are not.
     /// As an example, see Scroller and Absolute. Some compound containers does not
     /// support margins.
     ///
@@ -259,10 +259,10 @@ public:
     /// @{
 
     /// Set exact size hint.
-    /// Tells parent container about preffered widget size.
+    /// Tells parent container about preferred widget size.
     ///
     /// @note This call might emit signal_hints_changed().
-    /// @param size preffered size, values of zero mean "don't care".
+    /// @param size preferred size, values of zero mean "don't care".
     /// @return @b true if hint changed.
     /// @sa hint_min_size()
     /// @sa hint_max_size()
@@ -275,10 +275,10 @@ public:
     bool hint_size(const Size & size);
 
     /// Set exact size hint.
-    /// Tells parent container about preffered widget size.
+    /// Tells parent container about preferred widget size.
     /// @note This call might emit signal_hints_changed().
-    /// @param width preffered width, value of zero mean "don't care".
-    /// @param height preffered width, value of zero mean "don't care".
+    /// @param width preferred width, value of zero mean "don't care".
+    /// @param height preferred width, value of zero mean "don't care".
     /// @return @b true if hint changed.
     /// @sa hint_min_size()
     /// @sa hint_max_size()
@@ -305,7 +305,7 @@ public:
     /// Set minimal size hint.
     /// Tells parent container about minimal widget size.
     /// @note This call might emit signal_hints_changed().
-    /// @param size preffered minimal size in pixels, values of zero mean "don't care".
+    /// @param size preferred minimal size in pixels, values of zero mean "don't care".
     /// @return @b true if hint changed.
     /// @sa hint_size()
     /// @sa hint_max_size()
@@ -319,8 +319,8 @@ public:
     /// Set minimal size hint.
     /// Tells parent container about minimal widget size.
     /// @note This call might emit signal_hints_changed().
-    /// @param width preffered width, value of zero mean "don't care".
-    /// @param height preffered width, value of zero mean "don't care".
+    /// @param width preferred width, value of zero mean "don't care".
+    /// @param height preferred width, value of zero mean "don't care".
     /// @return @b true if hint changed.
     /// @sa hint_size()
     /// @sa hint_max_size()
@@ -359,7 +359,7 @@ public:
     /// Set maximal size hint.
     /// Tells parent container about maximal widget size.
     /// @note This call might emit signal_hints_changed().
-    /// @param width prefferd maximal width, value of zero mean "don't care".
+    /// @param width preferred maximal width, value of zero mean "don't care".
     /// @param height required maximal width, value of zero mean "don't care".
     /// @return @b true if hint changed.
     /// @sa hint_size()
@@ -601,7 +601,7 @@ public:
     ///
     /// The widget is visible, if:
     /// -   widget is not hidden by calling hide() or disappear().
-    /// -   widget's owner is visible (if Container owns widget) or Display (in case widget is Window) allows window
+    /// -   widget owner is visible (if Container owns widget) or Display (in case widget is Window) allows window
     ///     to be shown.
     ///
     /// @sa show()
@@ -887,7 +887,7 @@ public:
     /// ~~~~~~~~~~~~
     /// bool on_take_focus();
     /// ~~~~~~~~~~~~
-    /// Return @b true from here to stop futher signal processing.
+    /// Return @b true from here to stop further signal processing.
     /// @sa take_focus()
     signal<bool()> & signal_take_focus();
 
@@ -899,7 +899,7 @@ public:
     bool hover() const;
 
     /// Get mouse pointer position relatively to the widget origin.
-    /// The resulting point may be placed outside of widget's drawing area.
+    /// The resulting point may be placed outside of widget drawing area.
     Point where_mouse() const;
 
     /// Actively grabs control of the pointer. Further pointer events are reported only to the grabbing widget.
@@ -970,7 +970,7 @@ public:
     /// - @b mm  is a mouse modifier mask, see #Mouse_modifiers enum.
     ///
     /// Multiple slots may be connected to the signal.
-    /// Return @b true from the signal hander to disable futher signal emission.
+    /// Return @b true from the signal handler to disable further signal emission.
     signal<bool(int, int, Point)> & signal_mouse_down();
 
     /// Signal is emitted when the mouse button double pressed.
@@ -988,7 +988,7 @@ public:
     /// - @b mm  is a mouse modifier mask, see #Mouse_modifiers enum.
     ///
     /// Multiple slots may be connected to the signal.
-    /// Return @b true from the signal hander to disable futher signal emission.
+    /// Return @b true from the signal handler to disable further signal emission.
     signal<bool(int, int, Point)> & signal_mouse_double_click();
 
     /// Signal is emitted when the mouse button released.
@@ -1006,7 +1006,7 @@ public:
     /// - @b mm  is a mouse modifier mask, see #Mouse_modifiers enum.
     ///
     /// Multiple slots may be connected to the signal.
-    /// Return @b true from the signal hander to disable futher signal emission.
+    /// Return @b true from the signal handler to disable further signal emission.
     signal<bool(int, int, Point)> & signal_mouse_up();
 
     /// Signal is emitted while the mouse pointer moves.
@@ -1046,38 +1046,38 @@ public:
     /// - @b mm     is a mouse modifier mask, see #Mouse_modifiers enum.
     ///
     /// Multiple slots may be connected to the signal.
-    /// Return @b true from the signal hander to disable futher signal emission.
+    /// Return @b true from the signal handler to disable further signal emission.
     signal<bool(int, int, Point)> & signal_mouse_wheel();
 
     /// @}
-    /// @name Tooltips
+    /// @name Tool tips
     /// @{
 
-    /// Set tooltip as text.
+    /// Set tool tip as text.
     void set_tooltip(const ustring & tooltip_text);
 
-    /// Set tooltip as Widget.
+    /// Set tool tip as Widget.
     void set_tooltip(Widget & tooltip_widget);
 
-    /// Test if widget has tooltip.
+    /// Test if widget has tool tip.
     bool has_tooltip() const;
 
-    /// Unset tooltip.
+    /// Unset tool tip.
     void unset_tooltip();
 
-    /// Show tooltip with specified text.
+    /// Show tool tip with specified text.
     void show_tooltip(const ustring & tooltip_text);
 
-    /// Show tooltip as widget.
+    /// Show tool tip as widget.
     void show_tooltip(Widget & tooltip_widget);
 
-    /// Show tooltip with specified text at specified position and during specified time.
+    /// Show tool tip with specified text at specified position and during specified time.
     void show_tooltip(const ustring & tooltip_text, const Point & pt, Gravity gravity, unsigned time_ms=0);
 
-    /// Show tooltip as widget at specified position and during specified time.
+    /// Show tool tip as widget at specified position and during specified time.
     void show_tooltip(Widget & tooltip_widget, const Point & pt, Gravity gravity, unsigned time_ms=0);
 
-    /// Hide tooltip.
+    /// Hide tool tip.
     /// Hides currently displayed tooltip.
     void hide_tooltip();
 
@@ -1101,9 +1101,9 @@ public:
     ///     If it return @b true, the handler simply fill all accessible drawing area
     ///     by background color set by user with calling <i>%style().get("background").set()</i> method
     ///     (see Style_item::set()). Thus, if no one widget within hierarchy have its
-    ///     background set, only toplevel window renders its background and all other widgets within
+    ///     background set, only top level window renders its background and all other widgets within
     ///     hierarchy shares its background with owning window. The Window class has its background set
-    ///     by Display during window creation procedure. The programmer can unset widget's background
+    ///     by Display during window creation procedure. The programmer can unset widget background
     ///     by calling <i>%style().get("background").unset()</i> call (see Style_item::unset()).
     /// -   After all background handlers invoked, signal_paint() arrives. This signal used to draw foreground
     ///     only. The generic Widget class has no default handler for that signal, but every widget having its
@@ -1112,10 +1112,10 @@ public:
 
     /// Signal is emitted when a widget is supposed to render it's background.
     /// This %signal emitted when graphical system sends event for repaint,
-    /// such as ExposeEvent in X11 or WM_PAINT messsage on Windows.
+    /// such as ExposeEvent in X11 or WM_PAINT message on Windows.
     ///
     /// Multiple slots may be connected to the signal.
-    /// Return @b true from signal hander to disable other handlers.
+    /// Return @b true from signal handler to disable other handlers.
     ///
     /// Slot prototype:
     /// ~~~~~~~~~~~~~~~
@@ -1139,11 +1139,11 @@ public:
     signal<bool(Painter, Rect)> & signal_backpaint();
 
     /// Signal is emitted when a widget is supposed to render itself.
-    /// This %signal emitted when graphical system sends event for repainе,
-    /// such as ExposeEvent in X11 or WM_PAINT messsage on Windows.
+    /// This %signal emitted when graphical system sends event for repaint,
+    /// such as ExposeEvent in X11 or WM_PAINT message on Windows.
     ///
     /// Multiple slots may be connected to the signal.
-    /// Return @b true from signal hander to disable other handlers.
+    /// Return @b true from signal handler to disable other handlers.
     /// Slot prototype:
     /// ~~~~~~~~~~~~
     /// bool on_paint(Painter_ptr pr, const Rect & inval) {
@@ -1165,6 +1165,7 @@ public:
     signal<bool(Painter, Rect)> & signal_paint();
 
     /// Obtains a painter object.
+    ///
     /// Gets so called private painter.
     /// The rendering of the widget can be done in three ways:
     /// -   By calling invalidate() method and than waiting for signal_backpaint() and
@@ -1179,10 +1180,10 @@ public:
     /// The main difference of the painter object returned by this method and painter object used by
     /// signal_backpaint() and signal_paint() signal is a system clip rectangle,
     /// which stored into painter. When painting done using signal's public painter, that clip rectangle
-    /// is set to intersection of invalidate rectangle and widget's bounds, so isn't entire widget area
+    /// is set to intersection of invalidate rectangle and widget bounds, so isn't entire widget area
     /// may be accessible by the painter. The painter, returned by this method, has full access to entire
-    /// widget's drawing area. Also, in contrast to signal_paint() and signal_backpaint() painters,
-    /// when using private painter, the programmer must repaint widget's background manually.
+    /// widget drawing area. Also, in contrast to signal_paint() and signal_backpaint() painters,
+    /// when using private painter, the programmer must repaint widget background manually.
     ///
     /// The painter, returned by this method, can be stored as class member data and will be valid until
     /// widget will be removed from its owning container.
@@ -1209,12 +1210,13 @@ public:
     /// @sa Window::update()
     Painter painter();
 
-    /// Invalidate widget's painting area.
-    /// Mark widget's drawing area as needed to be repainted.
+    /// Invalidate widget drawing area.
+    ///
+    /// Mark widget drawing area as needed to be repainted.
     /// Using this method enqueues signal_backpaint() and signal_paint() emission in some nearest future.
     /// The time point of that future is system dependent, the typical timeout is a few dozens milliseconds.
     ///
-    /// @param r the invalidated region, the entire widget's drawing area if empty.
+    /// @param r the invalidated region, the entire widget drawing area if empty.
     /// @sa signal_backpaint()
     /// @sa signal_paint()
     /// @sa painter()
@@ -1251,7 +1253,7 @@ public:
     /// - @b km is a bit mask of #Key_modifiers enum values.
     ///
     /// Multiple slots may be connected to the signal.
-    /// Return @b true from signal hander to disable other handlers.
+    /// Return @b true from signal handler to disable other handlers.
     /// @sa signal_key_down()
     signal<bool(char32_t, int)> & signal_key_up();
 
@@ -1277,7 +1279,7 @@ public:
     /// than existing accelerators.
     ///
     /// The returning @b connection object can be used to suspend accelerator
-    /// appearance by calling connection::block() method and than resume apeearance
+    /// appearance by calling connection::block() method and than resume appearance
     /// by calling connection::unblock() method or accelerator can be completely
     /// disabled by calling connection::disconnect() method.
     ///
@@ -1299,7 +1301,7 @@ public:
 
     /// Lookup action.
     /// Searches an Action_base corresponding given specification within whole hierarchy
-    /// starting with current wdiget.
+    /// starting with current widget.
     /// @param kc the key code, see #Key_codes enum.
     /// @param km the key modifier, see #Key_modifiers enum.
     /// @return the Action_base pointer or @b nullptr if not found.
@@ -1326,7 +1328,7 @@ public:
     /// Get style.
     const Style & style() const;
 
-    /// Causes toplevel window to close, if that window is Dialog.
+    /// Causes top level window to close, if that window is Dialog.
     void quit_dialog();
 
     /// Test if widget has parent container.
@@ -1350,7 +1352,7 @@ public:
     signal<void()> & signal_parent();
 
     /// Signal is emitted when Display became accessible for widget.
-    /// From the construction, the widget havn't an access to the owning display.
+    /// From the construction, the widget haven't an access to the owning display.
     /// After widget inserted into hierarchy using some sort of insertion function, provided
     /// by the owning Container, it can gain an access to the owning display. When display
     /// became visible by owning container, it (owning container) emits signal_display()

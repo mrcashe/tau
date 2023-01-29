@@ -62,7 +62,7 @@ public:
     /// Constructor with parameters.
     /// @param slot_alarm slot to be connected to signal_alarm().
     /// @param time_ms the time in milliseconds, timer will be stopped if vale of 0 specified.
-    /// @param periodical if true, timer will autorestarts after signal emission.
+    /// @param periodical if true, timer will automatically restart after signal emission.
     Timer(slot<void()> slot_alarm, int time_ms=0, bool periodical=false);
 
     /// Start if not running.

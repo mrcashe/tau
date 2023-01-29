@@ -158,22 +158,22 @@ extern const char * ACTION_FOCUS_NEXT;
 /// @ingroup action_group
 extern const char * ACTION_FOCUS_PREVIOUS;
 
-/// Pan (scroll) Scroller's child left.
+/// Pan (scroll) Scroller child left.
 /// Actual value: "pan-left"
 /// @ingroup action_group
 extern const char * ACTION_PAN_LEFT;
 
-/// Pan (scroll) Scroller's child right.
+/// Pan (scroll) Scroller child right.
 /// Actual value: "pan-right"
 /// @ingroup action_group
 extern const char * ACTION_PAN_RIGHT;
 
-/// Pan (scroll) Scroller's child up.
+/// Pan (scroll) Scroller child up.
 /// Actual value: "pan-up"
 /// @ingroup action_group
 extern const char * ACTION_PAN_UP;
 
-/// Pan (scroll) Scroller's child down.
+/// Pan (scroll) Scroller child down.
 /// Actual value: "pan-down"
 /// @ingroup action_group
 extern const char * ACTION_PAN_DOWN;

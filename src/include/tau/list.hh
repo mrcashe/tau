@@ -202,11 +202,10 @@ public:
     /// Remove all.
     void clear();
 
-    /// Unselect all.
+    /// Clear selection.
     void unselect();
 
     /// Test if empty.
-    /// @return true if no rowes made.
     bool empty() const;
 
     /// Allow multiple select.

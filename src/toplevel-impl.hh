@@ -64,7 +64,7 @@ public:
 
     bool maximized() const { return maximized_; }
     bool minimized() const { return minimized_; }
-    bool fullscreened() const { return fullscreen_; }
+    bool full_screened() const { return fullscreen_; }
 
     void enable_maximize();
     void disable_maximize();

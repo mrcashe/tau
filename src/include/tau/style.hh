@@ -122,15 +122,15 @@ public:
     /// @param pts font size in points.
     void grow(double pts);
 
-    /// Add face modificator to the font.
+    /// Add face elements to the font.
     /// @param face_elements element to be added to font face specification.
-    /// If current font specificaion is "Arial Bold" and the face_elements is
+    /// If current font specification is "Arial Bold" and the face_elements is
     /// "Italic", the result will be "Arial Bold Italic".
     void add_face(const ustring & face_elements);
 
     /// Set face.
     /// @param face face specification.
-    /// If current font specificaion is "Arial Bold" and the face is
+    /// If current font specification is "Arial Bold" and the face is
     /// "Italic", the result will be "Arial Italic".
     void set_face(const ustring & face);
 
@@ -200,7 +200,7 @@ public:
     /// @sa @ref style_sect
     Style_item & get(const std::string & name);
 
-    /// Get const item by name.
+    /// Get constant item by name.
     /// @sa @ref style_sect
     const Style_item & get(const std::string & name) const;
 

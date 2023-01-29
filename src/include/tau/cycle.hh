@@ -95,7 +95,7 @@ public:
     void append(Widget & w, bool shrink=false);
 
     /// Append text after cycling widget.
-    /// @param text text to be appended.
+    /// @param text text for append.
     /// @param margin_left left margin.
     /// @param margin_right right margin.
     /// @return a pointer to the created Text widget.
@@ -107,7 +107,7 @@ public:
     void prepend(Widget & w, bool shrink=false);
 
     /// Prepend text before cycling widget.
-    /// @param text text to be prepended.
+    /// @param text text for prepend.
     /// @param margin_left left margin.
     /// @param margin_right right margin.
     /// @return a pointer to the created Text widget.

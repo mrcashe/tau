@@ -230,7 +230,7 @@ ustring str_env(const std::string & env, const ustring & fallback) {
     return res;
 }
 
-exception::~exception() {}
+exception::~exception() throw() {}
 
 internal_error::internal_error(const ustring & msg): msg_(msg) {}
 
@@ -248,7 +248,6 @@ bad_doc::bad_doc(const ustring & msg): internal_error(msg) {}
 bad_font::bad_font(const ustring & msg): internal_error(msg) {}
 
 bad_pixmap::bad_pixmap(const ustring & path): internal_error("bad pixmap: "+path) {}
-
 
 } // namespace tau
 

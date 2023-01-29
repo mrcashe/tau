@@ -963,7 +963,7 @@ struct Main: tau::Toplevel {
     }
 
     void on_escape() {
-        if (fullscreened()) {
+        if (full_screened()) {
             unfullscreen();
         }
 

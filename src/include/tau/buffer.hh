@@ -451,7 +451,7 @@ public:
     /// Enables buffer modifying.
     void unlock();
 
-    /// @name Signal accessors
+    /// @name Signals
     /// @{
 
     /// Signal emitted when text erased.

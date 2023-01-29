@@ -56,7 +56,7 @@ These are platforms for which file generation is possible
 ### API versioning
 
 **tau** uses classical three-component versioning scheme: *Major_.Minor_.Micro_*.
-I use underscrore character ('_') here because library source code declares that
+I use underscore character ('_') here because library source code declares that
 variables this manner. The actual version number can be obtained from *VERSION* file
 in project's root directory.
 
@@ -75,7 +75,7 @@ necessary software tools before downloading code.
 Most of that tools are part of the base system installation,
 but some can be missing on your system.
 
-##### Programs from the Unix basesystem
+##### Programs from the Unix base system
 
 Must present if you have working system. Presence of the following
 programs is mandatory or build process will fail otherwise.
@@ -122,7 +122,7 @@ Can be missing.
 #### Software packages used during build process
 
 Note that, the following packages must have installed development files
-(typically, C++ headers). Some Linux distros (like Ubuntu, Mageia) provides
+(typically, C++ headers). Some Linux distros (like Ubuntu, Mageia) provide
 separated packages for runtime and development files. But some others
 (like ArchLinux, FreeBSD) provides monolithic packages including both runtime and
 development files. In any case, the configure script will inform you if any
@@ -224,9 +224,9 @@ The **Build Tree** consists of several subdirectories:
 
 -   *conf/* is a result of configuration process and holds control data for build process.
 -   *build/* where object and library files collected during build process.
--   *bin/* is a place where demonstration and test binary executables (a result of build process) will be located.
+-   *bin/* is a place where demonstration and test/demo binary executable files (a result of build process) will be located.
 
-The Build Tree is fully independent of Source Tree and may be located at any place within filesystem.
+The Build Tree is fully independent of Source Tree and may be located at any place within file system.
 The Source Tree doesn't modified during Configure, Build or Install processed.
 
 ## Configure
@@ -262,7 +262,7 @@ and do not want to build there. You can make another directory, say ~/build/tau-
 [~]$ ../tau/configure
 ~~~
 
-...and build process will happen within ~/build/tau-build/ directory. Same way, you may
+...and build process will happen within `~/build/tau-build/` directory. Same way, you may
 specify an absolute path to the `configure` script:
 
 ~~~

@@ -249,7 +249,7 @@ public:
     /// Default constructor.
     trackable();
 
-    /// Copy cosntructor.
+    /// Copy constructor.
     /// This constructor does not copy slots from src.
     trackable(const trackable & src);
 
@@ -257,7 +257,7 @@ public:
     /// This operator does not copy slots from src.
     trackable & operator=(const trackable & src);
 
-    /// Move cosntructor.
+    /// Move constructor.
     /// This constructor does not copy slots from src.
     trackable(trackable && src);
 

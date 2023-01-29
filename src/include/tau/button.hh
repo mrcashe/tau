@@ -132,14 +132,14 @@ public:
     Button(Action & action, int icon_size, Action_items items=ACTION_ALL);
 
     /// @}
-    /// Enable autorepeat of mouse click.
+    /// Enable automatic repeat of mouse click.
     /// Disabled by default.
     void enable_repeat();
 
-    /// Disable autorepeat of mouse click.
+    /// Disable automatic repeat of mouse click.
     void disable_repeat();
 
-    /// Determines is autorepeat enabled.
+    /// Determines is automatic repeat enabled.
     bool repeat_enabled() const;
 
     /// Set repeat period.
@@ -150,7 +150,7 @@ public:
     /// Get repeat delay.
     unsigned repeat_delay() const;
 
-    /// Get repeat intrval.
+    /// Get repeat interval.
     unsigned repeat_interval() const;
 
     /// Signal emitted when button clicked.

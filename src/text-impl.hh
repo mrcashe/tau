@@ -331,7 +331,7 @@ private:
     bool align_rows(std::size_t first, std::size_t last);
     void align_all();
     void load_rows(std::size_t first, std::size_t last);
-    void translate_lines(std::size_t first, std::size_t last, int dy);
+    void translate_rows(std::size_t first, std::size_t last, int dy);
     void insert_range(Buffer_citer b, Buffer_citer e);
     void paint_row(const Row & row, std::size_t ri, std::size_t pos, Painter pr);
     void paint_ellipsized(const Row & row, Painter pr);

@@ -114,7 +114,7 @@ public:
     ///
     /// If key file was created using load_from_file() method, this call will
     /// save it back. If key file wasn't loaded from file that way, the user_error
-    /// will be trown. If file specified for load_from_file() does not exist, save()
+    /// will be thrown. If file specified for load_from_file() does not exist, save()
     /// anyway should try to perform write operation.
     ///
     /// @throw user_error if key file wasn't created using load_from_file.
@@ -145,7 +145,7 @@ public:
     /// @return key value or fallback if key not found.
     bool get_boolean(Key_section & sect, const ustring & key, bool fallback=false);
 
-    /// Gets a list of booleans associated with key key under sect section.
+    /// Gets a list of Boolean's associated with key key under sect section.
     /// @param sect section.
     /// @param key key name.
     /// @return list of values or empty list if not found.
@@ -205,7 +205,7 @@ public:
     /// @param value value to be saved.
     void set_boolean(Key_section & sect, const ustring & key, bool value);
 
-    /// Sets a list of booleans for the key key under sect.
+    /// Sets a list of Boolean's for the key key under sect.
     /// @param sect section.
     /// @param key key name.
     /// @param vec vector of values.

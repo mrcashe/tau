@@ -106,8 +106,8 @@ public:
     /// Deoccupy the screen.
     void unfullscreen();
 
-    /// Test if fullscreened.
-    bool fullscreened() const;
+    /// Test if full screened.
+    bool full_screened() const;
 
     /// Maximize (zoom) window.
     void maximize();

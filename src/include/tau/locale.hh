@@ -46,7 +46,7 @@ struct Territory_data;
 class Territory {
 public:
 
-    /// Constructs from iso code or from current locale if iso_code is empty.
+    /// Constructs from ISO code or from current locale if iso_code is empty.
     Territory(const std::string & iso_code=std::string());
 
     /// Copy constructor.
@@ -80,7 +80,7 @@ public:
     /// Get 2-character code.
     std::string code2() const;
 
-    /// Get 3-character code if avilable.
+    /// Get 3-character code if available.
     std::string code3() const;
 
     /// Get numeric code.
@@ -152,7 +152,7 @@ public:
     /// Returns a list of derived variants of locale, which can be used to
     /// e.g. construct locale-dependent filenames or search paths. The returned
     /// list is sorted from most desirable to least desirable.
-    /// This function handles territory, charset and extra locale modifiers.
+    /// This function handles territory, character set and extra locale modifiers.
     ///
     /// For example, if locale is "fr_BE", then the returned list
     /// is "fr_BE", "fr".

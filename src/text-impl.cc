@@ -239,7 +239,7 @@ void Text_impl::on_buffer_replace(Buffer_citer b, Buffer_citer e, const std::u32
         int h1 = ln.ascent+ln.descent;
         if (ln.width < text_width_) { text_width_ = calc_width(0, rows_.size()); }
         e.move_to_eol();
-        if (h1 != h0) { translate_lines(b.row()+1, rows_.size(), h1-h0); e = buffer_.cend(); }
+        if (h1 != h0) { translate_rows(b.row()+1, rows_.size(), h1-h0); e = buffer_.cend(); }
         update_requisition();
         align_rows(b.row(), b.row());
         update_range(b, e);
@@ -293,18 +293,20 @@ void Text_impl::on_buffer_erase(Buffer_citer b, Buffer_citer e, const std::u32st
 
         if (row.width < text_width_) { text_width_ = calc_width(0, rows_.size()); }
         e.move_to_eol();
-        if (h1 != h0) { translate_lines(b.row()+1, rows_.size(), h1-h0); e = buffer_.cend(); }
+        if (h1 != h0) { translate_rows(b.row()+1, rows_.size(), h1-h0); e = buffer_.cend(); }
     }
 
     else {
         int hdel = calc_height(b.row()+1, e.row());
         int wdel = calc_width(b.row()+1, e.row());
         rows_.erase(rows_.begin()+b.row(), rows_.begin()+e.row());
-        translate_lines(b.row(), rows_.size(), -hdel);
+        translate_rows(b.row(), rows_.size(), -hdel);
         load_rows(b.row(), e.row());
         text_height_ = std::max(0, text_height_-hdel);
         if (wdel >= text_width_) { text_width_ = calc_width(0, rows()); }
         e = buffer_.cend();
+        auto & row = rows_[b.row()];
+        wipe_area(va_.x(), row.ybase-row.ascent, va_.right(), va_.bottom());
     }
 
     update_requisition();
@@ -463,7 +465,7 @@ void Text_impl::align_all() {
     }
 }
 
-void Text_impl::translate_lines(std::size_t first, std::size_t last, int dy) {
+void Text_impl::translate_rows(std::size_t first, std::size_t last, int dy) {
     if (last < first) { std::swap(first, last); }
     for (std::size_t n = first; n < rows_.size() && n <= last; ++n) { rows_[n].ybase += dy; }
 }

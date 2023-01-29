@@ -37,6 +37,7 @@ namespace tau {
 /// Numeric value editor.
 ///
 /// Thread safe: @b NO
+///
 /// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup widget_group

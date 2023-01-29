@@ -33,7 +33,7 @@
 
 namespace tau {
 
-/// An abstract widget's @ref container_group "container" base.
+/// An abstract widget @ref container_group "container" base.
 ///
 /// @note This class is a wrapper around its implementation shared pointer.
 ///

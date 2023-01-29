@@ -76,7 +76,7 @@ public:
     /// implementation pointer class.
     Icon(Widget_ptr wp);
 
-    /// Constructor with icon_name and icon size.
+    /// Constructor with icon name and icon size.
     Icon(const ustring & icon_name, int icon_size);
 
     /// @param action the action to be used.

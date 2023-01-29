@@ -55,7 +55,7 @@ Includes sections:
 - API versioning
 - Getting Started
     + Tools used during build process
-        - Programs from the Unix basesystem
+        - Programs from the Unix base system
         - C++ compiler, binutils and gmake
         - Optional programs
     + Software packages used during build process

@@ -111,7 +111,7 @@ public:
 
     /// Add cycling text.
     /// @param text text to shown.
-    /// @param tooltip an optional tooltip for that text.
+    /// @param tooltip an optional tool tip for that text.
     void add_text(const ustring & text, const ustring & tooltip=ustring());
 
     /// Select specified text.
@@ -136,7 +136,7 @@ public:
     void append(Widget & w, bool shrink=false);
 
     /// Append text after cycling text.
-    /// @param text text to be appended.
+    /// @param text text for append.
     /// @param margin_left left margin.
     /// @param margin_right right margin.
     void append(const ustring & text, unsigned margin_left=0, unsigned margin_right=0);
@@ -147,7 +147,7 @@ public:
     void prepend(Widget & w, bool shrink=false);
 
     /// Prepend text before cycling text.
-    /// @param text text to be prepended.
+    /// @param text text for prepend.
     /// @param margin_left left margin.
     /// @param margin_right right margin.
     void prepend(const ustring & text, unsigned margin_left=0, unsigned margin_right=0);

@@ -229,7 +229,7 @@ public:
     void move_rel(const Vector & v);
 
     /// Draw rectangle.
-    /// @param x1 left corrdinate.
+    /// @param x1 left coordinate.
     /// @param y1 top coordinate.
     /// @param x2 right coordinate.
     /// @param y2 bottom coordinate.
@@ -239,7 +239,7 @@ public:
     void rectangle(double x1, double y1, double x2, double y2, double radius=0.0);
 
     /// Draw rectangle.
-    /// @param v1 top left corrdinates.
+    /// @param v1 top left coordinates.
     /// @param v2 bottom top coordinates.
     /// @param radius rectangle corners radius (reserved but not yet realized).
     /// @note This method does not work on pure %Painter.

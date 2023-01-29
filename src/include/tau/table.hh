@@ -161,7 +161,7 @@ public:
     /// Remove all children.
     void clear();
 
-    /// Change widget's span in cells using existing shrink options.
+    /// Change widget span in cells using existing shrink options.
     /// @param w the widget.
     /// @param x the X cell coordinate of top left corner.
     /// @param y the Y cell coordinate of top left corner.
@@ -170,7 +170,7 @@ public:
     /// %Widget w must be child of the table using put() method.
     void respan(Widget & w, int x, int y, unsigned xspan, unsigned yspan);
 
-    /// Change widget's span in cells.
+    /// Change widget span in cells.
     /// @param w the widget.
     /// @param x the X cell coordinate of top left corner.
     /// @param y the Y cell coordinate of top left corner.

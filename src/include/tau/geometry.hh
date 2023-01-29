@@ -311,134 +311,134 @@ public:
     int idepth() const;
 
     /// Update width.
-    /// @return true if changed.
+    /// @return @b true if changed.
     bool update_width(unsigned width);
 
     /// Update height.
-    /// @return true if changed.
+    /// @return @b true if changed.
     bool update_height(unsigned height);
 
     /// Update depth.
-    /// @return true if changed.
+    /// @return @b true if changed.
     bool update_depth(unsigned depth);
 
     /// Update width, height and depth.
     bool update(unsigned all);
 
     /// Update width and height.
-    /// @return true if changed.
+    /// @return @b true if changed.
     bool update(unsigned width, unsigned height);
 
     /// Update width, height and depth.
-    /// @return true if changed.
+    /// @return @b true if changed.
     bool update(unsigned width, unsigned height, unsigned depth);
 
     /// Update all.
     /// @param sz other size.
     /// @param nz update values only if new values not equals to 0.
-    /// @return true if changed.
+    /// @return @b true if changed.
     bool update(const Size & sz, bool nz=false);
 
     /// Update all.
-    /// @return true if changed.
+    /// @return @b true if changed.
     bool update(const Vector & vec);
 
     /// Update if given value greater.
-    /// @return true if changed.
+    /// @return @b true if changed.
     bool update_max_width(unsigned width);
 
     /// Update if given value greater.
-    /// @return true if changed.
+    /// @return @b true if changed.
     bool update_max_height(unsigned height);
 
     /// Update if given value greater.
-    /// @return true if changed.
+    /// @return @b true if changed.
     bool update_max_depth(unsigned depth);
 
     /// Update if given values greater.
     bool update_max(unsigned all);
 
     /// Update width and height if given values greater.
-    /// @return true if changed.
+    /// @return @b true if changed.
     bool update_max(unsigned width, unsigned height);
 
     /// Update width, height and depth if given values greater.
-    /// @return true if changed.
+    /// @return @b true if changed.
     bool update_max(unsigned width, unsigned height, unsigned depth);
 
     /// Update all if given values greater.
     /// @param sz other size.
     /// @param nz update values only if new values not equals to 0.
-    /// @return true if changed.
+    /// @return @b true if changed.
     bool update_max(const Size & sz, bool nz=false);
 
     /// Update all if given values greater.
-    /// @return true if changed.
+    /// @return @b true if changed.
     bool update_max(const Vector & vec);
 
     /// Update width if given value less.
-    /// @return true if changed.
+    /// @return @b true if changed.
     bool update_min_width(unsigned width);
 
     /// Update height if given value less.
-    /// @return true if changed.
+    /// @return @b true if changed.
     bool update_min_height(unsigned height);
 
     /// Update depth if given value less.
-    /// @return true if changed.
+    /// @return @b true if changed.
     bool update_min_depth(unsigned depth);
 
     /// Update width, height and depth if given values less.
     bool update_min(unsigned all);
 
     /// Update width and height if given values less.
-    /// @return true if changed.
+    /// @return @b true if changed.
     bool update_min(unsigned width, unsigned height);
 
     /// Update width, height and depth if given values less.
-    /// @return true if changed.
+    /// @return @b true if changed.
     bool update_min(unsigned width, unsigned height, unsigned depth);
 
     /// Update all if given value less.
     /// @param sz other size.
     /// @param nz update values only if new values not equals to 0.
-    /// @return true if changed.
+    /// @return @b true if changed.
     bool update_min(const Size & sz, bool nz=false);
 
     /// Update all if given value less.
-    /// @return true if changed.
+    /// @return @b true if changed.
     bool update_min(const Vector & vec);
 
     /// Increase 2D size.
-    /// @return true if changed.
+    /// @return @b true if changed.
     bool increase(unsigned dx, unsigned dy);
 
     /// Increase 3D size.
-    /// @return true if changed.
+    /// @return @b true if changed.
     bool increase(unsigned dx, unsigned dy, unsigned dz);
 
     /// Increase size.
-    /// @return true if changed.
+    /// @return @b true if changed.
     bool increase(const Size & sz);
 
     /// Decrease 2D size.
-    /// @return true if changed.
+    /// @return @b true if changed.
     bool decrease(unsigned dx, unsigned dy);
 
     /// Decrease 3D size.
-    /// @return true if changed.
+    /// @return @b true if changed.
     bool decrease(unsigned dx, unsigned dy, unsigned dz);
 
     /// Decrease size.
-    /// @return true if changed.
+    /// @return @b true if changed.
     bool decrease(const Size & sz);
 
     /// Grow 2D size.
-    /// @return true if changed.
+    /// @return @b true if changed.
     bool grow(int dx, int dy);
 
     /// Grow 3D size.
-    /// @return true if changed.
+    /// @return @b true if changed.
     bool grow(int dx, int dy, int dz);
 
     /// Make increased size.

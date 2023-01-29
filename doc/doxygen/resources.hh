@@ -335,7 +335,7 @@ modifiers into internal representation and emit series of signals to the current
 -   If key released:
     +   Widget::signal_key_up() [public API].
 
-Typically, the ordinar user must not use above signals directly. The best way to handle keyboard events is to use
+Typically, the ordinary user must not use above signals directly. The best way to handle keyboard events is to use
 specially designed for this purpose classes Accel, Action and Toggle_action. For Unicode input, you can use
 specially designed classes Edit and Entry.
 
@@ -409,7 +409,7 @@ within a file etc. See also @ref km_sect and @ref kc_sect.
 Each key modifier from #Key_modifiers enumeration can be represented as text in two ways:
 1.  As part of key specification. In this case the representation of the key modifiers looks like, for example,
     <b>"\<CONTROL\>" </b>, <b>"\<ALT\>\<SHIFT\>" </b> and so on.
-2.  As a human readable text, for the tooltips and menu items. In this case the textual representation looks like,
+2.  As a human readable text, for the tool tips and menu items. In this case the textual representation looks like,
     for example, <b>"Ctrl+BackSpace"</b>, <b>"Alt+Shift+N"</b>. There are no way to represent key modifier only as a
     human readable text.
 
@@ -475,7 +475,7 @@ of all possible at the moment values.
 </table>
 
 @section kc_sect Key code textual representation
-Unlike key modifiers, the key code representation is same whithin specification or human readable text.
+Unlike key modifiers, the key code representation is same within specification or human readable text.
 For Unicode key codes, the textual representation is a character itself (except "Space" character, which
 textual representation is "Space"). For example, key specification of pair U'A':KM_CONTROL returned by
 key_spec_to_string() is <b>"\<CONTROL\>A" </b> and human readable text returned by key_spec_to_label()

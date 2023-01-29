@@ -66,7 +66,7 @@ public:
     /// Construct cosmetic pen.
     ///
     /// Cosmetic pens are used to draw strokes that have a constant width regardless of any transformations
-    /// applied to the QPainter they are used with. Drawing a shape with a cosmetic pen ensures that its
+    /// applied to the Painter they are used with. Drawing a shape with a cosmetic pen ensures that its
     /// outline will have the same thickness at different scale factors.
     Pen(const Color & color);
 

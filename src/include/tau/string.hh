@@ -67,7 +67,7 @@ bool char32_is_zerowidth(char32_t uc);
 /// @ingroup string_group
 bool char32_is_control(char32_t kc);
 
-/// Test if valid unicode.
+/// Test if valid Unicode.
 /// @ingroup string_group
 bool char32_is_unicode(char32_t uc);
 
@@ -130,7 +130,7 @@ inline void __str_format_helper(std::ostream & os, const T & arg, const Args & .
     __str_format_helper(os, args...);
 }
 
-/// Formatting function that accepts ios_base format flags such as std::hex etc.
+/// Formatting function that accepts std::ios_base format flags such as std::hex etc.
 /// @ingroup string_group
 template<typename... Args>
 inline ustring str_format(const Args & ... args) {

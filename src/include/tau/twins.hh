@@ -112,7 +112,7 @@ public:
     double ratio() const;
 
     /// Signal emitted when user changed ratio by moving handle.
-    /// Slot protorype:
+    /// Slot prototype:
     /// ~~~~~~~~~~~~~~~
     /// void on_ratio_changed(double ratio);
     /// ~~~~~~~~~~~~~~~

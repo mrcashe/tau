@@ -27,14 +27,14 @@
 #ifndef TAU_NAVIGATOR_HH
 #define TAU_NAVIGATOR_HH
 
-/// @file navigator.hh The %Navigator (filesystem navigation widget) class.
+/// @file navigator.hh The %Navigator (file system navigation widget) class.
 
 #include <tau/ustring.hh>
 #include <tau/widget.hh>
 
 namespace tau {
 
-/// Filesystem navigation widget.
+/// File system navigation widget.
 ///
 /// @note This class is a wrapper around its implementation shared pointer.
 ///
@@ -174,7 +174,7 @@ public:
     /// Signal emitted when:
     /// 1. The user presses "ENTER" on file.
     /// 2. The user double clicks on file.
-    /// The bound string represents a full path to the clicked or ENTERed file or directory.
+    /// The bound string represents a full path to the clicked or entered file or directory.
     signal<void(const ustring &)> & signal_file_activate();
 };
 

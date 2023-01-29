@@ -91,7 +91,7 @@ public:
     /// Get font specification.
     ustring spec() const;
 
-    /// Get PostScript font name.
+    /// Get Postscript font name.
     ustring psname() const;
 
     /// Get dots-per-inch.
@@ -107,7 +107,7 @@ public:
     /// grid coordinate used to place an outline point.
     double descent() const;
 
-    /// Get linegap.
+    /// Get line gap.
     /// The distance that must be placed between two lines of text.
     double linegap() const;
 
@@ -117,7 +117,7 @@ public:
     /// Get (xmax:ymax) pair.
     Vector max() const;
 
-    /// Get glyph for specified unicode character.
+    /// Get glyph for specified Unicode character.
     Glyph glyph(char32_t wc);
 
 private:
@@ -159,17 +159,17 @@ double font_size_from_spec(const ustring & spec, double fallback=0.0);
 double font_size_from_spec(const std::vector<ustring> & specv, double fallback=0.0);
 
 /// Change size in font specification.
-/// Changes size if it present and add font size if it initially absend.
+/// Changes size if it present and add font size if it initially absent.
 /// @ingroup font_group
 ustring font_size_change(const ustring & spec, double size_pt);
 
 /// Change size in font specification.
-/// Changes size if it less than given value or if it absend.
+/// Changes size if it less than given value or if it absent.
 /// @ingroup font_group
 ustring font_size_at_least(const ustring & spec, double min_size_pt);
 
 /// Change size in font specification.
-/// Changes size if it greater than given value or if it absend.
+/// Changes size if it greater than given value or if it absent.
 /// @ingroup font_group
 ustring font_size_as_max(const ustring & spec, double max_size_pt);
 
@@ -189,7 +189,7 @@ ustring font_spec_build(const std::vector<ustring> & specv);
 /// @ingroup font_group
 /// @param spec initial font specification.
 /// @param face_elements elements to be added to font face specification.
-/// If current font specificaion is "Arial Bold" and the face_elements is
+/// If current font specification is "Arial Bold" and the face_elements is
 /// "Italic", the result will be "Arial Bold Italic".
 /// @return modified font specification.
 ustring font_face_add(const ustring & spec, const ustring & face_elements);
@@ -198,7 +198,7 @@ ustring font_face_add(const ustring & spec, const ustring & face_elements);
 /// @ingroup font_group
 /// @param spec initial font specification.
 /// @param face the face specification.
-/// If current font specificaion is "Arial Bold" and the face is
+/// If current font specification is "Arial Bold" and the face is
 /// "Italic", the result will be "Arial Italic".
 /// @return modified font specification.
 ustring font_face_set(const ustring & spec, const ustring & face);

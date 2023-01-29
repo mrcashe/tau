@@ -103,10 +103,10 @@ public:
     /// @name Access to the established actions and signals.
     /// @{
 
-    /// Gets "Cut" action (Ctrl+X, Ctrl+Delete").
+    /// Gets "Cut" action (Ctrl+X, Ctrl+Delete).
     Action & cut_action();
 
-    /// Gets "Cut" action (Ctrl+X, Ctrl+Delete").
+    /// Gets "Cut" action (Ctrl+X, Ctrl+Delete).
     const Action & cut_action() const;
 
     /// Gets "Paste" action (Ctrl+V, Shift+Insert).

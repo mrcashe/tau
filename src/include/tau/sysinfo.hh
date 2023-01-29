@@ -145,7 +145,7 @@ bool        shared;
 
 /// Shared library path.
 /// When .shared is @b false, this field is empty.
-/// Else it @e must containg path to the shared library but it is possible it not.
+/// Else it @e must contain path to the shared library but it is possible it not.
 ustring     sopath;
 
 /// System locale.
@@ -161,7 +161,7 @@ std::string iocharset;
 //  Definition in $(confdir)/$(plat)/conf-$(plat).cc
 const Sysinfo & sysinfo();
 
-/// Get Sysinfo content as a text splited into lines.
+/// Get Sysinfo content as a text split into lines.
 /// @ingroup string_group
 //  implementation in $(srcdir)/sys.cc
 ustring str_sysinfo();

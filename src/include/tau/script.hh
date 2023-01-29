@@ -78,7 +78,7 @@ public:
     /// Create script from it's id.
     static Script from_id(int id);
 
-    /// Gets uncoded script.
+    /// Gets unknown script.
     /// Has "Zzzz" code and id of 999.
     static Script Unknown();
 

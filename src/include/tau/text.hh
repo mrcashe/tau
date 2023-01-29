@@ -30,6 +30,7 @@
 #define TAU_TEXT_HH
 
 #include <tau/enums.hh>
+#include <tau/ustring.hh>
 #include <tau/widget.hh>
 
 namespace tau {
@@ -190,7 +191,7 @@ public:
     /// Set word wrap mode.
     void set_wrap_mode(Wrap_mode wrap_mode);
 
-    /// Get wrap_mode.
+    /// Get word wrap mode.
     Wrap_mode wrap_mode() const;
 
     /// Set caret position.
@@ -250,7 +251,7 @@ public:
     /// If specified row does not exist, the returning values are 0.
     void get_row_bounds(std::size_t row, int & top, int & bottom) const;
 
-    /// @name Accessors to established actions.
+    /// @name Access to established actions.
     /// @{
 
     /// Gets "Move Left" action.
@@ -416,7 +417,7 @@ public:
     const Action & cancel_action() const;
 
     /// @}
-    /// @name Accessors to established signals.
+    /// @name Access to established signals.
     /// @{
 
     /// Signal emitted when selection changes.
