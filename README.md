@@ -8,18 +8,19 @@ graphical user interfaces (GUI) in C++ programming language
 -   Pure C++ design
 -   Uses C++14 standard
 -   Uses exceptions for error handling
+-   Uses only standard numeric types
 -   A small number of external dependencies
 -   Set of widgets for GUI building
 -   Internationalization support
 -   Built-in font engine
 -   Cross-platform file and directory management functions and classes
--   Path and URI management functions
+-   File path management functions
 -   Classes and functions for UTF-8 encoding management
 -   Built-in pixmap (bitmap) managing classes and functions provides import from
     BMP, ICO, ANI, XPM, CUR, Xcursor graphics formats
 -   Import from PNG graphics format done with using of libpng library
 -   Built-in signal/slot support for event handling (derived from libsigc++-2.0)
--   The building system is [**GNU Make**](https://www.gnu.org/software/make/).
+-   The build system is [**GNU Make**](https://www.gnu.org/software/make/).
 
 ### Host platforms
 
@@ -34,7 +35,7 @@ These are platforms for which file generation is possible
 
 -   Linux
 -   FreeBSD
--   Windows (using M cross-platform environment ([**MXE**](https://mxe.cc))).
+-   Windows (using M cross-platform environment, [**MXE**](https://mxe.cc)).
     MXE uses [**MinGW-w64**](https://www.mingw-w64.org) toolchain. Supported MXE
     targets at the moment are:
     +   i686-w64-mingw32.static (32 bit)
@@ -188,17 +189,54 @@ package is missing.
 > however, the installation of the Linux Kernel headers may be required.
 
 ### Download
-Download can be done from the [**GitHub**](https://github.com/) repository using
-`git` command. Therefore, **git** should be installed on your system.
+Download can be done from the [**GitHub**](https://github.com/) repository.
+
+#### Clone from git repository
+Therefore, **git** should be installed on your system.
+
+The link is: https://github.com/mrcashe/tau.git
 
 Choose directory where to clone remote directory and type in the console:
 
-`[~]$ git clone https://github.com/mrcashe/tau.git`
+~~~
+[~]$ git clone https://github.com/mrcashe/tau.git
+~~~
+The directory named `tau` will appear.
 
+#### Download zip archive provided by GitHub
+The link is: https://github.com/mrcashe/tau/archive/refs/tags/0.3.0.zip
+~~~
+[~]$ wget https://github.com/mrcashe/tau/archive/refs/tags/0.3.0.zip
+[~]$ unzip 0.3.0.zip
+~~~
+The directory named `tau-0.3.0` will appear.
 
-As a result, the directory named '**tau**' will appear.
+#### Download gzip tarball provided by GitHub
+The link is: https://github.com/mrcashe/tau/archive/refs/tags/0.3.0.tar.gz
+~~~
+[~]$ wget https://github.com/mrcashe/tau/archive/refs/tags/0.3.0.tar.gz
+[~]$ tar xf 0.3.0.tar.gz
+~~~
+The directory named `tau-0.3.0` will appear.
 
-#### Source Tree
+#### Download xz tarball provided by myself
+The link is: https://github.com/mrcashe/tau/releases/download/0.3.0/tau-0.3.0.tar.xz
+~~~
+[~]$ wget https://github.com/mrcashe/tau/archive/refs/tags/tau-0.3.0.tar.xz
+[~]$ tar xf tau-0.3.0.tar.xz
+~~~
+The directory named `tau` will appear.
+
+#### Download Doxygen documentation only
+The link is: https://github.com/mrcashe/tau/releases/download/0.3.0/tau-0.3.0-doc.tar.xz
+~~~
+[~]$ wget https://github.com/mrcashe/tau/archive/refs/tags/tau-0.3.0-doc.tar.xz
+[~]$ tar xf tau-0.3.0-doc.tar.xz
+~~~
+The directory named `html` will appear, use `html/index.html` file as argument for WWW browser.
+For addition, tau-0.3.0.pdf file will appear, use your favourite PDF viewer for reading.
+
+### Source Tree
 
 The typical layout of downloaded directory looks similar to:
 
@@ -218,13 +256,13 @@ VERSION
 This is so-called **Source Tree**.
 The most important files for you are *Makefile* and *configure*.
 
-#### Build Tree
+### Build Tree
 
 The **Build Tree** consists of several subdirectories:
 
--   *conf/* is a result of configuration process and holds control data for build process.
--   *build/* where object and library files collected during build process.
--   *bin/* is a place where demonstration and test/demo binary executable files (a result of build process) will be located.
+-   `conf/` is a result of configuration process and holds control data for build process.
+-   `build/` where object and library files collected during build process.
+-   `bin/` is a place where demonstration and test/demo binary executable files (a result of build process) will be located.
 
 The Build Tree is fully independent of Source Tree and may be located at any place within file system.
 The Source Tree doesn't modified during Configure, Build or Install processed.
@@ -232,7 +270,7 @@ The Source Tree doesn't modified during Configure, Build or Install processed.
 ## Configure
 
 Despite the fact that the library does not use the **GNU Autotools**,
-the **configure** script is provided. In contrast to *automake's* generated
+the `configure` script is provided. In contrast to *automake's* generated
 scripts, this script is hand-made.
 
 At this point, you can run `configure` script with default arguments:
@@ -304,7 +342,7 @@ command to install files. Good alternative is specify ***$HOME*** variable as
 variables in your `~/.profile`, `~/.bash_profile` or `~/.csh_profile` file,
 such as ***PATH***, ***LD_LIBRARY_PATH*** and ***PKG_CONFIG_PATH***.
 
-#### What will be installed and where
+### What will be installed and where
 
 -   Shared library (and static, if enabled, too) will be installed
     into ***PREFIX***/lib/ subdirectory.
@@ -365,4 +403,3 @@ tau_pc = tau-$(tau_version)
 CXXFLAGS += $(shell pkg-config --cflags $(tau_pc))
 tau_static = $(shell pkg-config --variable=a $(tau_pc))
 ~~~
-
