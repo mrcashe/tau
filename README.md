@@ -222,7 +222,7 @@ The directory named `tau-0.3.0` will appear.
 #### Download xz tarball provided by myself
 The link is: https://github.com/mrcashe/tau/releases/download/0.3.0/tau-0.3.0.tar.xz
 ~~~
-[~]$ wget https://github.com/mrcashe/tau/archive/refs/tags/tau-0.3.0.tar.xz
+[~]$ wget https://github.com/mrcashe/tau/releases/download/0.3.0/tau-0.3.0.tar.xz
 [~]$ tar xf tau-0.3.0.tar.xz
 ~~~
 The directory named `tau` will appear.
@@ -230,7 +230,7 @@ The directory named `tau` will appear.
 #### Download Doxygen documentation only
 The link is: https://github.com/mrcashe/tau/releases/download/0.3.0/tau-0.3.0-doc.tar.xz
 ~~~
-[~]$ wget https://github.com/mrcashe/tau/archive/refs/tags/tau-0.3.0-doc.tar.xz
+[~]$ wget https://github.com/mrcashe/tau/releases/download/0.3.0/tau-0.3.0-doc.tar.xz
 [~]$ tar xf tau-0.3.0-doc.tar.xz
 ~~~
 The directory named `html` will appear, use `html/index.html` file as argument for WWW browser.
