@@ -24,6 +24,8 @@
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ----------------------------------------------------------------------------
 
+/// @file tauhello.cc
+
 #include <tau.hh>
 #include <iostream>
 
@@ -38,6 +40,14 @@ int main(int argc, char * argv[]) {
 
     catch (tau::exception & x) {
         std::cerr << "** tau::exception thrown: " << x.what() << std::endl;
+    }
+
+    catch (std::exception & x) {
+        std::cerr << "** std::exception thrown: " << x.what() << std::endl;
+    }
+
+    catch (...) {
+        std::cerr << "** unknown exception thrown" << std::endl;
     }
 
     return 0;
