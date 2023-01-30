@@ -78,68 +78,70 @@ void Popup_impl::on_show() {
 }
 
 void Popup_impl::adjust() {
-    int x, y;
-    std::size_t w = required_size().width(), h = required_size().height();
+    Size rs = required_size(), ps = rs;
+    auto wpp = parent_window();
+    if (wpp) { ps = wpp->size(); }
+    Rect req(rs), pb(ps);
 
     switch (gravity_) {
-        case GRAVITY_LEFT:
-            x = upos_.x();
-            y = upos_.y()-h/2;
-            break;
-
-        case GRAVITY_RIGHT:
-            x = upos_.x()-w;
-            y = upos_.y()-h/2;
-            break;
-
-        case GRAVITY_TOP:
-            x = upos_.x()-w/2;
-            y = upos_.y();
-            break;
-
-        case GRAVITY_BOTTOM:
-            x = upos_.x()-w/2;
-            y = upos_.y()-h;
-            break;
-
         case GRAVITY_TOP_LEFT:
-            x = upos_.x();
-            y = upos_.y();
+            req.translate(upos_);
             break;
 
-        case GRAVITY_TOP_RIGHT:
-            x = upos_.x()-w;
-            y = upos_.y();
+        case GRAVITY_LEFT:
+            req.translate(upos_.x(), upos_.y()-req.iheight()/2);
             break;
 
         case GRAVITY_BOTTOM_LEFT:
-            x = upos_.x();
-            y = upos_.y()-h;
+            req.translate(upos_.x(), upos_.y()-req.iheight());
+            break;
+
+        case GRAVITY_TOP_RIGHT:
+            req.translate(upos_.x()-req.iwidth(), upos_.y());
+            break;
+
+        case GRAVITY_RIGHT:
+            req.translate(upos_.x()-req.iwidth(), upos_.y()-req.iheight()/2);
             break;
 
         case GRAVITY_BOTTOM_RIGHT:
-            x = upos_.x()-w;
-            y = upos_.y()-h;
+            req.translate(upos_.x()-req.iwidth(), upos_.y()-req.iheight());
+            break;
+
+        case GRAVITY_TOP:
+            req.translate(upos_.x()-req.iwidth()/2, upos_.y());
             break;
 
         case GRAVITY_CENTER:
-            x = upos_.x()-w/2;
-            y = upos_.y()-h/2;
+            req.translate(upos_.x()-req.iwidth()/2, upos_.y()-req.iheight()/2);
+            break;
+
+        case GRAVITY_BOTTOM:
+            req.translate(upos_.x()-req.iwidth()/2, upos_.y()-req.iheight());
             break;
 
         default:
             return;
     }
 
-    if (wpp_) {
-        if (x+w > wpp_->size().width()) { x = wpp_->size().width()-w; }
-        else if (x < 0) { x = 0; }
+    Rect united(pb|req);
 
-        if (y+h > wpp_->size().height()) { y = wpp_->size().height()-h; }
-        else if (y < 0) { y = 0; }
+    if (united != pb) {
+        Size ds(united.size()-ps), pps(ps);
+        pps.update_min(req.size());
 
-        move(Rect(x, y, required_size()));
+        if (ds.width()) {
+            req.update_width(pps.width());
+            req.update_left((ps-req.size()).width());
+        }
+
+        if (ds.height()) {
+            req.update_height(pps.height());
+            req.update_top((ps-req.size()).height());
+        }
     }
+
+    move(req);
 }
 
 } // namespace tau

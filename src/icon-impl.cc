@@ -35,6 +35,12 @@ namespace tau {
 const char * ICON_CONFIGURE = "configure";
 const char * ICON_DIALOG_CANCEL = "dialog-cancel";
 const char * ICON_DIALOG_OK = "dialog-ok";
+const char * ICON_DOCUMENT_NEW = "document-new";
+const char * ICON_DOCUMENT_OPEN_RECENT = "document-open-recent";
+const char * ICON_DOCUMENT_OPEN = "document-open";
+const char * ICON_DOCUMENT_SAVE_ALL = "document-save-all";
+const char * ICON_DOCUMENT_SAVE_AS = "document-save-as";
+const char * ICON_DOCUMENT_SAVE = "document-save";
 const char * ICON_DRIVE_OPTICAL = "drive-optical";
 const char * ICON_DRIVE_HARDDISK = "drive-harddisk";
 const char * ICON_DRIVE_REMOVABLE_MEDIA = "drive-removable-media";

@@ -1042,23 +1042,20 @@ void Display_xcb::handle_xcb_event(xcb_generic_event_t * event) {
 
             if (auto wf = find(motion->event)) {
                 Point pt(motion->event_x, motion->event_y);
-                Window_impl * wii = wf->self();
+                auto wip = wf->self();
 
-                if (modal_window_) {
-                    if (mouse_grabber_ != wii) {
-                        pt = wii->to_screen(pt)-modal_window_->to_screen();
-                    }
-
-                    wii = modal_window_;
+                if (modal_window_ && wip != modal_window_) {
+                    pt = wip->to_screen(pt)-modal_window_->to_screen();
+                    wip = modal_window_;
                 }
 
-                else if (mouse_grabber_ && mouse_grabber_ != wii) {
-                    pt = wii->to_screen(pt)-mouse_grabber_->to_screen();
-                    wii = mouse_grabber_;
+                else if (mouse_grabber_ && wip != mouse_grabber_) {
+                    pt = wip->to_screen(pt)-mouse_grabber_->to_screen();
+                    wip = mouse_grabber_;
                 }
 
-                set_mouse_owner(wii, pt);
-                wii->signal_mouse_motion()(mm_from_state(motion->state), pt);
+                set_mouse_owner(wip, pt);
+                wip->signal_mouse_motion()(mm_from_state(motion->state), pt);
             }
         }
             break;
@@ -1068,11 +1065,11 @@ void Display_xcb::handle_xcb_event(xcb_generic_event_t * event) {
             auto enter = reinterpret_cast<xcb_enter_notify_event_t *>(event);
 
             if (auto wf = find(enter->event)) {
-                if (!mouse_grabber_) {
-                    if (!modal_window_ || wf->self() == modal_window_) {
-                        const Point pt(enter->event_x, enter->event_y);
-                        set_mouse_owner(wf->self(), pt);
-                    }
+                auto wip = wf->self();
+
+                if ((!mouse_grabber_ && !modal_window_) || wip == modal_window_) {
+                    const Point pt(enter->event_x, enter->event_y);
+                    set_mouse_owner(wip, pt);
                 }
             }
         }
@@ -1083,10 +1080,10 @@ void Display_xcb::handle_xcb_event(xcb_generic_event_t * event) {
             auto leave = reinterpret_cast<xcb_enter_notify_event_t *>(event);
 
             if (auto wf = find(leave->event)) {
-                if (!mouse_grabber_) {
-                    if (!modal_window_ || wf->self() == modal_window_) {
-                        if (wf->self() == mouse_owner_) { reset_mouse_owner(); }
-                    }
+                auto wip = wf->self();
+
+                if ((!mouse_grabber_ && !modal_window_) || wip == modal_window_) {
+                    if (wip == mouse_owner_) { reset_mouse_owner(); }
                 }
             }
         }

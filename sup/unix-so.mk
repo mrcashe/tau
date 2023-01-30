@@ -37,6 +37,7 @@ $(unix_so): $(objects)
 
 install: $(lib_prefix)
 	@if [ -f $(unix_so) ]; then \
+	    rm -f $(lib_prefix)/libtau.so.$(Major_).$(Minor_)*; \
 	    echo "++ unix-so.mk: rebuilding shared library with -soname option..."; \
 	    $(CXX) -o $(unix_sopath) -shared -fPIC -Wl,-soname,$(unix_soname) $(unix_so_builddir)/*.o; \
 	    chmod -x $(unix_sopath); \

@@ -429,6 +429,7 @@ struct Main: tau::Toplevel {
                 if (p.second.id == id) {
                     tau::Slot_menu_item item(tau::path_notdir(p.first), tau::bind(tau::fun(this, &Main::open_recent), p.second.path), "unknown");
                     tau::Text tooltip("@"+tau::path_dirname(p.second.path));
+                    tooltip.set_wrap_mode(tau::WRAP_ELLIPSIZE_END);
                     tooltip.style().font("font").resize(7);
                     item.set_tooltip(tooltip);
                     recent_menu_.append(item);

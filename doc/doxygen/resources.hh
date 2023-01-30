@@ -52,6 +52,12 @@ Here is summary of all possible at the moment values.
 <tr><td>@link ICON_CONFIGURE               @endlink <td>configure               <td>Fileman                       <td>YES           <td> @image html configure.png
 <tr><td>@link ICON_DIALOG_CANCEL           @endlink <td>dialog-cancel           <td>Fileman, Colorsel, Fontsel    <td>YES           <td> @image html dialog-cancel.png
 <tr><td>@link ICON_DIALOG_OK               @endlink <td>dialog-ok               <td>Fontsel, Colorsel, Fileman    <td>YES           <td> @image html dialog-ok.png
+<tr><td>@link ICON_DOCUMENT_NEW            @endlink <td>document-new            <td>                              <td>              <td> @image html document-new.png
+<tr><td>@link ICON_DOCUMENT_OPEN_RECENT    @endlink <td>document-open-recent    <td>                              <td>              <td> @image html document-open-recent.png
+<tr><td>@link ICON_DOCUMENT_OPEN           @endlink <td>document-open           <td>                              <td>              <td> @image html document-open.png
+<tr><td>@link ICON_DOCUMENT_SAVE_ALL       @endlink <td>document-save-all       <td>                              <td>              <td> @image html document-save-all.png
+<tr><td>@link ICON_DOCUMENT_SAVE_AS        @endlink <td>document-save-as        <td>                              <td>              <td> @image html document-save-as.png
+<tr><td>@link ICON_DOCUMENT_SAVE           @endlink <td>document-save           <td>                              <td>              <td> @image html document-save.png
 <tr><td>@link ICON_DRIVE_OPTICAL           @endlink <td>drive-optical           <td>Fileman                       <td>YES           <td> @image html drive-optical.png
 <tr><td>@link ICON_DRIVE_HARDDISK          @endlink <td>drive-harddisk          <td>Fileman                       <td>YES           <td> @image html drive-harddisk.png
 <tr><td>@link ICON_DRIVE_REMOVABLE_MEDIA   @endlink <td>drive-removable-media   <td>Fileman                       <td>YES           <td> @image html drive-removable-media.png

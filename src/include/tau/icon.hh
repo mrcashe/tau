@@ -123,6 +123,30 @@ extern const char * ICON_DIALOG_CANCEL;
 /// @ingroup paint_group
 extern const char * ICON_DIALOG_OK;
 
+/// The actual value is "document-new".
+/// @ingroup paint_group
+extern const char * ICON_DOCUMENT_NEW;
+
+/// The actual value is "document-open-recent".
+/// @ingroup paint_group
+extern const char * ICON_DOCUMENT_OPEN_RECENT;
+
+/// The actual value is "document-open".
+/// @ingroup paint_group
+extern const char * ICON_DOCUMENT_OPEN;
+
+/// The actual value is "document-save-all".
+/// @ingroup paint_group
+extern const char * ICON_DOCUMENT_SAVE_ALL;
+
+/// The actual value is "document-save-as".
+/// @ingroup paint_group
+extern const char * ICON_DOCUMENT_SAVE_AS;
+
+/// The actual value is "document-save".
+/// @ingroup paint_group
+extern const char * ICON_DOCUMENT_SAVE;
+
 /// The actual value is "drive-optical".
 /// @ingroup paint_group
 extern const char * ICON_DRIVE_OPTICAL;

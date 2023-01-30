@@ -728,32 +728,56 @@ bool Key_file::has_key(const Key_section & sect, const ustring & key_name, bool 
     return impl->has_key(sect, key_name, similar);
 }
 
+bool Key_file::has_key(const ustring & key_name, bool similar) const {
+    return impl->has_key(impl->root_, key_name, similar);
+}
+
 ustring Key_file::key_name(const Key_section & sect, const ustring similar_name) const {
     return impl->key_name(sect, similar_name);
+}
+
+ustring Key_file::key_name(const ustring similar_name) const {
+    return impl->key_name(impl->root_, similar_name);
 }
 
 Key_section & Key_file::root() {
     return impl->root_;
 }
 
-Key_section & Key_file::section(const ustring & sect, bool similar) {
-    return impl->section(sect, similar);
+Key_section & Key_file::section(const ustring & sect_name, bool similar) {
+    return impl->section(sect_name, similar);
 }
 
 void Key_file::set_comment(Key_section & sect, const ustring & comment) {
     impl->set_comment(sect, comment);
 }
 
+void Key_file::set_comment(const ustring & comment) {
+    impl->set_comment(root(), comment);
+}
+
 void Key_file::set_string(Key_section & sect, const ustring & key, const ustring & value) {
     if (sect.set_value(key, value)) { impl->signal_changed_(); }
+}
+
+void Key_file::set_string(const ustring & key, const ustring & value) {
+    if (root().set_value(key, value)) { impl->signal_changed_(); }
 }
 
 void Key_file::set_strings(Key_section & sect, const ustring & key, const std::vector<ustring> & vec) {
     if (sect.set_value(key, str_implode(vec, impl->lsep_))) { impl->signal_changed_(); }
 }
 
+void Key_file::set_strings(const ustring & key, const std::vector<ustring> & vec) {
+    if (root().set_value(key, str_implode(vec, impl->lsep_))) { impl->signal_changed_(); }
+}
+
 void Key_file::set_boolean(Key_section & sect, const ustring & key, bool value) {
     if (sect.set_value(key, value ? "true" : "false")) { impl->signal_changed_(); }
+}
+
+void Key_file::set_boolean(const ustring & key, bool value) {
+    if (root().set_value(key, value ? "true" : "false")) { impl->signal_changed_(); }
 }
 
 void Key_file::set_booleans(Key_section & sect, const ustring & key, const std::vector<bool> & vec) {
@@ -762,8 +786,18 @@ void Key_file::set_booleans(Key_section & sect, const ustring & key, const std::
     if (sect.set_value(key, str_implode(sv, impl->lsep_))) { impl->signal_changed_(); }
 }
 
+void Key_file::set_booleans(const ustring & key, const std::vector<bool> & vec) {
+    std::vector<ustring> sv;
+    for (bool b: vec) { sv.push_back(b ? "true" : "false"); }
+    if (root().set_value(key, str_implode(sv, impl->lsep_))) { impl->signal_changed_(); }
+}
+
 void Key_file::set_integer(Key_section & sect, const ustring & key, long long value) {
     if (sect.set_value(key, str_format(value))) { impl->signal_changed_(); }
+}
+
+void Key_file::set_integer(const ustring & key, long long value) {
+    if (root().set_value(key, str_format(value))) { impl->signal_changed_(); }
 }
 
 void Key_file::set_integers(Key_section & sect, const ustring & key, const std::vector<long long> & vec) {
@@ -772,8 +806,18 @@ void Key_file::set_integers(Key_section & sect, const ustring & key, const std::
     if (sect.set_value(key, str_implode(sv, impl->lsep_))) { impl->signal_changed_(); }
 }
 
+void Key_file::set_integers(const ustring & key, const std::vector<long long> & vec) {
+    std::vector<ustring> sv;
+    for (long long ll: vec) { sv.push_back(str_format(ll)); }
+    if (root().set_value(key, str_implode(sv, impl->lsep_))) { impl->signal_changed_(); }
+}
+
 void Key_file::set_double(Key_section & sect, const ustring & key, double value) {
     if (sect.set_value(key, str_format(value))) { impl->signal_changed_(); }
+}
+
+void Key_file::set_double(const ustring & key, double value) {
+    if (root().set_value(key, str_format(value))) { impl->signal_changed_(); }
 }
 
 void Key_file::set_doubles(Key_section & sect, const ustring & key, const std::vector<double> & vec) {
@@ -782,44 +826,90 @@ void Key_file::set_doubles(Key_section & sect, const ustring & key, const std::v
     if (sect.set_value(key, str_implode(sv, impl->lsep_))) { impl->signal_changed_(); }
 }
 
+void Key_file::set_doubles(const ustring & key, const std::vector<double> & vec) {
+    std::vector<ustring> sv;
+    for (double d: vec) { sv.push_back(str_format(d)); }
+    if (root().set_value(key, str_implode(sv, impl->lsep_))) { impl->signal_changed_(); }
+}
+
 ustring Key_file::comment(Key_section & sect) {
     return impl->comment(sect);
+}
+
+ustring Key_file::comment() {
+    return impl->comment(root());
 }
 
 ustring Key_file::get_string(Key_section & sect, const ustring & key, const ustring & fallback) {
     return impl->get_string(sect, key, fallback);
 }
 
+ustring Key_file::get_string(const ustring & key, const ustring & fallback) {
+    return impl->get_string(root(), key, fallback);
+}
+
 std::vector<ustring> Key_file::get_strings(Key_section & sect, const ustring & key) {
     return impl->get_strings(sect, key);
+}
+
+std::vector<ustring> Key_file::get_strings(const ustring & key) {
+    return impl->get_strings(root(), key);
 }
 
 bool Key_file::get_boolean(Key_section & sect, const ustring & key, bool fallback) {
     return impl->get_boolean(sect, key, fallback);
 }
 
+bool Key_file::get_boolean(const ustring & key, bool fallback) {
+    return impl->get_boolean(root(), key, fallback);
+}
+
 std::vector<bool> Key_file::get_booleans(Key_section & sect, const ustring & key) {
     return impl->get_booleans(sect, key);
+}
+
+std::vector<bool> Key_file::get_booleans(const ustring & key) {
+    return impl->get_booleans(root(), key);
 }
 
 long long Key_file::get_integer(Key_section & sect, const ustring & key, long long fallback) {
     return impl->get_integer(sect, key, fallback);
 }
 
+long long Key_file::get_integer(const ustring & key, long long fallback) {
+    return impl->get_integer(root(), key, fallback);
+}
+
 std::vector<long long> Key_file::get_integers(Key_section & sect, const ustring & key) {
     return impl->get_integers(sect, key);
+}
+
+std::vector<long long> Key_file::get_integers(const ustring & key) {
+    return impl->get_integers(root(), key);
 }
 
 double Key_file::get_double(Key_section & sect, const ustring & key, double fallback) {
     return impl->get_double(sect, key, fallback);
 }
 
+double Key_file::get_double(const ustring & key, double fallback) {
+    return impl->get_double(root(), key, fallback);
+}
+
 std::vector<double> Key_file::get_doubles(Key_section & sect, const ustring & key) {
     return impl->get_doubles(sect, key);
 }
 
+std::vector<double> Key_file::get_doubles(const ustring & key) {
+    return impl->get_doubles(root(), key);
+}
+
 void Key_file::remove_key(Key_section & sect, const ustring & key, bool similar) {
     impl->remove_key(sect, key, similar);
+}
+
+void Key_file::remove_key(const ustring & key, bool similar) {
+    impl->remove_key(root(), key, similar);
 }
 
 void Key_file::remove_section(const ustring & sect_name, bool similar) {

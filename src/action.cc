@@ -496,6 +496,8 @@ void Action_base::set_master_action(Master_action & master_action) {
     icon_changed_cx_ = master_action.signal_icon_changed().connect(fun(this, &Action_base::set_icon_name));
     tooltip_changed_cx_ = master_action.signal_tooltip_changed().connect(fun(this, &Action_base::set_tooltip));
 
+    clear_accels();
+
     for (Accel & accel: master_action.accels()) {
         char32_t kc; int km;
         accel.get_keys(kc, km);

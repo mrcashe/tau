@@ -25,7 +25,7 @@
 # -----------------------------------------------------------------------------
 
 all: all-build
-install: all install-build
+install: all-build install-build
 uninstall: uninstall-build
 clean: clean-build
 
