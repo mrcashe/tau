@@ -25,6 +25,8 @@
 // ----------------------------------------------------------------------------
 
 #include <tau/card.hh>
+#include <tau/exception.hh>
+#include <tau/string.hh>
 #include <card-impl.hh>
 
 #define CARD_IMPL (std::static_pointer_cast<Card_impl>(impl))
@@ -39,6 +41,15 @@ Card::Card():
 Card::Card(Widget_ptr wp):
     Container(std::dynamic_pointer_cast<Card_impl>(wp))
 {
+}
+
+Card & Card::operator=(Widget_ptr wp) {
+    if (!std::dynamic_pointer_cast<Card_impl>(wp)) {
+        throw user_error(str_format(this, " Card::operator=(Widget_ptr): got pure or incompatible implementation pointer"));
+    }
+
+    impl = wp;
+    return *this;
 }
 
 void Card::insert(Widget & w) {

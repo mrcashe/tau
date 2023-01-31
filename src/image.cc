@@ -25,6 +25,8 @@
 // ----------------------------------------------------------------------------
 
 #include <tau/image.hh>
+#include <tau/exception.hh>
+#include <tau/string.hh>
 #include <image-impl.hh>
 #include <pixmap-impl.hh>
 
@@ -40,6 +42,15 @@ Image::Image():
 Image::Image(Widget_ptr wp):
     Widget(std::dynamic_pointer_cast<Image_impl>(wp))
 {
+}
+
+Image & Image::operator=(Widget_ptr wp) {
+    if (!std::dynamic_pointer_cast<Image_impl>(wp)) {
+        throw user_error(str_format(this, " Image::operator=(Widget_ptr): got pure or incompatible implementation pointer"));
+    }
+
+    impl = wp;
+    return *this;
 }
 
 Image::Image(Pixmap pix, bool transparent):

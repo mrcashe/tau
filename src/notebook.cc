@@ -25,6 +25,8 @@
 // ----------------------------------------------------------------------------
 
 #include <tau/notebook.hh>
+#include <tau/exception.hh>
+#include <tau/string.hh>
 #include <notebook-impl.hh>
 
 #define NOTEBOOK_IMPL (std::static_pointer_cast<Notebook_impl>(impl))
@@ -39,6 +41,15 @@ Notebook::Notebook(Tab_pos tab_pos):
 Notebook::Notebook(Widget_ptr wp):
     Widget(std::dynamic_pointer_cast<Notebook_impl>(wp))
 {
+}
+
+Notebook & Notebook::operator=(Widget_ptr wp) {
+    if (!std::dynamic_pointer_cast<Notebook_impl>(wp)) {
+        throw user_error(str_format(this, " Notebook::operator=(Widget_ptr): got pure or incompatible implementation pointer"));
+    }
+
+    impl = wp;
+    return *this;
 }
 
 int Notebook::append_page(Widget & w) {

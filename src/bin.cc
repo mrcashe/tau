@@ -25,6 +25,8 @@
 // ----------------------------------------------------------------------------
 
 #include <tau/bin.hh>
+#include <tau/exception.hh>
+#include <tau/string.hh>
 #include <bin-impl.hh>
 
 #define BIN_IMPL (std::static_pointer_cast<Bin_impl>(impl))
@@ -39,6 +41,15 @@ Bin::Bin():
 Bin::Bin(Widget_ptr wp):
     Container(std::dynamic_pointer_cast<Bin_impl>(wp))
 {
+}
+
+Bin & Bin::operator=(Widget_ptr wp) {
+    if (!std::dynamic_pointer_cast<Bin_impl>(wp)) {
+        throw user_error(str_format(this, " Bin::operator=(Widget_ptr): got pure or incompatible implementation pointer"));
+    }
+
+    impl = wp;
+    return *this;
 }
 
 Bin::Bin(std::nullptr_t):

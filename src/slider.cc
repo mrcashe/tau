@@ -24,7 +24,9 @@
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ----------------------------------------------------------------------------
 
+#include <tau/exception.hh>
 #include <tau/scroller.hh>
+#include <tau/string.hh>
 #include <tau/slider.hh>
 #include <scroller-impl.hh>
 #include <slider-impl.hh>
@@ -41,6 +43,15 @@ Slider::Slider():
 Slider::Slider(Widget_ptr wp):
     Widget(std::dynamic_pointer_cast<Slider_impl>(wp))
 {
+}
+
+Slider & Slider::operator=(Widget_ptr wp) {
+    if (!std::dynamic_pointer_cast<Slider_impl>(wp)) {
+        throw user_error(str_format(this, " Slider::operator=(Widget_ptr): got pure or incompatible implementation pointer"));
+    }
+
+    impl = wp;
+    return *this;
 }
 
 Slider::Slider(Orientation orient, bool autohide):

@@ -24,7 +24,9 @@
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ----------------------------------------------------------------------------
 
+#include <tau/exception.hh>
 #include <tau/menu.hh>
+#include <tau/string.hh>
 #include <tau/toplevel.hh>
 #include <toplevel-impl.hh>
 #include <menu-impl.hh>
@@ -221,6 +223,15 @@ Submenu_item::Submenu_item(Widget_ptr wp):
 {
 }
 
+Submenu_item & Submenu_item::operator=(Widget_ptr wp) {
+    if (!std::dynamic_pointer_cast<Submenu_impl>(wp)) {
+        throw user_error(str_format(this, " Submenu_item::operator=(Widget_ptr): got pure or incompatible implementation pointer"));
+    }
+
+    impl = wp;
+    return *this;
+}
+
 Submenu_item::Submenu_item(const ustring & label, Menu & menu, const ustring & icon_name):
     Menu_item(std::make_shared<Submenu_impl>(label, std::static_pointer_cast<Menu_impl>(menu.ptr()), icon_name))
 {
@@ -241,6 +252,15 @@ Slot_menu_item::Slot_menu_item(const ustring & label, const slot<void()> & slot_
 Slot_menu_item::Slot_menu_item(Widget_ptr wp):
     Menu_item(std::dynamic_pointer_cast<Slot_menu_impl>(wp))
 {
+}
+
+Slot_menu_item & Slot_menu_item::operator=(Widget_ptr wp) {
+    if (!std::dynamic_pointer_cast<Slot_menu_impl>(wp)) {
+        throw user_error(str_format(this, " Slot_menu_item::operator=(Widget_ptr): got pure or incompatible implementation pointer"));
+    }
+
+    impl = wp;
+    return *this;
 }
 
 Slot_menu_item::Slot_menu_item(const ustring & label, const slot<void()> & slot_activate, const ustring & image_name):
@@ -265,6 +285,15 @@ Action_menu_item::Action_menu_item(Widget_ptr wp):
 {
 }
 
+Action_menu_item & Action_menu_item::operator=(Widget_ptr wp) {
+    if (!std::dynamic_pointer_cast<Action_menu_impl>(wp)) {
+        throw user_error(str_format(this, " Action_menu_item::operator=(Widget_ptr): got pure or incompatible implementation pointer"));
+    }
+
+    impl = wp;
+    return *this;
+}
+
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
 
@@ -278,6 +307,15 @@ Toggle_menu_item::Toggle_menu_item(Toggle_action & toggle_action, Check_style ch
 Toggle_menu_item::Toggle_menu_item(Widget_ptr wp):
     Menu_item(std::dynamic_pointer_cast<Toggle_menu_impl>(wp))
 {
+}
+
+Toggle_menu_item & Toggle_menu_item::operator=(Widget_ptr wp) {
+    if (!std::dynamic_pointer_cast<Toggle_menu_impl>(wp)) {
+        throw user_error(str_format(this, " Toggle_menu_item::operator=(Widget_ptr): got pure or incompatible implementation pointer"));
+    }
+
+    impl = wp;
+    return *this;
 }
 
 void Toggle_menu_item::set_check_style(Check_style check_style) {
@@ -317,6 +355,15 @@ Check_menu_item::Check_menu_item(const ustring & label, bool checked):
 Check_menu_item::Check_menu_item(Widget_ptr wp):
     Menu_item(std::dynamic_pointer_cast<Check_menu_impl>(wp))
 {
+}
+
+Check_menu_item & Check_menu_item::operator=(Widget_ptr wp) {
+    if (!std::dynamic_pointer_cast<Check_menu_impl>(wp)) {
+        throw user_error(str_format(this, " Check_menu_item::operator=(Widget_ptr): got pure or incompatible implementation pointer"));
+    }
+
+    impl = wp;
+    return *this;
 }
 
 Check_menu_item::Check_menu_item(const ustring & label, Check_style check_style, bool checked):
@@ -405,6 +452,15 @@ Menubar::Menubar(Widget_ptr wp):
 {
 }
 
+Menubar & Menubar::operator=(Widget_ptr wp) {
+    if (!std::dynamic_pointer_cast<Menubar_impl>(wp)) {
+        throw user_error(str_format(this, " Menubar::operator=(Widget_ptr): got pure or incompatible implementation pointer"));
+    }
+
+    impl = wp;
+    return *this;
+}
+
 void Menubar::activate() {
     MENUBAR_IMPL->activate();
 }
@@ -422,6 +478,15 @@ Menubox::Menubox():
 Menubox::Menubox(Widget_ptr wp):
     Menu(std::dynamic_pointer_cast<Menubox_impl>(wp))
 {
+}
+
+Menubox & Menubox::operator=(Widget_ptr wp) {
+    if (!std::dynamic_pointer_cast<Menubox_impl>(wp)) {
+        throw user_error(str_format(this, " Menubox::operator=(Widget_ptr): got pure or incompatible implementation pointer"));
+    }
+
+    impl = wp;
+    return *this;
 }
 
 Widget_ptr Menubox::popup(Toplevel & root, const Point & origin) {

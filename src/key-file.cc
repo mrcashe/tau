@@ -49,13 +49,17 @@ const char * bool_words_  = "true yes y on false no n off none";
 
 namespace tau {
 
+struct Key_file_impl;
+
 struct Key_section {
     ustring comment_;
     using Pair = std::pair<ustring, ustring>;
     using Storage = std::list<Pair>;
     Storage elems_;
+    const Key_file_impl * kf_ = nullptr;
+    ustring name_;
 
-    Key_section() = default;
+    Key_section(const Key_file_impl * kf, const ustring & name): kf_(kf), name_(name) {}
     Key_section(const Key_section & other) = default;
     Key_section(Key_section && other) = default;
     Key_section & operator=(const Key_section & other) = default;
@@ -159,9 +163,14 @@ struct Key_file_impl {
     Key_section root_;
     Storage sections_;
     ustring path_;
+    bool changed_ = false;
     signal<void()> signal_changed_;
 
-    Key_file_impl() = default;
+    Key_file_impl():
+        root_(this, "root")
+    {
+        signal_changed_.connect(fun(this, &Key_file_impl::on_changed));
+    }
 
     Key_file_impl(const Key_file_impl & other):
         locked_(other.locked_),
@@ -169,8 +178,11 @@ struct Key_file_impl {
         lsep_(other.lsep_),
         root_(other.root_),
         sections_(other.sections_),
-        path_(other.path_)
+        path_(other.path_),
+        changed_(other.changed_)
     {
+        own();
+        signal_changed_.connect(fun(this, &Key_file_impl::on_changed));
     }
 
     Key_file_impl(Key_file_impl && other):
@@ -179,8 +191,11 @@ struct Key_file_impl {
         lsep_(other.lsep_),
         root_(std::move(other.root_)),
         sections_(std::move(other.sections_)),
-        path_(std::move(other.path_))
+        path_(std::move(other.path_)),
+        changed_(other.changed_)
     {
+        own();
+        signal_changed_.connect(fun(this, &Key_file_impl::on_changed));
     }
 
     Key_file_impl & operator=(const Key_file_impl & other) {
@@ -191,6 +206,8 @@ struct Key_file_impl {
             root_ = other.root_;
             sections_ = other.sections_;
             path_ = other.path_;
+            changed_ = other.changed_;
+            own();
         }
 
         return *this;
@@ -203,7 +220,18 @@ struct Key_file_impl {
         root_ = std::move(other.root_);
         sections_ = std::move(other.sections_);
         path_ = std::move(other.path_);
+        changed_ = other.changed_;
+        own();
         return *this;
+    }
+
+    void on_changed() {
+        changed_ = true;
+    }
+
+    void own() {
+        root_.kf_ = this;
+        for (auto & p: sections_) { p.second.kf_ = this; }
     }
 
     void stream_out(ustring & os) const {
@@ -261,7 +289,7 @@ struct Key_file_impl {
         Lock lock(mx_);
         auto i = find(sect_name, similar);
         if (i != sections_.end()) { return i->second; }
-        sections_.emplace_back(std::make_pair(sect_name, Key_section()));
+        sections_.emplace_back(sect_name, Key_section(this, sect_name));
         signal_changed_();
         return sections_.back().second;
     }
@@ -296,6 +324,7 @@ struct Key_file_impl {
     }
 
     void remove_key(Key_section & sect, const ustring & key, bool similar) {
+        if (this != sect.kf_) { throw user_error(str_format(this, " Key_file: foreign section '", sect.name_, '\'')); }
         bool changed = false;
 
         if (!locked_) {
@@ -308,6 +337,7 @@ struct Key_file_impl {
     }
 
     std::vector<double> get_doubles(Key_section & sect, const ustring & key) {
+        if (this != sect.kf_) { throw user_error(str_format(this, " Key_file: foreign section '", sect.name_, '\'')); }
         std::vector<double> v;
         Lock lock(mx_);
         auto iter = sect.find(key);
@@ -323,7 +353,12 @@ struct Key_file_impl {
         return v;
     }
 
+    std::vector<double> get_doubles(const ustring & key) {
+        return get_doubles(root_, key);
+    }
+
     double get_double(Key_section & sect, const ustring & key, double fallback) {
+        if (this != sect.kf_) { throw user_error(str_format(this, " Key_file: foreign section '", sect.name_, '\'')); }
         Lock lock(mx_);
         auto iter = sect.find(key);
         if (iter == sect.elems_.end()) { return fallback; }
@@ -333,7 +368,12 @@ struct Key_file_impl {
         return d;
     }
 
+    double get_double(const ustring & key, double fallback) {
+        return get_double(root_, key, fallback);
+    }
+
     std::vector<long long> get_integers(Key_section & sect, const ustring & key) {
+        if (this != sect.kf_) { throw user_error(str_format(this, " Key_file: foreign section '", sect.name_, '\'')); }
         std::vector<long long> v;
         Lock lock(mx_);
         auto iter = sect.find(key);
@@ -348,7 +388,12 @@ struct Key_file_impl {
         return v;
     }
 
+    std::vector<long long> get_integers(const ustring & key) {
+        return get_integers(root_, key);
+    }
+
     long long get_integer(Key_section & sect, const ustring & key, long long fallback) {
+        if (this != sect.kf_) { throw user_error(str_format(this, " Key_file: foreign section '", sect.name_, '\'')); }
         Lock lock(mx_);
         auto i = sect.find(key);
 
@@ -360,7 +405,12 @@ struct Key_file_impl {
         return fallback;
     }
 
+    long long get_integer(const ustring & key, long long fallback) {
+        return get_integer(root_, key, fallback);
+    }
+
     std::vector<bool> get_booleans(Key_section & sect, const ustring & key) {
+        if (this != sect.kf_) { throw user_error(str_format(this, " Key_file: foreign section '", sect.name_, '\'')); }
         std::vector<bool> v;
         Lock lock(mx_);
         auto iter = sect.find(key);
@@ -382,7 +432,12 @@ struct Key_file_impl {
         return v;
     }
 
+    std::vector<bool> get_booleans(const ustring & key) {
+        return get_booleans(root_, key);
+    }
+
     bool get_boolean(Key_section & sect, const ustring & key, bool fallback) {
+        if (this != sect.kf_) { throw user_error(str_format(this, " Key_file: foreign section '", sect.name_, '\'')); }
         Lock lock(mx_);
         auto iter = sect.find(key);
         if (iter == sect.elems_.end()) { return fallback; }
@@ -395,7 +450,12 @@ struct Key_file_impl {
         return str_similar(iter->second, true_words_, U' ');
     }
 
+    bool get_boolean(const ustring & key, bool fallback) {
+        return get_boolean(root_, key, fallback);
+    }
+
     std::vector<ustring> get_strings(Key_section & sect, const ustring & key) {
+        if (this != sect.kf_) { throw user_error(str_format(this, " Key_file: foreign section '", sect.name_, '\'')); }
         Lock lock(mx_);
         std::vector<ustring> v;
         auto iter = sect.find(key);
@@ -407,10 +467,19 @@ struct Key_file_impl {
         return v;
     }
 
+    std::vector<ustring> get_strings(const ustring & key) {
+        return get_strings(root_, key);
+    }
+
     ustring get_string(Key_section & sect, const ustring & key, const ustring & fallback) {
+        if (this != sect.kf_) { throw user_error(str_format(this, " Key_file: foreign section '", sect.name_, '\'')); }
         Lock lock(mx_);
         auto iter = sect.find(key);
         return iter == sect.elems_.end() ? fallback : iter->second;
+    }
+
+    ustring get_string(const ustring & key, const ustring & fallback) {
+        return get_string(root_, key, fallback);
     }
 
     ustring comment(Key_section & sect) {
@@ -418,7 +487,12 @@ struct Key_file_impl {
         return sect.comment_;
     }
 
+    ustring comment() {
+        return comment(root_);
+    }
+
     void set_comment(Key_section & sect, const ustring & comment) {
+        if (this != sect.kf_) { throw user_error(str_format(this, " Key_file: foreign section '", sect.name_, '\'')); }
         bool changed = false;
 
         if (!locked_) {
@@ -433,7 +507,12 @@ struct Key_file_impl {
         if (changed) { signal_changed_(); }
     }
 
+    void set_comment(const ustring & comment) {
+        set_comment(root_, comment);
+    }
+
     void set_string(Key_section & sect, const ustring & key, const ustring & value) {
+        if (this != sect.kf_) { throw user_error(str_format(this, " Key_file: foreign section '", sect.name_, '\'')); }
         bool changed = false;
 
         if (!locked_) {
@@ -444,7 +523,12 @@ struct Key_file_impl {
         if (changed) { signal_changed_(); }
     }
 
+    void set_string(const ustring & key, const ustring & value) {
+        set_string(root_, key, value);
+    }
+
     void set_strings(Key_section & sect, const ustring & key, const std::vector<ustring> & vec) {
+        if (this != sect.kf_) { throw user_error(str_format(this, " Key_file: foreign section '", sect.name_, '\'')); }
         bool changed = false;
 
         if (!locked_) {
@@ -455,7 +539,12 @@ struct Key_file_impl {
         if (changed) { signal_changed_(); }
     }
 
+    void set_strings(const ustring & key, const std::vector<ustring> & vec) {
+        set_strings(root_, key, vec);
+    }
+
     void set_boolean(Key_section & sect, const ustring & key, bool value) {
+        if (this != sect.kf_) { throw user_error(str_format(this, " Key_file: foreign section '", sect.name_, '\'')); }
         bool changed = false;
 
         if (!locked_) {
@@ -466,7 +555,12 @@ struct Key_file_impl {
         if (changed) { signal_changed_(); }
     }
 
+    void set_boolean(const ustring & key, bool value) {
+        set_boolean(root_, key, value);
+    }
+
     void set_booleans(Key_section & sect, const ustring & key, const std::vector<bool> & vec) {
+        if (this != sect.kf_) { throw user_error(str_format(this, " Key_file: foreign section '", sect.name_, '\'')); }
         bool changed = false;
 
         if (!locked_) {
@@ -479,7 +573,12 @@ struct Key_file_impl {
         if (changed) { signal_changed_(); }
     }
 
+    void set_booleans(const ustring & key, const std::vector<bool> & vec) {
+        set_booleans(root_, key, vec);
+    }
+
     void set_integer(Key_section & sect, const ustring & key, long long value) {
+        if (this != sect.kf_) { throw user_error(str_format(this, " Key_file: foreign section '", sect.name_, '\'')); }
         bool changed = false;
 
         if (!locked_) {
@@ -490,7 +589,12 @@ struct Key_file_impl {
         if (changed) { signal_changed_(); }
     }
 
+    void set_integer(const ustring & key, long long value) {
+        set_integer(root_, key, value);
+    }
+
     void set_integers(Key_section & sect, const ustring & key, const std::vector<long long> & vec) {
+        if (this != sect.kf_) { throw user_error(str_format(this, " Key_file: foreign section '", sect.name_, '\'')); }
         bool changed = false;
 
         if (!locked_) {
@@ -503,7 +607,12 @@ struct Key_file_impl {
         if (changed) { signal_changed_(); }
     }
 
+    void set_integers(const ustring & key, const std::vector<long long> & vec) {
+        set_integers(root_, key, vec);
+    }
+
     void set_double(Key_section & sect, const ustring & key, double value) {
+        if (this != sect.kf_) { throw user_error(str_format(this, " Key_file: foreign section '", sect.name_, '\'')); }
         bool changed = false;
 
         if (!locked_) {
@@ -514,7 +623,12 @@ struct Key_file_impl {
         if (changed) { signal_changed_(); }
     }
 
+    void set_double(const ustring & key, double value) {
+        set_double(root_, key, value);
+    }
+
     void set_doubles(Key_section & sect, const ustring & key, const std::vector<double> & vec) {
+        if (this != sect.kf_) { throw user_error(str_format(this, " Key_file: foreign section '", sect.name_, '\'')); }
         bool changed = false;
 
         if (!locked_) {
@@ -527,19 +641,38 @@ struct Key_file_impl {
         if (changed) { signal_changed_(); }
     }
 
+    void set_doubles(const ustring & key, const std::vector<double> & vec) {
+        set_doubles(root_, key, vec);
+    }
+
     std::vector<ustring> list_keys(const Key_section & sect) const {
+        if (this != sect.kf_) { throw user_error(str_format(this, " Key_file: foreign section '", sect.name_, '\'')); }
         Lock lock(mx_);
         return sect.list_keys();
     }
 
+    std::vector<ustring> list_keys() const {
+        return list_keys(root_);
+    }
+
     bool has_key(const Key_section & sect, const ustring & key_name, bool similar) const {
+        if (this != sect.kf_) { throw user_error(str_format(this, " Key_file: foreign section '", sect.name_, '\'')); }
         Lock lock(mx_);
         return sect.has_key(key_name, similar);
     }
 
-    ustring key_name(const Key_section & sect, const ustring similar_name) const {
+    bool has_key(const ustring & key_name, bool similar) const {
+        return has_key(root_, key_name, similar);
+    }
+
+    ustring key_name(const Key_section & sect, const ustring & similar_name) const {
+        if (this != sect.kf_) { throw user_error(str_format(this, " Key_file: foreign section '", sect.name_, '\'')); }
         Lock lock(mx_);
         return sect.key_name(similar_name);
+    }
+
+    ustring key_name(const ustring & similar_name) const {
+        return key_name(root_, similar_name);
     }
 
     void load(std::istream & is) {
@@ -655,6 +788,7 @@ Key_file & Key_file::operator=(Key_file && other) {
 }
 
 Key_file::~Key_file() {
+    flush();
     delete impl;
 }
 
@@ -674,10 +808,12 @@ void Key_file::save(std::ostream & os) const {
         ustring s;
         impl->stream_out(s);
         os << s;
+        impl->changed_ = false;
     }
 }
 
 void Key_file::save(const ustring & path) {
+    path_mkdir(path_dirname(path));
     auto & io = Locale().iocharset();
     std::ofstream os(io.is_utf8() ? std::string(path) : io.encode(path));
     save(os);
@@ -686,6 +822,26 @@ void Key_file::save(const ustring & path) {
 void Key_file::save() {
     if (impl->path_.empty()) { throw user_error("Key_file::save(): was not loaded from file"); }
     save(impl->path_);
+}
+
+void Key_file::flush() {
+    if (impl->changed_ && !impl->path_.empty()) {
+        try {
+            save(impl->path_);
+        }
+
+        catch (exception & x) {
+            std::cerr << "** Key_file::flush(): failed to write to file " << impl->path_ << ": " << x.what() << std::endl;
+        }
+
+        catch (std::exception & x) {
+            std::cerr << "** Key_file::flush(): failed to write to file " << impl->path_ << ": " << x.what() << std::endl;
+        }
+
+        catch (...) {
+            std::cerr << "** Key_file::flush(): failed to write to file " << impl->path_ << std::endl;
+        }
+    }
 }
 
 void Key_file::set_comment_separator(char32_t comment_sep) {
@@ -729,14 +885,14 @@ bool Key_file::has_key(const Key_section & sect, const ustring & key_name, bool 
 }
 
 bool Key_file::has_key(const ustring & key_name, bool similar) const {
-    return impl->has_key(impl->root_, key_name, similar);
+    return impl->has_key(key_name, similar);
 }
 
-ustring Key_file::key_name(const Key_section & sect, const ustring similar_name) const {
+ustring Key_file::key_name(const Key_section & sect, const ustring & similar_name) const {
     return impl->key_name(sect, similar_name);
 }
 
-ustring Key_file::key_name(const ustring similar_name) const {
+ustring Key_file::key_name(const ustring & similar_name) const {
     return impl->key_name(impl->root_, similar_name);
 }
 
@@ -753,83 +909,71 @@ void Key_file::set_comment(Key_section & sect, const ustring & comment) {
 }
 
 void Key_file::set_comment(const ustring & comment) {
-    impl->set_comment(root(), comment);
+    impl->set_comment(comment);
 }
 
 void Key_file::set_string(Key_section & sect, const ustring & key, const ustring & value) {
-    if (sect.set_value(key, value)) { impl->signal_changed_(); }
+    impl->set_string(sect, key, value);
 }
 
 void Key_file::set_string(const ustring & key, const ustring & value) {
-    if (root().set_value(key, value)) { impl->signal_changed_(); }
+    impl->set_string(key, value);
 }
 
 void Key_file::set_strings(Key_section & sect, const ustring & key, const std::vector<ustring> & vec) {
-    if (sect.set_value(key, str_implode(vec, impl->lsep_))) { impl->signal_changed_(); }
+    impl->set_strings(sect, key, vec);
 }
 
 void Key_file::set_strings(const ustring & key, const std::vector<ustring> & vec) {
-    if (root().set_value(key, str_implode(vec, impl->lsep_))) { impl->signal_changed_(); }
+    impl->set_strings(key, vec);
 }
 
 void Key_file::set_boolean(Key_section & sect, const ustring & key, bool value) {
-    if (sect.set_value(key, value ? "true" : "false")) { impl->signal_changed_(); }
+    impl->set_boolean(sect, key, value);
 }
 
 void Key_file::set_boolean(const ustring & key, bool value) {
-    if (root().set_value(key, value ? "true" : "false")) { impl->signal_changed_(); }
+    impl->set_boolean(key, value);
 }
 
 void Key_file::set_booleans(Key_section & sect, const ustring & key, const std::vector<bool> & vec) {
-    std::vector<ustring> sv;
-    for (bool b: vec) { sv.push_back(b ? "true" : "false"); }
-    if (sect.set_value(key, str_implode(sv, impl->lsep_))) { impl->signal_changed_(); }
+    impl->set_booleans(sect, key, vec);
 }
 
 void Key_file::set_booleans(const ustring & key, const std::vector<bool> & vec) {
-    std::vector<ustring> sv;
-    for (bool b: vec) { sv.push_back(b ? "true" : "false"); }
-    if (root().set_value(key, str_implode(sv, impl->lsep_))) { impl->signal_changed_(); }
+    impl->set_booleans(key, vec);
 }
 
 void Key_file::set_integer(Key_section & sect, const ustring & key, long long value) {
-    if (sect.set_value(key, str_format(value))) { impl->signal_changed_(); }
+    impl->set_integer(sect, key, value);
 }
 
 void Key_file::set_integer(const ustring & key, long long value) {
-    if (root().set_value(key, str_format(value))) { impl->signal_changed_(); }
+    impl->set_integer(key, value);
 }
 
 void Key_file::set_integers(Key_section & sect, const ustring & key, const std::vector<long long> & vec) {
-    std::vector<ustring> sv;
-    for (long long ll: vec) { sv.push_back(str_format(ll)); }
-    if (sect.set_value(key, str_implode(sv, impl->lsep_))) { impl->signal_changed_(); }
+    impl->set_integers(sect, key, vec);
 }
 
 void Key_file::set_integers(const ustring & key, const std::vector<long long> & vec) {
-    std::vector<ustring> sv;
-    for (long long ll: vec) { sv.push_back(str_format(ll)); }
-    if (root().set_value(key, str_implode(sv, impl->lsep_))) { impl->signal_changed_(); }
+    impl->set_integers(key, vec);
 }
 
 void Key_file::set_double(Key_section & sect, const ustring & key, double value) {
-    if (sect.set_value(key, str_format(value))) { impl->signal_changed_(); }
+    impl->set_double(sect, key, value);
 }
 
 void Key_file::set_double(const ustring & key, double value) {
-    if (root().set_value(key, str_format(value))) { impl->signal_changed_(); }
+    impl->set_double(key, value);
 }
 
 void Key_file::set_doubles(Key_section & sect, const ustring & key, const std::vector<double> & vec) {
-    std::vector<ustring> sv;
-    for (double d: vec) { sv.push_back(str_format(d)); }
-    if (sect.set_value(key, str_implode(sv, impl->lsep_))) { impl->signal_changed_(); }
+    impl->set_doubles(sect, key, vec);
 }
 
 void Key_file::set_doubles(const ustring & key, const std::vector<double> & vec) {
-    std::vector<ustring> sv;
-    for (double d: vec) { sv.push_back(str_format(d)); }
-    if (root().set_value(key, str_implode(sv, impl->lsep_))) { impl->signal_changed_(); }
+    impl->set_doubles(key, vec);
 }
 
 ustring Key_file::comment(Key_section & sect) {
@@ -934,6 +1078,10 @@ void Key_file::unlock() {
 
 bool Key_file::locked() const {
     return impl->locked_;
+}
+
+bool Key_file::changed() const {
+    return impl->changed_;
 }
 
 signal<void()> & Key_file::signal_changed() {

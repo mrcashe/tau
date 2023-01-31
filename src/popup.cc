@@ -24,6 +24,8 @@
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ----------------------------------------------------------------------------
 
+#include <tau/exception.hh>
+#include <tau/string.hh>
 #include <tau/popup.hh>
 #include <tau/toplevel.hh>
 #include <display-impl.hh>
@@ -45,6 +47,15 @@ Popup::Popup(Toplevel & tp, const Point & origin, Gravity gravity):
 Popup::Popup(Widget_ptr wp):
     Window(std::dynamic_pointer_cast<Popup_impl>(wp))
 {
+}
+
+Popup & Popup::operator=(Widget_ptr wp) {
+    if (!std::dynamic_pointer_cast<Popup_impl>(wp)) {
+        throw user_error(str_format(this, " Popup::operator=(Widget_ptr): got pure or incompatible implementation pointer"));
+    }
+
+    impl = wp;
+    return *this;
 }
 
 void Popup::close() {

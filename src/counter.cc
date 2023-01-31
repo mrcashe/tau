@@ -25,6 +25,8 @@
 // ----------------------------------------------------------------------------
 
 #include <tau/counter.hh>
+#include <tau/exception.hh>
+#include <tau/string.hh>
 #include <counter-impl.hh>
 
 namespace tau {
@@ -44,6 +46,15 @@ Counter::Counter(Border_style bs, double value, double max_value, double min_val
 Counter::Counter(Widget_ptr wp):
     Widget(std::dynamic_pointer_cast<Counter_impl>(wp))
 {
+}
+
+Counter & Counter::operator=(Widget_ptr wp) {
+    if (!std::dynamic_pointer_cast<Counter_impl>(wp)) {
+        throw user_error(str_format(this, " Counter::operator=(Widget_ptr): got pure or incompatible implementation pointer"));
+    }
+
+    impl = wp;
+    return *this;
 }
 
 void Counter::set_border_style(Border_style bs) {

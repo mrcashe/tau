@@ -76,6 +76,13 @@ public:
     /// implementation pointer class.
     Icon(Widget_ptr wp);
 
+    /// Assign implementation.
+    ///
+    /// @since 0.4.0
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Icon & operator=(Widget_ptr wp);
+
     /// Constructor with icon name and icon size.
     Icon(const ustring & icon_name, int icon_size);
 

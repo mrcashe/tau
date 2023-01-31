@@ -85,6 +85,13 @@ public:
     /// implementation pointer class.
     Action_menu_item(Widget_ptr wp);
 
+    /// Assign implementation.
+    ///
+    /// @since 0.4.0
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Action_menu_item & operator=(Widget_ptr wp);
+
     /// Constructor with Action.
     Action_menu_item(Action & action);
 };
@@ -123,6 +130,13 @@ public:
     /// @throw user_error in case of pure implementation pointer or incompatible
     /// implementation pointer class.
     Toggle_menu_item(Widget_ptr wp);
+
+    /// Assign implementation.
+    ///
+    /// @since 0.4.0
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Toggle_menu_item & operator=(Widget_ptr wp);
 
     /// Constructor with Toggle_action.
     Toggle_menu_item(Toggle_action & toggle_action, Check_style check_style=CHECK_VSTYLE, Border_style border_style=BORDER_INSET);
@@ -182,6 +196,13 @@ public:
     /// implementation pointer class.
     Submenu_item(Widget_ptr wp);
 
+    /// Assign implementation.
+    ///
+    /// @since 0.4.0
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Submenu_item & operator=(Widget_ptr wp);
+
     /// Constructor with label and submenu.
     Submenu_item(const ustring & label, Menu & menu);
 
@@ -227,6 +248,13 @@ public:
     /// implementation pointer class.
     Slot_menu_item(Widget_ptr wp);
 
+    /// Assign implementation.
+    ///
+    /// @since 0.4.0
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Slot_menu_item & operator=(Widget_ptr wp);
+
     /// Constructor with label and slot.
     Slot_menu_item(const ustring & label, const slot<void()> & slot_activate);
 
@@ -271,6 +299,13 @@ public:
     /// @throw user_error in case of pure implementation pointer or incompatible
     /// implementation pointer class.
     Check_menu_item(Widget_ptr wp);
+
+    /// Assign implementation.
+    ///
+    /// @since 0.4.0
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Check_menu_item & operator=(Widget_ptr wp);
 
     /// Constructor with label and initial state.
     /// @param label the label.
@@ -497,6 +532,13 @@ public:
     /// implementation pointer class.
     Menubox(Widget_ptr wp);
 
+    /// Assign implementation.
+    ///
+    /// @since 0.4.0
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Menubox & operator=(Widget_ptr wp);
+
     /// %Popup menu.
     Widget_ptr popup(Toplevel & root, const Point & origin);
 
@@ -542,6 +584,13 @@ public:
     /// @throw user_error in case of pure implementation pointer or incompatible
     /// implementation pointer class.
     Menubar(Widget_ptr wp);
+
+    /// Assign implementation.
+    ///
+    /// @since 0.4.0
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Menubar & operator=(Widget_ptr wp);
 
     /// Activate menu.
     void activate();

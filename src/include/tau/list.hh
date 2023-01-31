@@ -84,6 +84,13 @@ public:
     /// implementation pointer class.
     List(Widget_ptr wp);
 
+    /// Assign implementation.
+    ///
+    /// @since 0.4.0
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    List & operator=(Widget_ptr wp);
+
     /// Prepend selectable row.
     /// @throw user_error if w already inserted into another container.
     /// @throw internal_error if w has pure implementation pointer.

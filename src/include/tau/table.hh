@@ -94,6 +94,13 @@ public:
     /// implementation pointer class.
     Table(Widget_ptr wp);
 
+    /// Assign implementation.
+    ///
+    /// @since 0.4.0
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Table & operator=(Widget_ptr wp);
+
     /// Get table span in cells.
     /// On empty table both xmin and ymin are equals to @b INT_MAX and
     /// both xmax and ymax are equals to @b INT_MIN.

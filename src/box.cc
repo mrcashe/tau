@@ -25,6 +25,8 @@
 // ----------------------------------------------------------------------------
 
 #include <tau/box.hh>
+#include <tau/exception.hh>
+#include <tau/string.hh>
 #include <box-impl.hh>
 
 namespace tau {
@@ -40,6 +42,15 @@ Box::Box(Orientation orient, unsigned spacing):
 Box::Box(Widget_ptr wp):
     Container(std::dynamic_pointer_cast<Box_impl>(wp))
 {
+}
+
+Box & Box::operator=(Widget_ptr wp) {
+    if (!std::dynamic_pointer_cast<Box_impl>(wp)) {
+        throw user_error(str_format(this, " Box::operator=(Widget_ptr): got pure or incompatible implementation pointer"));
+    }
+
+    impl = wp;
+    return *this;
 }
 
 void Box::set_spacing(unsigned spacing) {

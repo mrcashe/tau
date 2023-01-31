@@ -25,6 +25,8 @@
 // ----------------------------------------------------------------------------
 
 #include <tau/check.hh>
+#include <tau/exception.hh>
+#include <tau/string.hh>
 #include <check-impl.hh>
 
 namespace tau {
@@ -39,6 +41,15 @@ Check::Check(bool checked):
 Check::Check(Widget_ptr wp):
     Widget(std::dynamic_pointer_cast<Check_impl>(wp))
 {
+}
+
+Check & Check::operator=(Widget_ptr wp) {
+    if (!std::dynamic_pointer_cast<Check_impl>(wp)) {
+        throw user_error(str_format(this, " Check::operator=(Widget_ptr): got pure or incompatible implementation pointer"));
+    }
+
+    impl = wp;
+    return *this;
 }
 
 Check::Check(Check_style check_style, bool checked):

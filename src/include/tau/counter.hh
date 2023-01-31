@@ -87,6 +87,13 @@ public:
     /// implementation pointer class.
     Counter(Widget_ptr wp);
 
+    /// Assign implementation.
+    ///
+    /// @since 0.4.0
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Counter & operator=(Widget_ptr wp);
+
     /// @}
     /// Set border style.
     /// @param bs the border style, see #Border_style enum

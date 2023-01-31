@@ -76,6 +76,13 @@ public:
     /// implementation pointer class.
     Navigator(Widget_ptr wp);
 
+    /// Assign implementation.
+    ///
+    /// @since 0.4.0
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Navigator & operator=(Widget_ptr wp);
+
     /// @}
     /// Set current URI.
     void set_uri(const ustring & uri);

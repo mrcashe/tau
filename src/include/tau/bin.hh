@@ -78,6 +78,13 @@ public:
     /// implementation pointer class.
     Bin(Widget_ptr wp);
 
+    /// Assign implementation.
+    ///
+    /// @since 0.4.0
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Bin & operator=(Widget_ptr wp);
+
     /// @}
     /// Set owning widget.
     /// You can insert a new child into %Bin even when it is old child already

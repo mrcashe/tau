@@ -81,6 +81,13 @@ public:
     /// implementation pointer class.
     Notebook(Widget_ptr wp);
 
+    /// Assign implementation.
+    ///
+    /// @since 0.4.0
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Notebook & operator=(Widget_ptr wp);
+
     /// @}
     /// Appends a page to notebook.
     /// @param w the widget for append.

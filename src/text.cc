@@ -24,6 +24,8 @@
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ----------------------------------------------------------------------------
 
+#include <tau/exception.hh>
+#include <tau/string.hh>
 #include <tau/text.hh>
 #include <text-impl.hh>
 #include <iostream>
@@ -40,6 +42,15 @@ Text::Text():
 Text::Text(Widget_ptr wp):
     Widget(std::dynamic_pointer_cast<Text_impl>(wp))
 {
+}
+
+Text & Text::operator=(Widget_ptr wp) {
+    if (!std::dynamic_pointer_cast<Text_impl>(wp)) {
+        throw user_error(str_format(this, " Text::operator=(Widget_ptr): got pure or incompatible implementation pointer"));
+    }
+
+    impl = wp;
+    return *this;
 }
 
 Text::Text(Align halign, Align valign):

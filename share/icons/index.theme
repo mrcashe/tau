@@ -1,16 +1,7 @@
-# This theme is a fallback icon theme for TAU library.
-# Library does not support SVG images yet, so bitmap icons used.
-# The images taken mainly from Oxygen icon theme.
-# I find it difficult to say what is the current status of the oxygen-icons project,
-# I even can not find a proper website of this project. If anybody can clarify that
-# status, let me know: <mrcashe@gmail.com>.
-
 [Icon Theme]
 Name=tau
 Inherits=Oxygen,Hicolor
 Comment=The fallback theme for TAU library
-
-# Directory list
 Directories=actions/12,actions/16,actions/22,actions/32,actions/48,devices/16,devices/22,devices/32,devices/48,places/16,places/22,places/32,places/48
 
 [actions/12]
@@ -43,12 +34,7 @@ Context=Devices
 Size=16
 Type=Fixed
 
-[devices/32]
 [devices/22]
-Context=Devices
-Size=22
-Type=Fixed
-
 Context=Devices
 Size=32
 Type=Fixed
@@ -77,3 +63,4 @@ Type=Fixed
 Context=Places
 Size=48
 Type=Fixed
+

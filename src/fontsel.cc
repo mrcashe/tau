@@ -25,6 +25,8 @@
 // ----------------------------------------------------------------------------
 
 #include <tau/fontsel.hh>
+#include <tau/exception.hh>
+#include <tau/string.hh>
 #include <fontsel-impl.hh>
 
 #define FONTSEL_IMPL (std::static_pointer_cast<Fontsel_impl>(impl))
@@ -39,6 +41,15 @@ Fontsel::Fontsel():
 Fontsel::Fontsel(Widget_ptr wp):
     Widget(std::dynamic_pointer_cast<Fontsel_impl>(wp))
 {
+}
+
+Fontsel & Fontsel::operator=(Widget_ptr wp) {
+    if (!std::dynamic_pointer_cast<Fontsel_impl>(wp)) {
+        throw user_error(str_format(this, " Fontsel::operator=(Widget_ptr): got pure or incompatible implementation pointer"));
+    }
+
+    impl = wp;
+    return *this;
 }
 
 Fontsel::Fontsel(const ustring & spec, const ustring & sample):

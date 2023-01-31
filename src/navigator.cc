@@ -24,7 +24,9 @@
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ----------------------------------------------------------------------------
 
+#include <tau/exception.hh>
 #include <tau/navigator.hh>
+#include <tau/string.hh>
 #include <navigator-impl.hh>
 
 namespace tau {
@@ -39,6 +41,15 @@ Navigator::Navigator(const ustring & path):
 Navigator::Navigator(Widget_ptr wp):
     Widget(std::dynamic_pointer_cast<Navigator_impl>(wp))
 {
+}
+
+Navigator & Navigator::operator=(Widget_ptr wp) {
+    if (!std::dynamic_pointer_cast<Navigator_impl>(wp)) {
+        throw user_error(str_format(this, " Navigator::operator=(Widget_ptr): got pure or incompatible implementation pointer"));
+    }
+
+    impl = wp;
+    return *this;
 }
 
 void Navigator::set_uri(const ustring & uri) {

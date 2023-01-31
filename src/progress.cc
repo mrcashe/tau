@@ -24,7 +24,9 @@
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ----------------------------------------------------------------------------
 
+#include <tau/exception.hh>
 #include <tau/progress.hh>
+#include <tau/string.hh>
 #include <progress-impl.hh>
 
 namespace tau {
@@ -39,6 +41,15 @@ Progress::Progress(bool vertical):
 Progress::Progress(Widget_ptr wp):
     Widget(std::dynamic_pointer_cast<Progress_impl>(wp))
 {
+}
+
+Progress & Progress::operator=(Widget_ptr wp) {
+    if (!std::dynamic_pointer_cast<Progress_impl>(wp)) {
+        throw user_error(str_format(this, " Progress::operator=(Widget_ptr): got pure or incompatible implementation pointer"));
+    }
+
+    impl = wp;
+    return *this;
 }
 
 void Progress::set_border_style(Border_style bs) {

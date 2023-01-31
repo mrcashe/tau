@@ -74,6 +74,13 @@ public:
     /// implementation pointer class.
     Popup(Widget_ptr wp);
 
+    /// Assign implementation.
+    ///
+    /// @since 0.4.0
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Popup & operator=(Widget_ptr wp);
+
     /// Close window.
     void close();
 

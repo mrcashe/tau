@@ -25,6 +25,8 @@
 // ----------------------------------------------------------------------------
 
 #include <tau/fileman.hh>
+#include <tau/exception.hh>
+#include <tau/string.hh>
 #include <fileman-impl.hh>
 
 namespace tau {
@@ -39,6 +41,15 @@ Fileman::Fileman(Fileman_mode mode, const ustring & path):
 Fileman::Fileman(Widget_ptr wp):
     Widget(std::dynamic_pointer_cast<Fileman_impl>(wp))
 {
+}
+
+Fileman & Fileman::operator=(Widget_ptr wp) {
+    if (!std::dynamic_pointer_cast<Fileman_impl>(wp)) {
+        throw user_error(str_format(this, " Fileman::operator=(Widget_ptr): got pure or incompatible implementation pointer"));
+    }
+
+    impl = wp;
+    return *this;
 }
 
 Widget_ptr Fileman::navigator_ptr() {

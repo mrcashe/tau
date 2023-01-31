@@ -24,6 +24,8 @@
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ----------------------------------------------------------------------------
 
+#include <tau/exception.hh>
+#include <tau/string.hh>
 #include <tau/toplevel.hh>
 #include <display-impl.hh>
 #include <pixmap-impl.hh>
@@ -51,6 +53,15 @@ Toplevel::Toplevel(const ustring & title, const Rect & bounds):
 Toplevel::Toplevel(Widget_ptr wp):
     Window(std::dynamic_pointer_cast<Window_impl>(wp))
 {
+}
+
+Toplevel & Toplevel::operator=(Widget_ptr wp) {
+    if (!std::dynamic_pointer_cast<Toplevel_impl>(wp)) {
+        throw user_error(str_format(this, " Toplevel::operator=(Widget_ptr): got pure or incompatible implementation pointer"));
+    }
+
+    impl = wp;
+    return *this;
 }
 
 Toplevel::Toplevel(std::nullptr_t):

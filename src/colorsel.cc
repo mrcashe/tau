@@ -25,6 +25,8 @@
 // ----------------------------------------------------------------------------
 
 #include <tau/colorsel.hh>
+#include <tau/exception.hh>
+#include <tau/string.hh>
 #include <colorsel-impl.hh>
 
 namespace tau {
@@ -39,6 +41,15 @@ Colorsel::Colorsel(const Color & initial_color):
 Colorsel::Colorsel(Widget_ptr wp):
     Widget(std::dynamic_pointer_cast<Colorsel_impl>(wp))
 {
+}
+
+Colorsel & Colorsel::operator=(Widget_ptr wp) {
+    if (!std::dynamic_pointer_cast<Colorsel_impl>(wp)) {
+        throw user_error(str_format(this, " Colorsel::operator=(Widget_ptr): got pure or incompatible implementation pointer"));
+    }
+
+    impl = wp;
+    return *this;
 }
 
 void Colorsel::set_color(const Color & color) {

@@ -75,6 +75,13 @@ public:
     /// implementation pointer class.
     Image(Widget_ptr wp);
 
+    /// Assign implementation.
+    ///
+    /// @since 0.4.0
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Image & operator=(Widget_ptr wp);
+
     /// Constructor with pixmap.
     /// @param pixmap the pixmap.
     /// @param transparent set transparent or opaque mode.

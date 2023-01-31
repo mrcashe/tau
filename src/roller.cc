@@ -24,7 +24,9 @@
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ----------------------------------------------------------------------------
 
+#include <tau/exception.hh>
 #include <tau/roller.hh>
+#include <tau/string.hh>
 #include <roller-impl.hh>
 
 namespace tau {
@@ -39,6 +41,15 @@ Roller::Roller(Orientation orient, bool autohide):
 Roller::Roller(Widget_ptr wp):
     Widget(std::dynamic_pointer_cast<Roller_impl>(wp))
 {
+}
+
+Roller & Roller::operator=(Widget_ptr wp) {
+    if (!std::dynamic_pointer_cast<Roller_impl>(wp)) {
+        throw user_error(str_format(this, " Roller::operator=(Widget_ptr): got pure or incompatible implementation pointer"));
+    }
+
+    impl = wp;
+    return *this;
 }
 
 void Roller::insert(Widget & w) {

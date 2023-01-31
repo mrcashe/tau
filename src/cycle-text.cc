@@ -25,6 +25,8 @@
 // ----------------------------------------------------------------------------
 
 #include <tau/cycle-text.hh>
+#include <tau/exception.hh>
+#include <tau/string.hh>
 #include <cycle-text-impl.hh>
 
 namespace tau {
@@ -50,6 +52,15 @@ Cycle_text::Cycle_text(Align align):
 Cycle_text::Cycle_text(Widget_ptr wp):
     Widget(std::dynamic_pointer_cast<Cycle_text_impl>(wp))
 {
+}
+
+Cycle_text & Cycle_text::operator=(Widget_ptr wp) {
+    if (!std::dynamic_pointer_cast<Cycle_text_impl>(wp)) {
+        throw user_error(str_format(this, " Cycle_text::operator=(Widget_ptr): got pure or incompatible implementation pointer"));
+    }
+
+    impl = wp;
+    return *this;
 }
 
 void Cycle_text::set_border_style(Border_style bs) {

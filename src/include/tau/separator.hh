@@ -72,6 +72,13 @@ public:
     /// implementation pointer class.
     Separator(Widget_ptr wp);
 
+    /// Assign implementation.
+    ///
+    /// @since 0.4.0
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Separator & operator=(Widget_ptr wp);
+
     /// Set separator style.
     void set_separator_style(Separator_style separator_style);
 

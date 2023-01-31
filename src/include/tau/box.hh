@@ -94,6 +94,13 @@ public:
     /// implementation pointer class.
     Box(Widget_ptr wp);
 
+    /// Assign implementation.
+    ///
+    /// @since 0.4.0
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Box & operator=(Widget_ptr wp);
+
     /// @}
     /// Set spacing.
     /// @param spacing the amount of space being allocated between widgets.

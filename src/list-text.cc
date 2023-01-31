@@ -25,6 +25,8 @@
 // ----------------------------------------------------------------------------
 
 #include <tau/list-text.hh>
+#include <tau/exception.hh>
+#include <tau/string.hh>
 #include <list-text-impl.hh>
 
 #define LIST_TEXT_IMPL (std::static_pointer_cast<List_text_impl>(impl))
@@ -39,6 +41,15 @@ List_text::List_text(Align align):
 List_text::List_text(Widget_ptr wp):
     Widget(std::dynamic_pointer_cast<List_text_impl>(wp))
 {
+}
+
+List_text & List_text::operator=(Widget_ptr wp) {
+    if (!std::dynamic_pointer_cast<List_text_impl>(wp)) {
+        throw user_error(str_format(this, " List_text::operator=(Widget_ptr): got pure or incompatible implementation pointer"));
+    }
+
+    impl = wp;
+    return *this;
 }
 
 void List_text::set_text_align(Align align) {

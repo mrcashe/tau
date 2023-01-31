@@ -25,6 +25,8 @@
 // ----------------------------------------------------------------------------
 
 #include <tau/list.hh>
+#include <tau/exception.hh>
+#include <tau/string.hh>
 #include <list-impl.hh>
 
 #define LIST_IMPL (std::static_pointer_cast<List_impl>(impl))
@@ -39,6 +41,15 @@ List::List():
 List::List(Widget_ptr wp):
     Widget(std::dynamic_pointer_cast<List_impl>(wp))
 {
+}
+
+List & List::operator=(Widget_ptr wp) {
+    if (!std::dynamic_pointer_cast<List_impl>(wp)) {
+        throw user_error(str_format(this, " List::operator=(Widget_ptr): got pure or incompatible implementation pointer"));
+    }
+
+    impl = wp;
+    return *this;
 }
 
 int List::prepend_row(Widget & w, bool shrink) {

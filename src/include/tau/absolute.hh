@@ -76,6 +76,13 @@ public:
     /// implementation pointer class.
     Absolute(Widget_ptr wp);
 
+    /// Assign implementation.
+    ///
+    /// @since 0.4.0
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Absolute & operator=(Widget_ptr wp);
+
     /// @}
     /// Put widget at the specified position and give them specified size.
     ///

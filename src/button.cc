@@ -25,6 +25,8 @@
 // ----------------------------------------------------------------------------
 
 #include <tau/button.hh>
+#include <tau/exception.hh>
+#include <tau/string.hh>
 #include <button-impl.hh>
 
 namespace tau {
@@ -73,6 +75,15 @@ Button::Button():
 Button::Button(Widget_ptr wp):
     Button_base(std::dynamic_pointer_cast<Button_impl>(wp))
 {
+}
+
+Button & Button::operator=(Widget_ptr wp) {
+    if (!std::dynamic_pointer_cast<Button_impl>(wp)) {
+        throw user_error(str_format(this, " Button::operator=(Widget_ptr): got pure or incompatible implementation pointer"));
+    }
+
+    impl = wp;
+    return *this;
 }
 
 Button::Button(const ustring & label):
@@ -149,6 +160,15 @@ Toggle::Toggle():
 Toggle::Toggle(Widget_ptr wp):
     Button_base(std::dynamic_pointer_cast<Toggle_impl>(wp))
 {
+}
+
+Toggle & Toggle::operator=(Widget_ptr wp) {
+    if (!std::dynamic_pointer_cast<Toggle_impl>(wp)) {
+        throw user_error(str_format(this, " Toggle::operator=(Widget_ptr): got pure or incompatible implementation pointer"));
+    }
+
+    impl = wp;
+    return *this;
 }
 
 Toggle::Toggle(const ustring & label):

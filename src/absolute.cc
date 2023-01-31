@@ -25,6 +25,8 @@
 // ----------------------------------------------------------------------------
 
 #include <tau/absolute.hh>
+#include <tau/exception.hh>
+#include <tau/string.hh>
 #include <absolute-impl.hh>
 
 #define ABSOLUTE_IMPL (std::static_pointer_cast<Absolute_impl>(impl))
@@ -39,6 +41,15 @@ Absolute::Absolute():
 Absolute::Absolute(Widget_ptr wp):
     Container(std::dynamic_pointer_cast<Absolute_impl>(wp))
 {
+}
+
+Absolute & Absolute::operator=(Widget_ptr wp) {
+    if (!std::dynamic_pointer_cast<Absolute_impl>(wp)) {
+        throw user_error(str_format(this, " Absolute::operator=(Widget_ptr): got pure or incompatible implementation pointer"));
+    }
+
+    impl = wp;
+    return *this;
 }
 
 void Absolute::put(Widget & w, const Point & pos, const Size & size) {

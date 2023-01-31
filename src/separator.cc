@@ -24,7 +24,9 @@
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ----------------------------------------------------------------------------
 
+#include <tau/exception.hh>
 #include <tau/separator.hh>
+#include <tau/string.hh>
 #include <separator-impl.hh>
 
 namespace tau {
@@ -39,6 +41,15 @@ Separator::Separator(Separator_style separator_style):
 Separator::Separator(Widget_ptr wp):
     Widget(std::dynamic_pointer_cast<Separator_impl>(wp))
 {
+}
+
+Separator & Separator::operator=(Widget_ptr wp) {
+    if (!std::dynamic_pointer_cast<Separator_impl>(wp)) {
+        throw user_error(str_format(this, " Separator::operator=(Widget_ptr): got pure or incompatible implementation pointer"));
+    }
+
+    impl = wp;
+    return *this;
 }
 
 void Separator::set_separator_style(Separator_style separator_style) {

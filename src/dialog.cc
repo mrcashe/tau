@@ -25,6 +25,8 @@
 // ----------------------------------------------------------------------------
 
 #include <tau/dialog.hh>
+#include <tau/exception.hh>
+#include <tau/string.hh>
 #include <dialog-impl.hh>
 #include <display-impl.hh>
 
@@ -71,6 +73,15 @@ Dialog::Dialog(Toplevel & wnd, const ustring & title, const Rect & bounds):
 Dialog::Dialog(Widget_ptr wp):
     Toplevel(std::dynamic_pointer_cast<Dialog_impl>(wp))
 {
+}
+
+Dialog & Dialog::operator=(Widget_ptr wp) {
+    if (!std::dynamic_pointer_cast<Dialog_impl>(wp)) {
+        throw user_error(str_format(this, " Dialog::operator=(Widget_ptr): got pure or incompatible implementation pointer"));
+    }
+
+    impl = wp;
+    return *this;
 }
 
 void Dialog::run() {

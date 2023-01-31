@@ -71,6 +71,13 @@ public:
     /// implementation pointer class.
     List_text(Widget_ptr wp);
 
+    /// Assign implementation.
+    ///
+    /// @since 0.4.0
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    List_text & operator=(Widget_ptr wp);
+
     /// Set horizontal text align.
     void set_text_align(Align align);
 

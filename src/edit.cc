@@ -25,6 +25,8 @@
 // ----------------------------------------------------------------------------
 
 #include <tau/edit.hh>
+#include <tau/exception.hh>
+#include <tau/string.hh>
 #include <edit-impl.hh>
 
 namespace tau {
@@ -39,6 +41,15 @@ Edit::Edit():
 Edit::Edit(Widget_ptr wp):
     Text(std::dynamic_pointer_cast<Edit_impl>(wp))
 {
+}
+
+Edit & Edit::operator=(Widget_ptr wp) {
+    if (!std::dynamic_pointer_cast<Edit_impl>(wp)) {
+        throw user_error(str_format(this, " Edit::operator=(Widget_ptr): got pure or incompatible implementation pointer"));
+    }
+
+    impl = wp;
+    return *this;
 }
 
 Edit::Edit(Align halign, Align valign):

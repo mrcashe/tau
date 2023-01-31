@@ -49,7 +49,7 @@ Widget::Widget(Widget_ptr wp):
     impl(wp)
 {
     if (!impl) {
-        throw user_error(str_format(this, " Widget::Widget(Widget_ptr wp): got pure or incompatible implementation pointer"));
+        throw user_error(str_format(this, " Widget::Widget(Widget_ptr): got pure or incompatible implementation pointer"));
     }
 }
 
@@ -64,6 +64,12 @@ Widget_ptr Widget::ptr() {
 
 Widget_cptr Widget::ptr() const {
     return impl;
+}
+
+Widget & Widget::operator=(Widget_ptr wp) {
+    if (!wp) { throw user_error(str_format(this, " Widget::operator=(Widget_ptr): got pure or incompatible implementation pointer")); }
+    impl = wp;
+    return *this;
 }
 
 void Widget::show() {

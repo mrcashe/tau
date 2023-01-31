@@ -24,7 +24,9 @@
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ----------------------------------------------------------------------------
 
+#include <tau/exception.hh>
 #include <tau/scroller.hh>
+#include <tau/string.hh>
 #include <scroller-impl.hh>
 
 namespace tau {
@@ -39,6 +41,15 @@ Scroller::Scroller():
 Scroller::Scroller(Widget_ptr wp):
     Container(std::dynamic_pointer_cast<Scroller_impl>(wp))
 {
+}
+
+Scroller & Scroller::operator=(Widget_ptr wp) {
+    if (!std::dynamic_pointer_cast<Scroller_impl>(wp)) {
+        throw user_error(str_format(this, " Scroller::operator=(Widget_ptr): got pure or incompatible implementation pointer"));
+    }
+
+    impl = wp;
+    return *this;
 }
 
 void Scroller::insert(Widget & w) {

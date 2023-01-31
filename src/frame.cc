@@ -44,6 +44,15 @@ Frame::Frame(Widget_ptr wp):
 {
 }
 
+Frame & Frame::operator=(Widget_ptr wp) {
+    if (!std::dynamic_pointer_cast<Frame_impl>(wp)) {
+        throw user_error(str_format(this, " Frame::operator=(Widget_ptr): got pure or incompatible implementation pointer"));
+    }
+
+    impl = wp;
+    return *this;
+}
+
 Frame::Frame(const ustring & label):
     Container(std::make_shared<Frame_impl>(label))
 {

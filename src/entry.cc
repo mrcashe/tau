@@ -25,6 +25,8 @@
 // ----------------------------------------------------------------------------
 
 #include <tau/entry.hh>
+#include <tau/exception.hh>
+#include <tau/string.hh>
 #include <entry-impl.hh>
 
 namespace tau {
@@ -39,6 +41,15 @@ Entry::Entry(Border_style border_style):
 Entry::Entry(Widget_ptr wp):
     Widget(std::dynamic_pointer_cast<Entry_impl>(wp))
 {
+}
+
+Entry & Entry::operator=(Widget_ptr wp) {
+    if (!std::dynamic_pointer_cast<Entry_impl>(wp)) {
+        throw user_error(str_format(this, " Entry::operator=(Widget_ptr): got pure or incompatible implementation pointer"));
+    }
+
+    impl = wp;
+    return *this;
 }
 
 Entry::Entry(Align text_align, Border_style border_style):

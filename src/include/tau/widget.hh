@@ -72,6 +72,9 @@ namespace tau {
 class Widget: public trackable {
 public:
 
+    /// @name Constructors, operators, shared pointers
+    /// @{
+
     /// Default constructor.
     /// Creates basic widget commonly used for drawing.
     Widget();
@@ -109,6 +112,14 @@ public:
     /// Gets underlying shared pointer to implementation.
     Widget_cptr ptr() const;
 
+    /// Assign implementation.
+    ///
+    /// @since 0.4.0
+    /// @throw user_error in case of pure implementation pointer or incompatible
+    /// implementation pointer class.
+    Widget & operator=(Widget_ptr wp);
+
+    /// @}
     /// @name Size, position and coordinates
     /// Methods related to widget size, position and coordinates control.
     ///

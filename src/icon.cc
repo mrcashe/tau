@@ -25,6 +25,8 @@
 // ----------------------------------------------------------------------------
 
 #include <tau/icon.hh>
+#include <tau/exception.hh>
+#include <tau/string.hh>
 #include <icon-impl.hh>
 
 namespace tau {
@@ -39,6 +41,15 @@ Icon::Icon():
 Icon::Icon(Widget_ptr wp):
     Widget(std::dynamic_pointer_cast<Icon_impl>(wp))
 {
+}
+
+Icon & Icon::operator=(Widget_ptr wp) {
+    if (!std::dynamic_pointer_cast<Icon_impl>(wp)) {
+        throw user_error(str_format(this, " Icon::operator=(Widget_ptr): got pure or incompatible implementation pointer"));
+    }
+
+    impl = wp;
+    return *this;
 }
 
 Icon::Icon(const ustring & icon_name, int icon_size):

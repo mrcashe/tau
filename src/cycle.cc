@@ -25,6 +25,8 @@
 // ----------------------------------------------------------------------------
 
 #include <tau/cycle.hh>
+#include <tau/exception.hh>
+#include <tau/string.hh>
 #include <cycle-impl.hh>
 
 namespace tau {
@@ -39,6 +41,15 @@ Cycle::Cycle(Border_style bs):
 Cycle::Cycle(Widget_ptr wp):
     Widget(std::dynamic_pointer_cast<Cycle_impl>(wp))
 {
+}
+
+Cycle & Cycle::operator=(Widget_ptr wp) {
+    if (!std::dynamic_pointer_cast<Cycle_impl>(wp)) {
+        throw user_error(str_format(this, " Cycle::operator=(Widget_ptr): got pure or incompatible implementation pointer"));
+    }
+
+    impl = wp;
+    return *this;
 }
 
 void Cycle::set_border_style(Border_style bs) {
