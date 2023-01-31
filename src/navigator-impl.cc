@@ -179,7 +179,7 @@ void Navigator_impl::show_record(Rec & rec) {
         }
 
         if (ico) {
-            Image_ptr img = std::make_shared<Image_impl>(ico->dup(), true);
+            Image_ptr img = std::make_shared<Image_impl>(ico, true);
             list_->insert(rec.br, img, -1, true);
             list_->align(img, ALIGN_START, ALIGN_CENTER);
         }

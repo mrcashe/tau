@@ -79,7 +79,7 @@ void Pixmap_painter_win::fill_polygon(const Point * pts, std::size_t npts, const
 }
 
 // Overrides pure Painter_impl.
-void Pixmap_painter_win::draw_pixmap(Pixmap_ptr pix, const Point & pix_origin, const Size & pix_size, const Point & pt, bool transparent) {
+void Pixmap_painter_win::draw_pixmap(Pixmap_cptr pix, const Point & pix_origin, const Size & pix_size, const Point & pt, bool transparent) {
 }
 
 } // namespace tau

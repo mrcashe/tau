@@ -404,10 +404,10 @@ void Painter_win::fill_prim_contour(const Prim_contour & o) {
 }
 
 // protected
-void Painter_win::draw_pixmap(Pixmap_ptr pix, const Point & pix_origin, const Size & pix_size, const Point & pt, bool transparent) {
+void Painter_win::draw_pixmap(Pixmap_cptr pix, const Point & pix_origin, const Size & pix_size, const Point & pt, bool transparent) {
     if (!hdc_) { return; }
 
-    if (auto pix_ms = std::dynamic_pointer_cast<Pixmap_win>(pix)) {
+    if (auto pix_ms = std::dynamic_pointer_cast<const Pixmap_win>(pix)) {
         if (HDC cdc = CreateCompatibleDC(hdc_)) {
             HBITMAP cbm = pix_ms->create_bitmap(hdc_);
 

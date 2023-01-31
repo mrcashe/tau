@@ -225,13 +225,13 @@ void Painter_impl::text(std::u32string && str, const Color & c) {
 }
 
 // public
-void Painter_impl::pixmap(Pixmap_ptr pix, const Point pix_origin, const Size & pix_size, bool transparent) {
+void Painter_impl::pixmap(Pixmap_cptr pix, const Point pix_origin, const Size & pix_size, bool transparent) {
     flush_object();
     prims_.push_back(new_prim_pixmap(position(), pix, pix_origin, pix_size, transparent));
 }
 
 // public
-void Painter_impl::pixmap(Pixmap_ptr pix, bool transparent) {
+void Painter_impl::pixmap(Pixmap_cptr pix, bool transparent) {
     pixmap(pix, Point(), pix->size(), transparent);
 }
 
@@ -823,7 +823,7 @@ Painter_impl::Prim_text * Painter_impl::new_prim_text(const Vector & pos, std::u
     return p;
 }
 
-Painter_impl::Prim_pixmap * Painter_impl::new_prim_pixmap(const Vector & pos, Pixmap_ptr pix, const Point & origin, const Size & size, bool transparent) {
+Painter_impl::Prim_pixmap * Painter_impl::new_prim_pixmap(const Vector & pos, Pixmap_cptr pix, const Point & origin, const Size & size, bool transparent) {
     Prim_pixmap * p = nullptr, * pa = pixmaps_.data();
 
     for (std::size_t n = pixmaps_.size(); n; n--, pa++) {

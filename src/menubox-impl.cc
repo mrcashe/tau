@@ -170,14 +170,16 @@ bool Menubox_impl::on_popup_mouse_down(int mbt, int mm, const Point & pt) {
             Point spt = wip->to_screen(pt);
 
             for (auto m = parent_menu(); m; m = m->parent_menu()) {
-                Point worg = m->to_screen();
+                if (dynamic_cast<Menubox_impl *>(m)) {
+                    Point worg = m->to_screen();
 
-                if (Rect(worg, m->size()).contains(spt)) {
-                    m->close_submenu();
-                    m->grab_modal();
-                    m->grab_mouse();
-                    m->signal_mouse_down()(mbt, mm, spt-worg);
-                    return true;
+                    if (Rect(worg, m->size()).contains(spt)) {
+                        m->close_submenu();
+                        m->grab_modal();
+                        m->grab_mouse();
+                        m->signal_mouse_down()(mbt, mm, spt-worg);
+                        return true;
+                    }
                 }
             }
 

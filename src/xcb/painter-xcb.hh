@@ -65,7 +65,7 @@ protected:
     void stroke_polyline(const Point * pts, std::size_t npts) override;
 
     // Overrides pure Painter_impl.
-    void draw_pixmap(Pixmap_ptr pix, const Point & pix_origin, const Size & pix_size, const Point & pt, bool transparent) override;
+    void draw_pixmap(Pixmap_cptr pix, const Point & pix_origin, const Size & pix_size, const Point & pt, bool transparent) override;
 
     // Overrides Painter_impl.
     void fill_polygon(const Point * pts, std::size_t npts, const Color & color) override;
@@ -91,7 +91,7 @@ protected:
 private:
 
     void set_clip();
-    void put_image(uint8_t format, xcb_drawable_t drawable, Context_xcb & gc, const Size & sz, const Point & dst_pos, uint8_t left_pad, uint8_t depth, uint32_t data_len, const uint8_t * data);
+    void put_image(uint8_t format, xcb_drawable_t drawable, const Context_xcb & gc, const Size & sz, const Point & dst_pos, uint8_t left_pad, uint8_t depth, uint32_t data_len, const uint8_t * data);
     void on_destroy();
 
 private:

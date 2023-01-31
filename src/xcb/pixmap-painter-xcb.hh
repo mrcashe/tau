@@ -60,7 +60,7 @@ protected:
     void fill_polygon(const Point * pts, std::size_t npts, const Color & color) override;
 
     // Overrides pure Painter_impl.
-    void draw_pixmap(Pixmap_ptr pix, const Point & pix_origin, const Size & pix_size, const Point & pt, bool transparent) override;
+    void draw_pixmap(Pixmap_cptr pix, const Point & pix_origin, const Size & pix_size, const Point & pt, bool transparent) override;
 
     // Overrides pure Painter_impl.
     void set_font(Font_ptr font) override;

@@ -147,7 +147,7 @@ void Context_xcb::set_arc_mode(uint32_t mode) {
     arcmode_ = mode;
 }
 
-void Context_xcb::flush() {
+void Context_xcb::flush() const {
     if (0 != flags_) {
         uint32_t v[24];
         uint32_t cnt = 0;

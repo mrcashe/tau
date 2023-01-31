@@ -33,6 +33,13 @@
 
 namespace tau {
 
+struct Pixmap_sys {
+    unsigned             depth_;
+    std::size_t          stride_;
+    std::vector<uint8_t> raw_;
+    BITMAPINFO           info_;
+};
+
 class Pixmap_win: public Pixmap_impl {
 public:
 
@@ -78,10 +85,7 @@ private:
 
 private:
 
-    unsigned             depth_;
-    std::size_t          stride_;
-    std::vector<uint8_t> raw_;
-    BITMAPINFO           info_;
+    mutable Pixmap_sys sys;
 };
 
 } // namespace tau

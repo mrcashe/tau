@@ -59,6 +59,7 @@ class Buffer_citer_impl;
 class Check;
 class Check_menu_item;
 class Color;
+class Color_style;
 class Container;
 class Contour;
 
@@ -120,6 +121,8 @@ class Font;
 class Font_impl;
 using Font_ptr = std::shared_ptr<Font_impl>;
 using Font_cptr = std::shared_ptr<const Font_impl>;
+
+class Font_style;
 
 class Glyph;
 class Glyph_impl;

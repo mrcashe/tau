@@ -92,10 +92,7 @@ int Notebook_impl::page_number(Widget_cptr cwp) const {
     std::size_t current = 0;
 
     for (auto & p: pages_) {
-        if (cwp == p.wp) {
-            return current;
-        }
-
+        if (cwp == p.wp || cwp == p.title) { return current; }
         ++current;
     }
 

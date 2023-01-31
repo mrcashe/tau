@@ -73,6 +73,7 @@ public:
 private:
 
     friend Style_impl;
+    friend Font_style;
 
     ustring     value_;
     ustring     pvalue_;

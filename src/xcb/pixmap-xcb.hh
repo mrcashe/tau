@@ -57,6 +57,20 @@ struct Pix_store {
     void to_full(Pix_store & xp) const;
 };
 
+struct Pixmap_sys {
+    Display_xcb_ptr dp_;
+    Pix_store * store_                  = nullptr;
+    xcb_pixmap_t pixmap_                = XCB_NONE;
+    xcb_pixmap_t mask_pixmap_           = XCB_NONE;
+    xcb_render_picture_t picture_       = XCB_NONE;
+    xcb_render_picture_t mask_picture_  = XCB_NONE;
+    Context_xcb * gc_                   = nullptr;
+    Context_xcb * gcm_                  = nullptr;
+};
+
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+
 class Pixmap_xcb: public Pixmap_impl {
 public:
 
@@ -90,51 +104,40 @@ public:
     // Overrides pure Pixmap_impl.
     void fill_rectangles(const Rect * rs, std::size_t nrs, const Color & c) override;
 
-    void set_display(Display_xcb_ptr dp);
-    Display_xcb_ptr display() { return dp_; }
-    Display_xcb_cptr display() const { return dp_; }
+    void set_display(Display_xcb_ptr dp) const;
+    Display_xcb_ptr display() { return sys.dp_; }
+    Display_xcb_cptr display() const { return sys.dp_; }
 
-    xcb_pixmap_t xcb_pixmap() const { return pixmap_; };
-    xcb_pixmap_t create_xcb_pixmap(xcb_drawable_t drw, unsigned depth=0);
+    xcb_pixmap_t xcb_pixmap() const { return sys.pixmap_; };
+    xcb_pixmap_t create_xcb_pixmap(xcb_drawable_t drw, unsigned depth=0) const;
 
-    xcb_render_picture_t xcb_render_picture() const { return picture_; }
-    xcb_render_picture_t create_xcb_render_picture(xcb_render_pictformat_t pict_format=XCB_NONE);
+    xcb_render_picture_t xcb_render_picture() const { return sys.picture_; }
+    xcb_render_picture_t create_xcb_render_picture(xcb_render_pictformat_t pict_format=XCB_NONE) const;
 
-    Pix_store * store() { return store_; }
-    const Pix_store * store() const { return store_; }
+    Pix_store * store() { return sys.store_; }
+    const Pix_store * store() const { return sys.store_; }
 
-    xcb_pixmap_t mask_xcb_pixmap() const { return mask_pixmap_; }
-    xcb_pixmap_t create_mask_xcb_pixmap(xcb_drawable_t drw);
+    xcb_pixmap_t mask_xcb_pixmap() const { return sys.mask_pixmap_; }
+    xcb_pixmap_t create_mask_xcb_pixmap(xcb_drawable_t drw) const;
 
-    xcb_render_picture_t mask_xcb_render_picture() const { return mask_picture_; }
-    xcb_render_picture_t create_mask_xcb_render_picture();
+    xcb_render_picture_t mask_xcb_render_picture() const { return sys.mask_picture_; }
+    xcb_render_picture_t create_mask_xcb_render_picture() const;
 
-    Context_xcb * gc() { return gc_; }
-    const Context_xcb * gc() const { return gc_; }
+    Context_xcb * gc() { return sys.gc_; }
+    const Context_xcb * gc() const { return sys.gc_; }
 
-    Context_xcb * mask_gc() { return gcm_; }
-    const Context_xcb * mask_gc() const { return gcm_; }
+    Context_xcb * mask_gc() { return sys.gcm_; }
+    const Context_xcb * mask_gc() const { return sys.gcm_; }
 
-    uint32_t format() const { return store_ ? store_->format() : XCB_NONE; }
-
-private:
-
-    void drop_cache();
+    uint32_t format() const { return sys.store_ ? sys.store_->format() : XCB_NONE; }
 
 private:
 
-    Pix_store * store_ = nullptr;
+    void drop_cache() const;
 
-    xcb_pixmap_t pixmap_ = XCB_NONE;
-    xcb_pixmap_t mask_pixmap_ = XCB_NONE;
+private:
 
-    xcb_render_picture_t picture_ = XCB_NONE;
-    xcb_render_picture_t mask_picture_ = XCB_NONE;
-
-    Context_xcb * gc_ = nullptr;
-    Context_xcb * gcm_ = nullptr;
-
-    Display_xcb_ptr dp_;
+    mutable Pixmap_sys sys;
 };
 
 } // namespace tau

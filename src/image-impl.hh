@@ -37,11 +37,11 @@ class Image_impl: public Widget_impl {
 public:
 
     Image_impl();
-    explicit Image_impl(Pixmap_ptr pix, bool transparent=false);
+    explicit Image_impl(Pixmap_cptr pix, bool transparent=false);
     explicit Image_impl(const ustring & pixmap_name, bool transparent=false);
 
-    void add_pixmap(Pixmap_ptr pix, unsigned delay=0);
-    void set_pixmap(Pixmap_ptr pix, bool transparent=false);
+    void add_pixmap(Pixmap_cptr pix, unsigned delay=0);
+    void set_pixmap(Pixmap_cptr pix, bool transparent=false);
     void set_transparent();
     void unset_transparent();
     void set_delay(unsigned delay);
@@ -62,7 +62,7 @@ public:
 protected:
 
     struct Film_frame {
-        Pixmap_ptr      pix;
+        Pixmap_cptr     pix;
         unsigned        delay = 0;
         connection      changed_cx;
     };
@@ -81,7 +81,6 @@ protected:
     void on_timer();
     void on_enable();
     void on_disable();
-    void on_pix_changed(std::size_t index);
 
 protected:
 

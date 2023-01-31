@@ -178,9 +178,11 @@ ustring Style_item::get() const {
 
 void Style_item::set(const ustring & val) {
     if (val.find(U'%') < val.size()) {
-        fmt_ = val;
-        signal_value_changed_(get());
-        signal_changed_();
+        if (fmt_ != val) {
+            fmt_ = val;
+            signal_value_changed_(get());
+            signal_changed_();
+        }
     }
 
     else {
@@ -192,16 +194,14 @@ void Style_item::set(const ustring & val) {
     }
 }
 
-ustring Style_item::format() const {
-    return fmt_;
-}
+void Style_item::set_pvalue(const ustring & pvalue) {
+    ustring val  = pvalue_;
+    pvalue_ = pvalue;
 
-signal<void()> & Style_item::signal_changed() {
-    return signal_changed_;
-}
-
-bool Style_item::is_set() const {
-    return set_ || !value_.empty();
+    if (set_ || (pvalue != val)) {
+        signal_value_changed_(get());
+        signal_changed_();
+    }
 }
 
 void Style_item::unset() {
@@ -215,14 +215,16 @@ void Style_item::unset() {
     }
 }
 
-void Style_item::set_pvalue(const ustring & pvalue) {
-    ustring val  = pvalue_;
-    pvalue_ = pvalue;
+ustring Style_item::format() const {
+    return fmt_;
+}
 
-    if (set_ || (pvalue != val)) {
-        signal_value_changed_(get());
-        signal_changed_();
-    }
+signal<void()> & Style_item::signal_changed() {
+    return signal_changed_;
+}
+
+bool Style_item::is_set() const {
+    return set_ || !value_.empty();
 }
 
 // ----------------------------------------------------------------------------
@@ -264,14 +266,13 @@ void Font_style::clear_size() {
         }
     } while (!done);
 
-    fmt = str_implode(fv, ' ');
-    set(fmt);
+    si_.fmt_ = str_implode(fv, ' ');
 }
 
 void Font_style::resize(double pts) {
     if (pts > 0.0) {
         clear_size();
-        ustring fmt = si_.format();
+        ustring fmt = si_.fmt_;
         if (ustring::npos == fmt.find(U'%')) { fmt = "%v"; }
         fmt = str_format(fmt, " =", pts);
         set(fmt);
@@ -290,7 +291,7 @@ void Font_style::grow(double pts) {
 }
 
 void Font_style::enlarge(double pts) {
-    ustring fmt = si_.format();
+    ustring fmt = si_.fmt_;
     auto fv = str_explode(fmt, str_blanks());
     bool done;
 
@@ -313,10 +314,10 @@ void Font_style::enlarge(double pts) {
 }
 
 void Font_style::add_face(const ustring & face_elements) {
-    ustring fmt = si_.format();
+    ustring fmt = si_.fmt_;
     if (ustring::npos == fmt.find(U'%')) { fmt = "%v"; }
     fmt = str_format(fmt, " ", face_elements);
-    si_.set(fmt);
+    set(fmt);
 }
 
 void Font_style::set_face(const ustring & face) {

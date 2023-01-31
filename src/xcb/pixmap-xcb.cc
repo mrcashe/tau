@@ -426,37 +426,37 @@ void Pix_store::to_mono(Pix_store & pm) const {
 Pixmap_xcb::Pixmap_xcb(unsigned depth, const Size & sz):
     Pixmap_impl()
 {
-    store_ = new Pix_store(depth, sz);
+    sys.store_ = new Pix_store(depth, sz);
 }
 
 Pixmap_xcb::~Pixmap_xcb() {
     drop_cache();
-    delete store_;
+    delete sys.store_;
 }
 
 // Overrides pure Pixmap_impl.
 Size Pixmap_xcb::size() const {
-    return store_->sz_;
+    return sys.store_->sz_;
 }
 
 // Overrides pure Pixmap_impl.
 const uint8_t * Pixmap_xcb::raw() const {
-    return store_->raw_.data();
+    return sys.store_->raw_.data();
 }
 
 // Overrides pure Pixmap_impl.
 int Pixmap_xcb::depth() const {
-    return store_->depth_;
+    return sys.store_->depth_;
 }
 
 // Overrides pure Pixmap_impl.
 std::size_t Pixmap_xcb::bytes() const {
-    return store_->raw_.size();
+    return sys.store_->raw_.size();
 }
 
 // Overrides pure Pixmap_impl.
 void Pixmap_xcb::resize(const Size & sz) {
-    store_->resize(sz);
+    sys.store_->resize(sz);
     drop_cache();
     signal_changed_();
 }
@@ -464,19 +464,19 @@ void Pixmap_xcb::resize(const Size & sz) {
 // Overrides pure Pixmap_impl.
 Color Pixmap_xcb::get_pixel(const Point & pt) const {
     if (1 == depth()) {
-        return store_->get_pixel(pt) ? Color("White") : Color("Black");
+        return Color(sys.store_->get_pixel(pt) ? "White" : "Black");
     }
 
     else if (8 == depth()) {
-        return Color::from_gray8(store_->get_pixel(pt));
+        return Color::from_gray8(sys.store_->get_pixel(pt));
     }
 
     else if (24 == depth()) {
-        return Color::from_rgb24(store_->get_pixel(pt));
+        return Color::from_rgb24(sys.store_->get_pixel(pt));
     }
 
     else {
-        return Color::from_argb32(store_->get_pixel(pt));
+        return Color::from_argb32(sys.store_->get_pixel(pt));
     }
 
     return Color();
@@ -486,25 +486,25 @@ Color Pixmap_xcb::get_pixel(const Point & pt) const {
 void Pixmap_xcb::fill_rectangles(const Rect * rs, std::size_t nrs, const Color & c) {
     if (1 == depth()) {
         for (; 0 != nrs; --nrs, ++rs) {
-            store_->fill_rectangle(rs->origin(), rs->size(), 0 != c.rgb24() ? 0xff : 0x00);
+            sys.store_->fill_rectangle(rs->origin(), rs->size(), 0 != c.rgb24() ? 0xff : 0x00);
         }
     }
 
     else if (8 == depth()) {
         for (; 0 != nrs; --nrs, ++rs) {
-            store_->fill_rectangle(rs->origin(), rs->size(), c.gray8());
+            sys.store_->fill_rectangle(rs->origin(), rs->size(), c.gray8());
         }
     }
 
     else if (24 == depth()) {
         for (; 0 != nrs; --nrs, ++rs) {
-            store_->fill_rectangle(rs->origin(), rs->size(), c.rgb24());
+            sys.store_->fill_rectangle(rs->origin(), rs->size(), c.rgb24());
         }
     }
 
     else if (32 == depth()) {
         for (; 0 != nrs; --nrs, ++rs) {
-            store_->fill_rectangle(rs->origin(), rs->size(), c.argb32());
+            sys.store_->fill_rectangle(rs->origin(), rs->size(), c.argb32());
         }
     }
 
@@ -514,91 +514,91 @@ void Pixmap_xcb::fill_rectangles(const Rect * rs, std::size_t nrs, const Color &
 
 // Overrides pure Pixmap_impl.
 void Pixmap_xcb::set_argb32(const Point & pt, const uint8_t * buffer, std::size_t nbytes) {
-    store_->set_argb32(pt, buffer, nbytes);
+    sys.store_->set_argb32(pt, buffer, nbytes);
     drop_cache();
     signal_changed_();
 }
 
-void Pixmap_xcb::set_display(Display_xcb_ptr dp) {
-    if (!dp_ || dp_ != dp) {
+void Pixmap_xcb::set_display(Display_xcb_ptr dp) const {
+    if (!sys.dp_ || sys.dp_ != dp) {
         drop_cache();
-        dp_ = dp;
+        sys.dp_ = dp;
     }
 }
 
-xcb_pixmap_t Pixmap_xcb::create_xcb_pixmap(xcb_drawable_t drw, unsigned depth) {
-    if (dp_) {
-        pixmap_ = xcb_generate_id(dp_->conn());
-        xcb_create_pixmap(dp_->conn(), 0 == depth ? dp_->depth() : depth, pixmap_, drw, size().width(), size().height());
-        gc_ = new Context_xcb(dp_, pixmap_);
-        return pixmap_;
-    }
-
-    return XCB_NONE;
-}
-
-xcb_pixmap_t Pixmap_xcb::create_mask_xcb_pixmap(xcb_drawable_t drw) {
-    if (dp_) {
-        mask_pixmap_ = xcb_generate_id(dp_->conn());
-        xcb_create_pixmap(dp_->conn(), 1, mask_pixmap_, drw, size().width(), size().height());
-        gcm_ = new Context_xcb(dp_, mask_pixmap_);
-        return mask_pixmap_;
+xcb_pixmap_t Pixmap_xcb::create_xcb_pixmap(xcb_drawable_t drw, unsigned depth) const {
+    if (sys.dp_) {
+        sys.pixmap_ = xcb_generate_id(sys.dp_->conn());
+        xcb_create_pixmap(sys.dp_->conn(), 0 == depth ? sys.dp_->depth() : depth, sys.pixmap_, drw, size().width(), size().height());
+        sys.gc_ = new Context_xcb(sys.dp_, sys.pixmap_);
+        return sys.pixmap_;
     }
 
     return XCB_NONE;
 }
 
-xcb_render_picture_t Pixmap_xcb::create_xcb_render_picture(xcb_render_pictformat_t pict_format) {
-    if (dp_ && XCB_NONE != pixmap_) {
-        picture_ = xcb_generate_id(dp_->conn());
+xcb_pixmap_t Pixmap_xcb::create_mask_xcb_pixmap(xcb_drawable_t drw) const {
+    if (sys.dp_) {
+        sys.mask_pixmap_ = xcb_generate_id(sys.dp_->conn());
+        xcb_create_pixmap(sys.dp_->conn(), 1, sys.mask_pixmap_, drw, size().width(), size().height());
+        sys.gcm_ = new Context_xcb(sys.dp_, sys.mask_pixmap_);
+        return sys.mask_pixmap_;
+    }
+
+    return XCB_NONE;
+}
+
+xcb_render_picture_t Pixmap_xcb::create_xcb_render_picture(xcb_render_pictformat_t pict_format) const {
+    if (sys.dp_ && XCB_NONE != sys.pixmap_) {
+        sys.picture_ = xcb_generate_id(sys.dp_->conn());
         const uint32_t v[1] = { 0 };
-        xcb_render_create_picture(dp_->conn(), picture_, pixmap_, XCB_NONE != pict_format ? pict_format : dp_->pictformat(), 1, v);
+        xcb_render_create_picture(sys.dp_->conn(), sys.picture_, sys.pixmap_, XCB_NONE != pict_format ? pict_format : sys.dp_->pictformat(), 1, v);
     }
 
-    return picture_;
+    return sys.picture_;
 }
 
-xcb_render_picture_t Pixmap_xcb::create_mask_xcb_render_picture() {
-    if (dp_ && XCB_NONE != mask_pixmap_) {
-        mask_picture_ = xcb_generate_id(dp_->conn());
+xcb_render_picture_t Pixmap_xcb::create_mask_xcb_render_picture() const {
+    if (sys.dp_ && XCB_NONE != sys.mask_pixmap_) {
+        sys.mask_picture_ = xcb_generate_id(sys.dp_->conn());
         const uint32_t v[1] = { 0 };
-        xcb_render_create_picture(dp_->conn(), mask_picture_, mask_pixmap_, dp_->pictformat(1), 1, v);
-        return mask_picture_;
+        xcb_render_create_picture(sys.dp_->conn(), sys.mask_picture_, sys.mask_pixmap_, sys.dp_->pictformat(1), 1, v);
+        return sys.mask_picture_;
     }
 
     return XCB_NONE;
 }
 
-void Pixmap_xcb::drop_cache() {
-    if (dp_) {
-        if (XCB_NONE != mask_picture_) {
-            xcb_render_free_picture(dp_->conn(), mask_picture_);
-            mask_picture_ = XCB_NONE;
+void Pixmap_xcb::drop_cache() const {
+    if (sys.dp_) {
+        if (XCB_NONE != sys.mask_picture_) {
+            xcb_render_free_picture(sys.dp_->conn(), sys.mask_picture_);
+            sys.mask_picture_ = XCB_NONE;
         }
 
-        if (XCB_NONE != picture_) {
-            xcb_render_free_picture(dp_->conn(), picture_);
-            picture_ = XCB_NONE;
+        if (XCB_NONE != sys.picture_) {
+            xcb_render_free_picture(sys.dp_->conn(), sys.picture_);
+            sys.picture_ = XCB_NONE;
         }
 
-        if (XCB_NONE != mask_pixmap_) {
-            xcb_free_pixmap(dp_->conn(), mask_pixmap_);
-            mask_pixmap_ = XCB_NONE;
+        if (XCB_NONE != sys.mask_pixmap_) {
+            xcb_free_pixmap(sys.dp_->conn(), sys.mask_pixmap_);
+            sys.mask_pixmap_ = XCB_NONE;
         }
 
-        if (XCB_NONE != pixmap_) {
-            xcb_free_pixmap(dp_->conn(), pixmap_);
-            pixmap_ = XCB_NONE;
+        if (XCB_NONE != sys.pixmap_) {
+            xcb_free_pixmap(sys.dp_->conn(), sys.pixmap_);
+            sys.pixmap_ = XCB_NONE;
         }
 
-        if (gc_) {
-            delete gc_;
-            gc_ = nullptr;
+        if (sys.gc_) {
+            delete sys.gc_;
+            sys.gc_ = nullptr;
         }
 
-        if (gcm_) {
-            delete gcm_;
-            gcm_ = nullptr;
+        if (sys.gcm_) {
+            delete sys.gcm_;
+            sys.gcm_ = nullptr;
         }
     }
 }

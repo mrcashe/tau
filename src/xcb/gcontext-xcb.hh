@@ -62,13 +62,13 @@ public:
     void set_dash_offset(uint32_t ofs);
     void set_dash_list(uint32_t list);
     void set_arc_mode(uint32_t mode);
-    void flush();
+    void flush() const;
 
 private:
 
     Display_xcb_ptr     dp_;
     xcb_gcontext_t      gc_ = 0;
-    uint32_t            flags_ = 0;
+    mutable uint32_t    flags_ = 0;
     xcb_gx_t            func_ = XCB_GX_COPY;
     uint32_t            pmask_ = XCB_NONE;
     uint32_t            fore_ = 0xffffffff;

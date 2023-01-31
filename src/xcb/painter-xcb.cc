@@ -54,9 +54,9 @@ Painter_xcb::Painter_xcb(Winface_xcb * wf):
     update_clip();
 }
 
-void Painter_xcb::draw_pixmap(Pixmap_ptr pix, const Point & pix_origin, const Size & pix_size, const Point & pt, bool transparent) {
+void Painter_xcb::draw_pixmap(Pixmap_cptr pix, const Point & pix_origin, const Size & pix_size, const Point & pt, bool transparent) {
     if (XCB_NONE == xpicture_ || XCB_NONE == xid_) { return; }
-    auto xpix = std::dynamic_pointer_cast<Pixmap_xcb>(pix);
+    auto xpix = std::dynamic_pointer_cast<const Pixmap_xcb>(pix);
     if (!xpix || !xpix->size()) { return; }
     xcb_render_picture_t pmask = XCB_NONE;
 
@@ -341,7 +341,7 @@ void Painter_xcb::fill_prim_arc(const Prim_arc & obj) {
     Painter_impl::fill_prim_arc(obj);
 }
 
-void Painter_xcb::put_image(uint8_t str_format, xcb_drawable_t drawable, Context_xcb & gc, const Size & sz, const Point & dst_pos, uint8_t left_pad, uint8_t depth, uint32_t data_len, const uint8_t * data) {
+void Painter_xcb::put_image(uint8_t str_format, xcb_drawable_t drawable, const Context_xcb & gc, const Size & sz, const Point & dst_pos, uint8_t left_pad, uint8_t depth, uint32_t data_len, const uint8_t * data) {
     gc.flush();
     xcb_put_image(cx_, str_format, drawable, gc.xid(), sz.width(), sz.height(), dst_pos.x(), dst_pos.y(), left_pad, depth, data_len, data);
     xcb_flush(cx_);

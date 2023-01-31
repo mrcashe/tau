@@ -183,9 +183,11 @@ std::vector<ustring> Fileman_impl::selection() const {
     return selection_;
 }
 
+// FIXME Change behaviour in future? When List_impl emit signal_row_activated(), it does not
+// clear its selection.
 void Fileman_impl::on_file_activate(const ustring & path) {
-    selection_.clear();
-    selection_.push_back(path_notdir(path));
+    ustring filename = path_notdir(path);
+    if (selection_.end() == std::find(selection_.begin(), selection_.end(), filename)) { selection_.push_back(filename); }
     apply();
 }
 
@@ -215,8 +217,9 @@ void Fileman_impl::entry_from_selection() {
 
 void Fileman_impl::on_file_select(const ustring & filename) {
     if (navi_->multiple_select_allowed()) {
-        auto iter = std::find(selection_.begin(), selection_.end(), filename);
-        if (iter == selection_.end()) { selection_.push_back(filename); }
+        if (selection_.end() == std::find(selection_.begin(), selection_.end(), filename)) {
+            selection_.push_back(filename);
+        }
     }
 
     else {
@@ -235,8 +238,8 @@ void Fileman_impl::on_file_select(const ustring & filename) {
 
 void Fileman_impl::on_file_unselect(const ustring & filename) {
     if (navi_->multiple_select_allowed()) {
-        auto iter = std::find(selection_.begin(), selection_.end(), filename);
-        if (iter != selection_.end()) { selection_.erase(iter); }
+        auto i = std::find(selection_.begin(), selection_.end(), filename);
+        if (i != selection_.end()) { selection_.erase(i); }
     }
 
     entry_from_selection();
@@ -244,6 +247,7 @@ void Fileman_impl::on_file_unselect(const ustring & filename) {
 
 void Fileman_impl::on_dir_changed(const ustring & path) {
     entry_->clear();
+    selection_.clear();
     apply_action_.disable();
     pathbox_->clear();
 
@@ -368,8 +372,9 @@ void Fileman_impl::on_entry_changed(const ustring & s) {
 
                 else {
                     if (!navi_->multiple_select_allowed()) {
-                        auto iter = std::find(selection_.begin(), selection_.end(), s);
-                        if (selection_.end() == iter) { selection_.push_back(s); }
+                        if (selection_.end() == std::find(selection_.begin(), selection_.end(), s)) {
+                            selection_.push_back(s);
+                        }
                     }
 
                     apply_action_.enable();
@@ -408,8 +413,9 @@ void Fileman_impl::on_entry_activate(const ustring & s) {
                 if (FILEMAN_OPEN == mode_) {
                     if (file_exists(p)) {
                         if (!navi_->multiple_select_allowed()) {
-                            auto iter = std::find(selection_.begin(), selection_.end(), s);
-                            if (selection_.end() == iter) { selection_.push_back(s); }
+                            if (selection_.end() == std::find(selection_.begin(), selection_.end(), s)) {
+                                selection_.push_back(s);
+                            }
                         }
 
                         apply();

@@ -87,8 +87,8 @@ public:
     void  set_brush(Brush brush) { state().brush = brush.impl; }
     Brush brush() const { return Brush(state().brush); }
 
-    void pixmap(Pixmap_ptr pix, const Point pix_origin, const Size & pix_size, bool transparent);
-    void pixmap(Pixmap_ptr pix, bool transparent);
+    void pixmap(Pixmap_cptr pix, const Point pix_origin, const Size & pix_size, bool transparent);
+    void pixmap(Pixmap_cptr pix, bool transparent);
 
     void set_oper(Oper op) { state().op = op; }
     Oper oper() const { return state().op; }
@@ -207,7 +207,7 @@ protected:
 
     struct Prim_pixmap: Prim {
         Vector          pos;
-        Pixmap_ptr      pix;
+        Pixmap_cptr     pix;
         Point           origin;
         Size            size;
         bool            transparent;
@@ -258,7 +258,7 @@ protected:
     Prim_text * new_prim_text(const Vector & pos, const ustring & str, const Color & color);
     Prim_text * new_prim_text(const Vector & pos, const std::u32string & str, const Color & color);
     Prim_text * new_prim_text(const Vector & pos, std::u32string && str, const Color & color);
-    Prim_pixmap * new_prim_pixmap(const Vector & pos, Pixmap_ptr pix, const Point & origin, const Size & size, bool transparent);
+    Prim_pixmap * new_prim_pixmap(const Vector & pos, Pixmap_cptr pix, const Point & origin, const Size & size, bool transparent);
 
     Prim_contour * alloc_contour();
     Prim_text * alloc_text();
@@ -270,7 +270,7 @@ protected:
 
     virtual void stroke_rectangle(const Rect & r) = 0;
     virtual void fill_polygon(const Point * pts, std::size_t npts, const Color & color) = 0;
-    virtual void draw_pixmap(Pixmap_ptr pix, const Point & pix_origin, const Size & pix_size, const Point & pt, bool transparent) = 0;
+    virtual void draw_pixmap(Pixmap_cptr pix, const Point & pix_origin, const Size & pix_size, const Point & pt, bool transparent) = 0;
 
     // Overriden by Painter_xcb.
     // Overriden by Painter_win.

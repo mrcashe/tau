@@ -92,7 +92,7 @@ private:
     using History = std::vector<ustring>;
 
     Box_ptr                 pathbox_;               // Path selection buttons here.
-    std::vector<ustring>    selection_;             // Currently selected paths.
+    std::vector<ustring>    selection_;             // Currently selected filenames.
     Navigator_ptr           navi_;
     Entry_ptr               entry_;
     History                 history_;

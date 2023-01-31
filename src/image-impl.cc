@@ -28,6 +28,7 @@
 #include <tau/loop.hh>
 #include <tau/painter.hh>
 #include <image-impl.hh>
+#include <painter-impl.hh>
 #include <pixmap-impl.hh>
 #include <theme-impl.hh>
 
@@ -39,7 +40,7 @@ Image_impl::Image_impl():
     init();
 }
 
-Image_impl::Image_impl(Pixmap_ptr pix, bool transparent):
+Image_impl::Image_impl(Pixmap_cptr pix, bool transparent):
     Widget_impl()
 {
     init();
@@ -68,21 +69,12 @@ void Image_impl::clear() {
     invalidate();
 }
 
-void Image_impl::on_pix_changed(std::size_t index) {
-    if (index < film_.size() && cur_ == index) {
-        gray_.reset();
-        invalidate();
-    }
-}
-
-void Image_impl::add_pixmap(Pixmap_ptr pix, unsigned delay) {
+void Image_impl::add_pixmap(Pixmap_cptr pix, unsigned delay) {
     if (pix) {
         film_.emplace_back();
         Film_frame & ff = film_.back();
-        std::size_t index = film_.size()-1;
         ff.pix = pix;
         ff.delay = delay;
-        ff.changed_cx = pix->signal_changed().connect(tau::bind(fun(this, &Image_impl::on_pix_changed), index));
     }
 
     Size sz;
@@ -92,7 +84,7 @@ void Image_impl::add_pixmap(Pixmap_ptr pix, unsigned delay) {
     start_timer_if_needed();
 }
 
-void Image_impl::set_pixmap(Pixmap_ptr pix, bool transparent) {
+void Image_impl::set_pixmap(Pixmap_cptr pix, bool transparent) {
     transparent_ = transparent;
 
     if (pix) {
@@ -125,7 +117,7 @@ void Image_impl::set_oper(Oper op) {
 void Image_impl::paint_pixmap(Painter pr) {
     if (cur_ < film_.size()) {
         if (!enabled() && !gray_) {
-            Pixmap_ptr orig = film_[cur_].pix;
+            auto orig = film_[cur_].pix;
 
             if (32 == orig->depth() && transparent_) {
                 gray_ = Pixmap_impl::create(32, orig->size());
@@ -151,20 +143,22 @@ void Image_impl::paint_pixmap(Painter pr) {
             }
         }
 
+        auto pri = strip(pr);
+
         if (irect_) {
-            pr.set_brush(Color(style().color("background")));
-            pr.rectangle(irect_.left(), irect_.top(), irect_.right(), irect_.bottom());
-            pr.fill();
+            pri->set_brush(Color(style().color("background")));
+            pri->rectangle(irect_.left(), irect_.top(), irect_.right(), irect_.bottom());
+            pri->fill();
         }
 
-        Pixmap_ptr pix = gray_ ? gray_ : film_[cur_].pix;
+        auto pix = gray_ ? gray_ : film_[cur_].pix;
         Rect r(pix->size()), rr(size());
         r.center_to(rr.center());
         irect_ = r;
-        pr.set_oper(oper_);
-        pr.move_to(r.origin());
-        pr.pixmap(pix, transparent_);
-        pr.stroke();
+        pri->set_oper(oper_);
+        pri->move_to(r.origin());
+        pri->pixmap(pix, transparent_);
+        pri->stroke();
     }
 }
 
