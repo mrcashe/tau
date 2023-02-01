@@ -28,10 +28,8 @@
 #include <tau/string.hh>
 #include <button-impl.hh>
 #include <counter-impl.hh>
-#include <image-impl.hh>
-#include <pixmap-impl.hh>
+#include <icon-impl.hh>
 #include <table-impl.hh>
-#include <theme-impl.hh>
 #include <iomanip>
 #include <iostream>
 
@@ -86,15 +84,8 @@ void Counter_impl::init(double value, double max_value, double min_value) {
     table_->put(down_, 1, 1, 1, 1, true);
     table_->align(down_.get(), ALIGN_CENTER, ALIGN_END);
 
-    auto theme = Theme_impl::root();
-
-    Pixmap_cptr pixmap = theme->find_pixmap(ICON_PICTO_DEC);
-    if (pixmap) { down_->set_image(std::make_shared<Image_impl>(pixmap->dup(), true)); }
-    else { down_->hint_size(8, 4); }
-
-    pixmap = theme->find_pixmap(ICON_PICTO_INC);
-    if (pixmap) { up_->set_image(std::make_shared<Image_impl>(pixmap->dup(), true)); }
-    else { up_->hint_size(8, 4); }
+    down_->set_image(std::make_shared<Icon_impl>(ICON_PICTO_DEC, 8));
+    up_->set_image(std::make_shared<Icon_impl>(ICON_PICTO_INC, 8));
 
     set_max_value(max_value);
     set_min_value(min_value);

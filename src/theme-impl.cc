@@ -593,6 +593,7 @@ bool Theme_impl::feed_icon_root(const ustring & root, const ustring & stop_after
     }
 
     Key_file kf(path_build(root, "index.theme"), ',');
+    kf.lock();
     Key_section * theme_sect = kf.has_section("Icon Theme") ? &kf.section("Icon Theme") : nullptr;
     ustring theme_name = theme_sect ? kf.get_string(*theme_sect, "Name", this_filename) : this_filename;
     int itheme = -1;

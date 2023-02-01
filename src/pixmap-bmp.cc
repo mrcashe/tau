@@ -193,10 +193,7 @@ Pixmap_ptr Pixmap_impl::load_bmp_from_memory(const char * raw, std::size_t bytes
             pix = Pixmap_impl::create(32, iwidth, height);
 
             for (std::size_t y = 0; y < height; ++y) {
-                for (int x = 0; x < iwidth; ++x) {
-                    pix->put_pixel(x, iheight >= 0 ? height-y-1 : y, Color::from_argb32(u32(bits)));
-                    bits += 4;
-                }
+                pix->set_argb32(Point(0, y), reinterpret_cast<const uint8_t *>(bits), 4*iwidth); bits += 4*iwidth;
             }
         }
 

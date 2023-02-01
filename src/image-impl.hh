@@ -64,35 +64,44 @@ protected:
     struct Film_frame {
         Pixmap_cptr     pix;
         unsigned        delay = 0;
-        connection      changed_cx;
+        connection      changed_cx { true };
     };
 
     using Film = std::vector<Film_frame>;
 
-    void init();
-    void clear();
-    void paint_pixmap(Painter pr);
-    void redraw();
-    void start_timer_if_needed();
-    unsigned calc_delay() const;
-
-    bool on_paint(Painter pr, const Rect & inval);
-    void on_parent();
-    void on_timer();
-    void on_enable();
-    void on_disable();
-
-protected:
-
     Film        film_;
-    Pixmap_ptr  gray_;
-    Rect        irect_;
-    std::size_t cur_ = 0;
-    unsigned    delay_ = 0;
-    Timer       timer_ { fun(this, &Image_impl::on_timer) };
     bool        transparent_ = false;
     ustring     pixmap_name_;
     Oper        oper_ = OPER_COPY;
+
+protected:
+
+    void init();
+
+private:
+
+    Timer       timer_ { fun(this, &Image_impl::on_timer) };
+    Rect        irect_;
+    std::size_t cur_ = 0;
+    unsigned    delay_ = 0;
+    Pixmap_ptr  gray_;
+    connection  gray_cx_ { true };
+
+private:
+
+    void start_timer_if_needed();
+    unsigned calc_delay() const;
+    void clear();
+    void paint_pixmap(Painter pr);
+    void redraw();
+    void create_gray();
+    void reset_gray();
+
+    bool on_paint(Painter pr, const Rect & inval);
+    void on_display();
+    void on_timer();
+    void on_enable();
+    void on_disable();
 };
 
 } // namespace tau

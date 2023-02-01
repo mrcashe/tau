@@ -825,7 +825,7 @@ void Key_file::save() {
 }
 
 void Key_file::flush() {
-    if (impl->changed_ && !impl->path_.empty()) {
+    if (!impl->locked_ && impl->changed_ && !impl->path_.empty()) {
         try {
             save(impl->path_);
         }

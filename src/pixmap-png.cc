@@ -58,6 +58,8 @@ Pixmap_ptr Pixmap_impl::load_png_from_file(const ustring & path) {
 
     if (PNG_COLOR_TYPE_PALETTE == ctype) { png_set_palette_to_rgb(png_ptr); }
     if (16 == bit_depth) { png_set_strip_16(png_ptr); }
+    if (PNG_COLOR_TYPE_RGB_ALPHA == ctype || PNG_COLOR_TYPE_RGB == ctype) { png_set_bgr(png_ptr); }
+
     png_read_update_info(png_ptr, info_ptr);
     ctype = png_get_color_type(png_ptr, info_ptr);
     bit_depth = png_get_bit_depth(png_ptr, info_ptr);
@@ -65,62 +67,54 @@ Pixmap_ptr Pixmap_impl::load_png_from_file(const ustring & path) {
     int width = png_get_image_width(png_ptr, info_ptr);
     int height = png_get_image_height(png_ptr, info_ptr);
 
-    png_bytep * row_pointers = new png_bytep[height];
-    for (int y = 0; y < height; ++y) { row_pointers[y] = new png_byte[png_get_rowbytes(png_ptr, info_ptr)]; }
+    png_bytep * row_pointers = (png_bytep *)png_malloc(png_ptr, sizeof(png_bytep)*height);
+    for (int y = 0; y < height; ++y) { row_pointers[y] = (png_byte *)png_malloc(png_ptr, png_get_rowbytes(png_ptr, info_ptr)); }
     png_read_image(png_ptr, row_pointers);
 
-    Pixmap_ptr pix;
-
-    if (PNG_COLOR_TYPE_GRAY == ctype) {
-        pix = Pixmap_impl::create(8, Size(width, height));
-    }
-
-    else if (PNG_COLOR_TYPE_RGB_ALPHA == ctype || PNG_COLOR_TYPE_GRAY_ALPHA == ctype) {
-        pix = Pixmap_impl::create(32, Size(width, height));
-    }
-
-    else {
-        pix = Pixmap_impl::create(24, Size(width, height));
-    }
-
+    int bpp = 24;
+    if (PNG_COLOR_TYPE_GRAY == ctype) { bpp = 8; }
+    else if (PNG_COLOR_TYPE_RGB_ALPHA == ctype || PNG_COLOR_TYPE_GRAY_ALPHA == ctype) { bpp = 32; }
+    if (32 == bpp) { png_set_swap(png_ptr); }
+    Pixmap_ptr pix = Pixmap_impl::create(bpp, width, height);
     pix->set_ppi(Vector(png_get_x_pixels_per_inch(png_ptr, info_ptr), png_get_y_pixels_per_inch(png_ptr, info_ptr)));
 
     for (int y = 0; y < height; ++y) {
         png_byte * row = row_pointers[y];
 
-        for (int x = 0; x < width; ++x) {
-            if (PNG_COLOR_TYPE_RGB_ALPHA == ctype) {
-                png_byte * p = row+(x*4);
-                uint32_t r = p[0], g = p[1], b = p[2], a = p[3];
-                pix->put_pixel(x, y, Color::from_argb32((a << 24)|(r << 16)|(g << 8)|b));
-            }
+        if (PNG_COLOR_TYPE_RGB_ALPHA == ctype) {
+            pix->set_argb32(Point(0, y), row, 4*width);
+        }
 
-            else if (PNG_COLOR_TYPE_RGB == ctype) {
+        else if (PNG_COLOR_TYPE_RGB == ctype) {
+            for (int x = 0; x < width; ++x) {
                 png_byte * p = row+(x*3);
-                uint32_t r = p[0], g = p[1], b = p[2];
+                uint32_t b = p[0], g = p[1], r = p[2];
                 pix->put_pixel(x, y, Color::from_rgb24((r << 16)|(g << 8)|b));
             }
+        }
 
-            else if (PNG_COLOR_TYPE_GRAY == ctype) {
+        else if (PNG_COLOR_TYPE_GRAY == ctype) {
+            for (int x = 0; x < width; ++x) {
                 png_byte * p = row+x;
                 pix->put_pixel(x, y, Color::from_gray8(*p));
             }
+        }
 
-            else if (PNG_COLOR_TYPE_GRAY_ALPHA == ctype) {
+        else if (PNG_COLOR_TYPE_GRAY_ALPHA == ctype) {
+            for (int x = 0; x < width; ++x) {
                 png_byte * p = row+(x*2);
                 pix->put_pixel(x, y, Color::from_gray8(p[0], p[1]/255.0));
             }
+        }
 
-            else {
-                throw bad_pixmap(str_format(path, ": PNG: color type of ", ctype, " unsupported"));
-            }
+        else {
+            throw bad_pixmap(str_format(path, ": PNG: color type of ", ctype, " unsupported"));
         }
     }
 
-    for (int y = 0; y < height; ++y) { delete row_pointers[y]; }
-    delete[] row_pointers;
-    png_read_end(png_ptr, nullptr);
-    png_free_data(png_ptr, info_ptr, PNG_FREE_ALL, -1);
+    for (int y = 0; y < height; ++y) { png_free(png_ptr, row_pointers[y]); }
+    png_free(png_ptr, row_pointers);
+    png_read_end(png_ptr, info_ptr);
     std::fclose(is);
     return pix;
 }

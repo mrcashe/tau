@@ -217,8 +217,8 @@ using slot_ptr = std::shared_ptr<slot_impl>;
 /// Basic functionality for untyped %slot (abstract).
 /// @ingroup signal_group
 class slot_base {
-    friend struct slot_impl;
-    friend class signal_base;
+    friend slot_impl;
+    friend signal_base;
 
     void disconnect();
     void link(signal_base * signal);
@@ -531,6 +531,10 @@ public:
 
     /// Copy operator.
     signal & operator=(const signal & other) = default;
+
+    /// Destructor.
+    /// @since 0.4.0 is explicitly defined (doesn't break API).
+   ~signal() { slots_.clear(); size_ = 0; }
 
     /// Merge signals.
     void operator+=(const signal & other) {

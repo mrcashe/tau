@@ -91,7 +91,6 @@ protected:
 private:
 
     void set_clip();
-    void put_image(uint8_t format, xcb_drawable_t drawable, const Context_xcb & gc, const Size & sz, const Point & dst_pos, uint8_t left_pad, uint8_t depth, uint32_t data_len, const uint8_t * data);
     void on_destroy();
 
 private:

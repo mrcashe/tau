@@ -69,9 +69,9 @@ void Container_impl::make_child(Widget_ptr wp) {
     children_.push_back(wp);
     if (auto * ci = dynamic_cast<Container_impl *>(wp.get())) { containers_.push_back(ci); }
     wp->set_parent(this);
+    wp->on_owner_enable(enabled());
     if (display()) { wp->signal_display()(); }
     wp->on_owner_show(visible());
-    wp->on_owner_enable(enabled());
     signal_children_changed_();
 }
 

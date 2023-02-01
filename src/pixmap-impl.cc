@@ -42,11 +42,6 @@ void Pixmap_impl::copy(const Pixmap_impl * other) {
     }
 }
 
-void Pixmap_impl::put_pixel(const Point & pt, const Color & c) {
-    Rect r(pt, Size(1));
-    fill_rectangles(&r, 1, c);
-}
-
 Pixmap_ptr Pixmap_impl::dup() const {
     Pixmap_ptr pix = create(depth(), size());
     pix->copy(this);

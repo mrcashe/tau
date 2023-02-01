@@ -48,8 +48,6 @@ public:
     static Painter wrap(Painter_ptr pp) { return Painter(pp); }
     static Pixmap_ptr strip(Pixmap pix) { return pix.impl; }
 
-    virtual void fill_rectangles(const Rect * rs, std::size_t nrs, const Color & c) = 0;
-
     static ustring list_file_suffixes() { return "xpm:bmp:ico:png"; }
 
     Vector ppi() const { return ppi_; }
@@ -62,8 +60,8 @@ public:
 
     void copy(const Pixmap_impl * other);
 
-    void put_pixel(const Point & pt, const Color & c);
-    void put_pixel(int x, int y, const Color & c) { put_pixel(Point(x, y), c); }
+    void put_pixel(const Point & pt, const Color & c) { put_pixel_v(pt, c); }
+    void put_pixel(int x, int y, const Color & c) { put_pixel_v(Point(x, y), c); }
 
     // This method is platform depended.
     static Pixmap_ptr create(int depth, const Size & size=Size());
@@ -90,6 +88,10 @@ public:
 
     // Overriden by Pixmap_xcb.
     // Overriden by Pixmap_win.
+    virtual void fill_rectangles(const Rect * rs, std::size_t nrs, const Color & c) = 0;
+
+    // Overriden by Pixmap_xcb.
+    // Overriden by Pixmap_win.
     virtual Painter painter() = 0;
 
     // Overriden by Pixmap_xcb.
@@ -111,6 +113,10 @@ public:
     // Overriden by Pixmap_xcb.
     // Overriden by Pixmap_win.
     virtual void resize(const Size & sz) = 0;
+
+    // Overriden by Pixmap_xcb.
+    // Overriden by Pixmap_win.
+    virtual void put_pixel_v(const Point & pt, const Color & c) = 0;
 
     // Overriden by Pixmap_xcb.
     // Overriden by Pixmap_win.

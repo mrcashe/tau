@@ -179,7 +179,7 @@ private:
     uint16_t            xfixes_version_ = 0;
     Atoms               atoms_;
     RAtoms              ratoms_;
-    xcb_visualid_t      visualid_ = 0;
+    xcb_visualid_t      visualid_ = XCB_NONE;
     Visual_formats      visual_formats_;
     Pict_formats        pict_formats_;
     Depth_formats       depth_formats_;
@@ -194,12 +194,10 @@ private:
 
 private:
 
-    void init_connection();
     void init_xkb();
     void init_xrender();
     void init_xfixes();
     void init_xsync();
-    void init_whidden();
 
     Winface_xcb_ptr find(xcb_window_t xid);
     bool query_pointer(xcb_window_t wid, Point & pt) const;

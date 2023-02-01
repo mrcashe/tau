@@ -34,7 +34,7 @@ namespace tau {
 class Context_xcb {
 public:
 
-    Context_xcb(Display_xcb_ptr dp, xcb_drawable_t drawable);
+    Context_xcb(xcb_connection_t * cx, xcb_drawable_t drawable);
     Context_xcb(const Context_xcb & other) = default;
     Context_xcb & operator=(const Context_xcb & other) = default;
    ~Context_xcb();
@@ -66,7 +66,7 @@ public:
 
 private:
 
-    Display_xcb_ptr     dp_;
+    xcb_connection_t *  cx_ = nullptr;
     xcb_gcontext_t      gc_ = 0;
     mutable uint32_t    flags_ = 0;
     xcb_gx_t            func_ = XCB_GX_COPY;

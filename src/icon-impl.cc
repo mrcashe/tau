@@ -27,7 +27,9 @@
 #include <tau/action.hh>
 #include <tau/brush.hh>
 #include <tau/painter.hh>
+#include <display-impl.hh>
 #include <icon-impl.hh>
+#include <pixmap-impl.hh>
 #include <theme-impl.hh>
 
 namespace tau {
@@ -110,7 +112,26 @@ void Icon_impl::on_display() {
 }
 
 void Icon_impl::update_pixmap() {
-    set_pixmap(Theme_impl::root()->get_icon(icon_name_, icon_size_), true);
+    auto theme = Theme_impl::root();
+
+    if (auto pix = theme->find_icon(icon_name_, icon_size_)) {
+        set_pixmap(pix, true);
+    }
+
+    else {
+        auto dp = display();
+        int depth = dp ? dp->depth() : 1;
+        auto empty = Pixmap_impl::create(depth, theme->icon_pixels(icon_size_));
+
+        if (depth > 8) {
+            if (auto pr = empty->painter()) {
+                pr.set_brush(Brush(style_.color(STYLE_BACKGROUND)));
+                pr.paint();
+            }
+        }
+
+        set_pixmap(empty);
+    }
 }
 
 void Icon_impl::assign(const ustring & icon_name, int icon_size) {

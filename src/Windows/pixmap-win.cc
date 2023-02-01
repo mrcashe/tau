@@ -69,16 +69,16 @@ void Pixmap_win::resize_priv(const Size & sz) {
     unsigned nbits = 1 == sys.depth_ ? 1 : 32;
 
     if (1 == nbits) {
-        std::size_t nwords = sz.width() >> 5;
+        std::size_t nwords = sz.width()/32;
         sys.stride_ = (0x1f & sz.width()) ? 1 : 0;
         sys.stride_ += nwords;
         sys.stride_ *= 4;
         nbytes = sys.stride_*sz.height();
-        sys.raw_.assign(nbytes, 0xff);
+        sys.raw_.assign(nbytes, 0x00);
     }
 
     else {
-        sys.stride_ = sz.width() << 2;
+        sys.stride_ = 4*sz.width();
         nbytes = sys.stride_*sz.height();
         sys.raw_.assign(nbytes, 0x00);
     }
@@ -100,12 +100,12 @@ void Pixmap_win::put_pixel_impl(const Point & pt, uint32_t rgb) {
         if (index < sys.raw_.size()) {
             unsigned shift = 7-(0x07 & pt.x());
 
-            if (1 & rgb) {
-                sys.raw_[index] &= ~(1 << shift);
+            if (rgb) {
+                sys.raw_[index] |= (1 << shift);
             }
 
             else {
-                sys.raw_[index] |= (1 << shift);
+                sys.raw_[index] &= ~(1 << shift);
             }
         }
     }
@@ -122,13 +122,19 @@ void Pixmap_win::put_pixel_impl(const Point & pt, uint32_t rgb) {
     }
 }
 
+// Overrides pure Pixmap_impl.
+void Pixmap_win::put_pixel_v(const Point & pt, const Color & c) {
+    put_pixel_impl(pt, c.argb32());
+    signal_changed_();
+}
+
 uint32_t Pixmap_win::get_pixel_impl(const Point & pt) const {
     if (1 == bpp()) {
         std::size_t index = (pt.y()*sys.stride_)+(pt.x() >> 3);
         unsigned shift = 7-(0x07 & pt.x());
 
         if (index < sys.raw_.size()) {
-            return (sys.raw_[index] & (1 << shift)) ? 0 : 0x00ffffff;
+            return (sys.raw_[index] & (1 << shift)) ? 0x00ffffff : 0;
         }
 
         return 0;
@@ -152,7 +158,7 @@ uint32_t Pixmap_win::get_pixel_impl(const Point & pt) const {
 // Overrides pure Pixmap_impl.
 Color Pixmap_win::get_pixel(const Point & pt) const {
     if (1 == depth()) {
-        return Color(get_pixel_impl(pt) ? "White" : "Black");
+        return Color(get_pixel_impl(pt) ? COLOR_WHITE : COLOR_BLACK);
     }
 
     else if (32 == depth()) {
@@ -183,7 +189,7 @@ void Pixmap_win::fill_rectangles(const Rect * rs, std::size_t nrs, const Color &
                 for (int x = rs->x(); index < nbytes && 0 != width; ++x, --width) {
                     sys.raw_[index] &= ~(1 << shift);
 
-                    if (0 != c.rgb24()) {
+                    if (c.rgb24()) {
                         sys.raw_[index] |= (1 << shift);
                     }
 
@@ -232,7 +238,7 @@ void Pixmap_win::set_argb32(const Point & pt, const uint8_t * buffer, std::size_
             c |= buffer[2]; c <<= 8;
             c |= buffer[1]; c <<= 8;
             c |= buffer[0];
-            if (0 != c) { sys.raw_[index] |= (1 << shift); }
+            if (c) { sys.raw_[index] |= (1 << shift); }
             else { sys.raw_[index] &= ~(1 << shift); }
             buffer += 4;
             nbytes -= 4;

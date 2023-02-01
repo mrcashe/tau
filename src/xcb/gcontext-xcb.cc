@@ -30,15 +30,15 @@
 
 namespace tau {
 
-Context_xcb::Context_xcb(Display_xcb_ptr dp, xcb_drawable_t drw):
-    dp_(dp)
+Context_xcb::Context_xcb(xcb_connection_t * cx, xcb_drawable_t drw):
+    cx_(cx)
 {
-    gc_ = xcb_generate_id(dp_->conn());
-    xcb_create_gc(dp_->conn(), gc_, drw, 0, nullptr);
+    gc_ = xcb_generate_id(cx_);
+    xcb_create_gc(cx_, gc_, drw, 0, nullptr);
 }
 
 Context_xcb::~Context_xcb() {
-    xcb_free_gc(dp_->conn(), gc_);
+    xcb_free_gc(cx_, gc_);
 }
 
 void Context_xcb::set_func(xcb_gx_t func) {
@@ -174,7 +174,7 @@ void Context_xcb::flush() const {
         if (flags_ & XCB_GC_DASH_OFFSET) { v[cnt++] = doffset_; }
         if (flags_ & XCB_GC_DASH_LIST) { v[cnt++] = dlist_; }
         if (flags_ & XCB_GC_ARC_MODE) { v[cnt++] = arcmode_; }
-        xcb_change_gc(dp_->conn(), gc_, flags_, v);
+        xcb_change_gc(cx_, gc_, flags_, v);
         flags_ = 0;
     }
 }

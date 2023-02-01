@@ -36,36 +36,38 @@
 namespace tau {
 
 struct Pix_store {
-    Size                 sz_;
-    unsigned             depth_ = 1;            // layer count.
-    std::size_t          stride_ = 0;           // bytes per line.
-    std::vector<uint8_t> raw_;                  // raw data.
+    Size                    sz_;
+    int                     depth_ = 1;            // layer count.
+    uint8_t                 format_;
+    std::size_t             stride_ = 0;           // bytes per line.
+    std::vector<uint8_t>    raw_;                  // raw data.
 
-    explicit Pix_store(unsigned depth);
-    Pix_store(unsigned depth, const Size & sz);
+    explicit Pix_store(int depth, const Size & sz=Size());
 
     void resize(const Size & sz);
     uint32_t get_pixel(const Point & pt) const;
     void put_pixel(const Point & pt, uint32_t rgb);
     void fill_rectangle(const Point & pt, const Size & sz, uint32_t on);
     void set_argb32(const Point & pt, const uint8_t * buffer, std::size_t nbytes);
-    uint32_t format() const;
 
     void to_mono(Pix_store & xp) const;
     void to_gray(Pix_store & xp) const;
     void to_true(Pix_store & xp) const;
     void to_full(Pix_store & xp) const;
+
+    void convert(Pix_store & xp) const;
 };
 
 struct Pixmap_sys {
-    Display_xcb_ptr dp_;
-    Pix_store * store_                  = nullptr;
-    xcb_pixmap_t pixmap_                = XCB_NONE;
-    xcb_pixmap_t mask_pixmap_           = XCB_NONE;
-    xcb_render_picture_t picture_       = XCB_NONE;
-    xcb_render_picture_t mask_picture_  = XCB_NONE;
-    Context_xcb * gc_                   = nullptr;
-    Context_xcb * gcm_                  = nullptr;
+    Display_xcb_ptr         dp_;
+    xcb_connection_t *      cx_  = nullptr;
+    xcb_pixmap_t            pixmap_ = XCB_NONE;
+    xcb_pixmap_t            mask_pixmap_ = XCB_NONE;
+    xcb_render_picture_t    picture_ = XCB_NONE;
+    xcb_render_picture_t    mask_picture_ = XCB_NONE;
+    Pix_store *             store_ = nullptr;
+    Context_xcb *           gc_  = nullptr;
+    Context_xcb *           gcm_ = nullptr;
 };
 
 // ----------------------------------------------------------------------------
@@ -74,7 +76,7 @@ struct Pixmap_sys {
 class Pixmap_xcb: public Pixmap_impl {
 public:
 
-    explicit Pixmap_xcb(unsigned depth, const Size & sz=Size());
+    explicit Pixmap_xcb(int depth, const Size & sz=Size());
    ~Pixmap_xcb();
 
     // Overrides pure Pixmap_impl.
@@ -96,6 +98,9 @@ public:
     void resize(const Size & sz) override;
 
     // Overrides pure Pixmap_impl.
+    void put_pixel_v(const Point & pt, const Color & c) override;
+
+    // Overrides pure Pixmap_impl.
     Color get_pixel(const Point & pt) const override;
 
     // Overrides pure Pixmap_impl.
@@ -105,39 +110,17 @@ public:
     void fill_rectangles(const Rect * rs, std::size_t nrs, const Color & c) override;
 
     void set_display(Display_xcb_ptr dp) const;
-    Display_xcb_ptr display() { return sys.dp_; }
-    Display_xcb_cptr display() const { return sys.dp_; }
 
-    xcb_pixmap_t xcb_pixmap() const { return sys.pixmap_; };
-    xcb_pixmap_t create_xcb_pixmap(xcb_drawable_t drw, unsigned depth=0) const;
-
-    xcb_render_picture_t xcb_render_picture() const { return sys.picture_; }
-    xcb_render_picture_t create_xcb_render_picture(xcb_render_pictformat_t pict_format=XCB_NONE) const;
-
-    Pix_store * store() { return sys.store_; }
-    const Pix_store * store() const { return sys.store_; }
-
-    xcb_pixmap_t mask_xcb_pixmap() const { return sys.mask_pixmap_; }
-    xcb_pixmap_t create_mask_xcb_pixmap(xcb_drawable_t drw) const;
-
-    xcb_render_picture_t mask_xcb_render_picture() const { return sys.mask_picture_; }
-    xcb_render_picture_t create_mask_xcb_render_picture() const;
-
-    Context_xcb * gc() { return sys.gc_; }
-    const Context_xcb * gc() const { return sys.gc_; }
-
-    Context_xcb * mask_gc() { return sys.gcm_; }
-    const Context_xcb * mask_gc() const { return sys.gcm_; }
-
-    uint32_t format() const { return sys.store_ ? sys.store_->format() : XCB_NONE; }
-
-private:
-
-    void drop_cache() const;
+    void draw(xcb_drawable_t drw, xcb_render_picture_t pict, Oper op, const Point & pix_origin, const Size & pix_size, const Point & pt, bool transparent) const;
 
 private:
 
     mutable Pixmap_sys sys;
+
+private:
+
+    void drop_cache() const;
+    void put(uint8_t format, xcb_drawable_t drw, const Context_xcb * gc, const Size & sz, const Point & dst_pos, uint8_t left_pad, uint8_t depth, uint32_t data_len, const uint8_t * data) const;
 };
 
 } // namespace tau

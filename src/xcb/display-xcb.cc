@@ -597,23 +597,23 @@ public:
 };
 
 void Display_xcb::open(const ustring & args) {
-    init_connection();
+    int nscreen;
+    cx_ = xcb_connect(nullptr, &nscreen);
+    if (xcb_connection_has_error(cx_)) { throw graphics_error("Display_xcb: xcb_connect() failed"); }
 
-    if (scr_) {
-        size_px_.update(scr_->width_in_pixels, scr_->height_in_pixels);
-        size_mm_.update(scr_->width_in_millimeters, scr_->height_in_millimeters);
-        double xdpi = 0.0, ydpi = 0.0;
+    // Get first screen.
+    auto sc = xcb_setup_roots_iterator(xcb_get_setup(cx_));
+    scr_ = sc.data;
+    if (!scr_) { throw graphics_error("Display_xcb: screen not found"); }
+    visualid_ = sc.data->root_visual;
+    size_px_.update(scr_->width_in_pixels, scr_->height_in_pixels);
+    size_mm_.update(scr_->width_in_millimeters, scr_->height_in_millimeters);
 
-        if (0 != size_mm_.width()) {
-            xdpi = 25.4*size_px_.width();
-            xdpi /= size_mm_.width();
-        }
-
-        if (0 != size_mm_.height()) {
-            ydpi = 25.4*size_px_.height();
-            ydpi /= size_mm_.height();
-        }
-
+    if (size_mm_) {
+        double xdpi = 25.4*size_px_.width();
+        xdpi /= size_mm_.width();
+        double ydpi = 25.4*size_px_.height();
+        ydpi /= size_mm_.height();
         dpi_ = std::max(1, int(std::min(xdpi, ydpi)));
     }
 
@@ -621,7 +621,13 @@ void Display_xcb::open(const ustring & args) {
     init_xkb();
     init_xsync();
     init_xfixes();
-    init_whidden();
+
+    whidden_ = xcb_generate_id(cx_);
+    uint32_t vals[1] = { 0 };
+    vals[0] |= XCB_EVENT_MASK_PROPERTY_CHANGE;
+    auto ck = xcb_create_window_checked(cx_, XCB_COPY_FROM_PARENT, whidden_, root(), 0, 0, 1, 1, 0, XCB_WINDOW_CLASS_INPUT_ONLY, XCB_COPY_FROM_PARENT, XCB_CW_EVENT_MASK, vals);
+    int err = request_check(ck);
+    if (0 != err) { throw graphics_error("Display_xcb: failed to create hidden window"); }
 
     utf8_string_atom_ = atom("UTF8_STRING");
     targets_atom_ = atom("TARGETS");
@@ -667,31 +673,6 @@ Display_xcb::~Display_xcb() {
 
     atoms_.clear();
     ratoms_.clear();
-}
-
-void Display_xcb::init_connection() {
-    int nscreen;
-    cx_ = xcb_connect(nullptr, &nscreen);
-    if (!cx_) { throw graphics_error("Display_xcb: xcb_connect() returned NULL"); }
-
-    // Get first screen.
-    auto sc = xcb_setup_roots_iterator(xcb_get_setup(cx_));
-    if (!sc.data) { throw graphics_error("Display_xcb: screen not found"); }
-    scr_ = sc.data;
-
-    // Find visual for our screen.
-    for (auto depths = xcb_screen_allowed_depths_iterator(scr_); depths.rem; xcb_depth_next (&depths)) {
-        for (auto visuals = xcb_depth_visuals_iterator(depths.data); visuals.rem; xcb_visualtype_next(&visuals)) {
-            if (scr_->root_visual == visuals.data->visual_id) {
-                visualid_ = visuals.data->visual_id;
-                break;
-            }
-        }
-    }
-
-    if (0 == visualid_) {
-        throw graphics_error("Display_xcb: failed to init visual");
-    }
 }
 
 void Display_xcb::init_xfixes() {
@@ -1628,16 +1609,6 @@ xcb_render_picture_t Display_xcb::solid_fill(const Color & c) {
 // Overrides pure Display_impl.
 bool Display_xcb::can_paste_text() const {
     return true;
-}
-
-void Display_xcb::init_whidden() {
-    xcb_window_t wid = xcb_generate_id(cx_);
-    uint32_t vals[1] = { 0 };
-    vals[0] |= XCB_EVENT_MASK_PROPERTY_CHANGE;
-    auto ck = xcb_create_window_checked(cx_, XCB_COPY_FROM_PARENT, wid, root(), 0, 0, 1, 1, 0, XCB_WINDOW_CLASS_INPUT_ONLY, XCB_COPY_FROM_PARENT, XCB_CW_EVENT_MASK, vals);
-    int err = request_check(ck);
-    if (0 != err) { throw graphics_error("Display_xcb: failed to create window"); }
-    whidden_ = wid;
 }
 
 xcb_window_t Display_xcb::selection_owner() {

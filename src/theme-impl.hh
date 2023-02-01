@@ -74,6 +74,7 @@ public:
     void set_icon_theme(const ustring & names);         // Accepts colon separated list of themes.
     ustring cursor_theme() const;
     ustring icon_theme() const;
+    int icon_pixels(int icon_size) const;               // Convert Icon_size enum to the icon size in pixels.
 
     ustring font_normal() { return font_normal_; }
     ustring font_mono() { return font_mono_; }
@@ -144,7 +145,6 @@ private:
     int find_icon_theme(const ustring & name) const;
     int find_icon_theme_nolock(const ustring & name) const;
     Pixmap_ptr find_icon_in_theme(int itheme, const std::vector<ustring> & unames, const ustring & context, std::vector<int> & seen, int size);
-    int icon_pixels(int icon_size) const;
 
     Pixmap_ptr find_picto(const ustring & names, ustring & ret_name);
 

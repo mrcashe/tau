@@ -28,11 +28,9 @@
 #include <card-impl.hh>
 #include <button-impl.hh>
 #include <cycle-impl.hh>
-#include <image-impl.hh>
-#include <pixmap-impl.hh>
+#include <icon-impl.hh>
 #include <table-impl.hh>
 #include <text-impl.hh>
-#include <theme-impl.hh>
 
 #include <iostream>
 
@@ -74,15 +72,8 @@ Cycle_impl::Cycle_impl(Border_style bs):
     otable_->put(down_, 1, 1, 1, 1, true, false);
     otable_->align(down_.get(), ALIGN_CENTER, ALIGN_END);
 
-    auto theme = Theme_impl::root();
-
-    auto pixmap = theme->find_pixmap(ICON_PICTO_DEC);
-    if (pixmap) { down_->set_image(std::make_shared<Image_impl>(pixmap->dup(), true)); }
-    else { down_->hint_size(8, 4); }
-
-    pixmap = theme->find_pixmap(ICON_PICTO_INC);
-    if (pixmap) { up_->set_image(std::make_shared<Image_impl>(pixmap->dup(), true)); }
-    else { up_->hint_size(8, 4); }
+    down_->set_image(std::make_shared<Icon_impl>(ICON_PICTO_DEC, 8));
+    up_->set_image(std::make_shared<Icon_impl>(ICON_PICTO_INC, 8));
 
     up_action_.connect(fun(card_, &Card_impl::show_next));
     down_action_.connect(fun(card_, &Card_impl::show_previous));

@@ -24,26 +24,26 @@
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ----------------------------------------------------------------------------
 
+#include <tau/string.hh>
 #include "pixmap-xcb.hh"
 #include "display-xcb.hh"
+#include <cstring>
+#include <iostream>
 
 namespace tau {
 
-Pix_store::Pix_store(unsigned depth, const Size & sz):
+Pix_store::Pix_store(int depth, const Size & sz):
     depth_(0 != depth ? depth : 1)
 {
+    format_ = 1 == depth_ ? XCB_IMAGE_FORMAT_XY_BITMAP : (depth_ < 8 ? XCB_IMAGE_FORMAT_XY_PIXMAP : XCB_IMAGE_FORMAT_Z_PIXMAP);
     if (sz) { resize(sz); }
-}
-
-uint32_t Pix_store::format() const {
-    return 1 == depth_ ? XCB_IMAGE_FORMAT_XY_BITMAP : (depth_ < 8 ? XCB_IMAGE_FORMAT_XY_PIXMAP : XCB_IMAGE_FORMAT_Z_PIXMAP);
 }
 
 void Pix_store::resize(const Size & sz) {
     unsigned width = sz.width();
     std::size_t nwords, nbytes;
 
-    if (depth_ < 8) {
+    if (1 == depth_) {
         nwords = width >> 5;
         stride_ = (0x1f & width) ? 1 : 0;
         stride_ += nwords;
@@ -108,13 +108,14 @@ uint32_t Pix_store::get_pixel(const Point & pt) const {
 void Pix_store::put_pixel(const Point & pt, uint32_t rgb) {
     std::size_t index;
 
-    if (depth_ < 8) {
+    if (1 == depth_) {
+        rgb = rgb ? 1 : 0;
         index = (pt.x() >> 3)+pt.y()*stride_;
         unsigned shift = 0x07 & pt.x();
 
         for (std::size_t nbits = 0; index < raw_.size() && nbits < depth_; ++nbits) {
             raw_[index] &= ~(1 << shift);
-            if (1 & rgb) { raw_[index] |= (1 << shift); }
+            raw_[index] |= (rgb << shift);
             index += (sz_.width()*stride_);
             rgb <<= 1;
         }
@@ -122,40 +123,33 @@ void Pix_store::put_pixel(const Point & pt, uint32_t rgb) {
 
     else if (8 == depth_) {
         index = (pt.y()*stride_)+pt.x();
-
-        if (index < raw_.size()) {
-            raw_[index] = rgb;
-        }
+        if (index < raw_.size()) { raw_[index] = rgb; }
     }
 
     else {
         index = (pt.y()*stride_)+(pt.x() << 2);
-
-        if (index < raw_.size()-3) {
-            raw_[index++] = rgb;
-            raw_[index++] = rgb >> 8;
-            raw_[index++] = rgb >> 16;
-            raw_[index] = rgb >> 24;
-        }
+        if (index+3 < raw_.size()) { *reinterpret_cast<uint32_t *>(raw_.data()+index) = rgb; }
     }
 }
 
 void Pix_store::fill_rectangle(const Point & pt, const Size & sz, uint32_t rgb) {
-    std::size_t sindex, nbytes = raw_.size();
+    std::size_t sindex, rbytes = raw_.size();
+    if (0 == rbytes) { return; }
     unsigned height = sz.height();
 
-    if (depth_ < 8) {
+    if (1 == depth_) {
+        rgb = rgb ? 0xff : 0;
         sindex = (pt.y()*stride_)+(pt.x() >> 3);
         unsigned sshift = 0x07 & pt.x();
 
-        for (; sindex < nbytes && 0 != height; sindex += stride_, --height) {
+        for (; sindex < rbytes && 0 != height; sindex += stride_, --height) {
             std::size_t index = sindex, shift = sshift, width = sz.width();
 
-            for (; index < nbytes && 0 != width; --width) {
+            for (; index < rbytes && 0 != width; --width) {
                 uint32_t w = rgb;
                 std::size_t rindex = index;
 
-                for (std::size_t nbits = 0; rindex < nbytes && nbits < depth_; ++nbits) {
+                for (std::size_t nbits = 0; rindex < rbytes && nbits < depth_; ++nbits) {
                     raw_[rindex] &= ~(1 << shift);
                     if (1 & w) { raw_[rindex] |= (1 << shift); }
                     rindex += (sz_.width()*stride_);
@@ -170,10 +164,10 @@ void Pix_store::fill_rectangle(const Point & pt, const Size & sz, uint32_t rgb) 
     else if (8 == depth_) {
         sindex = (pt.y()*stride_)+pt.x();
 
-        for (; sindex < nbytes && 0 != height; sindex += stride_, --height) {
+        for (; sindex < rbytes && 0 != height; sindex += stride_, --height) {
             std::size_t index = sindex, width = sz.width();
 
-            for (; index < nbytes && 0 != width; --width) {
+            for (; index < rbytes && 0 != width; --width) {
                 raw_[index++] = rgb;
             }
         }
@@ -182,25 +176,21 @@ void Pix_store::fill_rectangle(const Point & pt, const Size & sz, uint32_t rgb) 
     else {
         sindex = (pt.y()*stride_)+(pt.x() << 2);
 
-        for (; sindex < nbytes && 0 != height; sindex += stride_, --height) {
-            std::size_t index = sindex, width = sz.width();
-
-            for (; index < nbytes-4 && 0 != width; --width) {
-                raw_[index++] = rgb;
-                raw_[index++] = rgb >> 8;
-                raw_[index++] = rgb >> 16;
-                raw_[index++] = rgb >> 24;
-            }
+        for (; sindex < rbytes && 0 != height; sindex += stride_, --height) {
+            std::wmemset(reinterpret_cast<wchar_t *>(raw_.data()+sindex), rgb, sz.width());
         }
     }
 }
 
 void Pix_store::set_argb32(const Point & pt, const uint8_t * buffer, std::size_t nbytes) {
-    if (depth_ < 8) {
-        std::size_t index = (pt.y()*stride_)+(pt.x() >> 3);
+    std::size_t index, rbytes = raw_.size();
+    if (!rbytes) { return; }
+
+    if (1 == depth_) {
+        index = (pt.y()*stride_)+(pt.x() >> 3);
         unsigned shift = 0x07 & pt.x();
 
-        while (index < raw_.size() && nbytes >= 4) {
+        while (index < rbytes && nbytes >= 4) {
             uint32_t c = 0;
             c |= buffer[3]; c <<= 8;
             c |= buffer[2]; c <<= 8;
@@ -215,43 +205,37 @@ void Pix_store::set_argb32(const Point & pt, const uint8_t * buffer, std::size_t
     }
 
     else if (8 == depth_) {
-        std::size_t index = (pt.y()*stride_)+pt.x();
+        index = (pt.y()*stride_)+pt.x();
 
-        while (index < raw_.size() && nbytes >= 4) {
+        while (index < rbytes && nbytes >= 4) {
             uint32_t c = 0;
             c |= buffer[3]; c <<= 8;
             c |= buffer[2]; c <<= 8;
             c |= buffer[1]; c <<= 8;
             c |= buffer[0];
             Color cc = Color::from_argb32(c);
-            raw_[index] = cc.gray8();
-            ++index;
+            raw_[index++] = cc.gray8();
             buffer += 4;
             nbytes -= 4;
         }
     }
 
     else {
-        std::size_t index = (pt.y()*stride_)+(pt.x() << 2);
-
-        while (index < raw_.size() && nbytes >= 4) {
-            raw_[index++] = *buffer++;
-            raw_[index++] = *buffer++;
-            raw_[index++] = *buffer++;
-            raw_[index++] = *buffer++;
-            nbytes -= 4;
-        }
+        index = (pt.y()*stride_)+(pt.x() << 2);
+        if (index < rbytes) { std::memcpy(raw_.data()+index, buffer, std::min(nbytes, rbytes-index)); }
     }
 }
 
 void Pix_store::to_full(Pix_store & pm) const {
+    unsigned w = sz_.width(), h = sz_.height();
+
     if (1 == depth_) {
-        for (unsigned y = 0; y < sz_.height(); ++y) {
+        for (unsigned y = 0; y < h; ++y) {
             std::size_t src = y*stride_;
             std::size_t dst = y*pm.stride_;
             std::size_t mask = 0x01;
 
-            for (std::size_t x = 0; x < sz_.width(); ++x) {
+            for (std::size_t x = 0; x < w; ++x) {
                 if (mask & raw_[src]) {
                     pm.raw_[dst++] = 0xff;
                     pm.raw_[dst++] = 0xff;
@@ -273,11 +257,11 @@ void Pix_store::to_full(Pix_store & pm) const {
     }
 
     else if (8 == depth_) {
-        for (unsigned y = 0; y < sz_.height(); ++y) {
+        for (unsigned y = 0; y < h; ++y) {
             std::size_t src = y*stride_;
             std::size_t dst = y*pm.stride_;
 
-            for (unsigned x = 0; x < sz_.width(); ++x) {
+            for (unsigned x = 0; x < w; ++x) {
                 uint8_t g8 = raw_[src++];
                 pm.raw_[dst++] = g8;
                 pm.raw_[dst++] = g8;
@@ -293,27 +277,16 @@ void Pix_store::to_full(Pix_store & pm) const {
 }
 
 void Pix_store::to_true(Pix_store & pm) const {
+    unsigned w = sz_.width(), h = sz_.height();
+
     if (1 == depth_) {
-        for (unsigned y = 0; y < sz_.height(); ++y) {
-            std::size_t src = y*stride_;
-            std::size_t dst = y*pm.stride_;
-            std::size_t mask = 0x01;
+        for (unsigned y = 0; y < h; ++y) {
+            const uint8_t * src = raw_.data()+y*stride_;
+            uint32_t * dst = reinterpret_cast<uint32_t *>(pm.raw_.data()+y*pm.stride_);
+            uint8_t mask = 0x01;
 
-            for (unsigned x = 0; x < sz_.width(); ++x) {
-                if (mask & raw_[src]) {
-                    pm.raw_[dst++] = 0xff;
-                    pm.raw_[dst++] = 0xff;
-                    pm.raw_[dst++] = 0xff;
-                    pm.raw_[dst++] = 0xff;
-                }
-
-                else {
-                    pm.raw_[dst++] = 0x00;
-                    pm.raw_[dst++] = 0x00;
-                    pm.raw_[dst++] = 0x00;
-                    pm.raw_[dst++] = 0xff;
-                }
-
+            for (unsigned x = 0; x < w; ++x) {
+                *dst++ = mask & *src ? 0x00ffffff : 0;
                 if (0x80 == mask) { mask = 0x01; ++src; }
                 else { mask <<= 1; }
             }
@@ -321,16 +294,35 @@ void Pix_store::to_true(Pix_store & pm) const {
     }
 
     else if (8 == depth_) {
-        for (unsigned y = 0; y < sz_.height(); ++y) {
-            std::size_t src = y*stride_;
-            std::size_t dst = y*pm.stride_;
+        for (unsigned y = 0; y < h; ++y) {
+            const uint8_t * src = raw_.data()+y*stride_;
+            uint8_t * dst = pm.raw_.data()+y*pm.stride_;
 
-            for (unsigned x = 0; x < sz_.width(); ++x) {
-                uint8_t g8 = raw_[src++];
-                pm.raw_[dst++] = g8;
-                pm.raw_[dst++] = g8;
-                pm.raw_[dst++] = g8;
-                pm.raw_[dst++] = 0xff;
+            for (unsigned x = 0; x < w; ++x) {
+                uint8_t g8 = *src++;
+                *dst++ = g8;
+                *dst++ = g8;
+                *dst++ = g8;
+                *dst++ = 0;
+            }
+        }
+    }
+
+    else if (32 == depth_) {
+        for (unsigned y = 0; y < h; ++y) {
+            const uint32_t * src = reinterpret_cast<const uint32_t *>(raw_.data()+y*stride_);
+            uint32_t * dst = reinterpret_cast<uint32_t *>(pm.raw_.data()+y*pm.stride_);
+
+            for (unsigned x = 0; x < w; ++x) {
+                Color c = Color::from_argb32(*src++), c2;
+                double a = c.alpha(), r = c.red(), g = c.green(), b = c.blue();
+                // Source => Target = (BGColor + Source) =
+                // Target.R = ((1 - Source.A) * BGColor.R) + (Source.A * Source.R)
+                // Target.G = ((1 - Source.A) * BGColor.G) + (Source.A * Source.G)
+                // Target.B = ((1 - Source.A) * BGColor.B) + (Source.A * Source.B)
+                // Do alpha blending with White destination color.
+                c2.set((1-a)+a*r, (1-a)+a*g, (1-a)+a*b, 0);
+                *dst++ = c2.rgb24();
             }
         }
     }
@@ -341,13 +333,15 @@ void Pix_store::to_true(Pix_store & pm) const {
 }
 
 void Pix_store::to_gray(Pix_store & pm) const {
+    unsigned w = sz_.width(), h = sz_.height();
+
     if (1 == depth_) {
-        for (unsigned y = 0; y < sz_.height(); ++y) {
+        for (unsigned y = 0; y < h; ++y) {
             std::size_t src = y*stride_;
             std::size_t dst = y*pm.stride_;
             std::size_t mask = 0x01;
 
-            for (unsigned x = 0; x < sz_.width(); ++x) {
+            for (unsigned x = 0; x < w; ++x) {
                 pm.raw_[dst++] = mask & raw_[src] ? 0xff : 0x00;
                 if (0x80 == mask) { mask = 0x01; ++src; }
                 else { mask <<= 1; }
@@ -360,11 +354,11 @@ void Pix_store::to_gray(Pix_store & pm) const {
     }
 
     else {
-        for (unsigned y = 0; y < sz_.height(); ++y) {
+        for (unsigned y = 0; y < h; ++y) {
             std::size_t src = y*stride_;
             std::size_t dst = y*pm.stride_;
 
-            for (unsigned x = 0; x < sz_.width(); ++x) {
+            for (unsigned x = 0; x < w; ++x) {
                 uint32_t c = 0;
                 c |= raw_[src+3]; c <<= 8;
                 c |= raw_[src+2]; c <<= 8;
@@ -378,17 +372,19 @@ void Pix_store::to_gray(Pix_store & pm) const {
 }
 
 void Pix_store::to_mono(Pix_store & pm) const {
+    unsigned w = sz_.width(), h = sz_.height();
+
     if (1 == depth_) {
         pm.raw_ = raw_;
     }
 
     else if (8 == depth_) {
-        for (unsigned y = 0; y < sz_.height(); ++y) {
+        for (unsigned y = 0; y < h; ++y) {
             std::size_t src = y*stride_;
             std::size_t dst = y*pm.stride_;
             std::size_t mask = 0x01;
 
-            for (unsigned x = 0; x < sz_.width(); ++x) {
+            for (unsigned x = 0; x < w; ++x) {
                 pm.raw_[dst] &= ~mask;
                 if (0 != raw_[src++]) { pm.raw_[dst] |= mask; }
                 if (0x80 == mask) { mask = 0x01; ++dst; }
@@ -398,12 +394,12 @@ void Pix_store::to_mono(Pix_store & pm) const {
     }
 
     else {
-        for (unsigned y = 0; y < sz_.height(); ++y) {
+        for (unsigned y = 0; y < h; ++y) {
             std::size_t src = y*stride_;
             std::size_t dst = y*pm.stride_;
             std::size_t mask = 0x01;
 
-            for (unsigned x = 0; x < sz_.width(); ++x) {
+            for (unsigned x = 0; x < w; ++x) {
                 pm.raw_[dst] &= ~mask;
 
                 uint8_t w = 0;
@@ -420,10 +416,25 @@ void Pix_store::to_mono(Pix_store & pm) const {
     }
 }
 
+void Pix_store::convert(Pix_store & pm) const {
+    if (pm.depth_ == depth_) {
+        pm.raw_ = raw_;
+    }
+
+    else {
+        switch (pm.depth_) {
+            case 32: to_full(pm); break;
+            case 24: to_true(pm); break;
+            case  8: to_gray(pm); break;
+            default: to_mono(pm);
+        }
+    }
+}
+
 // --------------------------------------------------------------------------
 // --------------------------------------------------------------------------
 
-Pixmap_xcb::Pixmap_xcb(unsigned depth, const Size & sz):
+Pixmap_xcb::Pixmap_xcb(int depth, const Size & sz):
     Pixmap_impl()
 {
     sys.store_ = new Pix_store(depth, sz);
@@ -431,7 +442,7 @@ Pixmap_xcb::Pixmap_xcb(unsigned depth, const Size & sz):
 
 Pixmap_xcb::~Pixmap_xcb() {
     drop_cache();
-    delete sys.store_;
+    if (sys.store_) { delete sys.store_; }
 }
 
 // Overrides pure Pixmap_impl.
@@ -464,7 +475,7 @@ void Pixmap_xcb::resize(const Size & sz) {
 // Overrides pure Pixmap_impl.
 Color Pixmap_xcb::get_pixel(const Point & pt) const {
     if (1 == depth()) {
-        return Color(sys.store_->get_pixel(pt) ? "White" : "Black");
+        return Color(sys.store_->get_pixel(pt) ? COLOR_WHITE : COLOR_BLACK);
     }
 
     else if (8 == depth()) {
@@ -483,31 +494,19 @@ Color Pixmap_xcb::get_pixel(const Point & pt) const {
 }
 
 // Overrides pure Pixmap_impl.
+void Pixmap_xcb::put_pixel_v(const Point & pt, const Color & c) {
+    uint32_t argb = c.argb32();
+    if (8 == sys.store_->depth_) { argb = c.gray8(); }
+    sys.store_->put_pixel(pt, argb);
+    drop_cache();
+    signal_changed_();
+}
+
+// Overrides pure Pixmap_impl.
 void Pixmap_xcb::fill_rectangles(const Rect * rs, std::size_t nrs, const Color & c) {
-    if (1 == depth()) {
-        for (; 0 != nrs; --nrs, ++rs) {
-            sys.store_->fill_rectangle(rs->origin(), rs->size(), 0 != c.rgb24() ? 0xff : 0x00);
-        }
-    }
-
-    else if (8 == depth()) {
-        for (; 0 != nrs; --nrs, ++rs) {
-            sys.store_->fill_rectangle(rs->origin(), rs->size(), c.gray8());
-        }
-    }
-
-    else if (24 == depth()) {
-        for (; 0 != nrs; --nrs, ++rs) {
-            sys.store_->fill_rectangle(rs->origin(), rs->size(), c.rgb24());
-        }
-    }
-
-    else if (32 == depth()) {
-        for (; 0 != nrs; --nrs, ++rs) {
-            sys.store_->fill_rectangle(rs->origin(), rs->size(), c.argb32());
-        }
-    }
-
+    uint32_t argb = c.argb32();
+    if (8 == sys.store_->depth_) { argb = c.gray8(); }
+    sys.store_->fill_rectangle(rs->origin(), rs->size(), argb);
     drop_cache();
     signal_changed_();
 }
@@ -523,84 +522,98 @@ void Pixmap_xcb::set_display(Display_xcb_ptr dp) const {
     if (!sys.dp_ || sys.dp_ != dp) {
         drop_cache();
         sys.dp_ = dp;
+        sys.cx_ = dp->conn();
     }
-}
-
-xcb_pixmap_t Pixmap_xcb::create_xcb_pixmap(xcb_drawable_t drw, unsigned depth) const {
-    if (sys.dp_) {
-        sys.pixmap_ = xcb_generate_id(sys.dp_->conn());
-        xcb_create_pixmap(sys.dp_->conn(), 0 == depth ? sys.dp_->depth() : depth, sys.pixmap_, drw, size().width(), size().height());
-        sys.gc_ = new Context_xcb(sys.dp_, sys.pixmap_);
-        return sys.pixmap_;
-    }
-
-    return XCB_NONE;
-}
-
-xcb_pixmap_t Pixmap_xcb::create_mask_xcb_pixmap(xcb_drawable_t drw) const {
-    if (sys.dp_) {
-        sys.mask_pixmap_ = xcb_generate_id(sys.dp_->conn());
-        xcb_create_pixmap(sys.dp_->conn(), 1, sys.mask_pixmap_, drw, size().width(), size().height());
-        sys.gcm_ = new Context_xcb(sys.dp_, sys.mask_pixmap_);
-        return sys.mask_pixmap_;
-    }
-
-    return XCB_NONE;
-}
-
-xcb_render_picture_t Pixmap_xcb::create_xcb_render_picture(xcb_render_pictformat_t pict_format) const {
-    if (sys.dp_ && XCB_NONE != sys.pixmap_) {
-        sys.picture_ = xcb_generate_id(sys.dp_->conn());
-        const uint32_t v[1] = { 0 };
-        xcb_render_create_picture(sys.dp_->conn(), sys.picture_, sys.pixmap_, XCB_NONE != pict_format ? pict_format : sys.dp_->pictformat(), 1, v);
-    }
-
-    return sys.picture_;
-}
-
-xcb_render_picture_t Pixmap_xcb::create_mask_xcb_render_picture() const {
-    if (sys.dp_ && XCB_NONE != sys.mask_pixmap_) {
-        sys.mask_picture_ = xcb_generate_id(sys.dp_->conn());
-        const uint32_t v[1] = { 0 };
-        xcb_render_create_picture(sys.dp_->conn(), sys.mask_picture_, sys.mask_pixmap_, sys.dp_->pictformat(1), 1, v);
-        return sys.mask_picture_;
-    }
-
-    return XCB_NONE;
 }
 
 void Pixmap_xcb::drop_cache() const {
-    if (sys.dp_) {
-        if (XCB_NONE != sys.mask_picture_) {
-            xcb_render_free_picture(sys.dp_->conn(), sys.mask_picture_);
-            sys.mask_picture_ = XCB_NONE;
+    if (XCB_NONE != sys.mask_picture_) {
+        if (sys.cx_) { xcb_render_free_picture(sys.cx_, sys.mask_picture_); }
+        sys.mask_picture_ = XCB_NONE;
+    }
+
+    if (XCB_NONE != sys.picture_) {
+        if (sys.cx_) { xcb_render_free_picture(sys.cx_, sys.picture_); }
+        sys.picture_ = XCB_NONE;
+    }
+
+    if (XCB_NONE != sys.mask_pixmap_) {
+        if (sys.cx_) { xcb_free_pixmap(sys.cx_, sys.mask_pixmap_); }
+        sys.mask_pixmap_ = XCB_NONE;
+    }
+
+    if (XCB_NONE != sys.pixmap_) {
+        if (sys.cx_) { xcb_free_pixmap(sys.cx_, sys.pixmap_); }
+        sys.pixmap_ = XCB_NONE;
+    }
+
+    if (sys.gc_) {
+        delete sys.gc_;
+        sys.gc_ = nullptr;
+    }
+
+    if (sys.gcm_) {
+        delete sys.gcm_;
+        sys.gcm_ = nullptr;
+    }
+}
+
+void Pixmap_xcb::put(uint8_t str_format, xcb_drawable_t drw, const Context_xcb * gc, const Size & sz, const Point & dst_pos, uint8_t left_pad, uint8_t depth, uint32_t data_len, const uint8_t * data) const {
+    gc->flush();
+    xcb_put_image(sys.cx_, str_format, drw, gc->xid(), sz.width(), sz.height(), dst_pos.x(), dst_pos.y(), left_pad, depth, data_len, data);
+    xcb_flush(sys.cx_);
+}
+
+void Pixmap_xcb::draw(xcb_drawable_t drw, xcb_render_picture_t pict, Oper op, const Point & pix_origin, const Size & pix_size, const Point & pt, bool transparent) const {
+    if (!sys.dp_ || !sys.store_) { return; }
+
+    if (XCB_NONE == sys.pixmap_) {
+        sys.pixmap_ = xcb_generate_id(sys.cx_);
+        xcb_create_pixmap(sys.cx_, sys.dp_->depth(), sys.pixmap_, drw, size().width(), size().height());
+        sys.gc_ = new Context_xcb(sys.cx_, sys.pixmap_);
+
+        sys.picture_ = xcb_generate_id(sys.cx_);
+        const uint32_t v[1] = { 0 };
+        xcb_render_create_picture(sys.cx_, sys.picture_, sys.pixmap_, sys.dp_->pictformat(), 1, v);
+
+        if (sys.dp_->depth() != depth()) {
+            Pix_store pm(sys.dp_->depth(), size());
+            sys.store_->convert(pm);
+            put(pm.format_, sys.pixmap_, sys.gc_, size(), Point(), 0, pm.depth_, pm.raw_.size(), pm.raw_.data());
         }
 
-        if (XCB_NONE != sys.picture_) {
-            xcb_render_free_picture(sys.dp_->conn(), sys.picture_);
-            sys.picture_ = XCB_NONE;
-        }
-
-        if (XCB_NONE != sys.mask_pixmap_) {
-            xcb_free_pixmap(sys.dp_->conn(), sys.mask_pixmap_);
-            sys.mask_pixmap_ = XCB_NONE;
-        }
-
-        if (XCB_NONE != sys.pixmap_) {
-            xcb_free_pixmap(sys.dp_->conn(), sys.pixmap_);
-            sys.pixmap_ = XCB_NONE;
-        }
-
-        if (sys.gc_) {
-            delete sys.gc_;
-            sys.gc_ = nullptr;
-        }
-
-        if (sys.gcm_) {
-            delete sys.gcm_;
-            sys.gcm_ = nullptr;
+        else {
+            put(sys.store_->format_, sys.pixmap_, sys.gc_, size(), Point(), 0, depth(), bytes(), raw());
         }
     }
+
+    xcb_render_picture_t pmask = XCB_NONE;
+
+    if (transparent && 32 == depth()) {
+        if (XCB_NONE == sys.mask_pixmap_) {
+            sys.mask_pixmap_ = xcb_generate_id(sys.cx_);
+            xcb_create_pixmap(sys.cx_, 1, sys.mask_pixmap_, drw, size().width(), size().height());
+            sys.gcm_ = new Context_xcb(sys.cx_, sys.mask_pixmap_);
+            Pix_store xpm(1, size());
+
+            for (int y = 0; y < size().iheight(); ++y) {
+                for (int x = 0; x < size().iwidth(); ++x) {
+                    uint32_t v = sys.store_->get_pixel(Point(x, y));
+                    xpm.put_pixel(Point(x, y), 0 != (v >> 24) ? 0 : 1);
+                }
+            }
+
+            put(xpm.format_, sys.mask_pixmap_, sys.gcm_, size(), Point(), 0, 1, xpm.raw_.size(), xpm.raw_.data());
+            sys.mask_picture_ = xcb_generate_id(sys.cx_);
+            const uint32_t v[1] = { 0 };
+            xcb_render_create_picture(sys.cx_, sys.mask_picture_, sys.mask_pixmap_, sys.dp_->pictformat(1), 1, v);
+        }
+
+        pmask = sys.mask_picture_;
+    }
+
+    xcb_render_composite(sys.cx_, xrender_oper(op), sys.picture_, pmask, pict, pix_origin.x(), pix_origin.y(), 0, 0, pt.x(), pt.y(), pix_size.width(), pix_size.height());
+    xcb_flush(sys.cx_);
 }
 
 } // namespace tau

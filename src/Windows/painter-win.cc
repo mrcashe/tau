@@ -414,7 +414,7 @@ void Painter_win::draw_pixmap(Pixmap_cptr pix, const Point & pix_origin, const S
             if (cbm) {
                 SelectObject(cdc, cbm);
 
-                if (transparent && 32 == pix_ms->depth()) {
+                if (transparent && 32 == pix->depth()) {
                     BLENDFUNCTION bf { AC_SRC_OVER, 0, 255, AC_SRC_ALPHA };
                     AlphaBlend(hdc_, pt.x(), pt.y(), pix_size.width(), pix_size.height(), cdc, pix_origin.x(), pix_origin.y(), pix_size.width(), pix_size.height(), bf);
                 }

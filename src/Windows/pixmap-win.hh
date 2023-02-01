@@ -61,12 +61,13 @@ public:
     const uint8_t * raw() const override;
 
     // Overrides pure Pixmap_impl.
-    void resize(const Size & size) override {
-        resize_priv(size);
-    }
+    void resize(const Size & size) override { resize_priv(size); }
 
     // Overrides pure Pixmap_impl.
     void fill_rectangles(const Rect * rs, std::size_t nrs, const Color & c) override;
+
+    // Overrides pure Pixmap_impl.
+    void put_pixel_v(const Point & pt, const Color & c) override;
 
     // Overrides pure Pixmap_impl.
     Color get_pixel(const Point & pt) const override;

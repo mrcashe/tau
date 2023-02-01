@@ -46,7 +46,7 @@ Painter_xcb::Painter_xcb(Winface_xcb * wf):
     cx_(wf->conn()),
     xid_(wf->wid()),
     xpicture_(wf->xpicture()),
-    gc_(dp_, wf->wid())
+    gc_(cx_, wf->wid())
 {
     wstate().wclip.set(wf->self()->size());
     wf->self()->signal_destroy().connect(fun(this, &Painter_xcb::on_destroy));
@@ -58,66 +58,8 @@ void Painter_xcb::draw_pixmap(Pixmap_cptr pix, const Point & pix_origin, const S
     if (XCB_NONE == xpicture_ || XCB_NONE == xid_) { return; }
     auto xpix = std::dynamic_pointer_cast<const Pixmap_xcb>(pix);
     if (!xpix || !xpix->size()) { return; }
-    xcb_render_picture_t pmask = XCB_NONE;
-
-    if (XCB_NONE == xpix->xcb_pixmap()) {
-        xpix->set_display(dp_);
-        xpix->create_xcb_pixmap(xid_);
-        xpix->create_xcb_render_picture();
-        xcb_flush(cx_);
-
-        if (dp_->depth() != xpix->depth()) {
-            if (1 == dp_->depth()) {
-                Pix_store pm(1, xpix->size());
-                xpix->store()->to_mono(pm);
-                put_image(pm.format(), xpix->xcb_pixmap(), *xpix->gc(), xpix->size(), Point(), 0, 1, pm.raw_.size(), pm.raw_.data());
-            }
-
-            else if (8 == dp_->depth()) {
-                Pix_store pm(8, xpix->size());
-                xpix->store()->to_gray(pm);
-                put_image(pm.format(), xpix->xcb_pixmap(), *xpix->gc(), xpix->size(), Point(), 0, 8, pm.raw_.size(), pm.raw_.data());
-            }
-
-            else if (24 == dp_->depth()) {
-                Pix_store pm(24, xpix->size());
-                xpix->store()->to_true(pm);
-                put_image(pm.format(), xpix->xcb_pixmap(), *xpix->gc(), xpix->size(), Point(), 0, 24, pm.raw_.size(), pm.raw_.data());
-            }
-
-            else {
-                Pix_store pm(32, xpix->size());
-                xpix->store()->to_full(pm);
-                put_image(pm.format(), xpix->xcb_pixmap(), *xpix->gc(), xpix->size(), Point(), 0, 32, pm.raw_.size(), pm.raw_.data());
-            }
-        }
-
-        else {
-            put_image(xpix->format(), xpix->xcb_pixmap(), *xpix->gc(), xpix->size(), Point(), 0, xpix->depth(), pix->bytes(), pix->raw());
-        }
-    }
-
-    if (transparent && 32 == xpix->depth()) {
-        if (XCB_NONE == xpix->mask_xcb_pixmap()) {
-            xpix->create_mask_xcb_pixmap(xid_);
-            Pix_store xpm(1, xpix->size());
-
-            for (std::size_t y = 0; y < xpix->size().height(); ++y) {
-                for (std::size_t x = 0; x < xpix->size().width(); ++x) {
-                    uint32_t v = xpix->store()->get_pixel(Point(x, y));
-                    xpm.put_pixel(Point(x, y), 0 != (v >> 24) ? 0 : 1);
-                }
-            }
-
-            put_image(xpm.format(), xpix->mask_xcb_pixmap(), *xpix->mask_gc(), xpix->size(), Point(), 0, 1, xpm.raw_.size(), xpm.raw_.data());
-            xpix->create_mask_xcb_render_picture();
-        }
-
-        pmask = xpix->mask_xcb_render_picture();
-    }
-
-    xcb_render_composite(cx_, xrender_oper(state().op), xpix->xcb_render_picture(), pmask, xpicture_, pix_origin.x(), pix_origin.y(), 0, 0, pt.x(), pt.y(), pix_size.width(), pix_size.height());
-    xcb_flush(cx_);
+    xpix->set_display(dp_);
+    xpix->draw(xid_, xpicture_, state().op, pix_origin, pix_size, pt, transparent);
 }
 
 void Painter_xcb::set_clip() {
@@ -339,12 +281,6 @@ void Painter_xcb::stroke_prim_arc(const Prim_arc & obj) {
 
 void Painter_xcb::fill_prim_arc(const Prim_arc & obj) {
     Painter_impl::fill_prim_arc(obj);
-}
-
-void Painter_xcb::put_image(uint8_t str_format, xcb_drawable_t drawable, const Context_xcb & gc, const Size & sz, const Point & dst_pos, uint8_t left_pad, uint8_t depth, uint32_t data_len, const uint8_t * data) {
-    gc.flush();
-    xcb_put_image(cx_, str_format, drawable, gc.xid(), sz.width(), sz.height(), dst_pos.x(), dst_pos.y(), left_pad, depth, data_len, data);
-    xcb_flush(cx_);
 }
 
 // Overrides pure Painter.
