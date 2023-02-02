@@ -54,6 +54,16 @@ void Winface_win::init(Window_impl * wii) {
     SetCursor(icursor_);
 }
 
+// Overrides pure Winface.
+Display_ptr Winface_win::display() {
+    return dp_->loop()->alive() ? dp_ : nullptr;
+}
+
+// Overrides pure Winface.
+Display_cptr Winface_win::display() const {
+    return dp_->loop()->alive() ? dp_ : nullptr;
+}
+
 void Winface_win::track_mouse_event() {
     if (!tme_) {
         tme_ = true;

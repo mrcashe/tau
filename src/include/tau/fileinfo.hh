@@ -46,6 +46,9 @@ public:
     /// Default constructor.
     Fileinfo();
 
+    /// Destructor.
+   ~Fileinfo();
+
     /// Copy constructor.
     ///
     /// @note This class is a wrapper around its implementation shared pointer,

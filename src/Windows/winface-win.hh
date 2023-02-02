@@ -41,10 +41,10 @@ public:
    ~Winface_win() { CloseHandle(hwnd_); }
 
     // Overrides pure Winface.
-    Display_ptr display() override { return dp_; }
+    Display_ptr display() override;
 
     // Overrides pure Winface.
-    Display_cptr display() const override { return dp_; }
+    Display_cptr display() const override;
 
    // Overrides pure Winface.
    void update() override;

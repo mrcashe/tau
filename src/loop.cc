@@ -38,6 +38,8 @@ Loop::Loop():
 {
 }
 
+Loop::~Loop() {}
+
 void Loop::run() {
     impl->run();
 }

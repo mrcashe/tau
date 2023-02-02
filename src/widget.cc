@@ -44,6 +44,8 @@ Widget::Widget():
 {
 }
 
+Widget::~Widget() {}
+
 Widget::Widget(Widget_ptr wp):
     trackable(),
     impl(wp)

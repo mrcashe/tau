@@ -46,6 +46,9 @@ public:
     /// Default constructor creates a current thread %Loop.
     Loop();
 
+    /// Destructor.
+   ~Loop();
+
     /// Copy constructor.
     ///
     /// @note This class is a wrapper around its implementation shared pointer,

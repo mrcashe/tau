@@ -30,20 +30,35 @@
 
 namespace tau {
 
-Accel::Accel(char32_t kc, int km) {
+Accel::~Accel() {}
+
+Accel::Accel():
+    trackable()
+{
+}
+
+Accel::Accel(char32_t kc, int km):
+    trackable()
+{
     assign(kc, km);
 }
 
-Accel::Accel(char32_t kc, int km, slot<bool()> slot_activate) {
+Accel::Accel(char32_t kc, int km, slot<bool()> slot_activate):
+    trackable()
+{
     assign(kc, km);
     connect(slot_activate);
 }
 
-Accel::Accel(const ustring & spec) {
+Accel::Accel(const ustring & spec):
+    trackable()
+{
     assign(spec);
 }
 
-Accel::Accel(const ustring & spec, slot<bool()> slot_activate) {
+Accel::Accel(const ustring & spec, slot<bool()> slot_activate):
+    trackable()
+{
     assign(spec);
     connect(slot_activate);
 }

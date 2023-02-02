@@ -46,15 +46,13 @@ public:
     explicit Text_impl(const ustring & text, Align xalign=ALIGN_CENTER, Align yalign=ALIGN_CENTER);
     explicit Text_impl(Buffer buf, Align xalign=ALIGN_CENTER, Align yalign=ALIGN_CENTER);
 
-    // Overriden by Edit_impl.
-    virtual void assign(const ustring & text);
-
-    // Overriden by Edit_impl.
-    virtual void assign(Buffer buf);
-
+    void assign(Buffer buf);
+    void assign(const ustring & text);
     bool empty() const;
     ustring text() const;
-    void clear();
+
+    // Overriden by Edit_impl.
+    virtual void clear();
 
     void allow_select();
     void disallow_select();
@@ -161,9 +159,10 @@ public:
 protected:
 
     Buffer              buffer_;
-    Buffer_citer         caret_;                 // Current caret position.
-    Buffer_citer         sel_;                   // Selection start.
-    Buffer_citer         esel_;                  // Selection end.
+    Buffer_citer        caret_;                 // Current caret position.
+    Buffer_citer        sel_;                   // Selection start.
+    Buffer_citer        esel_;                  // Selection end.
+    Painter             ppr_;                   // Private painter.
 
     bool                insert_ = true;
     bool                select_allowed_ = false;
@@ -209,6 +208,9 @@ protected:
     void move_caret(std::size_t row, std::size_t col);
     void scroll_to_caret();
     void hint_x();
+
+    // Overriden by Edit_impl.
+    virtual void init_buffer();
 
     void pan_up();
     void pan_down();
@@ -268,13 +270,14 @@ private:
         int             descent = 0;            // Descent in pixels.
         int             ybase   = 0;            // Baseline within entire widget area.
         int             ox      = 0;            // Offset within X coordinate.
-        std::u32string  text;
         std::u32string  ellipsized;
         Frags           frags;
         Poss            poss;
     };
 
     using Rows = std::vector<Row>;
+    using R_iter = Rows::iterator;
+    using R_citer = Rows::const_iterator;
 
     Rows                rows_;
     Buffer_citer        msel_;                  // Mouse selection start.
@@ -282,7 +285,6 @@ private:
     bool                caret_visible_ = false;
     bool                caret_exposed_ = false;
 
-    Painter             pr_;
     std::vector<Font>   fonts_;
     int                 xhint_ = 0;             // Desired x offset for up/down caret navigation.
     int                 font_height_ = 0;
@@ -302,17 +304,16 @@ private:
     std::size_t         spacing_ = 0;
 
     Timer               caret_timer_;
-    connection          insert_cx_;
-    connection          replace_cx_;
-    connection          erase_cx_;
-    connection          insert_move_cx_;
-    connection          replace_move_cx_;
-    connection          erase_move_cx_;
+    connection          insert_cx_ { true };
+    connection          replace_cx_ { true };
+    connection          erase_cx_ { true };
+    connection          insert_move_cx_ { true };
+    connection          replace_move_cx_ { true };
+    connection          erase_move_cx_ { true };
 
 private:
 
     void init();
-    void init_buffer();
     void draw_caret(Painter pr);
     void expose_caret();
     void wipe_caret();
@@ -322,18 +323,16 @@ private:
     int x_at_col(const Row & row, std::size_t col) const;
     std::size_t col_at_x(const Row & row, int x) const;
     std::size_t hinted_pos(std::size_t ri);
-    void arrange_rows();
-    int  calc_height(std::size_t first, std::size_t last);
-    int  calc_width(std::size_t first, std::size_t last);
-    void calc_row(Row & row);
-    void calc_ellipsis(Row & row);
-    void calc_all_ellipsis();
-    bool align_rows(std::size_t first, std::size_t last);
+    int  calc_height(R_citer first, R_citer last);
+    int  calc_width(R_citer first, R_citer last);
+    void calc_row(R_iter i, Painter pr=Painter());
+    void calc_rows();
+    bool align_rows(R_iter first, R_iter last);
     void align_all();
-    void load_rows(std::size_t first, std::size_t last);
-    void translate_rows(std::size_t first, std::size_t last, int dy);
+    void load_rows(R_iter first, R_iter last);
+    void translate_rows(R_iter first, R_iter last, int dy);
     void insert_range(Buffer_citer b, Buffer_citer e);
-    void paint_row(const Row & row, std::size_t ri, std::size_t pos, Painter pr);
+    void paint_row(R_citer ri, std::size_t pos, Painter pr);
     void paint_ellipsized(const Row & row, Painter pr);
     void redraw(const Rect & r, Painter pr=Painter());
     Painter wipe_area(int x1, int y1, int x2, int y2, Painter pr=Painter());
@@ -341,7 +340,6 @@ private:
     Font select_font(Painter pr=Painter());
 
     void update_caret();
-    void update_painter();
     void update_font();
     void update_range(Buffer_citer begin, Buffer_citer end);
     void update_requisition();

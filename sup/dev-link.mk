@@ -58,16 +58,16 @@ install-host:
 	    echo "exec_prefix=$(PREFIX)" >>$(unix_pc); \
 	    echo "lib_prefix=$(PREFIX)/lib">>$(unix_pc); \
 	    echo "includedir=$(hh_prefix)">>$(unix_pc); \
-	    [ -e $(unix_adest) ] && echo "a=$(unix_adest)">>$(unix_pc); \
+	    [ -e $(unix_adest) ] && echo "a=$(unix_adest) $(shell pkg-config --libs $(pkg_required))">>$(unix_pc); \
 	    echo "Name: tau">>$(unix_pc); \
 	    echo "Description: C++ GUI toolkit">>$(unix_pc); \
 	    echo "Version: $(Major_).$(Minor_).$(Micro_)">>$(unix_pc); \
-	    echo "Requires: $(pkg_required)">>$(unix_pc); \
-	    echo -n "Libs: -lpthread -L$$">>$(unix_pc); \
+	    echo "Requires:">>$(unix_pc); \
+	    echo -n "Libs: -L$$">>$(unix_pc); \
 	    echo -n "{lib_prefix}">>$(unix_pc); \
 	    [ -e $(unix_sopath) ] && echo -n " -ltau-$(Major_).$(Minor_)">>$(unix_pc); \
 	    echo "">>$(unix_pc); \
-	    echo -n "Cflags: -I$$">>$(unix_pc); \
+	    echo -n "Cflags: -pthread -I$$">>$(unix_pc); \
 	    echo "{includedir}">>$(unix_pc); \
 	fi
 

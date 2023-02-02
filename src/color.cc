@@ -710,6 +710,25 @@ Color Color::inactive() const {
     return c;
 }
 
+// Source => Target = (BGColor + Source) =
+// Target.R = ((1 - Source.A) * BGColor.R) + (Source.A * Source.R)
+// Target.G = ((1 - Source.A) * BGColor.G) + (Source.A * Source.G)
+// Target.B = ((1 - Source.A) * BGColor.B) + (Source.A * Source.B)
+void Color::alpha_blend(const Color & src) {
+    double a = src.alpha(), r = src.red(), g = src.green(), b = src.blue();
+    red_ = (red_*(1.0-a))+a*r;
+    green_ = (green_*(1.0-a))+a*g;
+    blue_ = (blue_*(1.0-a))+a*b;
+    alpha_ = 0;
+    calc_hsv();
+}
+
+Color Color::alpha_blended(const Color & src) const {
+    Color c(*this);
+    c.alpha_blend(src);
+    return c;
+}
+
 } // namespace tau
 
 //END

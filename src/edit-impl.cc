@@ -57,13 +57,13 @@ Edit_impl::Edit_impl(Buffer buf, Align halign, Align valign):
 }
 
 void Edit_impl::init() {
-    connect_buffer();
+    init_buffer();
     allow_edit();
 
-    style_.redirect("whitespace/background", "background");
+    style_.redirect(STYLE_WHITESPACE_BACKGROUND, STYLE_BACKGROUND);
     signal_key_down_.connect(fun(this, &Edit_impl::on_key_down));
     signal_input_.connect(fun(this, &Edit_impl::on_input));
-    signal_display().connect(fun(this, &Edit_impl::on_display));
+    signal_display_.connect(fun(this, &Edit_impl::on_display), true);
 
     undo_action_.disable();
     redo_action_.disable();
@@ -78,7 +78,9 @@ void Edit_impl::init() {
     connect_action(tab_action_);
 }
 
-void Edit_impl::connect_buffer() {
+// Overrides Text_impl.
+void Edit_impl::init_buffer() {
+    Text_impl::init_buffer();
     edit_insert_cx_ = buffer_.signal_insert().connect(fun(this, &Edit_impl::on_edit_insert), true);
     edit_replace_cx_ = buffer_.signal_replace().connect(fun(this, &Edit_impl::on_edit_replace), true);
     edit_erase_cx_ = buffer_.signal_erase().connect(fun(this, &Edit_impl::on_edit_erase), true);
@@ -98,23 +100,12 @@ void Edit_impl::disallow_edit() {
 }
 
 // Overrides Text_impl.
-void Edit_impl::assign(Buffer buf) {
-    edit_insert_cx_.drop();
-    edit_replace_cx_.drop();
-    edit_erase_cx_.drop();
-    flush_cx_.drop();
-
+void Edit_impl::clear() {
+    Text_impl::clear();
     undo_.clear();
     undo_index_ = 0;
-    Text_impl::assign(buf);
-    connect_buffer();
-}
-
-// Overrides Text_impl.
-void Edit_impl::assign(const ustring & s) {
-    undo_.clear();
-    undo_index_ = 0;
-    Text_impl::assign(s);
+    undo_action_.disable();
+    redo_action_.disable();
 }
 
 bool Edit_impl::on_input(const ustring & s) {
@@ -234,9 +225,8 @@ void Edit_impl::tab() {
 }
 
 void Edit_impl::on_display() {
-    if (auto dp = display()) {
-        paste_text_cx_ = dp->signal_paste_text().connect(fun(this, &Edit_impl::on_paste_text));
-    }
+    if (auto dp = display()) { paste_text_cx_ = dp->signal_paste_text().connect(fun(this, &Edit_impl::on_paste_text)); }
+    ppr_ = painter();
 }
 
 void Edit_impl::on_paste_text(const ustring & s) {

@@ -299,6 +299,8 @@ ustring::ustring():
 {
 }
 
+ustring::~ustring() {}
+
 ustring::ustring(const ustring & other):
     str_(other.str_),
     size_(other.size_)

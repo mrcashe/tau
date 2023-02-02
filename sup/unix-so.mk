@@ -28,18 +28,21 @@ srcdirs += $(posix_srcdir) $(xcb_srcdir) $(unix_srcdir) $(confdir)/$(plat) $(src
 VPATH = $(srcdirs)
 sources = $(foreach dir, $(srcdirs), $(wildcard $(dir)/*.cc))
 objects = $(addprefix $(unix_so_builddir)/, $(addsuffix .o, $(sort $(basename $(notdir $(sources))))))
+LDFLAGS += -lpthread $(shell pkg-config --libs $(pkg_required))
 CXXFLAGS += -O2 -g
 
 all: $(unix_sodir) $(unix_so_builddir) $(unix_so)
 
 $(unix_so): $(objects)
-	$(CXX) -o $@ -g -shared -fPIC $(unix_so_builddir)/*.o && chmod -x $@
+	$(CXX) -o $@ -g -shared -fPIC $(unix_so_builddir)/*.o $(LDFLAGS) && chmod -x $@
+	@lddout=`LANG=C ldd -r $(unix_so) | grep undefined`; \
+	if test -n "$$lddout"; then echo "** unix-so.mk: undefined symbols in $(unix_so)" >/dev/stderr; exit 1; fi
 
 install: $(lib_prefix)
 	@if [ -f $(unix_so) ]; then \
 	    rm -f $(lib_prefix)/libtau.so.$(Major_).$(Minor_)*; \
 	    echo "++ unix-so.mk: rebuilding shared library with -soname option..."; \
-	    $(CXX) -o $(unix_sopath) -shared -fPIC -Wl,-soname,$(unix_soname) $(unix_so_builddir)/*.o; \
+	    $(CXX) -o $(unix_sopath) -shared -fPIC -Wl,-soname,$(unix_soname) $(unix_so_builddir)/*.o $(LDFLAGS); \
 	    chmod -x $(unix_sopath); \
 	    strip --strip-unneeded $(unix_sopath); \
 	    (cd $(lib_prefix) && ln -vsf $(unix_sofile) $(unix_soname)); \

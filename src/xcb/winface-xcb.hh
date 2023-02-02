@@ -61,10 +61,10 @@ public:
     void handle_client(xcb_client_message_event_t * event);
 
     // Overrides pure Winface.
-    Display_ptr display() override { return dp_; }
+    Display_ptr display() override;
 
     // Overrides pure Winface.
-    Display_cptr display() const override { return dp_; }
+    Display_cptr display() const override;
 
     // Overrides pure Winface.
     Painter_ptr painter() override;

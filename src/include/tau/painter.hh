@@ -46,6 +46,9 @@ public:
     /// Default constructor creates a pure %Painter.
     Painter();
 
+    /// Destructor.
+   ~Painter();
+
     /// Copy constructor.
     Painter(const Painter & other) = default;
 

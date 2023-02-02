@@ -49,7 +49,10 @@ public:
     /// @{
 
     /// Default constructor.
-    Master_action() = default;
+    Master_action();
+
+    /// Destructor.
+   ~Master_action();
 
     /// Copy constructor.
     Master_action(const Master_action & other) = default;
@@ -255,7 +258,7 @@ public:
     /// @{
 
     /// Default constructor.
-    Action_base() = default;
+    Action_base();
 
     /// Copy constructor.
     Action_base(const Action_base & other) = default;
@@ -506,7 +509,10 @@ public:
     /// @{
 
     /// Default constructor.
-    Action() = default;
+    Action();
+
+    /// Destructor.
+   ~Action();
 
     /// Copy constructor.
     Action(const Action & other) = default;
@@ -619,7 +625,10 @@ public:
     /// @{
 
     /// Default constructor.
-    Toggle_action() = default;
+    Toggle_action();
+
+    /// Destructor.
+   ~Toggle_action();
 
     /// Copy constructor.
     Toggle_action(const Toggle_action & other) = default;

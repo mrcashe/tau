@@ -46,7 +46,10 @@ public:
     /// @{
 
     /// Default constructor.
-    Accel() = default;
+    Accel();
+
+    /// Destructor.
+   ~Accel();
 
     /// Copy constructor.
     Accel(const Accel & other) = default;

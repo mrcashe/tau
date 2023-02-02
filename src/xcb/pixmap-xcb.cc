@@ -76,7 +76,7 @@ uint32_t Pix_store::get_pixel(const Point & pt) const {
         index = (pt.y()*stride_)+(pt.x() >> 3);
         unsigned shift = 0x07 & pt.x();
 
-        for (std::size_t nbits = 0; index < raw_.size() && nbits < depth_; ++nbits) {
+        for (int nbits = 0; index < raw_.size() && nbits < depth_; ++nbits) {
             w <<= 1;
             if (raw_[index] & (1 << shift)) { ++w; }
             index += (sz_.width()*stride_);
@@ -113,7 +113,7 @@ void Pix_store::put_pixel(const Point & pt, uint32_t rgb) {
         index = (pt.x() >> 3)+pt.y()*stride_;
         unsigned shift = 0x07 & pt.x();
 
-        for (std::size_t nbits = 0; index < raw_.size() && nbits < depth_; ++nbits) {
+        for (int nbits = 0; index < raw_.size() && nbits < depth_; ++nbits) {
             raw_[index] &= ~(1 << shift);
             raw_[index] |= (rgb << shift);
             index += (sz_.width()*stride_);
@@ -149,7 +149,7 @@ void Pix_store::fill_rectangle(const Point & pt, const Size & sz, uint32_t rgb) 
                 uint32_t w = rgb;
                 std::size_t rindex = index;
 
-                for (std::size_t nbits = 0; rindex < rbytes && nbits < depth_; ++nbits) {
+                for (int nbits = 0; rindex < rbytes && nbits < depth_; ++nbits) {
                     raw_[rindex] &= ~(1 << shift);
                     if (1 & w) { raw_[rindex] |= (1 << shift); }
                     rindex += (sz_.width()*stride_);
@@ -309,20 +309,15 @@ void Pix_store::to_true(Pix_store & pm) const {
     }
 
     else if (32 == depth_) {
+        const Color white(1.0, 1.0, 1.0, 0.0);
+
         for (unsigned y = 0; y < h; ++y) {
             const uint32_t * src = reinterpret_cast<const uint32_t *>(raw_.data()+y*stride_);
             uint32_t * dst = reinterpret_cast<uint32_t *>(pm.raw_.data()+y*pm.stride_);
 
             for (unsigned x = 0; x < w; ++x) {
-                Color c = Color::from_argb32(*src++), c2;
-                double a = c.alpha(), r = c.red(), g = c.green(), b = c.blue();
-                // Source => Target = (BGColor + Source) =
-                // Target.R = ((1 - Source.A) * BGColor.R) + (Source.A * Source.R)
-                // Target.G = ((1 - Source.A) * BGColor.G) + (Source.A * Source.G)
-                // Target.B = ((1 - Source.A) * BGColor.B) + (Source.A * Source.B)
                 // Do alpha blending with White destination color.
-                c2.set((1-a)+a*r, (1-a)+a*g, (1-a)+a*b, 0);
-                *dst++ = c2.rgb24();
+                *dst++ = white.alpha_blended(Color::from_argb32(*src++)).rgb24();
             }
         }
     }

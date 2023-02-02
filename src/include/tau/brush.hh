@@ -47,6 +47,9 @@ public:
     /// Default constructor.
     Brush();
 
+    /// Destructor.
+   ~Brush();
+
     /// Constructs solid brush of specified color.
     Brush(const Color & color);
 

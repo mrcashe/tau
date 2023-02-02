@@ -79,6 +79,9 @@ public:
     /// Creates basic widget commonly used for drawing.
     Widget();
 
+    /// Destructor.
+   ~Widget();
+
     /// Copy constructor.
     ///
     /// @note This class is a wrapper around its implementation shared pointer,

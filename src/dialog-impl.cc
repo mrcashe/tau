@@ -24,8 +24,8 @@
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ----------------------------------------------------------------------------
 
-#include <tau/loop.hh>
 #include <dialog-impl.hh>
+#include <loop-impl.hh>
 #include <display-impl.hh>
 
 namespace tau {
@@ -58,7 +58,7 @@ void Dialog_impl::run() {
     if (!run_) {
         show();
         run_ = true;
-        Loop().run();
+        Loop_impl::this_loop()->run();
         run_ = false;
         hide();
         if (close_) { Window_impl::close(); }
@@ -67,7 +67,7 @@ void Dialog_impl::run() {
 
 void Dialog_impl::quit() {
     if (run_) {
-        Loop().quit();
+        Loop_impl::this_loop()->quit();
         run_ = false;
     }
 }

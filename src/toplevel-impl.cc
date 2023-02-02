@@ -25,7 +25,6 @@
 // ----------------------------------------------------------------------------
 
 #include <tau/exception.hh>
-#include <display-impl.hh>
 #include <pixmap-impl.hh>
 #include <theme-impl.hh>
 #include <toplevel-impl.hh>

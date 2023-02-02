@@ -40,10 +40,7 @@ public:
     explicit Edit_impl(Buffer buf, Align halign=ALIGN_START, Align valign=ALIGN_START);
 
     // Overrides Text_impl.
-    void assign(Buffer buf) override;
-
-    // Overrides Text_impl.
-    void assign(const ustring & text) override;
+    void clear() override;
 
     void allow_edit();
     void disallow_edit();
@@ -73,6 +70,23 @@ public:
 
 protected:
 
+    Action              enter_action_ { KC_ENTER, KM_NONE, fun(this, &Edit_impl::enter) };
+    Action              backspace_action_ { KC_BACKSPACE, KM_NONE, fun(this, &Edit_impl::backspace) };
+    Action              cut_action_ { "<Ctrl>X <Shift>Delete", fun(this, &Edit_impl::cut) };
+    Action              paste_action_ { "<Ctrl>V <Shift>Insert", fun(this, &Edit_impl::paste) };
+    Action              del_action_ { KC_DELETE, KM_NONE, fun(this, &Edit_impl::del) };
+    Action              undo_action_ { "<Alt>BackSpace <Ctrl>Z", fun(this, &Edit_impl::undo) };
+    Action              redo_action_ { "<Alt>Enter", fun(this, &Edit_impl::redo) };
+    Action              tab_action_ { KC_TAB, KM_NONE, fun(this, &Edit_impl::tab) };
+    Toggle_action       insert_action_ { KC_INSERT, KM_NONE, fun(this, &Edit_impl::on_insert) };
+
+protected:
+
+    // Overrides Text_impl.
+    void init_buffer() override;
+
+private:
+
     enum Undo_type { UNDO_INSERT, UNDO_REPLACE, UNDO_ERASE };
 
     struct Undo {
@@ -94,21 +108,17 @@ protected:
     bool                edit_allowed_ = true;
     bool                split_undo_ = false;
 
-    Action              enter_action_ { KC_ENTER, KM_NONE, fun(this, &Edit_impl::enter) };
-    Action              backspace_action_ { KC_BACKSPACE, KM_NONE, fun(this, &Edit_impl::backspace) };
-    Action              cut_action_ { "<Ctrl>X <Shift>Delete", fun(this, &Edit_impl::cut) };
-    Action              paste_action_ { "<Ctrl>V <Shift>Insert", fun(this, &Edit_impl::paste) };
-    Action              del_action_ { KC_DELETE, KM_NONE, fun(this, &Edit_impl::del) };
-    Action              undo_action_ { "<Alt>BackSpace <Ctrl>Z", fun(this, &Edit_impl::undo) };
-    Action              redo_action_ { "<Alt>Enter", fun(this, &Edit_impl::redo) };
-    Action              tab_action_ { KC_TAB, KM_NONE, fun(this, &Edit_impl::tab) };
-    Toggle_action       insert_action_ { KC_INSERT, KM_NONE, fun(this, &Edit_impl::on_insert) };
+    connection          edit_insert_cx_ { true };
+    connection          edit_replace_cx_ { true };
+    connection          edit_erase_cx_ { true };
+    connection          flush_cx_ { true };
+    connection          paste_text_cx_;
+    signal<void(bool)>  signal_modified_;
 
-protected:
+private:
 
     void init();
     void cutoff_redo();
-    void connect_buffer();
 
     void backspace();
     void enter();
@@ -122,17 +132,6 @@ protected:
     void del_char();
     void del_selection();
     void del_range(Buffer_citer b, Buffer_citer e);
-
-private:
-
-    connection          edit_insert_cx_;
-    connection          edit_replace_cx_;
-    connection          edit_erase_cx_;
-    connection          flush_cx_;
-    connection          paste_text_cx_;
-    signal<void(bool)>  signal_modified_;
-
-private:
 
     bool on_key_down(char32_t kc, uint32_t km);
     bool on_input(const ustring & s);

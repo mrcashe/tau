@@ -82,6 +82,7 @@ void Loop_impl::stop_timer(Timer_impl * tpi) {
 }
 
 signal<void()> & Loop_impl::signal_alarm(int timeout_ms, bool periodical) {
+    if (runlevel_ < 0) { throw user_error("Loop_impl::signal_alarm(): dead loop"); }
     Timer_ptr tp = std::make_shared<Timer_impl>();
     tp->time_ms = std::max(1, timeout_ms);
     tp->periodical = periodical;

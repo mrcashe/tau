@@ -120,6 +120,9 @@ public:
     /// Default constructor, which creates an empty string.
     ustring();
 
+    /// Destructor.
+   ~ustring();
+
     /// Construct a ustring as a copy of another ustring.
     /// @param other A source string.
     ustring(const ustring & other);

@@ -33,6 +33,7 @@
 #include <painter-impl.hh>
 #include <pixmap-impl.hh>
 #include <theme-impl.hh>
+#include <iostream>
 
 namespace tau {
 
@@ -98,7 +99,7 @@ void Image_impl::reset_gray() {
 }
 
 void Image_impl::create_gray() {
-    if (!gray_ && !film_.empty()) {
+    if (!shut_ && !gray_ && !film_.empty()) {
         auto orig = film_.front().pix;
 
         if (32 == orig->depth() && transparent_) {
@@ -128,7 +129,7 @@ void Image_impl::on_display() {
 }
 
 void Image_impl::on_enable() {
-    if (!film_.empty() && gray_) {
+    if (!shut_ && !film_.empty() && gray_) {
         if (auto dp = display()) {
             if (auto loop = dp->loop()) {
                 gray_cx_ = loop->signal_alarm(73869).connect(fun(this, &Image_impl::reset_gray));

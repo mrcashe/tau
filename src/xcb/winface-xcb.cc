@@ -116,6 +116,16 @@ Winface_xcb::~Winface_xcb() {
     xcb_flush(cx_);
 }
 
+// Overrides pure Winface.
+Display_ptr Winface_xcb::display() {
+    return dp_->loop()->alive() ? dp_ : nullptr;
+}
+
+// Overrides pure Winface.
+Display_cptr Winface_xcb::display() const {
+    return dp_->loop()->alive() ? dp_ : nullptr;
+}
+
 Painter_ptr Winface_xcb::painter() {
     return std::make_shared<Painter_xcb>(this);
 }

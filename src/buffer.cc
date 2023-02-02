@@ -39,6 +39,8 @@ Buffer::Buffer():
     impl->newlines_ = str_newlines();
 }
 
+Buffer::~Buffer() {}
+
 Buffer::Buffer(const ustring & s):
     impl(std::make_shared<Buffer_impl>())
 {

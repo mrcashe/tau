@@ -45,6 +45,9 @@ public:
     /// Default constructor.
     Timer();
 
+    /// Destructor.
+   ~Timer();
+
     /// Copy constructor.
     ///
     /// @note This class is a wrapper around its implementation shared pointer,

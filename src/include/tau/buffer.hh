@@ -286,6 +286,9 @@ public:
     /// Constructs an empty buffer.
     Buffer();
 
+    /// Destructor.
+   ~Buffer();
+
     /// Copy constructor.
     ///
     /// @note This class is a wrapper around its implementation shared pointer,

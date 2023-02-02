@@ -46,6 +46,9 @@ public:
     /// Constructor with default parameters.
     Pen();
 
+    /// Destructor.
+   ~Pen();
+
     /// Copy constructor.
     ///
     /// @note This class is a wrapper around its implementation shared pointer,

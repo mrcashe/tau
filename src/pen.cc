@@ -33,6 +33,8 @@ Pen::Pen():
 {
 }
 
+Pen::~Pen() {}
+
 Pen::Pen(Pen_ptr pp):
     impl(pp)
 {

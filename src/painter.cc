@@ -47,6 +47,8 @@ namespace tau {
 
 Painter::Painter() {}
 
+Painter::~Painter() {}
+
 Painter::Painter(Painter_ptr pp):
     impl(pp)
 {

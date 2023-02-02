@@ -28,7 +28,6 @@ all_sources = $(basename $(notdir $(wildcard $(srcdir)/test/*.cc)))
 all_binaries = $(addprefix $(bindir)/, $(all_sources))
 sources = $(basename $(notdir $(wildcard $(builddir)/test/*.cc)))
 binaries = $(addprefix $(bindir)/, $(sources))
-LDFLAGS += -lpthread $(shell pkg-config --libs $(pkg_required))
 CXXFLAGS += -O2 -g -fPIC -pthread
 VPATH = $(srcdir)/test
 
@@ -40,7 +39,7 @@ install: $(bin_prefix) $(binaries)
 		echo "** unix-test-so.mk: skipping install of $$bin_prefix/$$f: destination is a symlink"; \
 	    else \
 		echo "++ unix-test-so.mk: recompiling '$$f' against just installed shared library..."; \
-		$(CXX) $(CXXFLAGS) -o $$bin_prefix/$$f $$srcdir/test/$$f.cc -L $(lib_prefix) -ltau-$(Major_).$(Minor_) $(LDFLAGS); \
+		$(CXX) $(CXXFLAGS) -o $$bin_prefix/$$f $$srcdir/test/$$f.cc -L $(lib_prefix) -ltau-$(Major_).$(Minor_); \
 		if [ $$? -ne 0 ]; then \
 		    echo "** unix-test-so.mk: compile failed, exitting  with status 1" 1>&2; \
 		    exit 1; \
@@ -59,7 +58,7 @@ uninstall:
 	done
 
 $(bindir)/%: %.cc
-	$(CXX) -o $@ $< $(CXXFLAGS) -MD -MF $(unix_test_so_builddir)/$(notdir $@).dep $(unix_so) $(LDFLAGS)
+	$(CXX) -o $@ $< $(CXXFLAGS) -MD -MF $(unix_test_so_builddir)/$(notdir $@).dep $(unix_so)
 
 $(bindir):
 	@mkdir -vp $@

@@ -50,6 +50,9 @@ public:
     /// Default constructor creates a pure font.
     Font();
 
+    /// Destructor.
+   ~Font();
+
     /// Copy constructor.
     ///
     /// @note This class is a wrapper around its implementation shared pointer,

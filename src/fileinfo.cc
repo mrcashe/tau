@@ -33,6 +33,8 @@ Fileinfo::Fileinfo() {
     impl = Fileinfo_impl::create();
 }
 
+Fileinfo::~Fileinfo() {}
+
 Fileinfo::Fileinfo(const ustring & uri) {
     impl = Fileinfo_impl::create(uri);
 }

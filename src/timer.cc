@@ -36,6 +36,8 @@ Timer::Timer():
 {
 }
 
+Timer::~Timer() {}
+
 Timer::Timer(slot<void()> slot_alarm, int time_ms, bool periodical):
     impl(std::make_shared<Timer_impl>())
 {

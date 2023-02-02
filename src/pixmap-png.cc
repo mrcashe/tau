@@ -58,7 +58,7 @@ Pixmap_ptr Pixmap_impl::load_png_from_file(const ustring & path) {
 
     if (PNG_COLOR_TYPE_PALETTE == ctype) { png_set_palette_to_rgb(png_ptr); }
     if (16 == bit_depth) { png_set_strip_16(png_ptr); }
-    if (PNG_COLOR_TYPE_RGB_ALPHA == ctype || PNG_COLOR_TYPE_RGB == ctype) { png_set_bgr(png_ptr); }
+    // if (PNG_COLOR_TYPE_RGB_ALPHA == ctype || PNG_COLOR_TYPE_RGB == ctype) { png_set_bgr(png_ptr); }
 
     png_read_update_info(png_ptr, info_ptr);
     ctype = png_get_color_type(png_ptr, info_ptr);
@@ -82,7 +82,11 @@ Pixmap_ptr Pixmap_impl::load_png_from_file(const ustring & path) {
         png_byte * row = row_pointers[y];
 
         if (PNG_COLOR_TYPE_RGB_ALPHA == ctype) {
-            pix->set_argb32(Point(0, y), row, 4*width);
+            for (int x = 0; x < width; ++x) {
+                png_byte * p = row+(x*4);
+                uint32_t r = p[0], g = p[1], b = p[2], a = p[3];
+                pix->put_pixel(x, y, Color::from_argb32((a << 24)|(r << 16)|(g << 8)|b));
+            }
         }
 
         else if (PNG_COLOR_TYPE_RGB == ctype) {

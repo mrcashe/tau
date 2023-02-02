@@ -75,37 +75,32 @@ void Text_impl::init() {
     fonts_.emplace_back(Font());
     caret_timer_.signal_alarm().connect(fun(this, &Text_impl::on_caret_timer));
 
-    auto & fi = style_.get("font");
+    auto & fi = style_.get(STYLE_FONT);
     fi.signal_changed().connect(fun(this, &Text_impl::update_font));
-    fi.signal_changed().connect(fun(this, &Text_impl::update_requisition));
-    fi.signal_changed().connect(fun(this, &Text_impl::calc_all_ellipsis));
-    fi.signal_changed().connect(fun(this, &Text_impl::align_all));
+    fi.signal_changed().connect(fun(this, &Text_impl::calc_rows));
     fi.signal_changed().connect(fun(this, &Text_impl::refresh_caret));
     fi.signal_changed().connect(fun(this, &Text_impl::scroll_to_caret));
+    fi.signal_changed().connect(bind(fun(this, &Widget_impl::invalidate), Rect()));
 
-    style_.get("foreground").signal_changed().connect(tau::bind(fun(this, &Text_impl::invalidate), Rect()));
+    style_.get(STYLE_FOREGROUND).signal_changed().connect(bind(fun(this, &Widget_impl::invalidate), Rect()));
 
-    signal_origin_changed_.connect(fun(this, &Text_impl::calc_all_ellipsis));
+    signal_origin_changed_.connect(fun(this, &Text_impl::calc_rows), true);
 
     signal_size_changed_.connect(fun(this, &Text_impl::update_va));
-    signal_size_changed_.connect(fun(this, &Text_impl::calc_all_ellipsis));
-    signal_size_changed_.connect(fun(this, &Text_impl::align_all));
+    signal_size_changed_.connect(fun(this, &Text_impl::calc_rows));
     signal_size_changed_.connect(fun(this, &Text_impl::refresh_caret));
     signal_size_changed_.connect(fun(this, &Text_impl::scroll_to_caret));
 
     signal_scroll_changed_.connect(fun(this, &Text_impl::update_va));
 
     signal_visible_.connect(fun(this, &Text_impl::update_va));
-    signal_visible_.connect(fun(this, &Text_impl::calc_all_ellipsis));
-    signal_visible_.connect(fun(this, &Text_impl::align_all));
 
     signal_invisible_.connect(fun(this, &Text_impl::update_va));
 
-    signal_display_.connect(fun(this, &Text_impl::update_painter));
     signal_display_.connect(fun(this, &Text_impl::update_font));
-    signal_display_.connect(fun(this, &Text_impl::update_requisition));
-    signal_display_.connect(fun(this, &Text_impl::align_all));
+    signal_display_.connect(fun(this, &Text_impl::calc_rows));
     signal_display_.connect(fun(this, &Text_impl::refresh_caret));
+    signal_display_.connect(fun(this, &Text_impl::scroll_to_caret));
 
     signal_focus_in_.connect(fun(this, &Text_impl::on_focus_in));
     signal_focus_out_.connect(fun(this, &Text_impl::hide_caret));
@@ -116,7 +111,6 @@ void Text_impl::init() {
     signal_mouse_down_.connect(fun(this, &Text_impl::on_mouse_down));
     signal_mouse_up_.connect(fun(this, &Text_impl::on_mouse_up));
     signal_mouse_motion_.connect(fun(this, &Text_impl::on_mouse_motion));
-
     signal_paint_.connect(fun(this, &Text_impl::on_paint));
     signal_take_focus_.connect(fun(this, &Text_impl::on_take_focus));
 
@@ -156,28 +150,14 @@ bool Text_impl::empty() const {
 }
 
 void Text_impl::update_font() {
-    if (pr_) {
-        fonts_.front() = pr_.select_font(style_.font("font").spec());
+    if (auto pr = priv_painter()) {
+        fonts_.front() = pr.select_font(style_.font(STYLE_FONT).spec());
 
         if (fonts_.front()) {
             font_height_ = std::ceil(fonts_.front().ascent())+std::ceil(std::fabs(fonts_.front().descent()));
-            space_width_ = std::ceil(pr_.text_size(U" ").x());
-
-            for (std::size_t ri = 0; ri < rows_.size(); ++ri) {
-                Row & line = rows_[ri];
-                calc_row(line);
-            }
-
-            arrange_rows();
-            text_width_ = calc_width(0, rows());
-            text_height_ = calc_height(0, rows());
-            invalidate();
+            space_width_ = std::ceil(pr.text_size(U" ").x());
         }
     }
-}
-
-void Text_impl::update_painter() {
-    pr_ = painter();
 }
 
 bool Text_impl::on_mouse_down(int mbt, int mm, const Point & pt) {
@@ -231,29 +211,8 @@ void Text_impl::on_focus_in() {
     }
 }
 
-void Text_impl::on_buffer_replace(Buffer_citer b, Buffer_citer e, const std::u32string & replaced) {
-    if (b.row() == e.row()) {
-        Row & ln = rows_[b.row()];
-        int h0 = ln.ascent+ln.descent;
-        load_rows(b.row(), b.row());
-        int h1 = ln.ascent+ln.descent;
-        if (ln.width < text_width_) { text_width_ = calc_width(0, rows_.size()); }
-        e.move_to_eol();
-        if (h1 != h0) { translate_rows(b.row()+1, rows_.size(), h1-h0); e = buffer_.cend(); }
-        update_requisition();
-        align_rows(b.row(), b.row());
-        update_range(b, e);
-    }
-}
-
-void Text_impl::on_buffer_replace_move(Buffer_citer b, Buffer_citer e, const std::u32string & replaced) {
-    move_caret(e);
-    hint_x();
-}
-
 Painter Text_impl::wipe_area(int x1, int y1, int x2, int y2, Painter pr) {
-    if (!pr) { pr = pr_; }
-    if (!pr) { pr = painter(); }
+    if (!pr) { pr = priv_painter(); }
 
     if (pr) {
         pr.push();
@@ -267,6 +226,27 @@ Painter Text_impl::wipe_area(int x1, int y1, int x2, int y2, Painter pr) {
     return pr;
 }
 
+void Text_impl::on_buffer_replace(Buffer_citer b, Buffer_citer e, const std::u32string & replaced) {
+    if (b.row() == e.row()) {
+        auto i = rows_.begin()+b.row();
+        int h0 = i->ascent+i->descent;
+        load_rows(i, i);
+        calc_row(i);
+        int h1 = i->ascent+i->descent;
+        if (i->width < text_width_) { text_width_ = calc_width(i, rows_.end()); }
+        e.move_to_eol();
+        if (h1 != h0) { translate_rows(i+1, rows_.end(), h1-h0); e = buffer_.cend(); }
+        update_requisition();
+        align_rows(i, i);
+        update_range(b, e);
+    }
+}
+
+void Text_impl::on_buffer_replace_move(Buffer_citer b, Buffer_citer e, const std::u32string & replaced) {
+    move_caret(e);
+    hint_x();
+}
+
 void Text_impl::on_buffer_erase(Buffer_citer b, Buffer_citer e, const std::u32string & erased) {
     if (e < b) { std::swap(b, e); }
 
@@ -275,42 +255,42 @@ void Text_impl::on_buffer_erase(Buffer_citer b, Buffer_citer e, const std::u32st
         return;
     }
 
-    if (e.row() == b.row()) {
-        Row & row = rows_[b.row()];
-        int h0 = row.ascent+row.descent;
-        int y1 = oy_+row.ybase-row.ascent;
-        int y2 = oy_+row.ybase+row.descent;
+    auto i = rows_.begin()+b.row();
 
-        load_rows(b.row(), b.row());
-        int h1 = row.ascent+row.descent;
-        y1 = std::min(y1, oy_+row.ybase-row.ascent);
-        y2 = std::max(y2, oy_+row.ybase+row.descent);
+    if (e.row() == b.row()) {
+        int h0 = i->ascent+i->descent;
+        int y1 = oy_+i->ybase-i->ascent;
+        int y2 = oy_+i->ybase+i->descent;
+
+        load_rows(i, i);
+        calc_row(i);
+        int h1 = i->ascent+i->descent;
+        y1 = std::min(y1, oy_+i->ybase-i->ascent);
+        y2 = std::max(y2, oy_+i->ybase+i->descent);
 
         if (xalign_ != ALIGN_START) {
             wipe_area(va_.left(), y1, va_.right(), y2);
             b.move_to_sol();
         }
 
-        if (row.width < text_width_) { text_width_ = calc_width(0, rows_.size()); }
+        if (i->width < text_width_) { text_width_ = calc_width(rows_.begin(), rows_.end()); }
         e.move_to_eol();
-        if (h1 != h0) { translate_rows(b.row()+1, rows_.size(), h1-h0); e = buffer_.cend(); }
+        if (h1 != h0) { translate_rows(i+1, rows_.end(), h1-h0); e = buffer_.cend(); }
     }
 
     else {
-        int hdel = calc_height(b.row()+1, e.row());
-        int wdel = calc_width(b.row()+1, e.row());
-        rows_.erase(rows_.begin()+b.row(), rows_.begin()+e.row());
-        translate_rows(b.row(), rows_.size(), -hdel);
-        load_rows(b.row(), e.row());
-        text_height_ = std::max(0, text_height_-hdel);
-        if (wdel >= text_width_) { text_width_ = calc_width(0, rows()); }
+        auto j = rows_.begin()+e.row();
+        int hdel = calc_height(i+1, j);
+        rows_.erase(i, j);
+        translate_rows(i, rows_.end(), -hdel);
+        load_rows(i, j);
+        calc_rows();
         e = buffer_.cend();
-        auto & row = rows_[b.row()];
-        wipe_area(va_.x(), row.ybase-row.ascent, va_.right(), va_.bottom());
+        wipe_area(va_.x(), i->ybase-i->ascent, va_.right(), va_.bottom());
     }
 
     update_requisition();
-    bool aligned = align_rows(0, rows());
+    bool aligned = align_rows(rows_.begin(), rows_.end());
     if (aligned) { b.move_to_sol(); e.move_to_eol(); }
     update_range(b, e);
 }
@@ -330,38 +310,20 @@ void Text_impl::on_buffer_insert_move(Buffer_citer b, Buffer_citer e) {
 }
 
 void Text_impl::insert_range(Buffer_citer b, Buffer_citer e) {
+    if (rows_.empty()) { rows_.emplace_back(); }
     if (e < b) { std::swap(b, e); }
-    wipe_caret();
     std::size_t nlines = e.row()-b.row();
-
-    if (rows_.empty()) {
-        rows_.emplace_back();
-    }
-
-    while (nlines--) {
-        rows_.emplace(rows_.begin()+b.row());
-    }
-
-    load_rows(b.row(), e.row());
-    arrange_rows();
-    text_width_ = calc_width(0, rows_.size()-1);
-    text_height_ = calc_height(0, rows_.size()-1);
-    align_all();
-    update_requisition();
+    while (nlines--) { rows_.emplace(rows_.begin()+b.row()); }
+    load_rows(rows_.begin()+b.row(), rows_.begin()+e.row());
     if (e.row() > b.row()) { e = buffer_.cend(); }
     if (ALIGN_START != xalign_) { b.move_to_sol(); e.move_to_eol(); }
+    calc_rows();
     update_range(b, e);
 }
 
 // Overriden by Edit_impl.
 void Text_impl::assign(Buffer buf) {
     clear();
-    insert_cx_.drop();
-    replace_cx_.drop();
-    erase_cx_.drop();
-    insert_move_cx_.drop();
-    replace_move_cx_.drop();
-    erase_move_cx_.drop();
     buffer_ = buf;
     init_buffer();
     signal_caret_motion_();
@@ -373,14 +335,13 @@ void Text_impl::assign(const ustring & s) {
     buffer_.assign(s);
 }
 
+// Overriden by Edit_impl.
 void Text_impl::clear() {
     wipe_caret();
-    Painter pr = pr_;
-    if (!pr) { pr = painter(); }
 
-    if (pr) {
+    if (auto pr = priv_painter()) {
         pr.push(); pr.clear();
-        pr.set_brush(Brush(style_.color("background")));
+        pr.set_brush(Brush(style_.color(STYLE_BACKGROUND)));
         pr.paint(); pr.pop();
     }
 
@@ -395,6 +356,7 @@ void Text_impl::clear() {
     signal_caret_motion_();
 }
 
+// Overriden by Edit_impl.
 void Text_impl::init_buffer() {
     insert_cx_ = buffer_.signal_insert().connect(fun(this, &Text_impl::on_buffer_insert));
     replace_cx_ = buffer_.signal_replace().connect(fun(this, &Text_impl::on_buffer_replace));
@@ -417,7 +379,7 @@ ustring Text_impl::text() const {
 void Text_impl::set_spacing(unsigned spc) {
     if (spacing_ != spc) {
         spacing_ = spc;
-        if (align_rows(0, rows())) { invalidate(); }
+        if (align_rows(rows_.begin(), rows_.end())) { invalidate(); }
     }
 }
 
@@ -429,7 +391,7 @@ void Text_impl::set_text_align(Align xalign, Align yalign) {
     }
 }
 
-bool Text_impl::align_rows(std::size_t first, std::size_t last) {
+bool Text_impl::align_rows(R_iter first, R_iter last) {
     bool changed = false;
 
     if (va_) {
@@ -443,16 +405,15 @@ bool Text_impl::align_rows(std::size_t first, std::size_t last) {
 
         if (oy_ != oy) { oy_ = oy; changed = true; }
 
-        for (std::size_t n = first; n < rows_.size() && n <= last; ++n) {
-            Row & line = rows_[n];
-            int ex = w-line.width, ox = 0;
+        for (; first != rows_.end() && first <= last; ++first) {
+            int ex = w-first->width, ox = 0;
 
             if (ex > 0) {
                 if (ALIGN_CENTER == xalign_) { ox = ex/2; }
                 else if (ALIGN_END == xalign_) { ox = ex; }
             }
 
-            if (line.ox != ox) { line.ox = ox; changed = true; }
+            if (first->ox != ox) { first->ox = ox; changed = true; }
         }
     }
 
@@ -460,23 +421,14 @@ bool Text_impl::align_rows(std::size_t first, std::size_t last) {
 }
 
 void Text_impl::align_all() {
-    if (align_rows(0, rows())) {
+    if (align_rows(rows_.begin(), rows_.end())) {
         invalidate();
     }
 }
 
-void Text_impl::translate_rows(std::size_t first, std::size_t last, int dy) {
+void Text_impl::translate_rows(R_iter first, R_iter last, int dy) {
     if (last < first) { std::swap(first, last); }
-    for (std::size_t n = first; n < rows_.size() && n <= last; ++n) { rows_[n].ybase += dy; }
-}
-
-void Text_impl::arrange_rows() {
-    int ybase = 0;
-
-    for (Row & line: rows_) {
-        line.ybase = ybase+line.ascent;
-        ybase += line.ascent+line.descent+spacing_;
-    }
+    for (; first != rows_.end() && first <= last; ++first) { first->ybase += dy; }
 }
 
 void Text_impl::update_requisition() {
@@ -553,90 +505,45 @@ void Text_impl::update_range(Buffer_citer b, Buffer_citer e) {
     }
 }
 
-void Text_impl::calc_all_ellipsis() {
-    ellipsis_width_ = 0;
-
-    if (WRAP_NONE != wrap_) {
-        ellipsis_width_ = text_size(ellipsis_).width();
-        for (auto & row: rows_) { calc_ellipsis(row); }
+void Text_impl::load_rows(R_iter first, R_iter last) {
+    for (; first != rows_.end() && first <= last; ++first) {
+        first->frags.clear();
+        auto rn = first-rows_.begin();
+        auto b = buffer_.citer(rn, 0), e = b; e.move_to_eol();
+        std::u32string s = buffer_.text32(b, e);
+        first->ncols = s.size();
+        first->poss.assign(first->ncols, 0);
+        first->frags.emplace_back();
+        Frag & frag = first->frags.back();
+        frag.start = 0;
+        frag.ncols = first->ncols;
     }
 }
 
-void Text_impl::calc_ellipsis(Row & line) {
-    line.ellipsized.clear();
-
-    if (0 != ellipsis_width_ && va_.iwidth() >= ellipsis_width_ && line.ncols > 1) {
-        if (line.width > va_.iwidth()) {
-            std::size_t col = 1;
-            int w = va_.width()-ellipsis_width_;
-
-            if (WRAP_ELLIPSIZE_START == wrap_) {
-                line.ellipsized += ellipsis_;
-                int skip = line.width-w, skipped = 0;
-                while (skipped < skip && col < line.ncols) { skipped = line.poss[col++]; }
-                line.ellipsized += line.text.substr(col-1);
-            }
-
-            else if (WRAP_ELLIPSIZE_CENTER == wrap_) {
-                int lpart = w/2, wnext = 0;
-
-                while (wnext < lpart && col < line.ncols) {
-                    wnext = line.poss[col];
-                    if (wnext < lpart) { line.ellipsized += line.text[col-1]; }
-                    ++col;
-                }
-
-                line.ellipsized += ellipsis_;
-                col = line.ncols-1;
-                int rpart = line.width-(w/2), rpos = line.width;
-
-                while (rpos > rpart && 0 != col) {
-                    rpos = line.poss[col];
-                    if (rpos > rpart) { --col; }
-                }
-
-                if (col < line.ncols-1) { ++col; }
-                line.ellipsized += line.text.substr(col);
-            }
-
-            // Assume WRAP_ELLIPSIZE_END.
-            else {
-                int wnext = 0;
-
-                while (wnext < w && col < line.ncols) {
-                    wnext = line.poss[col];
-                    if (wnext < w) { line.ellipsized += line.text[col-1]; }
-                    ++col;
-                }
-
-                line.ellipsized += ellipsis_;
-            }
-        }
-    }
-}
-
-void Text_impl::calc_row(Row & line) {
-    line.ascent = 0;
-    line.descent = 0;
-    line.width = 0;
-    line.ox = 0;
+void Text_impl::calc_row(R_iter i, Painter pr) {
+    if (!pr) { pr = priv_painter(); }
+    i->ascent = 0;
+    i->descent = 0;
+    i->width = 0;
+    i->ox = 0;
     int x = 0;
 
-    if (Painter pr = priv_painter()) {
+    if (pr) {
         std::size_t pos = 0;
-        line.ncols = line.text.size();
-        line.poss.resize(line.ncols);
+        auto rn = i-rows_.begin();
+        auto b = buffer_.citer(rn, 0), e = buffer_.citer(rn, i->ncols);
+        std::u32string s = buffer_.text32(b, e);
 
-        for (Frag & frag: line.frags) {
-            Font font = frag.font ? fonts_[frag.font] : pr.font();
+        for (Frag & frag: i->frags) {
+            Font font = fonts_[frag.font];
             pr.set_font(font);
-            line.ascent = std::max(line.ascent, int(std::ceil(font.ascent())));
-            line.descent = std::max(line.descent, int(std::ceil(fabs(font.descent()))));
+            i->ascent = std::max(i->ascent, int(std::ceil(font.ascent())));
+            i->descent = std::max(i->descent, int(std::ceil(fabs(font.descent()))));
             std::u32string acc;
 
-            for (std::size_t i = 0; i < frag.ncols; ++i) {
-                line.poss[i+frag.start] = x+std::ceil(pr.text_size(acc).x());
-                char32_t c = line.text[i+frag.start];
+            for (std::size_t j = 0; j < frag.ncols; ++j) {
+                i->poss[j+frag.start] = x+std::ceil(pr.text_size(acc).x());
+                char32_t c = s[j+frag.start];
 
                 if (0x0009 == c) {
                     std::size_t n_spaces = tab_width_-(pos%tab_width_);
@@ -653,51 +560,97 @@ void Text_impl::calc_row(Row & line) {
             frag.width = std::ceil(pr.text_size(acc).x());
             x += frag.width;
         }
-    }
 
-    line.width = x;
-    calc_ellipsis(line);
+        i->width = x;
+        i->ellipsized.clear();
+
+        if (0 != ellipsis_width_ && va_.iwidth() >= ellipsis_width_ && i->ncols > 1) {
+            if (i->width > va_.iwidth()) {
+                std::size_t col = 1;
+                int w = va_.width()-ellipsis_width_;
+
+                if (WRAP_ELLIPSIZE_START == wrap_) {
+                    i->ellipsized += ellipsis_;
+                    int skip = i->width-w, skipped = 0;
+                    while (skipped < skip && col < i->ncols) { skipped = i->poss[col++]; }
+                    i->ellipsized += s.substr(col-1);
+                }
+
+                else if (WRAP_ELLIPSIZE_CENTER == wrap_) {
+                    int lpart = w/2, wnext = 0;
+
+                    while (wnext < lpart && col < i->ncols) {
+                        wnext = i->poss[col];
+                        if (wnext < lpart) { i->ellipsized += s[col-1]; }
+                        ++col;
+                    }
+
+                    i->ellipsized += ellipsis_;
+                    col = i->ncols-1;
+                    int rpart = i->width-(w/2), rpos = i->width;
+
+                    while (rpos > rpart && 0 != col) {
+                        rpos = i->poss[col];
+                        if (rpos > rpart) { --col; }
+                    }
+
+                    if (col < i->ncols-1) { ++col; }
+                    i->ellipsized += s.substr(col);
+                }
+
+                // Assume WRAP_ELLIPSIZE_END.
+                else {
+                    int wnext = 0;
+
+                    while (wnext < w && col < i->ncols) {
+                        wnext = i->poss[col];
+                        if (wnext < w) { i->ellipsized += s[col-1]; }
+                        ++col;
+                    }
+
+                    i->ellipsized += ellipsis_;
+                }
+            }
+        }
+    }
 }
 
-void Text_impl::load_rows(std::size_t ln, std::size_t last) {
-    for (; ln < rows_.size() && ln <= last; ++ln) {
-        Row & line = rows_[ln];
-        line.frags.clear();
-        line.ncols = 0;
-        Buffer_citer b = buffer_.citer(ln, 0), e = b;
-        e.move_to_eol();
-        line.text = buffer_.text32(b, e);
+void Text_impl::calc_rows() {
+    int ybase = 0;
+    text_height_ = text_width_ = 0;
+    auto pr = priv_painter();
 
-        line.frags.emplace_back();
-        Frag & frag = line.frags.back();
-        frag.start = 0;
-        frag.ncols = line.text.size();
-
-        calc_row(line);
+    for (auto i = rows_.begin(); i != rows_.end(); ++i) {
+        calc_row(i, pr);
+        i->ybase = ybase+i->ascent;
+        ybase += i->ascent+i->descent+spacing_;
+        text_height_ += i->ascent+i->descent;
+        if (i+1 < rows_.end()) { text_height_ += spacing_; }
+        text_width_ = std::max(text_width_, i->width);
     }
+
+    update_requisition();
+    align_all();
 }
 
-int Text_impl::calc_height(std::size_t first, std::size_t last) {
+int Text_impl::calc_height(R_citer first, R_citer last) {
     if (last < first) { std::swap(first, last); }
     int h = 0;
-    std::size_t nrows = rows_.size();
 
-    for (std::size_t n = first; n < nrows && n <= last; ) {
-        const Row & row = rows_[n];
-        h += row.ascent+row.descent;
-        if (++n < nrows) { h += spacing_; }
+    for (; first != rows_.end() && first <= last; ) {
+        h += first->ascent+first->descent;
+        if (++first != rows_.end()) { h += spacing_; }
     }
 
     return h;
 }
 
-int Text_impl::calc_width(std::size_t first, std::size_t last) {
+int Text_impl::calc_width(R_citer first, R_citer last) {
     if (last < first) { std::swap(first, last); }
     int w = 0;
 
-    for (std::size_t n = first; n < rows_.size() && n <= last; ++n) {
-        const Row & row = rows_[n];
-        w = std::max(w, row.width);
+    for (; first != rows_.end() && first <= last; ++first) {
+        w = std::max(w, first->width);
     }
 
     return w;
@@ -747,7 +700,7 @@ void Text_impl::update_caret() {
 }
 
 void Text_impl::draw_caret(Painter pr) {
-    if (rcaret_) {
+    if (pr && rcaret_) {
         pr.push();
         pr.clear();
         pr.rectangle(rcaret_.left(), rcaret_.top(), rcaret_.right(), rcaret_.bottom());
@@ -773,16 +726,16 @@ void Text_impl::refresh_caret() {
 }
 
 void Text_impl::expose_caret() {
-    if (caret_visible_ && visible() && caret_ && pr_) {
+    if (caret_visible_ && visible()) {
         caret_exposed_ = true;
-        draw_caret(pr_);
+        draw_caret(priv_painter());
     }
 }
 
 void Text_impl::wipe_caret() {
     if (caret_exposed_) {
-        draw_caret(pr_);
         caret_exposed_ = false;
+        draw_caret(priv_painter());
     }
 }
 
@@ -872,7 +825,6 @@ void Text_impl::show_caret() {
     if (!caret_visible_) {
         caret_visible_ = true;
         refresh_caret();
-        calc_all_ellipsis();
     }
 }
 
@@ -881,7 +833,6 @@ void Text_impl::hide_caret() {
         if (caret_exposed_) { wipe_caret(); }
         caret_timer_.stop();
         caret_visible_ = false;
-        calc_all_ellipsis();
     }
 }
 
@@ -960,11 +911,10 @@ std::size_t Text_impl::col_at_x(std::size_t ri, int x) const {
 }
 
 std::size_t Text_impl::row_at_y(int y) const {
-    if (y >= 0 && !rows_.empty()) {
-        for (std::size_t ri = 0; ri < rows_.size(); ++ri) {
-            const Row & row = rows_[ri];
-            int ymax = oy_+row.ybase+row.descent;
-            if (y < ymax) { return ri; }
+    if (y >= 0) {
+        for (auto i = rows_.begin(); i != rows_.end(); ++i) {
+            int ymax = oy_+i->ybase+i->descent;
+            if (y < ymax) { return i-rows_.begin(); }
         }
 
         return rows_.size()-1;
@@ -1004,43 +954,45 @@ void Text_impl::paint_ellipsized(const Row & line, Painter pr) {
     wipe_area(va_.left(), ybase-line.ascent, va_.right(), ybase+line.descent, pr);
     pr.move_to(0, ybase);
     select_font(pr);
-    pr.text(line.ellipsized, enabled() ? style_.color("foreground") : style_.color("background").get().inactive());
+    pr.text(line.ellipsized, enabled() ? style_.color(STYLE_FOREGROUND) : style_.color(STYLE_BACKGROUND).get().inactive());
     pr.stroke();
 }
 
-void Text_impl::paint_row(const Row & line, std::size_t ln, std::size_t pos, Painter pr) {
-    pos = std::min(pos, line.ncols);
-    std::size_t scol = std::max(pos, col_at_x(line, va_.left()));           // Starting column.
-    std::size_t ecol = std::min(line.ncols, 1+col_at_x(line, va_.right())); // Ending column.
+void Text_impl::paint_row(R_citer ri, std::size_t pos, Painter pr) {
+    pos = std::min(pos, ri->ncols);
+    std::size_t scol = std::max(pos, col_at_x(*ri, va_.left()));            // Starting column.
+    std::size_t ecol = std::min(ri->ncols, 1+col_at_x(*ri, va_.right()));   // Ending column.
+    auto rn = ri-rows_.begin();
 
     // Include modifiers before starting column.
-    for (Buffer_citer i = buffer_.citer(ln, scol); scol > 0; --scol, --i) {
+    for (Buffer_citer i = buffer_.citer(rn, scol); scol > 0; --scol, --i) {
         if (!char32_is_modifier(*i)) { break; }
     }
 
     // Include modifiers after ending column.
-    for (Buffer_citer i = buffer_.citer(ln, ecol); i.col() < line.ncols; ++ecol, ++i) {
+    for (Buffer_citer i = buffer_.citer(rn, ecol); i.col() < ri->ncols; ++ecol, ++i) {
         if (!char32_is_modifier(*i)) { break; }
     }
 
-    Color bg = style().color("background");
+    Color bg = style().color(STYLE_BACKGROUND);
 
-    if (sel_ && esel_ && (ln > sel_.row() || (ln == sel_.row() && scol >= sel_.col())) && ln <= esel_.row()) {
-        bg = style().color("select/background");
+    if (sel_ && esel_ && (rn > sel_.row() || (rn == sel_.row() && scol >= sel_.col())) && rn <= esel_.row()) {
+        bg = style().color(STYLE_SELECT_BACKGROUND);
     }
 
     std::size_t col0 = 0;
-    int ybase = oy_+line.ybase;
-    int y1 = ybase-line.ascent;
-    int y2 = ybase+line.descent;
+    int ybase = oy_+ri->ybase;
+    int y1 = ybase-ri->ascent;
+    int y2 = ybase+ri->descent;
 
     // Loop over fragmens.
-    for (const Frag & frag: line.frags) {
+    for (const Frag & frag: ri->frags) {
         std::size_t fend = col0+frag.ncols;
         std::size_t col = std::max(scol, col0);
 
         if (fend > scol) {
-            const std::u32string & s = line.text;
+            auto b = buffer_.citer(rn, 0), e = buffer_.citer(rn, ri->ncols);
+            const std::u32string s = buffer_.text32(b, e);
             std::size_t col1 = std::min(ecol, fend);
 
             // Loop inside of fragment.
@@ -1049,22 +1001,22 @@ void Text_impl::paint_row(const Row & line, std::size_t ln, std::size_t pos, Pai
                 select_font(pr);
 
                 if (sel_ && esel_) {
-                    if (sel_.row() == ln && col < sel_.col()) {
+                    if (sel_.row() == rn && col < sel_.col()) {
                         col2 = std::min(col1, sel_.col());
                     }
 
-                    else if (sel_.row() == ln && col == sel_.col()) {
-                        bg = style_.color("select/background");
-                        if (esel_.row() == ln && col < esel_.col()) { col2 = std::min(col1, esel_.col()); }
+                    else if (sel_.row() == rn && col == sel_.col()) {
+                        bg = style_.color(STYLE_SELECT_BACKGROUND);
+                        if (esel_.row() == rn && col < esel_.col()) { col2 = std::min(col1, esel_.col()); }
                     }
 
-                    else if (esel_.row() == ln && col < esel_.col()) {
-                        bg = style_.color("select/background");
+                    else if (esel_.row() == rn && col < esel_.col()) {
+                        bg = style_.color(STYLE_SELECT_BACKGROUND);
                         col2 = std::min(col1, esel_.col());
                     }
 
-                    else if (esel_.row() == ln && col >= esel_.col()) {
-                        bg = style_.color("background");
+                    else if (esel_.row() == rn && col >= esel_.col()) {
+                        bg = style_.color(STYLE_BACKGROUND);
                     }
                 }
 
@@ -1072,13 +1024,13 @@ void Text_impl::paint_row(const Row & line, std::size_t ln, std::size_t pos, Pai
                 if (tab > col && tab < col2) { col2 = tab; }
 
                 if (col2 > col) {
-                    int x1 = x_at_col(line, col), x2 = x_at_col(line, col2);
+                    int x1 = x_at_col(*ri, col), x2 = x_at_col(*ri, col2);
                     pr.rectangle(x1, y1, x2, y2);
                     pr.set_brush(bg);
                     pr.fill();
 
                     if (U'\x0009' != s[col]) {
-                        Color c = enabled() ? style_.color("foreground") : style_.color("background").get().inactive();
+                        Color c = enabled() ? style_.color(STYLE_FOREGROUND) : style_.color(STYLE_BACKGROUND).get().inactive();
                         auto ppr = strip(pr);
                         ppr->move_to(x1, ybase);
                         ppr->text(s.substr(col-col0, col2-col), c);
@@ -1098,9 +1050,9 @@ void Text_impl::paint_row(const Row & line, std::size_t ln, std::size_t pos, Pai
     }
 
     // Draw an empty rectangle after EOL.
-    if (ecol >= line.ncols) {
-        if (esel_ && esel_.row() == ln && esel_.col() <= line.ncols) { bg = style().color("background"); }
-        pr.rectangle(line.ox+line.width, y1, va_.right(), y2);
+    if (ecol >= ri->ncols) {
+        if (esel_ && esel_.row() == rn && esel_.col() <= ri->ncols) { bg = style().color(STYLE_BACKGROUND); }
+        pr.rectangle(ri->ox+ri->width, y1, va_.right(), y2);
         pr.set_brush(bg);
         pr.fill();
     }
@@ -1113,13 +1065,12 @@ void Text_impl::redraw(const Rect & r, Painter pr) {
         bool caret_exposed = caret_exposed_;
         wipe_caret();
         pr.push();
-        std::size_t ln = row_at_y(r.top()), len = rows_.size();
-        const Row * lp = rows_.data()+ln;
+        std::size_t top = row_at_y(r.top()), bottom = row_at_y(r.bottom());
+        auto last = rows_.begin()+bottom;
 
-        for (; ln < len; ++ln, ++lp) {
-            if (r.bottom() <= oy_+lp->ybase-lp->ascent) { break; }
-            if (!lp->ellipsized.empty()) { paint_ellipsized(*lp, pr); }
-            else { paint_row(*lp, ln, col_at_x(*lp, r.x()), pr); }
+        for (auto i = rows_.begin()+top; i != rows_.end() && i <= last; ++i) {
+            if (!i->ellipsized.empty()) { paint_ellipsized(*i, pr); }
+            else { paint_row(i, col_at_x(*i, r.x()), pr); }
         }
 
         pr.pop();
@@ -1135,12 +1086,9 @@ bool Text_impl::on_paint(Painter pr, const Rect & r) {
 Font Text_impl::select_font(Painter pr) {
     Font font;
 
-    if (!pr) { pr = pr_; }
-    if (!pr) { pr = painter(); }
-
     if (pr) {
         if (fonts_.front()) { font = fonts_.front(); pr.set_font(font); }
-        else { font = pr.select_font(style_.font("font")); }
+        else { font = pr.select_font(style_.font(STYLE_FONT)); }
     }
 
     return font;
@@ -1149,7 +1097,7 @@ Font Text_impl::select_font(Painter pr) {
 void Text_impl::set_wrap_mode(Wrap_mode wrap_mode) {
     if (wrap_ != wrap_mode) {
         wrap_ = wrap_mode;
-        calc_all_ellipsis();
+        calc_rows();
         invalidate();
     }
 }
@@ -1232,18 +1180,7 @@ std::size_t Text_impl::rows() const {
 }
 
 Painter Text_impl::priv_painter() {
-    Painter pr = pr_;
-
-    if (!pr) {
-        pr = painter();
-    }
-
-    if (pr) {
-        if (fonts_.front()) { pr.set_font(fonts_.front()); }
-        else { pr.select_font(style_.font("font").spec()); }
-    }
-
-    return pr;
+    return ppr_ ? ppr_ : painter();
 }
 
 Size Text_impl::text_size(const ustring & s) {

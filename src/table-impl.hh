@@ -38,7 +38,7 @@ class Table_impl: public Container_impl {
 public:
 
     Table_impl();
-   ~Table_impl() { signal_destroy_(); }
+   ~Table_impl();
 
     void put(Widget_ptr wp, int x, int y, unsigned xspan=1, unsigned yspan=1, bool xsh=false, bool ysh=false);
 
@@ -268,6 +268,12 @@ private:
     void unref_col(Col_iter & i);
     void erase_row(Row_iter & i);
     void unref_row(Row_iter & i);
+
+    Col & new_col(int xx);
+    Row & new_row(int yy);
+
+    Col & new_col(int xx, const Col & src);
+    Row & new_row(int yy, const Row & src);
 
     void wipe_holder(Holder & hol);
     void dist_holder(Holder & hol);

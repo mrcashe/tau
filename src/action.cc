@@ -32,6 +32,13 @@
 
 namespace tau {
 
+Master_action::Master_action():
+    trackable()
+{
+}
+
+Master_action::~Master_action() {}
+
 Master_action::Master_action(const ustring & accels):
     trackable()
 {
@@ -251,6 +258,11 @@ signal<void(const ustring &)> & Master_action::signal_tooltip_changed() {
 
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
+
+Action_base::Action_base():
+    trackable()
+{
+}
 
 Action_base::Action_base(const ustring & accels):
     trackable()
@@ -590,6 +602,13 @@ signal<void()> & Action_base::signal_destroy() {
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
 
+Action::Action():
+    Action_base()
+{
+}
+
+Action::~Action() {}
+
 Action::Action(slot<void()> slot_activate):
     Action_base()
 {
@@ -672,6 +691,13 @@ bool Action::on_accel() {
 
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
+
+Toggle_action::Toggle_action():
+    Action_base()
+{
+}
+
+Toggle_action::~Toggle_action() {}
 
 Toggle_action::Toggle_action(slot<void(bool)> slot_toggle):
     Action_base()

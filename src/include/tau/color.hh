@@ -166,6 +166,19 @@ public:
     /// Return low-contrast color (used for disabled GUI elements painting).
     Color inactive() const;
 
+    /// Performs alpha blending.
+    /// Here is this color is a target color.
+    /// @param src the source color.
+    /// @since 0.4.0
+    void alpha_blend(const Color & src);
+
+    /// Performs alpha blending.
+    /// Here is this color is a constant target color, but the result will be returned.
+    /// @param src the source color.
+    /// @return target color.
+    /// @since 0.4.0
+    Color alpha_blended(const Color & src) const;
+
     /// Create from ARGB32 data.
     static Color from_argb32(uint32_t argb32);
 

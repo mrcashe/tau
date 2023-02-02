@@ -34,6 +34,9 @@ Brush::Brush():
 {
 }
 
+Brush::~Brush() {}
+
+
 Brush::Brush(Brush_ptr bp):
     impl(bp)
 {

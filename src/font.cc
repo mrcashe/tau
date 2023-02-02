@@ -42,6 +42,8 @@ namespace tau {
 
 Font::Font() {}
 
+Font::~Font() {}
+
 Font::Font(Font_ptr fp):
     impl(fp)
 {

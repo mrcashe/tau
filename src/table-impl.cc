@@ -27,6 +27,7 @@
 #include <tau/brush.hh>
 #include <tau/loop.hh>
 #include <tau/painter.hh>
+#include <tau/string.hh>
 #include <display-impl.hh>
 #include <loop-impl.hh>
 #include <table-impl.hh>
@@ -35,6 +36,9 @@
 #include <iostream>
 
 namespace tau {
+
+unsigned  ntables_ = 0;
+uintmax_t nbytes_  = 0;
 
 Table_impl::Table_impl():
     Container_impl()
@@ -45,6 +49,15 @@ Table_impl::Table_impl():
     signal_display_.connect(fun(this, &Table_impl::update_requisition));
     signal_backpaint_.connect(fun(this, &Table_impl::on_backpaint));
     signal_take_focus_.connect(fun(this, &Table_impl::on_take_focus));
+
+    nbytes_ += sizeof(*this);
+    std::cout << "Table_impl::():       " << ++ntables_ << " " << str_bytes(nbytes_) << std::endl;
+}
+
+Table_impl::~Table_impl() {
+    signal_destroy_();
+    nbytes_ -= sizeof(*this);
+    std::cout << "~Table_impl::():      " << --ntables_ << " " << str_bytes(nbytes_) << std::endl;
 }
 
 void Table_impl::put(Widget_ptr wp, int x, int y, unsigned xspan, unsigned yspan, bool xsh, bool ysh) {
@@ -69,6 +82,9 @@ void Table_impl::put(Widget_ptr wp, int x, int y, unsigned xspan, unsigned yspan
         dist_holder(hol);
         update_requisition();
         queue_arrange();
+
+        nbytes_ += sizeof(Holder);
+        std::cout << "Table_impl::put():    " << ntables_ << " " << str_bytes(nbytes_) << std::endl;
     }
 }
 
@@ -88,6 +104,8 @@ void Table_impl::remove(Widget_impl * wp) {
             holders_.erase(i);
             update_requisition();
             queue_arrange();
+            nbytes_ -= sizeof(Holder);
+            std::cout << "Table_impl::remove(): " << ntables_ << " " << str_bytes(nbytes_) << std::endl;
         }
     }
 }
@@ -844,12 +862,9 @@ void Table_impl::align_column(int xx, Align xalign) {
     }
 
     else {
-        Col col;
+        Col & col = new_col(xx);
         col.align_set = true;
         col.xalign = xalign;
-        col.left = columns_left_;
-        col.right = columns_right_;
-        cols_[xx] = col;
     }
 }
 
@@ -888,12 +903,9 @@ void Table_impl::align_row(int yy, Align yalign) {
     }
 
     else {
-        Row row;
+        Row & row = new_row(yy);
         row.align_set = true;
         row.yalign = yalign;
-        row.top = rows_top_;
-        row.bottom = rows_bottom_;
-        rows_[yy] = row;
     }
 }
 
@@ -923,6 +935,8 @@ void Table_impl::erase_col(Col_iter & i) {
             !i->second.right && !i->second.umin && !i->second.umax && !i->second.usize)
         {
             cols_.erase(i);
+            nbytes_ -= sizeof(Col);
+            std::cout << "Table_impl::(): ecol  " << ntables_ << " " << str_bytes(nbytes_) << std::endl;
         }
     }
 }
@@ -939,12 +953,88 @@ void Table_impl::erase_row(Row_iter & i) {
             !i->second.bottom && !i->second.umin && !i->second.umax && !i->second.usize)
         {
             rows_.erase(i);
+            nbytes_ -= sizeof(Row);
+            std::cout << "Table_impl::(): erow  " << ntables_ << " " << str_bytes(nbytes_) << std::endl;
         }
     }
 }
 
 void Table_impl::unref_row(Row_iter & i) {
     if (i != rows_.end() && i->second.ref && --i->second.ref == 0) { erase_row(i); }
+}
+
+Table_impl::Col & Table_impl::new_col(int xx) {
+    auto p = cols_.emplace(xx, Col());
+    Col & col = p.first->second;
+    col.left = columns_left_;
+    col.right = columns_right_;
+    nbytes_ += sizeof(Col);
+    std::cout << "Table_impl::(): ncol  " << ntables_ << " " << str_bytes(nbytes_) << std::endl;
+    return col;
+}
+
+Table_impl::Row & Table_impl::new_row(int yy) {
+    auto p = rows_.emplace(yy, Row());
+    Row & row = p.first->second;
+    row.top = rows_top_;
+    row.bottom = rows_bottom_;
+    nbytes_ += sizeof(Row);
+    std::cout << "Table_impl::(): nrow  " << ntables_ << " " << str_bytes(nbytes_) << std::endl;
+    return row;
+}
+
+Table_impl::Col & Table_impl::new_col(int xx, const Col & src) {
+    auto p = cols_.emplace(xx, Col(src));
+    Col & col = p.first->second;
+    nbytes_ += sizeof(Col);
+    std::cout << "Table_impl::(): ncol  " << ntables_ << " " << str_bytes(nbytes_) << std::endl;
+    return col;
+}
+
+Table_impl::Row & Table_impl::new_row(int yy, const Row & src) {
+    auto p = rows_.emplace(yy, Row(src));
+    Row & row = p.first->second;
+    nbytes_ += sizeof(Row);
+    std::cout << "Table_impl::(): nrow  " << ntables_ << " " << str_bytes(nbytes_) << std::endl;
+    return row;
+}
+
+void Table_impl::dist_holder(Holder & hol) {
+    for (int xx = hol.xmin; xx < hol.xmax; ++xx) {
+        auto i = cols_.find(xx);
+
+        if (cols_.end() != i) {
+            Col & col = i->second;
+            ++col.ref;
+            if (hol.xsh) { ++col.shrank; }
+            if (!hol.wp->hidden()) { ++col.visible; }
+        }
+
+        else {
+            Col & col = new_col(xx);
+            col.ref = 1;
+            col.shrank = hol.xsh ? 1 : 0;
+            col.visible = hol.wp->hidden() ? 0 : 1;
+        }
+    }
+
+    for (int yy = hol.ymin; yy < hol.ymax; ++yy) {
+        auto i = rows_.find(yy);
+
+        if (rows_.end() != i) {
+            Row & row = i->second;
+            ++row.ref;
+            if (hol.ysh) { ++row.shrank; }
+            if (!hol.wp->hidden()) { ++row.visible; }
+        }
+
+        else {
+            Row & row = new_row(yy);
+            row.ref = 1;
+            row.shrank = hol.ysh ? 1 : 0;
+            row.visible = hol.wp->hidden() ? 0 : 1;
+        }
+    }
 }
 
 void Table_impl::wipe_holder(Holder & hol) {
@@ -962,50 +1052,6 @@ void Table_impl::wipe_holder(Holder & hol) {
         Row & row = i->second;
         if (hol.wp->visible() && 0 != row.visible) { --row.visible; }
         unref_row(i);
-    }
-}
-
-void Table_impl::dist_holder(Holder & hol) {
-    for (int xx = hol.xmin; xx < hol.xmax; ++xx) {
-        auto i = cols_.find(xx);
-
-        if (cols_.end() != i) {
-            Col & col = i->second;
-            ++col.ref;
-            if (hol.xsh) { ++col.shrank; }
-            if (!hol.wp->hidden()) { ++col.visible; }
-        }
-
-        else {
-            Col col;
-            col.ref = 1;
-            col.shrank = hol.xsh ? 1 : 0;
-            col.visible = hol.wp->hidden() ? 0 : 1;
-            col.left = columns_left_;
-            col.right = columns_right_;
-            cols_[xx] = col;
-        }
-    }
-
-    for (int yy = hol.ymin; yy < hol.ymax; ++yy) {
-        auto i = rows_.find(yy);
-
-        if (rows_.end() != i) {
-            Row & row = i->second;
-            ++row.ref;
-            if (hol.ysh) { ++row.shrank; }
-            if (!hol.wp->hidden()) { ++row.visible; }
-        }
-
-        else {
-            Row row;
-            row.ref = 1;
-            row.shrank = hol.ysh ? 1 : 0;
-            row.visible = hol.wp->hidden() ? 0 : 1;
-            row.top = rows_top_;
-            row.bottom = rows_bottom_;
-            rows_[yy] = row;
-        }
     }
 }
 
@@ -1033,10 +1079,9 @@ void Table_impl::set_column_margin(int xx, unsigned left, unsigned right) {
     }
 
     else {
-        Col col;
+        Col & col = new_col(xx);
         col.left = left;
         col.right = right;
-        cols_[xx] = col;
     }
 }
 
@@ -1064,10 +1109,9 @@ void Table_impl::set_row_margin(int yy, unsigned top, unsigned bottom) {
     }
 
     else {
-        Row row;
+        Row & row = new_row(yy);
         row.top = top;
         row.bottom = bottom;
-        rows_[yy] = row;
     }
 }
 
@@ -1328,11 +1372,8 @@ void Table_impl::set_column_width(int xx, unsigned usize) {
     }
 
     else {
-        Col col;
+        Col & col = new_col(xx);
         col.usize = usize;
-        col.left = columns_left_;
-        col.right = columns_right_;
-        cols_[xx] = col;
     }
 }
 
@@ -1358,11 +1399,8 @@ void Table_impl::set_row_height(int yy, unsigned usize) {
     }
 
     else {
-        Row row;
+        Row & row = new_row(yy);
         row.usize = usize;
-        row.top = rows_top_;
-        row.bottom = rows_bottom_;
-        rows_[yy] = row;
     }
 }
 
@@ -1386,11 +1424,8 @@ void Table_impl::set_min_column_width(int xx, unsigned umin) {
     }
 
     else {
-        Col col;
+        Col & col = new_col(xx);
         col.umin = umin;
-        col.left = columns_left_;
-        col.right = columns_right_;
-        cols_[xx] = col;
     }
 }
 
@@ -1414,11 +1449,8 @@ void Table_impl::set_min_row_height(int yy, unsigned umin) {
     }
 
     else {
-        Row row;
+        Row & row = new_row(yy);
         row.umin = umin;
-        row.top = rows_top_;
-        row.bottom = rows_bottom_;
-        rows_[yy] = row;
     }
 }
 
@@ -1442,11 +1474,8 @@ void Table_impl::set_max_column_width(int xx, unsigned umax) {
     }
 
     else {
-        Col col;
+        Col & col = new_col(xx);
         col.umax = umax;
-        col.left = columns_left_;
-        col.right = columns_right_;
-        cols_[xx] = col;
     }
 }
 
@@ -1470,11 +1499,8 @@ void Table_impl::set_max_row_height(int yy, unsigned umax) {
     }
 
     else {
-        Row row;
+        Row & row = new_row(yy);
         row.umax = umax;
-        row.top = rows_top_;
-        row.bottom = rows_bottom_;
-        rows_[yy] = row;
     }
 }
 
@@ -1556,11 +1582,7 @@ void Table_impl::insert_columns(int xmin, unsigned n_columns) {
     // Move the columns to the right.
     for (int x = cmax; x >= xmin; --x) {
         auto c_iter = cols_.find(x);
-
-        if (c_iter != cols_.end()) {
-            Col col(c_iter->second);
-            cols_[x+n_columns] = col;
-        }
+        if (c_iter != cols_.end()) { new_col(x+n_columns, c_iter->second); }
     }
 
     // Remove columns.
@@ -1646,11 +1668,7 @@ void Table_impl::insert_rows(int ymin, unsigned n_rows) {
     // Move the rows down.
     for (int y = rmax; y >= ymin; --y) {
         auto r_iter = rows_.find(y);
-
-        if (r_iter != rows_.end()) {
-            Row row(r_iter->second);
-            rows_[y+n_rows] = row;
-        }
+        if (r_iter != rows_.end()) { new_row(y+n_rows, r_iter->second); }
     }
 
     // Remove rows.
@@ -1716,11 +1734,7 @@ void Table_impl::remove_columns(int xmin, unsigned n_columns) {
     // Move columns to the left.
     for (int x = xmax; x <= last; ++x) {
         auto c_iter = cols_.find(x);
-
-        if (c_iter != cols_.end()) {
-            Col col(c_iter->second);
-            cols_[x-n_columns] = col;
-        }
+        if (c_iter != cols_.end()) { new_col(x-n_columns, c_iter->second); }
     }
 
     // Remove columns.
@@ -1786,11 +1800,7 @@ void Table_impl::remove_rows(int ymin, unsigned n_rows) {
     // Move rows to the top.
     for (int y = ymax; y <= last; ++y) {
         auto r_iter = rows_.find(y);
-
-        if (r_iter != rows_.end()) {
-            Row row(r_iter->second);
-            rows_[y-n_rows] = row;
-        }
+        if (r_iter != rows_.end()) { new_row(y-n_rows, r_iter->second); }
     }
 
     // Remove rows.
