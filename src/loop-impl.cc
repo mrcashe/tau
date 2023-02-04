@@ -119,13 +119,8 @@ void Loop_impl::run() {
             run = true;
         }
 
-        int tw = dts/1000;
-
-        // Do not call iterate() with 0 timeout value!
-        if (tw) {
-            iterate(tw);
-            now = Timeval::now();
-        }
+        iterate(std::max(1, int(dts/1000)));
+        now = Timeval::now();
 
         // In result of iterate() call timer queue may be modified, so test it again.
         while (!timers_.empty()) {

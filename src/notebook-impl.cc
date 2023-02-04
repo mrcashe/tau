@@ -50,26 +50,27 @@ tau::Orientation or_from_tab_pos(tau::Tab_pos tab_pos) {
 namespace tau {
 
 Notebook_impl::Notebook_impl(Tab_pos tab_pos):
-    Box_impl(or_from_tab_pos(tab_pos)),
-    card_(std::make_shared<Card_impl>())
+    Box_impl(or_from_tab_pos(tab_pos))
 {
     roller_ = std::make_shared<Roller_impl>(horizontal() ? OR_DOWN : OR_RIGHT);
     roller_->set_step(32);
+    append(roller_, true);
     abs_ = std::make_shared<Absolute_impl>();
+    roller_->insert(abs_);
 
     frame_ = std::make_shared<Frame_impl>();
     frame_->set_border_style(BORDER_SOLID);
     frame_->set_border_color(sel_color());
-
-    roller_->insert(abs_);
-    append(roller_, true);
-    frame_->insert(card_);
     append(frame_, false);
 
-    signal_size_changed().connect(fun(this, &Notebook_impl::update_tabs));
-    signal_size_changed().connect(fun(this, &Notebook_impl::update_roller));
-    signal_take_focus().connect(fun(card_, &Card_impl::take_focus));
-    frame_->style().get("button/background").signal_changed().connect(fun(this, &Notebook_impl::on_frame_background_changed));
+    card_ = std::make_shared<Card_impl>();
+    frame_->insert(card_);
+
+    signal_size_changed_.connect(fun(this, &Notebook_impl::update_tabs));
+    signal_size_changed_.connect(fun(this, &Notebook_impl::update_roller));
+    signal_take_focus_.connect(fun(card_, &Card_impl::take_focus));
+
+    frame_->style().get(STYLE_BUTTON_BACKGROUND).signal_changed().connect(fun(this, &Notebook_impl::on_frame_background_changed));
     roller_->signal_mouse_wheel().connect(fun(this, &Notebook_impl::on_mouse_wheel), true);
     abs_->signal_size_changed().connect(fun(this, &Notebook_impl::update_roller));
 }
@@ -122,8 +123,10 @@ int Notebook_impl::remove_page(int page) {
             signal_page_removed_(page);
             for (int n = pages_.size(); n > page; --n) { signal_page_reordered_(n, n-1); }
             if (page == current) { update_current(); }
+            if (pages_.empty()) { roller_->hide(); }
             update_frame_border();
             update_tabs();
+            invalidate();
             return upage;
         }
     }
@@ -344,6 +347,8 @@ void Notebook_impl::init_page(unsigned nth_page, Widget_ptr wp, Widget_ptr tp) {
     update_frame_border();
     if (tabs_visible_) { roller_->show(); }
     else { roller_->hide(); }
+    update_tabs();
+    invalidate();
 }
 
 void Notebook_impl::update_roller() {

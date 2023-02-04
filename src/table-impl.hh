@@ -37,6 +37,8 @@ namespace tau {
 class Table_impl: public Container_impl {
 public:
 
+    using Span = Table::Span;
+
     Table_impl();
    ~Table_impl();
 
@@ -84,7 +86,7 @@ public:
     void get_align(const Widget_impl * wp, Align & xalign, Align & yalign) const;
     void unalign(Widget_impl * wp);
 
-    Table::Span span() const;
+    Span span() const;
     void get_column_span(int col, int & ymin, int & ymax);
     void get_row_span(int row, int & xmin, int & xmax);
     Rect bounds(int x, int y, unsigned xspan=1, unsigned yspan=1) const;
@@ -112,7 +114,7 @@ public:
     void select(int x, int y, unsigned xspan=1, unsigned yspan=1);
     void select_column(int nth_col);
     void select_row(int nth_row);
-    Table::Span selection() const;
+    Span selection() const;
     void unselect();
 
     void mark(int x, int y, unsigned width, unsigned height);
@@ -122,7 +124,7 @@ public:
     void unmark_column(int x);
     void unmark_row(int y);
     void unmark_all();
-    std::vector<Table::Span> marks() const;
+    std::vector<Span> marks() const;
 
     void set_column_margin(int x, unsigned left, unsigned right);
     void get_column_margin(int x, unsigned & left, unsigned & right) const;
@@ -167,64 +169,64 @@ protected:
 private:
 
     struct Holder {
-        Widget_impl *   wp = nullptr;
-        int             xmin;
-        int             ymin;
-        int             xmax;
-        int             ymax;
-        bool            xsh;                // Shrink widget horizontally.
-        bool            ysh;                // Shrink widget vertically.
-        bool            align_set = false;  // Align was set by user.
-        Align           xalign;             // Horizontal align.
-        Align           yalign;             // Vertical align.
-        unsigned        wmax = 0;           // Calculated maximal width.
-        unsigned        hmax = 0;           // Calculated maximal height.
-        unsigned        wmin = 0;           // Calculated minimal width.
-        unsigned        hmin = 0;           // Calculated minimal height.
-        connection      hints_cx;
-        connection      req_cx;
-        connection      show_cx;
-        connection      hide_cx;
+        Widget_impl *   wp_ = nullptr;
+        int             xmin_;
+        int             ymin_;
+        int             xmax_;
+        int             ymax_;
+        bool            xsh_;               // Shrink widget horizontally.
+        bool            ysh_;               // Shrink widget vertically.
+        bool            align_set_ = false; // Align was set by user.
+        Align           xalign_;            // Horizontal align.
+        Align           yalign_;            // Vertical align.
+        unsigned        wmax_ = 0;          // Calculated maximal width.
+        unsigned        hmax_ = 0;          // Calculated maximal height.
+        unsigned        wmin_ = 0;          // Calculated minimal width.
+        unsigned        hmin_ = 0;          // Calculated minimal height.
+        connection      hints_cx_ { true };
+        connection      req_cx_ { true };
+        connection      show_cx_ { true };
+        connection      hide_cx_ { true };
     };
 
     struct Col {
-        int             x = 0;              // Origin.
-        int             ox = 0;             // Old origin.
-        unsigned        w = 0;              // Calculated width.
-        unsigned        ow = 0;             // Old width.
-        unsigned        left = 0;           // Left margin.
-        unsigned        right = 0;          // Right margin.
-        unsigned        usize = 0;          // User specified size.
-        unsigned        umin = 0;           // User specified minimal size.
-        unsigned        umax = 0;           // User specified maximal size.
-        unsigned        rmax = 0;           // Maximal requisition.
-        unsigned        rmin = 0;           // Minimal requisition.
-        unsigned        ref = 0;            // Reference count (number of widgets within column).
-        unsigned        shrank = 0;         // Shrank widget count.
-        unsigned        visible = 0;        // Visible widget count.
-        unsigned        fill = 0;           // Widget count having ALIGN_FILL align set.
-        bool            align_set = false;  // Align set by the user.
-        Align           xalign;             // User specified align.
+        int             x_ = 0;             // Origin.
+        int             ox_ = 0;            // Old origin.
+        unsigned        w_ = 0;             // Calculated width.
+        unsigned        ow_ = 0;            // Old width.
+        unsigned        left_ = 0;          // Left margin.
+        unsigned        right_ = 0;         // Right margin.
+        unsigned        usize_ = 0;         // User specified size.
+        unsigned        umin_ = 0;          // User specified minimal size.
+        unsigned        umax_ = 0;          // User specified maximal size.
+        unsigned        rmax_ = 0;          // Maximal requisition.
+        unsigned        rmin_ = 0;          // Minimal requisition.
+        unsigned        ref_ = 0;           // Reference count (number of widgets within column).
+        unsigned        shrank_ = 0;        // Shrank widget count.
+        unsigned        visible_ = 0;       // Visible widget count.
+        unsigned        fill_ = 0;          // Widget count having ALIGN_FILL align set.
+        bool            align_set_ = false; // Align set by the user.
+        Align           xalign_;            // User specified align.
     };
 
     struct Row {
-        int             y = 0;              // Origin.
-        int             oy = 0;             // Old origin.
-        unsigned        h = 0;              // Calculated height.
-        unsigned        oh = 0;             // Old height.
-        unsigned        top = 0;            // Top margin.
-        unsigned        bottom = 0;         // Bottom margin.
-        unsigned        usize = 0;          // User specified height.
-        unsigned        umin = 0;           // User specified minimal height.
-        unsigned        umax = 0;           // User specified maximal height.
-        unsigned        rmax = 0;           // Maximal requisition.
-        unsigned        rmin = 0;           // Minimal requisition.
-        unsigned        ref = 0;            // Reference count (number of widgets within row).
-        unsigned        shrank = 0;         // Shrank widget count.
-        unsigned        visible = 0;        // Visible widget count.
-        unsigned        fill = 0;           // Widget count having ALIGN_FILL align set.
-        bool            align_set = false;  // Align set by the user.
-        Align           yalign;             // User specified align.
+        int             y_ = 0;             // Origin.
+        int             oy_ = 0;            // Old origin.
+        unsigned        h_ = 0;             // Calculated height.
+        unsigned        oh_ = 0;            // Old height.
+        unsigned        top_ = 0;           // Top margin.
+        unsigned        bottom_ = 0;        // Bottom margin.
+        unsigned        usize_ = 0;         // User specified height.
+        unsigned        umin_ = 0;          // User specified minimal height.
+        unsigned        umax_ = 0;          // User specified maximal height.
+        unsigned        rmax_ = 0;          // Maximal requisition.
+        unsigned        rmin_ = 0;          // Minimal requisition.
+        unsigned        ref_ = 0;           // Reference count (number of widgets within row).
+        unsigned        shrank_ = 0;        // Shrank widget count.
+        unsigned        visible_ = 0;       // Visible widget count.
+        unsigned        fill_ = 0;          // Widget count having ALIGN_FILL align set.
+        bool            align_set_ = false; // Align set by the user.
+        Align           yalign_;            // User specified align.
     };
 
     using Holders = std::map<Widget_impl *, Holder>;
@@ -234,7 +236,7 @@ private:
     using Col_citer = Cols::const_iterator;
     using Row_iter =  Rows::iterator;
     using Row_citer = Rows::const_iterator;
-    using Marks = std::list<Table::Span>;   // List storing marks.
+    using Marks = std::list<Span>;          // List storing marks.
 
     Holders             holders_;
     Cols                cols_;
@@ -250,7 +252,7 @@ private:
     Align               xalign_ = ALIGN_CENTER;
     Align               yalign_ = ALIGN_CENTER;
 
-    Table::Span         sel_;
+    Span                sel_;
     Marks               marks_;
     Timer               loarr_tmr_ { fun(this, &Table_impl::place_widgets) }; // Local Arrange Timer.
     connection          async_clear_cx_;
@@ -277,7 +279,7 @@ private:
 
     void wipe_holder(Holder & hol);
     void dist_holder(Holder & hol);
-    Rect range_bounds(const Table::Span & rng) const;
+    Rect range_bounds(const Span & rng) const;
 
     void arrange();
 

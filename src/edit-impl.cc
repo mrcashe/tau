@@ -193,7 +193,8 @@ void Edit_impl::del_range(Buffer_citer b, Buffer_citer e) {
 
 void Edit_impl::on_insert(bool replace) {
     insert_ = !replace;
-    signal_caret_motion_();
+    refresh_caret();
+    signal_caret_motion()();
 }
 
 void Edit_impl::cut() {

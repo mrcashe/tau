@@ -92,8 +92,7 @@ protected:
 
     /// Do one iteration of run cycle.
     /// @param timeout_ms the timeout in milliseconds.
-    /// @return true if some event was handled or false if timeout has been expired.
-    virtual bool iterate(int timeout_ms) = 0;
+    virtual void iterate(int timeout_ms) = 0;
 
     /// Run once.
     /// Overriden by Loop_linux.

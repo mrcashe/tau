@@ -28,6 +28,7 @@
 #include <tau/painter.hh>
 #include <container-impl.hh>
 #include <display-impl.hh>
+#include <loop-impl.hh>
 #include <painter-impl.hh>
 #include <window-impl.hh>
 
@@ -53,9 +54,6 @@ Container_impl::Container_impl():
     signal_enable_.connect(fun(this, &Container_impl::on_enable));
     signal_disable_.connect(fun(this, &Container_impl::on_disable));
     signal_unparent_.connect(fun(this, &Container_impl::on_unparent));
-
-    arrange_timer_.signal_alarm().connect(fun(this, &Container_impl::sync_arrange));
-    woff_timer_.signal_alarm().connect(fun(this, &Container_impl::on_woff_timer));
 }
 
 Container_impl::~Container_impl() {
@@ -87,7 +85,7 @@ void Container_impl::unparent_child(Widget_impl * wi) {
         obscured_.remove(wi);
         woff_.push_back(*i);
         children_.erase(i);
-        woff_timer_.restart(11, true);
+        woff_cx_ = Loop_impl::this_loop()->signal_alarm(11, true).connect(fun(this, &Container_impl::on_woff_timer));
         if (wi == modal_child_) { modal_child_ = nullptr; }
         if (wi == focused_child_) { focused_child_ = nullptr; }
         if (wi == mouse_grabber_) { mouse_grabber_ = nullptr; }
@@ -99,31 +97,27 @@ void Container_impl::unparent_child(Widget_impl * wi) {
 
 void Container_impl::unparent_all() {
     for (auto wp: children_) {
+        woff_.push_back(wp);
         wp->unparent();
     }
+
+    if (!woff_.empty()) { woff_cx_ = Loop_impl::this_loop()->signal_alarm(11, true).connect(fun(this, &Container_impl::on_woff_timer)); }
+    children_.clear();
+    obscured_.clear();
+    containers_.clear();
+    modal_child_ = nullptr;
+    focused_child_ = nullptr;
+    mouse_grabber_ = nullptr;
+    mouse_owner_ = nullptr;
 
     if (!shut_) {
         end_modal_up(modal_child_);
         ungrab_mouse_up(mouse_grabber_);
         if (focused()) { grab_focus(); }
-
-        for (auto wp: children_) {
-            woff_.push_back(wp);
-            wp->unparent();
-        }
-
-        woff_timer_.start(11, true);
-        children_.clear();
-        obscured_.clear();
-        containers_.clear();
-        modal_child_ = nullptr;
-        focused_child_ = nullptr;
-        mouse_grabber_ = nullptr;
-        mouse_owner_ = nullptr;
-        update_mouse_owner();
         signal_children_changed_();
     }
 }
+
 void Container_impl::paint_children(Painter pr, const Rect & inval, bool backpaint) {
     Painter_ptr pp = pr.impl;
     Point wpos = worigin(), sc = scroll_position();
@@ -591,14 +585,14 @@ void Container_impl::on_child_visibility(Widget_impl * wi) {
 
 void Container_impl::sync_arrange() {
     if (visible()) {
-        arrange_timer_.stop();
+        arrange_cx_.drop();
         signal_arrange_();
         for (auto ci: containers_) { ci->sync_arrange(); }
     }
 }
 
 void Container_impl::queue_arrange() {
-    arrange_timer_.start(31);
+    arrange_cx_ = Loop_impl::this_loop()->signal_alarm(31).connect(fun(this, &Container_impl::sync_arrange));
 }
 
 void Container_impl::on_visible() {
@@ -624,8 +618,7 @@ void Container_impl::on_disable() {
 }
 
 void Container_impl::on_unparent() {
-    arrange_timer_.stop();
-    woff_timer_.stop();
+    arrange_cx_.drop();
     obscured_.clear();
     focused_child_ = nullptr;
     modal_child_ = nullptr;
@@ -635,7 +628,7 @@ void Container_impl::on_unparent() {
 
 void Container_impl::on_woff_timer() {
     for (auto wp: woff_) { if (wp->running()) return; }
-    woff_timer_.stop();
+    woff_cx_.drop();
     woff_.clear();
 }
 

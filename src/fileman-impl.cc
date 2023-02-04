@@ -236,13 +236,16 @@ void Fileman_impl::on_file_select(const ustring & filename) {
     entry_->move_to(entry_->buffer().cend());
 }
 
+// From Navigator.
 void Fileman_impl::on_file_unselect(const ustring & filename) {
-    if (navi_->multiple_select_allowed()) {
-        auto i = std::find(selection_.begin(), selection_.end(), filename);
-        if (i != selection_.end()) { selection_.erase(i); }
-    }
+    if (navi_ && navi_->has_parent()) {
+        if (navi_->multiple_select_allowed()) {
+            auto i = std::find(selection_.begin(), selection_.end(), filename);
+            if (i != selection_.end()) { selection_.erase(i); }
+        }
 
-    entry_from_selection();
+        entry_from_selection();
+    }
 }
 
 void Fileman_impl::on_dir_changed(const ustring & path) {

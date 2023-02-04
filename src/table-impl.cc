@@ -38,7 +38,7 @@
 namespace tau {
 
 unsigned  ntables_ = 0;
-uintmax_t nbytes_  = 0;
+uintmax_t table_bytes_  = 0;
 
 Table_impl::Table_impl():
     Container_impl()
@@ -49,42 +49,39 @@ Table_impl::Table_impl():
     signal_display_.connect(fun(this, &Table_impl::update_requisition));
     signal_backpaint_.connect(fun(this, &Table_impl::on_backpaint));
     signal_take_focus_.connect(fun(this, &Table_impl::on_take_focus));
-
-    nbytes_ += sizeof(*this);
-    std::cout << "Table_impl::():       " << ++ntables_ << " " << str_bytes(nbytes_) << std::endl;
+    table_bytes_ += sizeof(*this);
+    // std::cout << "Table_impl::():       " << ++ntables_ << " " << str_bytes(table_bytes_) << std::endl;
 }
 
 Table_impl::~Table_impl() {
     signal_destroy_();
-    nbytes_ -= sizeof(*this);
-    std::cout << "~Table_impl::():      " << --ntables_ << " " << str_bytes(nbytes_) << std::endl;
+    clear();
+    table_bytes_ -= sizeof(*this);
+    // std::cout << "~Table_impl::():      " << --ntables_ << " " << str_bytes(table_bytes_) << std::endl;
 }
 
 void Table_impl::put(Widget_ptr wp, int x, int y, unsigned xspan, unsigned yspan, bool xsh, bool ysh) {
     if (wp) {
-        Holder hol;
         make_child(wp);
-        wp->update_origin(INT_MIN, INT_MIN);
-        wp->update_size(0, 0);
-        hol.wp = wp.get();
-        hol.xmin = x;
-        hol.ymin = y;
-        hol.xmax = x+std::max(1U, xspan);
-        hol.ymax = y+std::max(1U, yspan);
-        hol.xsh = 1 == hol.xmax-hol.xmin && xsh;
-        hol.ysh = 1 == hol.ymax-hol.ymin && ysh;
-        hol.align_set = false;
-        hol.hints_cx = wp->signal_requisition_changed().connect(tau::bind(fun(this, &Table_impl::on_child_requisition_changed), wp.get()));
-        hol.req_cx = wp->signal_requisition_changed().connect(tau::bind(fun(this, &Table_impl::on_child_requisition_changed), wp.get()));
-        hol.show_cx = wp->signal_show().connect(tau::bind(fun(this, &Table_impl::on_child_show), wp.get()), true);
-        hol.hide_cx = wp->signal_hide().connect(tau::bind(fun(this, &Table_impl::on_child_hide), wp.get()), true);
-        holders_[wp.get()] = hol;
+        update_child_bounds(wp.get(), INT_MIN, INT_MIN, Size());
+        auto p = holders_.emplace(wp.get(), Holder());
+        Holder & hol = p.first->second;
+        hol.wp_ = wp.get();
+        hol.xmin_ = x;
+        hol.ymin_ = y;
+        hol.xmax_ = x+std::max(1U, xspan);
+        hol.ymax_ = y+std::max(1U, yspan);
+        hol.xsh_ = 1 == hol.xmax_-hol.xmin_ && xsh;
+        hol.ysh_ = 1 == hol.ymax_-hol.ymin_ && ysh;
+        hol.hints_cx_ = wp->signal_requisition_changed().connect(tau::bind(fun(this, &Table_impl::on_child_requisition_changed), wp.get()));
+        hol.req_cx_ = wp->signal_requisition_changed().connect(tau::bind(fun(this, &Table_impl::on_child_requisition_changed), wp.get()));
+        hol.show_cx_ = wp->signal_show().connect(tau::bind(fun(this, &Table_impl::on_child_show), wp.get()), true);
+        hol.hide_cx_ = wp->signal_hide().connect(tau::bind(fun(this, &Table_impl::on_child_hide), wp.get()), true);
         dist_holder(hol);
         update_requisition();
         queue_arrange();
-
-        nbytes_ += sizeof(Holder);
-        std::cout << "Table_impl::put():    " << ntables_ << " " << str_bytes(nbytes_) << std::endl;
+        table_bytes_ += sizeof(Holder);
+        // std::cout << "Table_impl::put():    " << ntables_ << " " << str_bytes(table_bytes_) << std::endl;
     }
 }
 
@@ -94,20 +91,31 @@ void Table_impl::remove(Widget_impl * wp) {
 
         if (i != holders_.end()) {
             wipe_holder(i->second);
-            i->second.hints_cx.drop();
-            i->second.req_cx.drop();
-            i->second.hide_cx.drop();
-            i->second.show_cx.drop();
             unparent_child(wp);
             wp->update_origin(INT_MIN, INT_MIN);
             wp->update_size(0, 0);
             holders_.erase(i);
             update_requisition();
             queue_arrange();
-            nbytes_ -= sizeof(Holder);
-            std::cout << "Table_impl::remove(): " << ntables_ << " " << str_bytes(nbytes_) << std::endl;
+            table_bytes_ -= sizeof(Holder);
+            // std::cout << "Table_impl::remove(): " << ntables_ << " " << str_bytes(table_bytes_) << std::endl;
         }
     }
+}
+
+// Overriden by List_impl.
+// Overriden by List_text_impl.
+void Table_impl::clear() {
+    table_bytes_ -= sizeof(Holder)*holders_.size() + sizeof(Col)*cols_.size() + sizeof(Row)*rows_.size();
+    // std::cout << "Table_impl::remove(): " << ntables_ << " " << str_bytes(table_bytes_) << std::endl;
+    unmark_all();
+    unselect();
+    unparent_all();
+    holders_.clear();
+    cols_.clear();
+    rows_.clear();
+    require_size(0);
+    invalidate();
 }
 
 // Both hints & requisitions come here.
@@ -132,16 +140,16 @@ void Table_impl::on_child_show(Widget_impl * wi) {
         if (i != holders_.end()) {
             Holder & hol = i->second;
 
-            for (int x = hol.xmin; x < hol.xmax; ++x) {
-                Col & col = cols_[x];
-                ++col.visible;
-                if (hol.xsh) { ++col.shrank; }
+            for (int xx = hol.xmin_; xx < hol.xmax_; ++xx) {
+                Col & col = cols_[xx];
+                ++col.visible_;
+                if (hol.xsh_) { ++col.shrank_; }
             }
 
-            for (int y = hol.ymin; y < hol.ymax; ++y) {
-                Row & row = rows_[y];
-                ++row.visible;
-                if (hol.ysh) { ++row.shrank; }
+            for (int yy = hol.ymin_; yy < hol.ymax_; ++yy) {
+                Row & row = rows_[yy];
+                ++row.visible_;
+                if (hol.ysh_) { ++row.shrank_; }
             }
 
             update_requisition();
@@ -159,16 +167,16 @@ void Table_impl::on_child_hide(Widget_impl * wi) {
             wi->update_size(0, 0);
             Holder & hol = i->second;
 
-            for (int x = hol.xmin; x < hol.xmax; ++x) {
-                Col & col = cols_[x];
-                if (0 != col.visible) { --col.visible; }
-                if (hol.xsh && 0 != col.shrank) { --col.shrank; }
+            for (int xx = hol.xmin_; xx < hol.xmax_; ++xx) {
+                Col & col = cols_[xx];
+                if (0 != col.visible_) { --col.visible_; }
+                if (hol.xsh_ && 0 != col.shrank_) { --col.shrank_; }
             }
 
-            for (int y = hol.ymin; y < hol.ymax; ++y) {
-                Row & row = rows_[y];
-                if (0 != row.visible) { --row.visible; }
-                if (hol.ysh && 0 != row.shrank) { --row.shrank; }
+            for (int yy = hol.ymin_; yy < hol.ymax_; ++yy) {
+                Row & row = rows_[yy];
+                if (0 != row.visible_) { --row.visible_; }
+                if (hol.ysh_ && 0 != row.shrank_) { --row.shrank_; }
             }
 
             update_requisition();
@@ -188,44 +196,43 @@ void Table_impl::update_requisition() {
 }
 
 void Table_impl::alloc_child(Holder & hol) {
-    hol.wmax = hol.hmax = hol.wmin = hol.hmin = 0;
-    if (hol.wp->hidden()) { return; }
+    hol.wmax_ = hol.hmax_ = hol.wmin_ = hol.hmin_ = 0;
+    if (hol.wp_->hidden()) { return; }
 
-    Size req = hol.wp->required_size(), min = hol.wp->min_size_hint();
-    req.update(hol.wp->size_hint(), true);
+    Size req = hol.wp_->required_size(), min = hol.wp_->min_size_hint();
+    req.update(hol.wp_->size_hint(), true);
     req.update_max(min);
-    req.update_min(hol.wp->max_size_hint(), true);
-    req.increase(hol.wp->margin_hint());
+    req.update_min(hol.wp_->max_size_hint(), true);
+    req.increase(hol.wp_->margin_hint());
 
-    hol.wmin = min.width();
-    hol.hmin = min.height();
+    hol.wmin_ = min.width();
+    hol.hmin_ = min.height();
 
-    hol.wmax = req.width();
-    hol.hmax = req.height();
+    hol.wmax_ = req.width();
+    hol.hmax_ = req.height();
 
     // --------------------------------------------------------------------------------
     // X Axis.
     // --------------------------------------------------------------------------------
 
-    auto cb = cols_.find(hol.xmin), ce = cols_.end();
-    unsigned nc = hol.xmax-hol.xmin;
+    auto cb = cols_.find(hol.xmin_), ce = cols_.end();
+    unsigned nc = hol.xmax_-hol.xmin_;
     unsigned spc = 0;
 
     if (1 == nc) {
-        cb->second.rmax = std::max(cb->second.rmax, hol.wmax);
-        cb->second.rmin = std::max(cb->second.rmin, hol.wmin);
+        cb->second.rmax_ = std::max(cb->second.rmax_, hol.wmax_);
+        cb->second.rmin_ = std::max(cb->second.rmin_, hol.wmin_);
     }
 
     else {
-        for (auto i(cb); i != ce && i->first < hol.xmax; ++i) {
-            const Col & col = i->second;
-            if (i != cb) { spc += col.left+xspacing_; }
-            if ((hol.xmax-i->first) > 1) { spc += col.right; }
-            if (col.shrank) { nc = std::max(1U, nc-1); }
+        for (auto i(cb); i != ce && i->first < hol.xmax_; ++i) {
+            if (i != cb) { spc += i->second.left_+xspacing_; }
+            if ((hol.xmax_-i->first) > 1) { spc += i->second.right_; }
+            if (i->second.shrank_) { nc = std::max(1U, nc-1); }
         }
 
-        unsigned wmax = hol.wmax > spc ? hol.wmax-spc : 0;  // maximal width.
-        unsigned wmin = hol.wmin > spc ? hol.wmin-spc : 0;  // minimal width.
+        unsigned wmax = hol.wmax_ > spc ? hol.wmax_-spc : 0;  // maximal width.
+        unsigned wmin = hol.wmin_ > spc ? hol.wmin_-spc : 0;  // minimal width.
 
         // Calculate width per cell and remainder per cell.
         unsigned wpc_max = wmax/nc;
@@ -233,15 +240,13 @@ void Table_impl::alloc_child(Holder & hol) {
         unsigned wpc_min = wmin/nc;
         unsigned rem_min = wmin%nc;
 
-        for (auto i(cb); i != ce && i->first < hol.xmax; ++i) {
-            Col & col = i->second;
-
-            if (!col.shrank) {
+        for (auto i(cb); i != ce && i->first < hol.xmax_; ++i) {
+            if (!i->second.shrank_) {
                 unsigned w1 = wpc_max, w2 = wpc_min;
                 if (w1 && rem_max) { ++w1, --rem_max; }
                 if (w2 && rem_min) { ++w2, --rem_min; }
-                col.rmax = std::max(col.rmax, w1);
-                col.rmin = std::max(col.rmin, w2);
+                i->second.rmax_ = std::max(i->second.rmax_, w1);
+                i->second.rmin_ = std::max(i->second.rmin_, w2);
             }
         }
     }
@@ -250,25 +255,24 @@ void Table_impl::alloc_child(Holder & hol) {
     // Y Axis.
     // --------------------------------------------------------------------------------
 
-    auto rb = rows_.find(hol.ymin), re = rows_.end();
-    nc = hol.ymax-hol.ymin;
+    auto rb = rows_.find(hol.ymin_), re = rows_.end();
+    nc = hol.ymax_-hol.ymin_;
     spc = 0;
 
     if (1 == nc) {
-        rb->second.rmax = std::max(rb->second.rmax, hol.hmax);
-        rb->second.rmin = std::max(rb->second.rmin, hol.hmin);
+        rb->second.rmax_ = std::max(rb->second.rmax_, hol.hmax_);
+        rb->second.rmin_ = std::max(rb->second.rmin_, hol.hmin_);
     }
 
     else {
-        for (auto i(rb); i != re && i->first < hol.ymax; ++i) {
-            const Row & row = i->second;
-            if (i != rb) { spc += row.top+yspacing_; }
-            if ((hol.ymax-i->first) > 1) { spc += row.bottom; }
-            if (row.shrank) { nc = std::max(1U, nc-1); }
+        for (auto i(rb); i != re && i->first < hol.ymax_; ++i) {
+            if (i != rb) { spc += i->second.top_+yspacing_; }
+            if ((hol.ymax_-i->first) > 1) { spc += i->second.bottom_; }
+            if (i->second.shrank_) { nc = std::max(1U, nc-1); }
         }
 
-        unsigned hmax = hol.hmax > spc ? hol.hmax-spc : 0;
-        unsigned hmin = hol.hmin > spc ? hol.hmin-spc : 0;
+        unsigned hmax = hol.hmax_ > spc ? hol.hmax_-spc : 0;
+        unsigned hmin = hol.hmin_ > spc ? hol.hmin_-spc : 0;
 
         // Calculate height per cell and remainder per cell.
         unsigned hpc_max = hmax/nc;
@@ -276,15 +280,13 @@ void Table_impl::alloc_child(Holder & hol) {
         unsigned hpc_min = hmin/nc;
         unsigned rem_min = hmin%nc;
 
-        for (auto i(rb); i != re && i->first < hol.ymax; ++i) {
-            Row & row = i->second;
-
-            if (!row.shrank) {
+        for (auto i(rb); i != re && i->first < hol.ymax_; ++i) {
+            if (!i->second.shrank_) {
                 unsigned h1 = hpc_max, h2 = hpc_min;
                 if (h1 && rem_max) { ++h1; --rem_max; }
                 if (h2 && rem_min) { ++h2; --rem_min; }
-                row.rmax = std::max(row.rmax, h1);
-                row.rmin = std::max(row.rmin, h2);
+                i->second.rmax_ = std::max(i->second.rmax_, h1);
+                i->second.rmin_ = std::max(i->second.rmin_, h2);
             }
         }
     }
@@ -294,39 +296,35 @@ Size Table_impl::get_requisition() {
     auto cb = cols_.begin(), ce = cols_.end();
     auto rb = rows_.begin(), re = rows_.end();
 
-    for (auto i(cb); i != ce; ++i) { i->second.rmin = i->second.rmax = 0; }
-    for (auto i(rb); i != re; ++i) { i->second.rmin = i->second.rmax = 0; }
+    for (auto i(cb); i != ce; ++i) { i->second.rmin_ = i->second.rmax_ = 0; }
+    for (auto i(rb); i != re; ++i) { i->second.rmin_ = i->second.rmax_ = 0; }
 
     for (auto i = holders_.begin(); i != holders_.end(); ++i) {
         Holder & hol = i->second;
-        if (!hol.wp->hidden()) { alloc_child(hol); }
+        if (!hol.wp_->hidden()) { alloc_child(hol); }
     }
 
     unsigned rx = 0;
 
     for (auto i(cb); i != ce; ++i) {
-        const Col & col = i->second;
-
-        if (col.visible) {
+        if (i->second.visible_) {
             if (i != cb) { rx += xspacing_; }
-            unsigned w = col.usize ? col.usize : std::max(col.rmin, col.rmax);
-            if (col.umax) { w = std::min(w, col.umax); }
-            w = std::max(w, col.umin);
-            rx += w+col.left+col.right;
+            unsigned w = i->second.usize_ ? i->second.usize_ : std::max(i->second.rmin_, i->second.rmax_);
+            if (i->second.umax_) { w = std::min(w, i->second.umax_); }
+            w = std::max(w, i->second.umin_);
+            rx += w+i->second.left_+i->second.right_;
         }
     }
 
     unsigned ry = 0;
 
     for (auto i(rb); i != re; ++i) {
-        const Row & row = i->second;
-
-        if (row.visible) {
+        if (i->second.visible_) {
             if (i != rb) { ry += yspacing_; }
-            unsigned h = row.usize ? row.usize : std::max(row.rmin, row.rmax);
-            if (row.umax) { h = std::min(h, row.umax); }
-            h = std::max(h, row.umin);
-            ry += h+row.top+row.bottom;
+            unsigned h = i->second.usize_ ? i->second.usize_ : std::max(i->second.rmin_, i->second.rmax_);
+            if (i->second.umax_) { h = std::min(h, i->second.umax_); }
+            h = std::max(h, i->second.umin_);
+            ry += h+i->second.top_+i->second.bottom_;
         }
     }
 
@@ -345,21 +343,19 @@ void Table_impl::alloc_cols() {
 
     // First pass.
     for (auto i(cb); i != ce; ++i) {
-        const Col & col = i->second;
-
-        if (col.visible) {
+        if (i->second.visible_) {
             if (i != cb) { spc += xspacing_; }
-            spc += col.left+col.right;
+            spc += i->second.left_+i->second.right_;
 
-            if (col.usize) {
-                px = col.usize;
-                if (col.umax) { px = std::min(px, col.umax); }
+            if (i->second.usize_) {
+                px = i->second.usize_;
+                if (i->second.umax_) { px = std::min(px, i->second.umax_); }
                 user += px;
             }
 
-            else if (col.shrank) {
-                px = col.rmax;
-                if (col.umax) { px = std::min(px, col.umax); }
+            else if (i->second.shrank_) {
+                px = i->second.rmax_;
+                if (i->second.umax_) { px = std::min(px, i->second.umax_); }
                 sh += px;
                 ++nsh;
             }
@@ -380,51 +376,49 @@ void Table_impl::alloc_cols() {
 
     // Second pass.
     for (auto i(cb); i != ce; ++i) {
-        Col & col = i->second;
+        if (i->second.visible_) {
+            i->second.ox_ = i->second.x_;
+            i->second.ow_ = i->second.w_;
+            x += i->second.left_;
+            i->second.x_ = x;
 
-        if (col.visible) {
-            col.ox = col.x;
-            col.ow = col.w;
-            x += col.left;
-            col.x = x;
-
-            if (col.usize) {
-                px = col.usize;
-                px = std::max(px, col.umin);
-                if (col.umax) { px = std::min(px, col.umax); }
+            if (i->second.usize_) {
+                px = i->second.usize_;
+                px = std::max(px, i->second.umin_);
+                if (i->second.umax_) { px = std::min(px, i->second.umax_); }
                 user = user > px ? user-px : 0;
             }
 
-            else if (col.shrank) {
-                px = std::max(col.rmin, col.rmax);
+            else if (i->second.shrank_) {
+                px = std::max(i->second.rmin_, i->second.rmax_);
 
-                if (!nfree && !user && (col.fill || (col.align_set && ALIGN_FILL == col.xalign) || ALIGN_FILL == xalign_)) {
+                if (!nfree && !user && (i->second.fill_ || (i->second.align_set_ && ALIGN_FILL == i->second.xalign_) || ALIGN_FILL == xalign_)) {
                     px += extra;
                     if (rem) { ++px, --rem; }
                 }
 
-                px = std::max(px, col.umin);
-                if (col.umax) { px = std::min(px, col.umax); }
+                px = std::max(px, i->second.umin_);
+                if (i->second.umax_) { px = std::min(px, i->second.umax_); }
                 sh = sh > px ? sh-px : 0;
             }
 
             else {
-                px = std::max(extra, col.rmin);
+                px = std::max(extra, i->second.rmin_);
                 if (rem) { ++px, --rem; }
-                if (!px) { px = col.rmin ? col.rmin : col.rmax; }
-                px = std::max(px, col.umin);
-                if (col.umax) { px = std::min(px, col.umax); }
+                if (!px) { px = i->second.rmin_ ? i->second.rmin_ : i->second.rmax_; }
+                px = std::max(px, i->second.umin_);
+                if (i->second.umax_) { px = std::min(px, i->second.umax_); }
             }
 
             x += px;
-            col.w = x-col.x;
-            x += col.right+xspacing_;
+            i->second.w_ = x-i->second.x_;
+            x += i->second.right_+xspacing_;
         }
     }
 
     // Third pass.
     for (auto i(cb); i != ce; ++i) {
-        if (i->second.ox != i->second.x || i->second.ow != i->second.w) {
+        if (i->second.ox_ != i->second.x_ || i->second.ow_ != i->second.w_) {
             signal_column_bounds_changed_(i->first);
         }
     }
@@ -442,21 +436,19 @@ void Table_impl::alloc_rows() {
 
     // First pass.
     for (auto i(rb); i != re; ++i) {
-        const Row & row = i->second;
-
-        if (row.visible) {
+        if (i->second.visible_) {
             if (i != rb) { spc += yspacing_; }
-            spc += row.top+row.bottom;
+            spc += i->second.top_+i->second.bottom_;
 
-            if (row.usize) {
-                px = std::max(row.usize, row.umin);
-                if (row.umax) { px = std::min(px, row.umax); }
+            if (i->second.usize_) {
+                px = std::max(i->second.usize_, i->second.umin_);
+                if (i->second.umax_) { px = std::min(px, i->second.umax_); }
                 user += px;
             }
 
-            else if (row.shrank) {
-                px = row.rmax;
-                if (row.umax) { px = std::min(px, row.umax); }
+            else if (i->second.shrank_) {
+                px = i->second.rmax_;
+                if (i->second.umax_) { px = std::min(px, i->second.umax_); }
                 sh += px;
                 ++nsh;
             }
@@ -477,59 +469,57 @@ void Table_impl::alloc_rows() {
 
     // Second pass.
     for (auto i(rb); i != re; ++i) {
-        Row & row = i->second;
+        if (i->second.visible_) {
+            i->second.oy_ = i->second.y_;
+            i->second.oh_ = i->second.h_;
+            y += i->second.top_;
+            i->second.y_ = y;
 
-        if (row.visible) {
-            row.oy = row.y;
-            row.oh = row.h;
-            y += row.top;
-            row.y = y;
-
-            if (row.usize) {
-                px = row.usize;
-                px = std::max(px, row.umin);
-                if (row.umax) { px = std::min(px, row.umax); }
+            if (i->second.usize_) {
+                px = i->second.usize_;
+                px = std::max(px, i->second.umin_);
+                if (i->second.umax_) { px = std::min(px, i->second.umax_); }
                 user = user > px ? user-px : 0;
             }
 
-            else if (row.shrank) {
-                px = std::max(row.rmin, row.rmax);
+            else if (i->second.shrank_) {
+                px = std::max(i->second.rmin_, i->second.rmax_);
 
                 //if (!nfree && 1 == nsh) {
-                if (!nfree && !user && (row.fill || (row.align_set && ALIGN_FILL == row.yalign) || ALIGN_FILL == yalign_)) {
+                if (!nfree && !user && (i->second.fill_ || (i->second.align_set_ && ALIGN_FILL == i->second.yalign_) || ALIGN_FILL == yalign_)) {
                     px += extra;
                     if (rem) { ++px, --rem; }
                 }
 
-                px = std::max(px, row.umin);
-                if (row.umax) { px = std::min(px, row.umax); }
+                px = std::max(px, i->second.umin_);
+                if (i->second.umax_) { px = std::min(px, i->second.umax_); }
                 sh = sh > px ? sh-px : 0;
             }
 
             else {
-                px = std::max(extra, row.rmin);
+                px = std::max(extra, i->second.rmin_);
                 if (rem) { ++px, --rem; }
-                if (!px) { px = row.rmin ? row.rmin : row.rmax; }
-                px = std::max(px, row.umin);
-                if (row.umax) { px = std::min(px, row.umax); }
+                if (!px) { px = i->second.rmin_ ? i->second.rmin_ : i->second.rmax_; }
+                px = std::max(px, i->second.umin_);
+                if (i->second.umax_) { px = std::min(px, i->second.umax_); }
             }
 
             y += px;
-            row.h = y-row.y;
-            y += row.bottom+yspacing_;
+            i->second.h_ = y-i->second.y_;
+            y += i->second.bottom_+yspacing_;
         }
     }
 
     // Third pass.
     for (auto i(rb); i != re; ++i) {
-        if (i->second.oy != i->second.y || i->second.oh != i->second.h) {
+        if (i->second.oy_ != i->second.y_ || i->second.oh_ != i->second.h_) {
             signal_row_bounds_changed_(i->first);
         }
     }
 }
 
 void Table_impl::place_holder(Holder & hol, Rect * inval) {
-    if (hol.wp->hidden() || !size()) { return; }
+    if (hol.wp_->hidden() || !size()) { return; }
 
     Align xalign = xalign_;
     Align yalign = yalign_;
@@ -542,102 +532,98 @@ void Table_impl::place_holder(Holder & hol, Rect * inval) {
 
     auto ce = cols_.cend();
 
-    for (auto i = cols_.find(hol.xmin); i != ce && i->first < hol.xmax; ++i) {
-        const Col & col = i->second;
+    for (auto i = cols_.find(hol.xmin_); i != ce && i->first < hol.xmax_; ++i) {
+        x = std::min(x, i->second.x_);
+        w += i->second.w_;
 
-        x = std::min(x, col.x);
-        w += col.w;
-
-        if (i->first > hol.xmin) {
+        if (i->first > hol.xmin_) {
             w += xspacing_;
-            w += col.left;
+            w += i->second.left_;
         }
 
-        if ((hol.xmax-i->first) > 1) {
-            w += col.right;
+        if ((hol.xmax_-i->first) > 1) {
+            w += i->second.right_;
         }
 
-        if (col.align_set) {
-            xalign = col.xalign;
+        if (i->second.align_set_) {
+            xalign = i->second.xalign_;
         }
     }
 
     auto re = rows_.cend();
 
-    for (auto i = rows_.find(hol.ymin); i != re && i->first < hol.ymax; ++i) {
-        const Row & row = i->second;
+    for (auto i = rows_.find(hol.ymin_); i != re && i->first < hol.ymax_; ++i) {
+        y = std::min(y, i->second.y_);
+        h += i->second.h_;
 
-        y = std::min(y, row.y);
-        h += row.h;
-
-        if (i->first > hol.ymin) {
+        if (i->first > hol.ymin_) {
             h += yspacing_;
-            h += row.top;
+            h += i->second.top_;
         }
 
-        if ((hol.ymax-i->first) > 1) {
-            h += row.bottom;
+        if ((hol.ymax_-i->first) > 1) {
+            h += i->second.bottom_;
         }
 
-        if (row.align_set) {
-            yalign = row.yalign;
+        if (i->second.align_set_) {
+            yalign = i->second.yalign_;
         }
     }
 
     // Align widgets inside cell bounds having shrink option and non-zero required size.
-    if (hol.xsh) {
-        if (hol.wmax) {
-            if (w > hol.wmax) {
-                if (hol.align_set) {
-                    xalign = hol.xalign;
+    if (hol.xsh_) {
+        if (hol.wmax_) {
+            if (w > hol.wmax_) {
+                if (hol.align_set_) {
+                    xalign = hol.xalign_;
                 }
 
                 if (ALIGN_END == xalign) {
-                    x += w-hol.wmax;
+                    x += w-hol.wmax_;
                 }
 
                 else if (ALIGN_CENTER == xalign) {
-                    x += (w-hol.wmax)/2;
+                    x += (w-hol.wmax_)/2;
                 }
 
                 if (ALIGN_FILL != xalign) {
-                    w = hol.wmax;
+                    w = hol.wmax_;
                 }
             }
         }
     }
 
-    if (hol.ysh) {
-        if (hol.hmax) {
-            if (h > hol.hmax) {
-                if (hol.align_set) {
-                    yalign = hol.yalign;
+    if (hol.ysh_) {
+        if (hol.hmax_) {
+            if (h > hol.hmax_) {
+                if (hol.align_set_) {
+                    yalign = hol.yalign_;
                 }
 
                 if (ALIGN_END == yalign) {
-                    y += h-hol.hmax;
+                    y += h-hol.hmax_;
                 }
 
                 else if (ALIGN_CENTER == yalign) {
-                    y += (h-hol.hmax)/2;
+                    y += (h-hol.hmax_)/2;
                 }
 
                 if (ALIGN_FILL != yalign) {
-                    h = hol.hmax;
+                    h = hol.hmax_;
                 }
             }
         }
     }
 
     Point origin(x, y);
-    origin += hol.wp->margin_origin();
+    origin += hol.wp_->margin_origin();
     Size size(w, h);
-    size.decrease(hol.wp->margin_hint());
-    Rect r(hol.wp->origin(), hol.wp->size());
+    size.decrease(hol.wp_->margin_hint());
+    Rect r(hol.wp_->origin(), hol.wp_->size());
     bool refresh = false;
 
-    if (hol.wp->update_origin(origin)) { refresh = true; }
-    if (hol.wp->update_size(size)) { refresh = true; }
+    if (hol.wp_->update_origin(origin)) { refresh = true; }
+    if (hol.wp_->update_size(size)) { refresh = true; }
 
     if (refresh) {
         r |= Rect(origin, size);
@@ -682,7 +668,7 @@ std::vector<Widget_impl *> Table_impl::children_within_range(int xmin, int ymin,
 
     for (auto i = holders_.begin(); i != holders_.end(); ++i) {
         Holder & hol = i->second;
-        if (hol.xmax > xmin && hol.xmin < xmax && hol.ymax > ymin && hol.ymin < ymax) { v.push_back(hol.wp); }
+        if (hol.xmax_ > xmin && hol.xmin_ < xmax && hol.ymax_ > ymin && hol.ymin_ < ymax) { v.push_back(hol.wp_); }
     }
 
     return v;
@@ -716,9 +702,9 @@ void Table_impl::get_column_span(int col, int & ymin, int & ymax) {
         for (auto i = holders_.begin(); i != holders_.end(); ++i) {
             Holder & hol = i->second;
 
-            if (hol.xmin <= col && hol.xmax > col) {
-                ymin = std::min(ymin, hol.ymin);
-                ymax = std::max(ymax, hol.ymax);
+            if (hol.xmin_ <= col && hol.xmax_ > col) {
+                ymin = std::min(ymin, hol.ymin_);
+                ymax = std::max(ymax, hol.ymax_);
             }
         }
     }
@@ -732,9 +718,9 @@ void Table_impl::get_row_span(int row, int & xmin, int & xmax) {
         for (auto i = holders_.begin(); i != holders_.end(); ++i) {
             Holder & hol = i->second;
 
-            if (hol.ymin <= row && hol.ymax > row) {
-                xmin = std::min(xmin, hol.xmin);
-                xmax = std::max(xmax, hol.xmax);
+            if (hol.ymin_ <= row && hol.ymax_ > row) {
+                xmin = std::min(xmin, hol.xmin_);
+                xmax = std::max(xmax, hol.xmax_);
             }
         }
     }
@@ -749,53 +735,47 @@ void Table_impl::align(Widget_impl * wp, Align xalign, Align yalign) {
     auto i = holders_.find(wp);
 
     if (i != holders_.end()) {
-        Holder & hol = i->second;
+        changed = !i->second.align_set_;
 
-        changed = !hol.align_set;
+        if (i->second.xalign_ != xalign) {
+            auto ce = cols_.end();
 
-        if (hol.xalign != xalign) {
-            if (hol.align_set && hol.xalign == ALIGN_FILL) {
-                auto ce = cols_.end();
-
-                for (auto i = cols_.find(hol.xmin); i != ce && i->first < hol.xmax; ++i) {
-                    if (i->second.fill) { --i->second.fill; }
+            if (i->second.align_set_ && i->second.xalign_ == ALIGN_FILL) {
+                for (auto j = cols_.find(i->second.xmin_); j != ce && j->first < i->second.xmax_; ++j) {
+                    if (j->second.fill_) { --j->second.fill_; }
                 }
             }
 
-            hol.xalign = xalign;
+            i->second.xalign_ = xalign;
             changed = true;
 
             if (xalign == ALIGN_FILL) {
-                auto ce = cols_.end();
-
-                for (auto i = cols_.find(hol.xmin); i != ce && i->first < hol.xmax; ++i) {
-                    ++i->second.fill;
+                for (auto j = cols_.find(i->second.xmin_); j != ce && j->first < i->second.xmax_; ++j) {
+                    ++j->second.fill_;
                 }
             }
         }
 
-        if (hol.yalign != yalign) {
-            if (hol.align_set && hol.yalign == ALIGN_FILL) {
-                auto re = rows_.end();
+        if (i->second.yalign_ != yalign) {
+            auto re = rows_.end();
 
-                for (auto i = rows_.find(hol.ymin); i != re && i->first < hol.ymax; ++i) {
-                    if (i->second.fill) { --i->second.fill; }
+            if (i->second.align_set_ && i->second.yalign_ == ALIGN_FILL) {
+                for (auto j = rows_.find(i->second.ymin_); j != re && j->first < i->second.ymax_; ++j) {
+                    if (j->second.fill_) { --j->second.fill_; }
                 }
             }
 
-            hol.yalign = yalign;
+            i->second.yalign_ = yalign;
             changed = true;
 
             if (yalign == ALIGN_FILL) {
-                auto re = rows_.end();
-
-                for (auto i = rows_.find(hol.ymin); i != re && i->first < hol.ymax; ++i) {
-                    ++i->second.fill;
+                for (auto j = rows_.find(i->second.ymin_); j != re && j->first < i->second.ymax_; ++j) {
+                    ++j->second.fill_;
                 }
             }
         }
 
-        hol.align_set = true;
+        i->second.align_set_ = true;
     }
 
     if (changed) {
@@ -808,18 +788,18 @@ void Table_impl::get_align(const Widget_impl * wp, Align & xalign, Align & yalig
     yalign = yalign_;
     auto i = holders_.find(const_cast<Widget_impl *>(wp));
 
-    if (i != holders_.cend()) {
-        const Holder & hol = i->second;
-        if (hol.align_set) { xalign = hol.xalign; yalign = hol.yalign; }
+    if (i != holders_.cend() && i->second.align_set_) {
+        xalign = i->second.xalign_;
+        yalign = i->second.yalign_;
     }
 }
 
 void Table_impl::unalign(Widget_impl * wp) {
     auto i = holders_.find(wp);
 
-    if (i != holders_.end()) {
-        Holder & hol = i->second;
-        if (hol.align_set) { hol.align_set = false; queue_arrange(); }
+    if (i != holders_.end() && i->second.align_set_) {
+        i->second.align_set_ = false;
+        queue_arrange();
     }
 }
 
@@ -850,38 +830,34 @@ void Table_impl::align_column(int xx, Align xalign) {
     auto i = cols_.find(xx);
 
     if (i != cols_.end()) {
-        Col & col = i->second;
-
-        if (!col.align_set || col.xalign != xalign) {
+        if (!i->second.align_set_ || i->second.xalign_ != xalign) {
             changed = true;
-            col.xalign = xalign;
+            i->second.xalign_ = xalign;
         }
 
-        col.align_set = true;
+        i->second.align_set_ = true;
         if (changed) { place_widgets(); }
     }
 
     else {
-        Col & col = new_col(xx);
-        col.align_set = true;
-        col.xalign = xalign;
+        auto & col = new_col(xx);
+        col.align_set_ = true;
+        col.xalign_ = xalign;
     }
 }
 
 Align Table_impl::column_align(int xx) const {
     auto i = cols_.find(xx);
-    return i != cols_.end() ? i->second.xalign : xalign_;
+    return i != cols_.end() ? i->second.xalign_ : xalign_;
 }
 
 void Table_impl::unalign_column(int xx) {
     auto i = cols_.find(xx);
 
     if (i != cols_.end()) {
-        Col & col = i->second;
-
-        if (col.align_set) {
-            col.align_set = false;
-            if (col.visible && (col.xalign != xalign_)) { place_widgets(); }
+        if (i->second.align_set_) {
+            i->second.align_set_ = false;
+            if (i->second.visible_ && (i->second.xalign_ != xalign_)) { place_widgets(); }
         }
     }
 }
@@ -891,148 +867,138 @@ void Table_impl::align_row(int yy, Align yalign) {
     auto i = rows_.find(yy);
 
     if (i != rows_.end()) {
-        Row & row = i->second;
-
-        if (!row.align_set || row.yalign != yalign) {
+        if (!i->second.align_set_ || i->second.yalign_ != yalign) {
             changed = true;
-            row.yalign = yalign;
+            i->second.yalign_ = yalign;
         }
 
-        row.align_set = true;
+        i->second.align_set_ = true;
         if (changed) { place_widgets(); }
     }
 
     else {
-        Row & row = new_row(yy);
-        row.align_set = true;
-        row.yalign = yalign;
+        auto & row = new_row(yy);
+        row.align_set_ = true;
+        row.yalign_ = yalign;
     }
 }
 
 Align Table_impl::row_align(int yy) const {
     auto i = rows_.find(yy);
-    return i != rows_.end() ? i->second.yalign : yalign_;
+    return i != rows_.end() ? i->second.yalign_ : yalign_;
 }
 
 void Table_impl::unalign_row(int yy) {
     auto i = rows_.find(yy);
 
     if (i != rows_.end()) {
-        Row & row = i->second;
-
-        if (row.align_set) {
-            row.align_set = false;
-            if (row.visible && (row.yalign != yalign_)) { place_widgets(); }
+        if (i->second.align_set_) {
+            i->second.align_set_ = false;
+            if (i->second.visible_ && (i->second.yalign_ != yalign_)) { place_widgets(); }
         }
     }
 }
 
 void Table_impl::erase_col(Col_iter & i) {
     if (i != cols_.end()) {
-        i->second.ref = 0;
+        i->second.ref_ = 0;
 
-        if (!i->second.align_set && !i->second.left &&
-            !i->second.right && !i->second.umin && !i->second.umax && !i->second.usize)
+        if (!i->second.align_set_ && !i->second.left_ &&
+            !i->second.right_ && !i->second.umin_ && !i->second.umax_ && !i->second.usize_)
         {
             cols_.erase(i);
-            nbytes_ -= sizeof(Col);
-            std::cout << "Table_impl::(): ecol  " << ntables_ << " " << str_bytes(nbytes_) << std::endl;
+            table_bytes_ -= sizeof(Col);
+            // std::cout << "Table_impl::(): ecol  " << ntables_ << " " << str_bytes(table_bytes_) << std::endl;
         }
     }
 }
 
 void Table_impl::unref_col(Col_iter & i) {
-    if (i != cols_.end() && i->second.ref && --i->second.ref == 0) { erase_col(i); }
+    if (i != cols_.end() && i->second.ref_ && --i->second.ref_ == 0) { erase_col(i); }
 }
 
 void Table_impl::erase_row(Row_iter & i) {
     if (i != rows_.end()) {
-        i->second.ref = 0;
+        i->second.ref_ = 0;
 
-        if (!i->second.align_set && !i->second.top &&
-            !i->second.bottom && !i->second.umin && !i->second.umax && !i->second.usize)
+        if (!i->second.align_set_ && !i->second.top_ &&
+            !i->second.bottom_ && !i->second.umin_ && !i->second.umax_ && !i->second.usize_)
         {
             rows_.erase(i);
-            nbytes_ -= sizeof(Row);
-            std::cout << "Table_impl::(): erow  " << ntables_ << " " << str_bytes(nbytes_) << std::endl;
+            table_bytes_ -= sizeof(Row);
+            // std::cout << "Table_impl::(): erow  " << ntables_ << " " << str_bytes(table_bytes_) << std::endl;
         }
     }
 }
 
 void Table_impl::unref_row(Row_iter & i) {
-    if (i != rows_.end() && i->second.ref && --i->second.ref == 0) { erase_row(i); }
+    if (i != rows_.end() && i->second.ref_ && --i->second.ref_ == 0) { erase_row(i); }
 }
 
 Table_impl::Col & Table_impl::new_col(int xx) {
     auto p = cols_.emplace(xx, Col());
-    Col & col = p.first->second;
-    col.left = columns_left_;
-    col.right = columns_right_;
-    nbytes_ += sizeof(Col);
-    std::cout << "Table_impl::(): ncol  " << ntables_ << " " << str_bytes(nbytes_) << std::endl;
-    return col;
+    p.first->second.left_ = columns_left_;
+    p.first->second.right_ = columns_right_;
+    table_bytes_ += sizeof(Col);
+    // std::cout << "Table_impl::(): ncol  " << ntables_ << " " << str_bytes(table_bytes_) << std::endl;
+    return p.first->second;
 }
 
 Table_impl::Row & Table_impl::new_row(int yy) {
     auto p = rows_.emplace(yy, Row());
-    Row & row = p.first->second;
-    row.top = rows_top_;
-    row.bottom = rows_bottom_;
-    nbytes_ += sizeof(Row);
-    std::cout << "Table_impl::(): nrow  " << ntables_ << " " << str_bytes(nbytes_) << std::endl;
-    return row;
+    p.first->second.top_ = rows_top_;
+    p.first->second.bottom_ = rows_bottom_;
+    table_bytes_ += sizeof(Row);
+    // std::cout << "Table_impl::(): nrow  " << ntables_ << " " << str_bytes(table_bytes_) << std::endl;
+    return p.first->second;
 }
 
 Table_impl::Col & Table_impl::new_col(int xx, const Col & src) {
     auto p = cols_.emplace(xx, Col(src));
-    Col & col = p.first->second;
-    nbytes_ += sizeof(Col);
-    std::cout << "Table_impl::(): ncol  " << ntables_ << " " << str_bytes(nbytes_) << std::endl;
-    return col;
+    table_bytes_ += sizeof(Col);
+    // std::cout << "Table_impl::(): ncol  " << ntables_ << " " << str_bytes(table_bytes_) << std::endl;
+    return p.first->second;
 }
 
 Table_impl::Row & Table_impl::new_row(int yy, const Row & src) {
     auto p = rows_.emplace(yy, Row(src));
-    Row & row = p.first->second;
-    nbytes_ += sizeof(Row);
-    std::cout << "Table_impl::(): nrow  " << ntables_ << " " << str_bytes(nbytes_) << std::endl;
-    return row;
+    table_bytes_ += sizeof(Row);
+    // std::cout << "Table_impl::(): nrow  " << ntables_ << " " << str_bytes(table_bytes_) << std::endl;
+    return p.first->second;
 }
 
 void Table_impl::dist_holder(Holder & hol) {
-    for (int xx = hol.xmin; xx < hol.xmax; ++xx) {
+    for (int xx = hol.xmin_; xx < hol.xmax_; ++xx) {
         auto i = cols_.find(xx);
 
         if (cols_.end() != i) {
-            Col & col = i->second;
-            ++col.ref;
-            if (hol.xsh) { ++col.shrank; }
-            if (!hol.wp->hidden()) { ++col.visible; }
+            ++i->second.ref_;
+            if (hol.xsh_) { ++i->second.shrank_; }
+            if (!hol.wp_->hidden()) { ++i->second.visible_; }
         }
 
         else {
-            Col & col = new_col(xx);
-            col.ref = 1;
-            col.shrank = hol.xsh ? 1 : 0;
-            col.visible = hol.wp->hidden() ? 0 : 1;
+            auto & col = new_col(xx);
+            col.ref_ = 1;
+            col.shrank_ = hol.xsh_ ? 1 : 0;
+            col.visible_ = hol.wp_->hidden() ? 0 : 1;
         }
     }
 
-    for (int yy = hol.ymin; yy < hol.ymax; ++yy) {
+    for (int yy = hol.ymin_; yy < hol.ymax_; ++yy) {
         auto i = rows_.find(yy);
 
         if (rows_.end() != i) {
-            Row & row = i->second;
-            ++row.ref;
-            if (hol.ysh) { ++row.shrank; }
-            if (!hol.wp->hidden()) { ++row.visible; }
+            ++i->second.ref_;
+            if (hol.ysh_) { ++i->second.shrank_; }
+            if (!hol.wp_->hidden()) { ++i->second.visible_; }
         }
 
         else {
-            Row & row = new_row(yy);
-            row.ref = 1;
-            row.shrank = hol.ysh ? 1 : 0;
-            row.visible = hol.wp->hidden() ? 0 : 1;
+            auto & row = new_row(yy);
+            row.ref_ = 1;
+            row.shrank_ = hol.ysh_ ? 1 : 0;
+            row.visible_ = hol.wp_->hidden() ? 0 : 1;
         }
     }
 }
@@ -1040,17 +1006,15 @@ void Table_impl::dist_holder(Holder & hol) {
 void Table_impl::wipe_holder(Holder & hol) {
     auto ce = cols_.end();
 
-    for (auto i = cols_.find(hol.xmin); i != ce && i->first < hol.xmax; ++i) {
-        Col & col = i->second;
-        if (hol.wp->visible() && 0 != col.visible) { --col.visible; }
+    for (auto i = cols_.find(hol.xmin_); i != ce && i->first < hol.xmax_; ++i) {
+        if (!hol.wp_->hidden() && 0 != i->second.visible_) { --i->second.visible_; }
         unref_col(i);
     }
 
     auto re = rows_.end();
 
-    for (auto i = rows_.find(hol.ymin); i != re && i->first < hol.ymax; ++i) {
-        Row & row = i->second;
-        if (hol.wp->visible() && 0 != row.visible) { --row.visible; }
+    for (auto i = rows_.find(hol.ymin_); i != re && i->first < hol.ymax_; ++i) {
+        if (!hol.wp_->hidden() && 0 != i->second.visible_) { --i->second.visible_; }
         unref_row(i);
     }
 }
@@ -1059,17 +1023,16 @@ void Table_impl::set_column_margin(int xx, unsigned left, unsigned right) {
     auto i = cols_.find(xx);
 
     if (i != cols_.end()) {
-        Col & col = i->second;
         bool changed = false;
 
-        if (col.left != left) {
-            col.left = left;
-            if (0 != col.ref) { changed = true; }
+        if (i->second.left_ != left) {
+            i->second.left_ = left;
+            if (0 != i->second.ref_) { changed = true; }
         }
 
-        if (col.right != right) {
-            col.right = right;
-            if (0 != col.ref) { changed = true; }
+        if (i->second.right_ != right) {
+            i->second.right_ = right;
+            if (0 != i->second.ref_) { changed = true; }
         }
 
         if (changed) {
@@ -1079,9 +1042,9 @@ void Table_impl::set_column_margin(int xx, unsigned left, unsigned right) {
     }
 
     else {
-        Col & col = new_col(xx);
-        col.left = left;
-        col.right = right;
+        auto & col = new_col(xx);
+        col.left_ = left;
+        col.right_ = right;
     }
 }
 
@@ -1089,17 +1052,16 @@ void Table_impl::set_row_margin(int yy, unsigned top, unsigned bottom) {
     auto i = rows_.find(yy);
 
     if (i != rows_.end()) {
-        Row & row = i->second;
         bool changed = false;
 
-        if (row.top != top) {
-            row.top = top;
-            if (0 != row.ref) { changed = true; }
+        if (i->second.top_ != top) {
+            i->second.top_ = top;
+            if (0 != i->second.ref_) { changed = true; }
         }
 
-        if (row.bottom != bottom) {
-            row.bottom = bottom;
-            if (0 != row.ref) { changed = true; }
+        if (i->second.bottom_ != bottom) {
+            i->second.bottom_ = bottom;
+            if (0 != i->second.ref_) { changed = true; }
         }
 
         if (changed) {
@@ -1109,9 +1071,9 @@ void Table_impl::set_row_margin(int yy, unsigned top, unsigned bottom) {
     }
 
     else {
-        Row & row = new_row(yy);
-        row.top = top;
-        row.bottom = bottom;
+        auto & row = new_row(yy);
+        row.top_ = top;
+        row.bottom_ = bottom;
     }
 }
 
@@ -1122,14 +1084,14 @@ void Table_impl::set_columns_margin(unsigned left, unsigned right) {
         bool changed = false;
 
         for (auto & col: cols_) {
-            if (col.second.left != left) {
-                col.second.left = left;
-                if (0 != col.second.ref) { changed = true; }
+            if (col.second.left_ != left) {
+                col.second.left_ = left;
+                if (0 != col.second.ref_) { changed = true; }
             }
 
-            if (col.second.right != right) {
-                col.second.right = right;
-                if (0 != col.second.ref) { changed = true; }
+            if (col.second.right_ != right) {
+                col.second.right_ = right;
+                if (0 != col.second.ref_) { changed = true; }
             }
         }
 
@@ -1147,14 +1109,14 @@ void Table_impl::set_rows_margin(unsigned top, unsigned bottom) {
         bool changed = false;
 
         for (auto & row: rows_) {
-            if (row.second.top != top) {
-                row.second.top = top;
-                if (0 != row.second.ref) { changed = true; }
+            if (row.second.top_ != top) {
+                row.second.top_ = top;
+                if (0 != row.second.ref_) { changed = true; }
             }
 
-            if (row.second.bottom != bottom) {
-                row.second.bottom = bottom;
-                if (0 != row.second.ref) { changed = true; }
+            if (row.second.bottom_ != bottom) {
+                row.second.bottom_ = bottom;
+                if (0 != row.second.ref_) { changed = true; }
             }
         }
 
@@ -1170,9 +1132,8 @@ void Table_impl::get_column_margin(int xx, unsigned & left, unsigned & right) co
     auto i = cols_.find(xx);
 
     if (i != cols_.end()) {
-        const Col & col = i->second;
-        left = col.left;
-        right = col.right;
+        left = i->second.left_;
+        right = i->second.right_;
     }
 }
 
@@ -1181,9 +1142,8 @@ void Table_impl::get_row_margin(int yy, unsigned & top, unsigned & bottom) const
     auto i = rows_.find(yy);
 
     if (i != rows_.end()) {
-        const Row & row = i->second;
-        top = row.top;
-        bottom = row.bottom;
+        top = i->second.top_;
+        bottom = i->second.bottom_;
     }
 }
 
@@ -1224,13 +1184,14 @@ bool Table_impl::on_backpaint(Painter pr, const Rect & inval) {
 }
 
 Rect Table_impl::range_bounds(const Table::Span & rng) const {
+    Rect bounds;
     int xmin = INT_MAX, ymin = INT_MAX, xmax = INT_MIN, ymax = INT_MIN;
 
     if (rng.xmax > rng.xmin) {
         for (auto & p: cols_) {
             if (p.first >= rng.xmin && p.first < rng.xmax) {
-                xmin = std::min(xmin, p.second.x-int(p.second.left));
-                xmax = std::max(xmax, p.second.x+int(p.second.w+p.second.right));
+                xmin = std::min(xmin, p.second.x_-int(p.second.left_));
+                xmax = std::max(xmax, p.second.x_+int(p.second.w_+p.second.right_));
             }
         }
     }
@@ -1238,71 +1199,60 @@ Rect Table_impl::range_bounds(const Table::Span & rng) const {
     if (rng.ymax > rng.ymin) {
         for (auto & p: rows_) {
             if (p.first >= rng.ymin && p.first < rng.ymax) {
-                ymin = std::min(ymin, p.second.y-int(p.second.top));
-                ymax = std::max(ymax, p.second.y+int(p.second.h+p.second.bottom));
+                ymin = std::min(ymin, p.second.y_-int(p.second.top_));
+                ymax = std::max(ymax, p.second.y_+int(p.second.h_+p.second.bottom_));
             }
         }
     }
 
-    if (xmax > xmin && ymax > ymin) {
-        return Rect(xmin, ymin, Size(xmax-xmin, ymax-ymin));
-    }
-
-    else {
-        return Rect();
-    }
+    if (xmax > xmin && ymax > ymin) { bounds.set(xmin, ymin, Size(xmax-xmin, ymax-ymin)); }
+    return bounds;
 }
 
 Table::Span Table_impl::span(const Widget_impl * wp) const {
     Table::Span rng;
-
     auto i = holders_.find(const_cast<Widget_impl *>(wp));
 
-    if (holders_.cend() != i) {
-        rng.xmin = i->second.xmin;
-        rng.ymin = i->second.ymin;
-        rng.xmax = i->second.xmax;
-        rng.ymax = i->second.ymax;
+    if (holders_.end() != i) {
+        rng.xmin = i->second.xmin_;
+        rng.ymin = i->second.ymin_;
+        rng.xmax = i->second.xmax_;
+        rng.ymax = i->second.ymax_;
     }
 
     return rng;
 }
 
 void Table_impl::respan(Widget_impl * wp, int x, int y, unsigned xspan, unsigned yspan) {
-    if (wp) {
-        auto i = holders_.find(wp);
-        if (i != holders_.end()) { respan(wp, x, y, xspan, yspan, i->second.xsh, i->second.ysh); }
-    }
+    auto i = holders_.find(wp);
+    if (i != holders_.end()) { respan(wp, x, y, xspan, yspan, i->second.xsh_, i->second.ysh_); }
 }
 
 void Table_impl::respan(Widget_impl * wp, int x, int y, unsigned xspan, unsigned yspan, bool xsh, bool ysh) {
-    if (wp) {
-        auto i = holders_.find(wp);
+    auto i = holders_.find(wp);
 
-        if (i != holders_.end()) {
-            Holder & hol = i->second;
-            int xmax = x+std::max(1U, xspan);
-            int ymax = y+std::max(1U, yspan);
+    if (i != holders_.end()) {
+        int xmax = x+std::max(1U, xspan);
+        int ymax = y+std::max(1U, yspan);
 
-            if (hol.xmin != x || hol.ymin != y || hol.xmax != xmax || hol.ymax != ymax || hol.xsh != xsh || hol.ysh != ysh) {
-                wipe_holder(hol);
-                hol.xmin = x;
-                hol.ymin = y;
-                hol.xmax = xmax;
-                hol.ymax = ymax;
-                hol.xsh = xsh;
-                hol.ysh = ysh;
-                dist_holder(hol);
-                update_requisition();
-                queue_arrange();
-            }
+        if (i->second.xmin_ != x || i->second.ymin_ != y || i->second.xmax_ != xmax || i->second.ymax_ != ymax || i->second.xsh_ != xsh || i->second.ysh_ != ysh) {
+            wipe_holder(i->second);
+            i->second.xmin_ = x;
+            i->second.ymin_ = y;
+            i->second.xmax_ = xmax;
+            i->second.ymax_ = ymax;
+            i->second.xsh_ = xsh;
+            i->second.ysh_ = ysh;
+            dist_holder(i->second);
+            update_requisition();
+            queue_arrange();
         }
     }
 }
 
 int Table_impl::column_at_x(int x) const {
     for (auto & p: cols_) {
-        if (x >= p.second.x && x < p.second.x+int(p.second.w)) {
+        if (x >= p.second.x_ && x < p.second.x_+int(p.second.w_)) {
             return p.first;
         }
     }
@@ -1312,7 +1262,7 @@ int Table_impl::column_at_x(int x) const {
 
 int Table_impl::row_at_y(int y) const {
     for (auto & p: rows_) {
-        if (y >= p.second.y && y < p.second.y+int(p.second.h)) {
+        if (y >= p.second.y_ && y < p.second.y_+int(p.second.h_)) {
             return p.first;
         }
     }
@@ -1336,11 +1286,9 @@ void Table_impl::get_column_bounds(int xx, int & xmin, int & xmax) {
     auto i = cols_.find(xx);
 
     if (i != cols_.end()) {
-        xmin = i->second.x;
-        xmax = xmin+i->second.w;
+        xmin = i->second.x_;
+        xmax = xmin+i->second.w_;
     }
-
-    //std::cout << "get_column_bounds " << xx << " " << xmin << " " << xmax << "\n";
 }
 
 void Table_impl::get_row_bounds(int yy, int & ymin, int & ymax) {
@@ -1350,8 +1298,8 @@ void Table_impl::get_row_bounds(int yy, int & ymin, int & ymax) {
     auto i = rows_.find(yy);
 
     if (i != rows_.end()) {
-        ymin = i->second.y;
-        ymax = ymin+i->second.h;
+        ymin = i->second.y_;
+        ymax = ymin+i->second.h_;
     }
 }
 
@@ -1359,12 +1307,10 @@ void Table_impl::set_column_width(int xx, unsigned usize) {
     auto i = cols_.find(xx);
 
     if (i != cols_.end()) {
-        Col & col = i->second;
+        if (i->second.usize_ != usize) {
+            i->second.usize_ = usize;
 
-        if (col.usize != usize) {
-            col.usize = usize;
-
-            if (col.w != usize) {
+            if (i->second.w_ != usize) {
                 update_requisition();
                 queue_arrange();
             }
@@ -1372,26 +1318,24 @@ void Table_impl::set_column_width(int xx, unsigned usize) {
     }
 
     else {
-        Col & col = new_col(xx);
-        col.usize = usize;
+        auto & col = new_col(xx);
+        col.usize_ = usize;
     }
 }
 
 unsigned Table_impl::column_width(int xx) const {
     auto i = cols_.find(xx);
-    return i != cols_.end() ? i->second.usize : 0;
+    return i != cols_.end() ? i->second.usize_ : 0;
 }
 
 void Table_impl::set_row_height(int yy, unsigned usize) {
     auto i = rows_.find(yy);
 
     if (i != rows_.end()) {
-        Row & row = i->second;
+        if (i->second.usize_ != usize) {
+            i->second.usize_ = usize;
 
-        if (row.usize != usize) {
-            row.usize = usize;
-
-            if (row.h != usize) {
+            if (i->second.h_ != usize) {
                 update_requisition();
                 queue_arrange();
             }
@@ -1399,24 +1343,24 @@ void Table_impl::set_row_height(int yy, unsigned usize) {
     }
 
     else {
-        Row & row = new_row(yy);
-        row.usize = usize;
+        auto & row = new_row(yy);
+        row.usize_ = usize;
     }
 }
 
 unsigned Table_impl::row_height(int yy) const {
     auto i = rows_.find(yy);
-    return i != rows_.end() ? i->second.usize : 0;
+    return i != rows_.end() ? i->second.usize_ : 0;
 }
 
 void Table_impl::set_min_column_width(int xx, unsigned umin) {
     auto i = cols_.find(xx);
 
     if (i != cols_.end()) {
-        if (i->second.umin != umin) {
-            i->second.umin = umin;
+        if (i->second.umin_ != umin) {
+            i->second.umin_ = umin;
 
-            if (0 == umin || i->second.w < umin) {
+            if (0 == umin || i->second.w_ < umin) {
                 update_requisition();
                 queue_arrange();
             }
@@ -1424,24 +1368,24 @@ void Table_impl::set_min_column_width(int xx, unsigned umin) {
     }
 
     else {
-        Col & col = new_col(xx);
-        col.umin = umin;
+        auto & col = new_col(xx);
+        col.umin_ = umin;
     }
 }
 
 unsigned Table_impl::min_column_width(int xx) const {
     auto i = cols_.find(xx);
-    return i != cols_.end() ? i->second.umin : 0;
+    return i != cols_.end() ? i->second.umin_ : 0;
 }
 
 void Table_impl::set_min_row_height(int yy, unsigned umin) {
     auto i = rows_.find(yy);
 
     if (i != rows_.end()) {
-        if (i->second.umin != umin) {
-            i->second.umin = umin;
+        if (i->second.umin_ != umin) {
+            i->second.umin_ = umin;
 
-            if (0 == umin || i->second.h < umin) {
+            if (0 == umin || i->second.h_ < umin) {
                 update_requisition();
                 queue_arrange();
             }
@@ -1449,24 +1393,24 @@ void Table_impl::set_min_row_height(int yy, unsigned umin) {
     }
 
     else {
-        Row & row = new_row(yy);
-        row.umin = umin;
+        auto & row = new_row(yy);
+        row.umin_ = umin;
     }
 }
 
 unsigned Table_impl::min_row_height(int yy) const {
     auto i = rows_.find(yy);
-    return i != rows_.end() ? i->second.umin : 0;
+    return i != rows_.end() ? i->second.umin_ : 0;
 }
 
 void Table_impl::set_max_column_width(int xx, unsigned umax) {
     auto i = cols_.find(xx);
 
     if (i != cols_.end()) {
-        if (i->second.umax != umax) {
-            i->second.umax = umax;
+        if (i->second.umax_ != umax) {
+            i->second.umax_ = umax;
 
-            if (0 == umax || i->second.w > umax) {
+            if (0 == umax || i->second.w_ > umax) {
                 update_requisition();
                 queue_arrange();
             }
@@ -1474,24 +1418,24 @@ void Table_impl::set_max_column_width(int xx, unsigned umax) {
     }
 
     else {
-        Col & col = new_col(xx);
-        col.umax = umax;
+        auto & col = new_col(xx);
+        col.umax_ = umax;
     }
 }
 
 unsigned Table_impl::max_column_width(int xx) const {
     auto i = cols_.find(xx);
-    return i != cols_.end() ? i->second.umax : 0;
+    return i != cols_.end() ? i->second.umax_ : 0;
 }
 
 void Table_impl::set_max_row_height(int yy, unsigned umax) {
     auto i = rows_.find(yy);
 
     if (i != rows_.end()) {
-        if (i->second.umax != umax) {
-            i->second.umax = umax;
+        if (i->second.umax_ != umax) {
+            i->second.umax_ = umax;
 
-            if (0 == umax || i->second.h > umax) {
+            if (0 == umax || i->second.h_ > umax) {
                 update_requisition();
                 queue_arrange();
             }
@@ -1499,19 +1443,18 @@ void Table_impl::set_max_row_height(int yy, unsigned umax) {
     }
 
     else {
-        Row & row = new_row(yy);
-        row.umax = umax;
+        auto & row = new_row(yy);
+        row.umax_ = umax;
     }
 }
 
 unsigned Table_impl::max_row_height(int yy) const {
     auto i = rows_.find(yy);
-    return i != rows_.end() ? i->second.umax : 0;
+    return i != rows_.end() ? i->second.umax_ : 0;
 }
 
 void Table_impl::insert_columns(int xmin, unsigned n_columns) {
     if (0 == n_columns || cols_.empty()) { return; }
-
     int cmax = cols_.rbegin()->first;
     if (xmin >= cmax) { return; }
     int xmax = xmin+n_columns;
@@ -1548,29 +1491,26 @@ void Table_impl::insert_columns(int xmin, unsigned n_columns) {
 
     // Trim and move children.
     for (auto i = holders_.begin(); i != holders_.end(); ++i) {
-        Holder & hol = i->second;
+        // Trim child.
+        if (i->second.xmin_ < xmin && i->second.xmax_ > xmin) {
+            if (i->second.xmax_ > xmax) {
+                for (int xx = xmax; xx < i->second.xmax_; ++xx) {
+                    auto j = cols_.find(xx);
 
-        // Trim the child.
-        if (hol.xmin < xmin && hol.xmax > xmin) {
-            if (hol.xmax > xmax) {
-                for (int x = xmax; x < hol.xmax; ++x) {
-                    auto i = cols_.find(x);
-
-                    if (i != cols_.end()) {
-                        Col & col = i->second;
-                        if (0 != col.visible && !hol.wp->hidden()) { --col.visible; }
-                        unref_col(i);
+                    if (j != cols_.end()) {
+                        if (0 != j->second.visible_ && !i->second.wp_->hidden()) { --j->second.visible_; }
+                        unref_col(j);
                     }
                 }
             }
 
-            hol.xmax = xmin;
+            i->second.xmax_ = xmin;
         }
 
         // Move the child to the right.
-        else if (hol.xmin >= xmin) {
-            hol.xmin += n_columns;
-            hol.xmax += n_columns;
+        else if (i->second.xmin_ >= xmin) {
+            i->second.xmin_ += n_columns;
+            i->second.xmax_ += n_columns;
         }
     }
 
@@ -1597,7 +1537,6 @@ exit:
 
 void Table_impl::insert_rows(int ymin, unsigned n_rows) {
     if (0 == n_rows || rows_.empty()) { return; }
-
     int rmax = rows_.rbegin()->first;
     if (ymin >= rmax) { return; }
     int ymax = ymin+n_rows;
@@ -1634,29 +1573,26 @@ void Table_impl::insert_rows(int ymin, unsigned n_rows) {
 
     // Trim and move children.
     for (auto i = holders_.begin(); i != holders_.end(); ++i) {
-        Holder & hol = i->second;
-
         // Trim the child.
-        if (hol.ymin < ymin && hol.ymax > ymin) {
-            if (hol.ymax > ymax) {
-                for (int y = ymax; y < hol.ymax; ++y) {
-                    auto j = rows_.find(y);
+        if (i->second.ymin_ < ymin && i->second.ymax_ > ymin) {
+            if (i->second.ymax_ > ymax) {
+                for (int yy = ymax; yy < i->second.ymax_; ++yy) {
+                    auto j = rows_.find(yy);
 
                     if (j != rows_.end()) {
-                        Row & row = j->second;
-                        if (0 != row.visible && !hol.wp->hidden()) { --row.visible; }
+                        if (0 != j->second.visible_ && !i->second.wp_->hidden()) { --j->second.visible_; }
                         unref_row(j);
                     }
                 }
             }
 
-            hol.ymax = ymin;
+            i->second.ymax_ = ymin;
         }
 
         // Move the child down.
-        else if (hol.ymin >= ymin) {
-            hol.ymin += n_rows;
-            hol.ymax += n_rows;
+        else if (i->second.ymin_ >= ymin) {
+            i->second.ymin_ += n_rows;
+            i->second.ymax_ += n_rows;
         }
     }
 
@@ -1666,9 +1602,9 @@ void Table_impl::insert_rows(int ymin, unsigned n_rows) {
     if (ymin >= rmax) { goto exit; }
 
     // Move the rows down.
-    for (int y = rmax; y >= ymin; --y) {
-        auto r_iter = rows_.find(y);
-        if (r_iter != rows_.end()) { new_row(y+n_rows, r_iter->second); }
+    for (int yy = rmax; yy >= ymin; --yy) {
+        auto r_iter = rows_.find(yy);
+        if (r_iter != rows_.end()) { new_row(yy+n_rows, r_iter->second); }
     }
 
     // Remove rows.
@@ -1683,48 +1619,43 @@ exit:
 
 void Table_impl::remove_columns(int xmin, unsigned n_columns) {
     if (0 == n_columns || cols_.empty()) { return; }
-
     int last = cols_.rbegin()->first;
     if (xmin > last) { return; }
-
     int xmax = xmin+n_columns;
     std::list<Widget_impl *> rem;
 
     // Trim and move children.
     for (auto i = holders_.begin(); i != holders_.end(); ++i) {
-        Holder & hol = i->second;
-
         // Trim the child.
-        if (hol.xmin < xmin && hol.xmax > xmin) {
-            if (hol.xmax > xmax) {
-                for (int x = xmax; x < hol.xmax; ++x) {
-                    auto i = cols_.find(x);
+        if (i->second.xmin_ < xmin && i->second.xmax_ > xmin) {
+            if (i->second.xmax_ > xmax) {
+                for (int xx = xmax; xx < i->second.xmax_; ++xx) {
+                    auto j = cols_.find(xx);
 
-                    if (i != cols_.end()) {
-                        Col & col = i->second;
-                        if (0 != col.visible && !hol.wp->hidden()) { --col.visible; }
-                        unref_col(i);
+                    if (j != cols_.end()) {
+                        if (0 != j->second.visible_ && !i->second.wp_->hidden()) { --j->second.visible_; }
+                        unref_col(j);
                     }
                 }
             }
 
-            hol.xmax = xmin;
+            i->second.xmax_ = xmin;
         }
 
         // Remove child.
-        else if (hol.xmin >= xmin && hol.xmin < xmax) {
-            rem.push_back(hol.wp);
+        else if (i->second.xmin_ >= xmin && i->second.xmin_ < xmax) {
+            rem.push_back(i->second.wp_);
         }
 
         // Move the child to the left.
-        else if (hol.xmin >= xmax) {
-            hol.xmin -= n_columns;
-            hol.xmax -= n_columns;
+        else if (i->second.xmin_ >= xmax) {
+            i->second.xmin_ -= n_columns;
+            i->second.xmax_ -= n_columns;
         }
     }
 
     // Remove children.
-    for (Widget_impl * wp: rem) { remove(wp); }
+    for (auto wp: rem) { remove(wp); }
 
     // Test again after trimming and deletion.
     if (cols_.empty()) { goto exit; }
@@ -1732,9 +1663,9 @@ void Table_impl::remove_columns(int xmin, unsigned n_columns) {
     if (xmin >= last) { goto exit; }
 
     // Move columns to the left.
-    for (int x = xmax; x <= last; ++x) {
-        auto c_iter = cols_.find(x);
-        if (c_iter != cols_.end()) { new_col(x-n_columns, c_iter->second); }
+    for (int xx = xmax; xx <= last; ++xx) {
+        auto c_iter = cols_.find(xx);
+        if (c_iter != cols_.end()) { new_col(xx-n_columns, c_iter->second); }
     }
 
     // Remove columns.
@@ -1749,43 +1680,38 @@ exit:
 
 void Table_impl::remove_rows(int ymin, unsigned n_rows) {
     if (0 == n_rows || rows_.empty()) { return; }
-
     int last = rows_.rbegin()->first;
     if (ymin > last) { return; }
-
     int ymax = ymin+n_rows;
     std::list<Widget_impl *> rem;
 
     // Trim and move children.
     for (auto i = holders_.begin(); i != holders_.end(); ++i) {
-        Holder & hol = i->second;
-
         // Trim the child.
-        if (hol.ymin < ymin && hol.ymax > ymin) {
-            if (hol.ymax > ymax) {
-                for (int y = ymax; y < hol.ymax; ++y) {
-                    auto i = rows_.find(y);
+        if (i->second.ymin_ < ymin && i->second.ymax_ > ymin) {
+            if (i->second.ymax_ > ymax) {
+                for (int yy = ymax; yy < i->second.ymax_; ++yy) {
+                    auto j = rows_.find(yy);
 
-                    if (i != rows_.end()) {
-                        Row & row = i->second;
-                        if (0 != row.visible && !hol.wp->hidden()) { --row.visible; }
-                        unref_row(i);
+                    if (j != rows_.end()) {
+                        if (0 != j->second.visible_ && !i->second.wp_->hidden()) { --j->second.visible_; }
+                        unref_row(j);
                     }
                 }
             }
 
-            hol.ymax = ymin;
+            i->second.ymax_ = ymin;
         }
 
         // Remove child.
-        else if (hol.ymin >= ymin && hol.ymin < ymax) {
-            rem.push_back(hol.wp);
+        else if (i->second.ymin_ >= ymin && i->second.ymin_ < ymax) {
+            rem.push_back(i->second.wp_);
         }
 
         // Move the child to the left.
-        else if (hol.ymin >= ymax) {
-            hol.ymin -= n_rows;
-            hol.ymax -= n_rows;
+        else if (i->second.ymin_ >= ymax) {
+            i->second.ymin_ -= n_rows;
+            i->second.ymax_ -= n_rows;
         }
     }
 
@@ -1798,9 +1724,9 @@ void Table_impl::remove_rows(int ymin, unsigned n_rows) {
     if (ymin >= last) { goto exit; }
 
     // Move rows to the top.
-    for (int y = ymax; y <= last; ++y) {
-        auto r_iter = rows_.find(y);
-        if (r_iter != rows_.end()) { new_row(y-n_rows, r_iter->second); }
+    for (int yy = ymax; yy <= last; ++yy) {
+        auto r_iter = rows_.find(yy);
+        if (r_iter != rows_.end()) { new_row(yy-n_rows, r_iter->second); }
     }
 
     // Remove rows.
@@ -1814,32 +1740,35 @@ exit:
 }
 
 void Table_impl::select(int xmin, int ymin, unsigned xspan, unsigned yspan) {
-    unselect();
-    if (rows_.empty() || cols_.empty() || 0 == xspan || 0 == yspan) { return; }
     int xmax = xmin+xspan, ymax = ymin+yspan;
 
-    Table::Span rng = span();
-    if (xmax <= rng.xmin || xmin >= rng.xmax || ymax <= rng.ymin || ymin >= rng.ymax) { return; }
+    if ((xmin != sel_.xmin || ymin != sel_.ymin || xmax != sel_.xmax || ymax != sel_.ymax)
+        && !rows_.empty() && !cols_.empty() && 0 != xspan && 0 != yspan) {
+        unselect();
+        Span rng = span();
+        if (xmax <= rng.xmin || xmin >= rng.xmax || ymax <= rng.ymin || ymin >= rng.ymax) { return; }
 
-    if (xmin < rng.xmin) { xmin = rng.xmin; }
-    if (xmax > rng.xmax) { xmax = rng.xmax; }
-    if (ymin < rng.ymin) { ymin = rng.ymin; }
-    if (ymax > rng.ymax) { ymax = rng.ymax; }
-    if (xmax <= xmin || ymax <= ymin) { return; }
+        if (xmin < rng.xmin) { xmin = rng.xmin; }
+        if (xmax > rng.xmax) { xmax = rng.xmax; }
+        if (ymin < rng.ymin) { ymin = rng.ymin; }
+        if (ymax > rng.ymax) { ymax = rng.ymax; }
 
-    sel_.xmin = xmin;
-    sel_.ymin = ymin;
-    sel_.xmax = xmax;
-    sel_.ymax = ymax;
-    Color c = style().color("select/background");
-    invalidate(range_bounds(sel_));
+        if (xmax > xmin && ymax > ymin) {
+            sel_.xmin = xmin;
+            sel_.ymin = ymin;
+            sel_.xmax = xmax;
+            sel_.ymax = ymax;
+            invalidate(range_bounds(sel_));
+            Color c = style().color(STYLE_SELECT_BACKGROUND);
 
-    for (auto wp: children_within_range(xmin, ymin, xmax, ymax)) {
-        wp->signal_select()();
-        wp->style().color("background") = c;
+            for (auto wp: children_within_range(xmin, ymin, xmax, ymax)) {
+                wp->signal_select()();
+                wp->style().color(STYLE_BACKGROUND) = c;
+            }
+
+            signal_selection_changed_();
+        }
     }
-
-    signal_selection_changed_();
 }
 
 void Table_impl::select_column(int x) {
@@ -1979,36 +1908,11 @@ bool Table_impl::on_take_focus() {
         return true;
     }
 
-    for (auto i = holders_.begin(); i != holders_.end(); ++i) {
-        Holder & hol = i->second;
-
-        if (hol.wp->take_focus()) {
-            return true;
-        }
+    if (std::any_of(holders_.begin(), holders_.end(), [](auto & p) { return p.second.wp_->take_focus(); } )) {
+        return true;
     }
 
     return grab_focus();
-}
-
-// Overriden by List_impl.
-// Overriden by List_text_impl.
-void Table_impl::clear() {
-    unmark_all();
-    unselect();
-
-    for (auto & hol: holders_) {
-        hol.second.hints_cx.drop();
-        hol.second.req_cx.drop();
-        hol.second.show_cx.drop();
-        hol.second.hide_cx.drop();
-    }
-
-    unparent_all();
-    holders_.clear();
-    cols_.clear();
-    rows_.clear();
-    require_size(0);
-    invalidate();
 }
 
 } // namespace tau

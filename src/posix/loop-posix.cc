@@ -31,20 +31,14 @@
 namespace tau {
 
 // Overrides pure Loop_impl.
-bool Loop_posix::iterate(int timeout_ms) {
-    int nfd = poll(fds_.data(), fds_.size(), timeout_ms);
-
-    if (nfd > 0) {
+void Loop_posix::iterate(int timeout_ms) {
+    if (0 < poll(fds_.data(), fds_.size(), std::max(1, timeout_ms))) {
         for (auto & pfd: fds_) {
             if (pfd.revents) {
                 signal_chain_poll_(pfd.fd);
             }
         }
-
-        return true;
     }
-
-    return false;
 }
 
 void Loop_posix::add_poller(Poller_base * ppi, short events) {

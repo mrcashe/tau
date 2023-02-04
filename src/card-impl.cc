@@ -93,6 +93,7 @@ void Card_impl::remove(Widget_impl * wi) {
         holders_.erase(i);
         update_requisition();
         queue_arrange();
+        if (holders_.empty()) { invalidate(); }
     }
 }
 

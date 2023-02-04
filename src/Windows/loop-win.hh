@@ -137,7 +137,7 @@ public:
 protected:
 
     // Overrides pure Loop_impl.
-    bool iterate(int timeout_ms) override;
+    void iterate(int timeout_ms) override;
 
 private:
 

@@ -48,10 +48,10 @@ const char * NAVIGATOR_INFO_DATE = "date";
 const char * NAVIGATOR_INFO_HIDDEN = "hidden";
 const char * NAVIGATOR_INFO_PLACES = "places";
 
-Navigator_impl::Navigator_impl(const ustring & path):
-    Bin_impl(),
-    user_path_(path)
+Navigator_impl::Navigator_impl(const ustring & uri):
+    Bin_impl()
 {
+    uri_ = file_exists(uri) || file_is_dir(path_dirname(uri)) ? uri : path_cwd();
     list_ = std::make_shared<List_impl>();
     list_->set_column_spacing(3);
     list_->show_header(0, "Name");
@@ -66,25 +66,38 @@ Navigator_impl::Navigator_impl(const ustring & path):
     list_->signal_size_changed().connect(fun(this, &Navigator_impl::limit_name_column));
     insert(list_);
 
-    signal_display().connect(fun(this, &Navigator_impl::show_current_dir));
+    signal_display().connect(fun(this, &Navigator_impl::on_display));
     signal_unparent().connect(fun(this, &Navigator_impl::on_unparent));
-    paint_cx_ = signal_paint().connect(fun(this, &Navigator_impl::on_paint));
 }
 
-Navigator_impl::~Navigator_impl() {
+void Navigator_impl::cleanup() {
     for (auto * hol: hcache_) {
         if (hol == holder_) { holder_ = nullptr; }
         delete hol;
     }
 
-    if (holder_) { delete holder_; }
+    if (holder_) { delete holder_; holder_ = nullptr; }
+}
+
+Navigator_impl::~Navigator_impl() {
+    cleanup();
+}
+
+void Navigator_impl::on_unparent() {
+    cleanup();
+    if (list_) { list_->clear(); clear(); list_.reset(); }
+}
+
+void Navigator_impl::on_display() {
+    set_uri(uri_);
+    show_current_dir();
 }
 
 int Navigator_impl::find_row(const ustring & name) {
     if (holder_) {
-        for (auto & rec: holder_->recs) {
-            if (name == rec.name) {
-                return rec.br;
+        for (auto & rec: holder_->recs_) {
+            if (name == rec.name_) {
+                return rec.row_;
             }
         }
     }
@@ -92,11 +105,11 @@ int Navigator_impl::find_row(const ustring & name) {
     return INT_MIN;
 }
 
-ustring Navigator_impl::name_from_row(int br) {
+ustring Navigator_impl::name_from_row(int row) {
     if (holder_) {
-        for (auto & rec: holder_->recs) {
-            if (br == rec.br) {
-                return rec.name;
+        for (auto & rec: holder_->recs_) {
+            if (row == rec.row_) {
+                return rec.name_;
             }
         }
     }
@@ -105,7 +118,7 @@ ustring Navigator_impl::name_from_row(int br) {
 }
 
 void Navigator_impl::new_dir(const ustring & path) {
-    if (!holder_ || holder_->path != path) {
+    if (!holder_ || holder_->path_ != path) {
         if (holder_) {
             if (hcache_.size() >= 32) {
                 Holder * h = hcache_.front();
@@ -113,7 +126,7 @@ void Navigator_impl::new_dir(const ustring & path) {
                 delete h;
             }
 
-            if (!find_cached_holder(holder_->path)) {
+            if (!find_cached_holder(holder_->path_)) {
                 hcache_.push_back(holder_);
             }
         }
@@ -122,46 +135,42 @@ void Navigator_impl::new_dir(const ustring & path) {
 
         if (!holder_) {
             holder_ = new Holder;
-            holder_->path = path;
+            holder_->path_ = path;
             read_dir(holder_);
             preprocess(*holder_);
-            holder_->finfo = Fileinfo(path);
+            holder_->finfo_ = Fileinfo(path);
             int event_mask = FILE_CREATED|FILE_DELETED|FILE_MOVED_IN|FILE_MOVED_OUT;
-            holder_->finfo.signal_watch(event_mask).connect(tau::bind(fun(this, &Navigator_impl::on_file_monitor), path));
+            holder_->wcx_ = holder_->finfo_.signal_watch(event_mask).connect(bind(fun(this, &Navigator_impl::on_watch), path));
         }
 
         if (holder_) {
-            if (!holder_->prep) { preprocess(*holder_); }
+            if (!holder_->prep_) { preprocess(*holder_); }
             signal_dir_changed_(path);
             show_current_dir();
         }
     }
 }
 
-ustring Navigator_impl::uri() const {
-    return holder_ ? holder_->path : path_cwd();
-}
-
 void Navigator_impl::show_record(Rec & rec) {
-    if (list_ && !list_->running() && !rec.filtered && (hidden_visible_ || !rec.hidden)) {
+    if (list_ && !list_->running() && !rec.filtered_ && (hidden_visible_ || !rec.hidden_)) {
 
         // Show file/dir name.
-        Text_ptr txt = std::make_shared<Text_impl>(rec.name, ALIGN_START);
-        //txt->set_wrap_mode(WRAP_ELLIPSIZE_CENTER);
-        txt->signal_select().connect(tau::bind(fun(this, &Navigator_impl::on_file_select), rec.name));
-        txt->signal_unselect().connect(tau::bind(fun(this, &Navigator_impl::on_file_unselect), rec.name));
-        rec.br = list_->append_row(txt);
+        Text_ptr txt = std::make_shared<Text_impl>(rec.name_, ALIGN_START);
+        // txt->set_wrap_mode(WRAP_ELLIPSIZE_CENTER);
+        txt->signal_select().connect(tau::bind(fun(this, &Navigator_impl::on_file_select), rec.name_));
+        txt->signal_unselect().connect(tau::bind(fun(this, &Navigator_impl::on_file_unselect), rec.name_));
+        rec.row_ = list_->append_row(txt);
         list_->align(txt, ALIGN_START, ALIGN_CENTER);
         Pixmap_cptr ico;
 
         // Show modify date/time.
         if (date_visible_) {
-            txt = std::make_shared<Text_impl>(format_file_time(rec.fi));
-            list_->insert(rec.br, txt, 1, true);
+            txt = std::make_shared<Text_impl>(format_file_time(rec.fi_));
+            list_->insert(rec.row_, txt, 1, true);
             list_->align(txt, ALIGN_END, ALIGN_CENTER);
         }
 
-        if (rec.fi.is_dir()) {
+        if (rec.fi_.is_dir()) {
             if (!dir_icon_) { dir_icon_ = Theme_impl::root()->find_icon(ICON_FOLDER, SMALL_ICON); }
             ico = dir_icon_;
         }
@@ -172,15 +181,15 @@ void Navigator_impl::show_record(Rec & rec) {
 
             // Do not show file size for directory.
             if (bytes_visible_) {
-                txt = std::make_shared<Text_impl>(str_bytes(rec.fi.bytes()));
-                list_->insert(rec.br, txt, 0, true);
+                txt = std::make_shared<Text_impl>(str_bytes(rec.fi_.bytes()));
+                list_->insert(rec.row_, txt, 0, true);
                 list_->align(txt, ALIGN_END, ALIGN_CENTER);
             }
         }
 
         if (ico) {
             Image_ptr img = std::make_shared<Image_impl>(ico, true);
-            list_->insert(rec.br, img, -1, true);
+            list_->insert(rec.row_, img, -1, true);
             list_->align(img, ALIGN_START, ALIGN_CENTER);
         }
     }
@@ -193,20 +202,20 @@ void Navigator_impl::show_current_dir() {
         // unsigned nn = 0;
 
         if (holder_) {
-            for (unsigned & n: holder_->indice) {
-                Rec & rec = holder_->recs[n];
+            for (unsigned & n: holder_->indice_) {
+                Rec & rec = holder_->recs_[n];
 
-                if (rec.fi.is_dir()) {
+                if (rec.fi_.is_dir()) {
                     show_record(rec);
                     // std::cout << " shown " << ++nn << " of " << holder_->recs.size() << ": " << rec.name << '\n';
                 }
             }
 
             if (!dirs_only_visible_) {
-                for (unsigned & n: holder_->indice) {
-                    Rec & rec = holder_->recs[n];
+                for (unsigned & n: holder_->indice_) {
+                    Rec & rec = holder_->recs_[n];
 
-                    if (!rec.fi.is_dir()) {
+                    if (!rec.fi_.is_dir()) {
                         show_record(rec);
                         // std::cout << " shown " << ++nn << " of " << holder_->recs.size() << ": " << rec.name << '\n';
                     }
@@ -220,20 +229,20 @@ void Navigator_impl::show_current_dir() {
 
 // May throw!
 void Navigator_impl::read_dir(Holder * hol) {
-    auto fs = path_list(hol->path);
-    hol->recs.clear();
+    auto fs = path_list(hol->path_);
+    hol->recs_.clear();
 
     for (const ustring & name: fs) {
         if ("." != name && ".." != name) {
-            ustring path = path_build(hol->path, name);
+            ustring path = path_build(hol->path_, name);
 
             try {
                 Fileinfo fi(path);
                 Rec rec;
-                rec.name = name;
-                rec.fi = fi;
-                rec.hidden = fi.is_hidden();
-                hol->recs.push_back(rec);
+                rec.name_ = name;
+                rec.fi_ = fi;
+                rec.hidden_ = fi.is_hidden();
+                hol->recs_.push_back(rec);
             }
 
             catch (...) {}
@@ -242,18 +251,18 @@ void Navigator_impl::read_dir(Holder * hol) {
 }
 
 void Navigator_impl::preprocess(Holder & hol) {
-    hol.prep = true;
+    hol.prep_ = true;
 
-    for (Rec & rec: hol.recs) {
-        rec.filtered = false;
+    for (Rec & rec: hol.recs_) {
+        rec.filtered_ = false;
 
-        if (!rec.fi.is_dir()) {
+        if (!rec.fi_.is_dir()) {
             if (!filters_.empty()) {
-                rec.filtered = true;
+                rec.filtered_ = true;
 
                 for (const ustring & pattern: filters_) {
-                    if (path_match(pattern, rec.name)) {
-                        rec.filtered = false;
+                    if (path_match(pattern, rec.name_)) {
+                        rec.filtered_ = false;
                         break;
                     }
                 }
@@ -261,53 +270,53 @@ void Navigator_impl::preprocess(Holder & hol) {
         }
     }
 
-    hol.indice.resize(hol.recs.size());
-    for (unsigned n = 0; n < hol.indice.size(); ++n) { hol.indice[n] = n; }
+    hol.indice_.resize(hol.recs_.size());
+    for (unsigned n = 0; n < hol.indice_.size(); ++n) { hol.indice_[n] = n; }
 
     if (NAVIGATOR_INFO_NAME == sort_by_) {
         if (sorted_backward()) {
-            std::sort(hol.indice.begin(), hol.indice.end(), [hol](unsigned r1, unsigned r2) { return hol.recs[r2].name < hol.recs[r1].name; } );
+            std::sort(hol.indice_.begin(), hol.indice_.end(), [hol](unsigned r1, unsigned r2) { return hol.recs_[r2].name_ < hol.recs_[r1].name_; } );
         }
 
         else {
-            std::sort(hol.indice.begin(), hol.indice.end(), [hol](unsigned r1, unsigned r2) { return hol.recs[r1].name < hol.recs[r2].name; } );
+            std::sort(hol.indice_.begin(), hol.indice_.end(), [hol](unsigned r1, unsigned r2) { return hol.recs_[r1].name_ < hol.recs_[r2].name_; } );
         }
     }
 
     else if (NAVIGATOR_INFO_DATE == sort_by_) {
         if (sorted_backward()) {
-            std::sort(hol.indice.begin(), hol.indice.end(), [hol](unsigned r1, unsigned r2) { return hol.recs[r2].fi.mtime() < hol.recs[r1].fi.mtime(); } );
+            std::sort(hol.indice_.begin(), hol.indice_.end(), [hol](unsigned r1, unsigned r2) { return hol.recs_[r2].fi_.mtime() < hol.recs_[r1].fi_.mtime(); } );
         }
 
         else {
-            std::sort(hol.indice.begin(), hol.indice.end(), [hol](unsigned r1, unsigned r2) { return hol.recs[r1].fi.mtime() < hol.recs[r2].fi.mtime(); } );
+            std::sort(hol.indice_.begin(), hol.indice_.end(), [hol](unsigned r1, unsigned r2) { return hol.recs_[r1].fi_.mtime() < hol.recs_[r2].fi_.mtime(); } );
         }
     }
 
     else if (NAVIGATOR_INFO_BYTES == sort_by_) {
         if (sorted_backward()) {
-            std::sort(hol.indice.begin(), hol.indice.end(), [hol](unsigned r1, unsigned r2) { return hol.recs[r2].fi.bytes() < hol.recs[r1].fi.bytes(); } );
+            std::sort(hol.indice_.begin(), hol.indice_.end(), [hol](unsigned r1, unsigned r2) { return hol.recs_[r2].fi_.bytes() < hol.recs_[r1].fi_.bytes(); } );
         }
 
         else {
-            std::sort(hol.indice.begin(), hol.indice.end(), [hol](unsigned r1, unsigned r2) { return hol.recs[r1].fi.bytes() < hol.recs[r2].fi.bytes(); } );
+            std::sort(hol.indice_.begin(), hol.indice_.end(), [hol](unsigned r1, unsigned r2) { return hol.recs_[r1].fi_.bytes() < hol.recs_[r2].fi_.bytes(); } );
         }
     }
 
     else if ("file" == sort_by_) {
         if (sorted_backward()) {
-            std::sort(hol.indice.begin(), hol.indice.end(), [hol](unsigned r1, unsigned r2) { return hol.recs[r2].type < hol.recs[r1].type; } );
+            std::sort(hol.indice_.begin(), hol.indice_.end(), [hol](unsigned r1, unsigned r2) { return hol.recs_[r2].type_ < hol.recs_[r1].type_; } );
         }
 
         else {
-            std::sort(hol.indice.begin(), hol.indice.end(), [hol](unsigned r1, unsigned r2) { return hol.recs[r1].type < hol.recs[r2].type; } );
+            std::sort(hol.indice_.begin(), hol.indice_.end(), [hol](unsigned r1, unsigned r2) { return hol.recs_[r1].type_ < hol.recs_[r2].type_; } );
         }
     }
 }
 
 Navigator_impl::Holder * Navigator_impl::find_cached_holder(const ustring & path) {
     Holder * hol = nullptr;
-    auto iter = std::find_if(hcache_.begin(), hcache_.end(), [path](Holder * h) { return path == h->path; });
+    auto iter = std::find_if(hcache_.begin(), hcache_.end(), [path](Holder * h) { return path == h->path_; });
     if (hcache_.end() != iter) { hol = *iter; }
     return hol;
 }
@@ -331,26 +340,26 @@ void Navigator_impl::refresh() {
     }
 }
 
-void Navigator_impl::set_uri(const ustring & path) {
+void Navigator_impl::set_uri(const ustring & uri) {
     try {
-        ustring fpath = path_is_absolute(path) ? path : path_build(path_cwd(), path);
+        ustring path = path_is_absolute(uri) ? uri : path_build(path_cwd(), uri);
 
-        if (!file_is_dir(fpath)) {
-            ustring p = path_dirname(fpath);
-
-            if (file_is_dir(p)) {
-                new_dir(p);
-                if (file_exists(fpath)) { select_name(path_notdir(fpath)); }
-            }
+        if (!file_is_dir(path)) {
+            ustring p = path_dirname(path);
+            if (file_is_dir(p)) { uri_ = p; }
         }
 
         else {
-            new_dir(fpath);
+            uri_ = path;
         }
+
+        new_dir(uri_);
+        if (file_exists(path)) { select_name(path_notdir(path)); }
     }
 
     catch (...) {
-        new_dir(path_cwd());
+        uri_ = path_cwd();
+        new_dir(uri_);
     }
 }
 
@@ -375,12 +384,12 @@ void Navigator_impl::on_list_activate(int br) {
     }
 }
 
-bool Navigator_impl::on_list_mark_validate(int br) {
+bool Navigator_impl::on_list_mark_validate(int row) {
     if (!dir_select_allowed_ && !dirs_only_visible_) {
         if (holder_) {
-            for (const Rec & rec: holder_->recs) {
-                if (rec.br == br) {
-                    return rec.fi.is_dir();
+            for (const Rec & rec: holder_->recs_) {
+                if (rec.row_ == row) {
+                    return rec.fi_.is_dir();
                 }
             }
         }
@@ -446,7 +455,7 @@ void Navigator_impl::sort_forward() {
         }
 
         if (holder_) {
-            for (auto hol: hcache_) { hol->prep = false; }
+            for (auto hol: hcache_) { hol->prep_ = false; }
             preprocess(*holder_);
             show_current_dir();
         }
@@ -464,21 +473,11 @@ void Navigator_impl::sort_backward() {
         }
 
         if (holder_) {
-            for (auto hol: hcache_) { hol->prep = false; }
+            for (auto hol: hcache_) { hol->prep_ = false; }
             preprocess(*holder_);
             show_current_dir();
         }
     }
-}
-
-bool Navigator_impl::on_paint(Painter pr, const Rect & inval) {
-    paint_cx_.drop();
-    timer_.start(97);
-    return false;
-}
-
-void Navigator_impl::on_timer() {
-    set_uri(user_path_.empty() ? path_cwd() : user_path_);
 }
 
 void Navigator_impl::hidden_visible_files() {
@@ -528,7 +527,7 @@ void Navigator_impl::set_filter(const ustring & filters) {
         }
     }
 
-    for (auto hol: hcache_) { hol->prep = false; }
+    for (auto hol: hcache_) { hol->prep_ = false; }
 
     if (holder_) {
         preprocess(*holder_);
@@ -536,38 +535,38 @@ void Navigator_impl::set_filter(const ustring & filters) {
     }
 }
 
-void Navigator_impl::on_file_monitor(unsigned event, const ustring & filename, const ustring & dirname) {
+void Navigator_impl::on_watch(unsigned event, const ustring & filename, const ustring & dirname) {
     Holder * holder = nullptr;
 
-    if (holder_ && dirname == holder_->path) {
+    if (holder_ && dirname == holder_->path_) {
         holder = holder_;
     }
 
     for (Holder * h: hcache_) {
-        if (h->path == dirname) {
+        if (h->path_ == dirname) {
             holder = h;
             break;
         }
     }
 
     if (holder) {
-        if (holder->mon_timer.signal_alarm().empty()) {
-            holder->mon_timer.signal_alarm().connect(tau::bind(fun(this, &Navigator_impl::on_file_monitor_timer), dirname));
+        if (holder->wtimer_.signal_alarm().empty()) {
+            holder->wtimer_.signal_alarm().connect(tau::bind(fun(this, &Navigator_impl::on_watch_timer), dirname));
         }
 
-        holder->mon_timer.start(251);
+        holder->wtimer_.start(251);
     }
 }
 
-void Navigator_impl::on_file_monitor_timer(const ustring & dirname) {
+void Navigator_impl::on_watch_timer(const ustring & dirname) {
     Holder * holder = nullptr;
 
-    if (holder_ && dirname == holder_->path) {
+    if (holder_ && dirname == holder_->path_) {
         holder = holder_;
     }
 
     for (Holder * h: hcache_) {
-        if (h->path == dirname) {
+        if (h->path_ == dirname) {
             holder = h;
             break;
         }
@@ -583,10 +582,6 @@ void Navigator_impl::on_file_monitor_timer(const ustring & dirname) {
             preprocess(*holder);
         }
     }
-}
-
-void Navigator_impl::on_unparent() {
-    //if (list_) { list_->clear(); clear(); list_.reset(); }
 }
 
 void Navigator_impl::sort_by(const ustring & col) {
@@ -612,7 +607,7 @@ void Navigator_impl::sort_by(const ustring & col) {
     list_->show_sort_marker(list_col, sorted_backward());
 
     if (holder_) {
-        for (auto hol: hcache_) { hol->prep = false; }
+        for (auto hol: hcache_) { hol->prep_ = false; }
         preprocess(*holder_);
         show_current_dir();
     }

@@ -25,10 +25,30 @@
 // ----------------------------------------------------------------------------
 
 #include <tau/signal.hh>
+#include <tau/string.hh>
 #include <algorithm>
 #include <iostream>
 
 namespace tau {
+
+uintmax_t max_bytes_, signal_bytes_, slot_bytes_, islot_bytes_, func_bytes_, cx_bytes_;
+unsigned nsignals_, nslots_, ncx_, nwidgets_;
+
+static void report(void * p, const char * met) {
+    // uintmax_t all_bytes = signal_bytes_+slot_bytes_+islot_bytes_+func_bytes_+cx_bytes_;
+    // max_bytes_ = std::max(max_bytes_, all_bytes);
+    //
+    // std::cout << p << ": " << met;
+    // std::cout << " S:" << str_bytes(signal_bytes_) << "[" << nsignals_ << "]";
+    // std::cout << " s:" << str_bytes(slot_bytes_);
+    // std::cout << " i:" << str_bytes(islot_bytes_) << "[" << nslots_ << "]";
+    // std::cout << " f:" << str_bytes(func_bytes_);
+    // std::cout << " c:" << str_bytes(cx_bytes_) << "[" << ncx_ << "]";
+    // std::cout << " T:" << str_bytes(all_bytes);
+    // std::cout << " M:" << str_bytes(max_bytes_);
+    // std::cout << " W:" << nwidgets_;
+    // std::cout << std::endl;
+}
 
 trackable::trackable() {}
 
@@ -61,7 +81,33 @@ trackable & trackable::operator=(trackable && src) {
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
 
-signal_base::~signal_base() {}
+functor_base::functor_base(trackable * target):
+    target_(target)
+{
+}
+
+trackable * functor_base::target() {
+    return target_;
+}
+
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+
+signal_base::signal_base() {
+    ++nsignals_;
+    report(this, " signal(): ");
+}
+
+signal_base::~signal_base() {
+    --nsignals_;
+    report(this, "~signal(): ");
+}
+
+connection signal_base::link(slot_base & slot) {
+    slot.link(this);
+    report(this, "connect(): ");
+    return slot.cx();
+}
 
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
@@ -75,6 +121,7 @@ slot_base::~slot_base() {
 void slot_base::disconnect() {
     if (auto s = signal_) {
         signal_ = nullptr;
+        report(this, "dconnect():");
         s->erase(this);
     }
 }
@@ -93,25 +140,42 @@ connection slot_base::cx() {
 connection::connection(bool autodrop):
     autodrop_(autodrop)
 {
+    cx_bytes_ += sizeof(*this);
+    ++ncx_;
+    // report(this, " cx():     ");
 }
 
 connection::~connection() {
-    if (autodrop_) {
-        // std::cout << this << " connection::drop() " << slot_.get() << "\n";
-        drop();
-    }
+    if (autodrop_) { drop(); }
+    cx_bytes_ -= sizeof(*this);
+    --ncx_;
+    // report(this, "~cx():     ");
 }
 
 connection::connection(const connection & other):
     slot_(other.slot_),
     autodrop_(other.autodrop_)
 {
+    cx_bytes_ += sizeof(*this);
+    ++ncx_;
+    // report(this, " cx():     ");
 }
 
 connection::connection(connection && other):
     slot_(other.slot_)
 {
     other.slot_.reset();
+    cx_bytes_ += sizeof(*this);
+    ++ncx_;
+    // report(this, " cx():     ");
+}
+
+connection::connection(slot_ptr slot):
+    slot_(slot)
+{
+    cx_bytes_ += sizeof(*this);
+    ++ncx_;
+    // report(this, " cx():     ");
 }
 
 connection & connection::operator=(const connection & other) {
@@ -131,11 +195,6 @@ connection & connection::operator=(connection && other) {
     }
 
     return *this;
-}
-
-connection::connection(slot_ptr slot):
-    slot_(slot)
-{
 }
 
 void connection::drop() {
@@ -181,9 +240,12 @@ bool connection::empty() const {
 slot_impl::slot_impl(slot_base * base):
     base_(base)
 {
+    ++nslots_;
 }
 
-slot_impl::~slot_impl() {}
+slot_impl::~slot_impl() {
+    --nslots_;
+}
 
 bool slot_impl::blocked() const {
     return 0 != blocked_;
@@ -202,7 +264,6 @@ void slot_impl::unblock() {
 // Called by owning slot.
 void slot_impl::link(slot_base * base) {
     base_ = base;
-    // std::cout << this << " slot_impl::link " << base_ << std::endl;
 }
 
 // Called by connection and trackable.
@@ -226,14 +287,6 @@ void slot_impl::untrack() {
 
 void slot_impl::reset() {
     target_ = nullptr;
-}
-
-// ----------------------------------------------------------------------------
-// ----------------------------------------------------------------------------
-
-connection signal_base::link(slot_base & slot) {
-    slot.link(this);
-    return slot.cx();
 }
 
 } // namespace tau

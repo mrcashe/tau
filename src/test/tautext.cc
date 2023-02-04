@@ -47,44 +47,45 @@ std::vector<long long>      geom_;
 
 struct Main: tau::Toplevel {
     struct Page {
-        tau::Table      cont;
-        tau::Box        tab { tau::ORIENTATION_EAST };
-        tau::Text       title { tau::ALIGN_START, tau::ALIGN_CENTER };
-        tau::Text       tooltip;
-        tau::Edit       edit;
-        tau::Box        status_box { tau::OR_RIGHT, 3 };
-        tau::Text       row_value { "0" };
-        tau::Text       rows_value { "0" };
-        tau::Text       col_value { "0" };
-        tau::Text       uni_value { "U+0000" };
-        tau::Text       enc_label { "UTF-8" };
-        tau::Text       insert_label { "INSERT" };
-        tau::Text       replace_label { "REPLACE" };
-        tau::Action     zin_action;
-        tau::Action     zout_action;
-        tau::Timer      motion_timer;
-        tau::Icon       ico { "window-close", tau::SMALL_ICON };
-        tau::Icon       save_ico { "document-save", tau::SMALL_ICON };
-        tau::ustring    path;
-        tau::connection meta_cx;
-        tau::connection encoding_cx;
-        tau::connection on_edit_focus_in_cx;
-        tau::connection enable_redo_cx;
-        tau::connection on_edit_focus_out_cx;
-        tau::connection disable_redo_cx;
-        std::size_t     lines = 0;
-        int             page;
-        uint64_t        metaid = 0;
-        unsigned        font_size = 0;
-        tau::Fileinfo   finfo;
+        tau::Table      cont_;
+        tau::Box        tab_ { tau::ORIENTATION_EAST };
+        tau::Text       title_ { tau::ALIGN_START, tau::ALIGN_CENTER };
+        tau::Text       tooltip_;
+        tau::Edit       edit_;
+        tau::Box        status_box_ { tau::OR_RIGHT, 3 };
+        tau::Text       row_value_ { "0" };
+        tau::Text       rows_value_ { "0" };
+        tau::Text       col_value_ { "0" };
+        tau::Text       uni_value_ { "U+0000" };
+        tau::Text       enc_label_ { "UTF-8" };
+        tau::Text       insert_label_ { "INSERT" };
+        tau::Text       replace_label_ { "REPLACE" };
+        tau::Action     zin_action_;
+        tau::Action     zout_action_;
+        tau::Timer      motion_timer_;
+        tau::Icon       ico_ { "window-close", tau::SMALL_ICON };
+        tau::Icon       save_ico_ { "document-save", tau::SMALL_ICON };
+        tau::ustring    path_;
+        tau::connection meta_cx_ { true };
+        tau::connection wcx_ { true };
+        tau::connection encoding_cx_ { true };
+        tau::connection enable_undo_cx_ { true };
+        tau::connection disable_undo_cx_ { true };
+        tau::connection enable_redo_cx_ { true };
+        tau::connection disable_redo_cx_ { true };
+        std::size_t     lines_ = 0;
+        int             page_;
+        uint64_t        metaid_ = 0;
+        unsigned        font_size_ = 0;
+        tau::Fileinfo   finfo_;
     };
 
     using Pages = std::list<Page>;
 
     struct Meta_holder {
-        tau::Timeval    atime { 0 };
-        tau::ustring    path;
-        uint64_t        id = 0;
+        tau::Timeval    atime_ { 0 };
+        tau::ustring    path_;
+        uint64_t        id_ = 0;
     };
 
     using Metas = std::unordered_map<std::string, Meta_holder>;
@@ -288,8 +289,8 @@ struct Main: tau::Toplevel {
 
     void on_menu_quit() {
         if (notebook_.visible()) {
-            auto i = std::find_if(pages_.begin(), pages_.end(), [this](auto & pg) { return notebook_.current_page() == pg.page; } );
-            if (i != pages_.end()) { i->edit.grab_focus(); }
+            auto i = std::find_if(pages_.begin(), pages_.end(), [this](auto & pg) { return notebook_.current_page() == pg.page_; } );
+            if (i != pages_.end()) { i->edit_.grab_focus(); }
         }
     }
 
@@ -304,11 +305,11 @@ struct Main: tau::Toplevel {
     }
 
     Pages::iterator find_page(int n) {
-        return std::find_if(pages_.begin(), pages_.end(), [n](auto & p) { return p.page == n; } );
+        return std::find_if(pages_.begin(), pages_.end(), [n](auto & p) { return p.page_ == n; } );
     }
 
     Pages::const_iterator find_page(int n) const {
-        return std::find_if(pages_.begin(), pages_.end(), [n](auto & p) { return p.page == n; } );
+        return std::find_if(pages_.begin(), pages_.end(), [n](auto & p) { return p.page_ == n; } );
     }
 
     void open_recent(const tau::ustring & path) {
@@ -331,8 +332,8 @@ struct Main: tau::Toplevel {
 
                 if (page >= 0 && (line_ > 0 || col_ > 0)) {
                     for (auto & pg: pages_) {
-                        if (pg.page == page) {
-                            pg.edit.move_to(line_ > 0 ? line_-1 : 0, col_ > 0 ? col_-1 : 0);
+                        if (pg.page_ == page) {
+                            pg.edit_.move_to(line_ > 0 ? line_-1 : 0, col_ > 0 ? col_-1 : 0);
                             break;
                         }
                     }
@@ -347,8 +348,8 @@ struct Main: tau::Toplevel {
 
     int open_file(const tau::ustring & path) {
         for (auto & pg: pages_) {
-            if (pg.path == path) {
-                return pg.page;
+            if (pg.path_ == path) {
+                return pg.page_;
             }
         }
 
@@ -356,41 +357,41 @@ struct Main: tau::Toplevel {
             set_cursor("wait:watch");
             tau::Buffer buffer = tau::Buffer::load_from_file(path);
             Page & pg = new_editor(buffer);
-            pg.path = path;
-            pg.title.assign(tau::path_notdir(path));
-            pg.tooltip.assign(path);
-            pg.tab.set_tooltip(pg.tooltip);
-            pg.metaid = find_metaid(path);
+            pg.path_ = path;
+            pg.title_.assign(tau::path_notdir(path));
+            pg.tooltip_.assign(path);
+            pg.tab_.set_tooltip(pg.tooltip_);
+            pg.metaid_ = find_metaid(path);
 
-            if (0 == pg.metaid) {
+            if (0 == pg.metaid_) {
                 tau::Timeval now = tau::Timeval::now();
-                pg.metaid = now;
+                pg.metaid_ = now;
                 Meta_holder hol;
-                hol.atime = now;
-                hol.id = now;
-                hol.path = path;
+                hol.atime_ = now;
+                hol.id_ = now;
+                hol.path_ = path;
                 metas_[tau::path_real(path)] = hol;
             }
 
             else {
-                const tau::ustring name = tau::str_format(pg.metaid, ".ini");
+                const tau::ustring name = tau::str_format(pg.metaid_, ".ini");
                 const tau::ustring mpath = tau::path_build(tau::path_build(tau::path_user_data_dir(), tau::program_name(), "meta"), name);
                 tau::Key_file kf(mpath);
                 std::size_t row = kf.get_integer(kf.section("pos"), "row");
                 std::size_t col = kf.get_integer(kf.section("pos"), "col");
-                pg.edit.move_to(row, col);
-                pg.font_size = kf.get_integer(kf.section("font"), "size");
-                pg.edit.style().font("font").set(tau::font_size_change(font_spec_, 0 != pg.font_size ? pg.font_size : font_size_));
+                pg.edit_.move_to(row, col);
+                pg.font_size_ = kf.get_integer(kf.section("font"), "size");
+                pg.edit_.style().font(tau::STYLE_FONT).set(tau::font_size_change(font_spec_, 0 != pg.font_size_ ? pg.font_size_ : font_size_));
             }
 
-            pg.finfo = tau::Fileinfo(path);
-            pg.finfo.signal_watch(tau::FILE_EVENTS).connect(tau::bind(tau::fun(this, &Main::on_watch), std::cref(pg)));
-            pg.page = notebook_.append_page(pg.cont, pg.tab);
+            pg.finfo_ = tau::Fileinfo(path);
+            pg.wcx_ = pg.finfo_.signal_watch(tau::FILE_EVENTS).connect(tau::bind(tau::fun(this, &Main::on_watch), std::ref(pg)));
+            pg.page_ = notebook_.append_page(pg.cont_, pg.tab_);
             loop_.signal_alarm(16754).connect(tau::fun(this, &Main::save_metas));
             touch_session();
-            touch_recent(pg.metaid);
+            touch_recent(pg.metaid_);
             unset_cursor();
-            return pg.page;
+            return pg.page_;
         }
 
         catch (tau::exception & x) {
@@ -418,8 +419,8 @@ struct Main: tau::Toplevel {
 
         for (uint64_t id: v) {
             for (auto & p: metas_) {
-                if (p.second.id == id) {
-                    uint64_t at = p.second.atime;
+                if (p.second.id_ == id) {
+                    uint64_t at = p.second.atime_;
                     ids[at] = id;
                     ats.push_back(at);
                     break;
@@ -433,11 +434,11 @@ struct Main: tau::Toplevel {
             uint64_t id = ids[at];
 
             for (auto & p: metas_) {
-                if (p.second.id == id) {
-                    tau::Slot_menu_item item(tau::path_notdir(p.first), tau::bind(tau::fun(this, &Main::open_recent), p.second.path), "unknown");
-                    tau::Text tooltip("@"+tau::path_dirname(p.second.path));
+                if (p.second.id_ == id) {
+                    tau::Slot_menu_item item(tau::path_notdir(p.first), tau::bind(tau::fun(this, &Main::open_recent), p.second.path_), "unknown");
+                    tau::Text tooltip("@"+tau::path_dirname(p.second.path_));
                     tooltip.set_wrap_mode(tau::WRAP_ELLIPSIZE_END);
-                    tooltip.style().font("font").resize(7);
+                    tooltip.style().font(tau::STYLE_FONT).resize(7);
                     item.set_tooltip(tooltip);
                     recent_menu_.append(item);
                     break;
@@ -450,8 +451,8 @@ struct Main: tau::Toplevel {
         load_metas();
 
         for (auto & p: metas_) {
-            if (p.second.id == rid) {
-                p.second.atime = tau::Timeval::now();
+            if (p.second.id_ == rid) {
+                p.second.atime_ = tau::Timeval::now();
                 break;
             }
         }
@@ -460,9 +461,9 @@ struct Main: tau::Toplevel {
         std::vector<uint64_t> ats;
 
         for (auto & p: metas_) {
-            uint64_t at = p.second.atime;
+            uint64_t at = p.second.atime_;
             ats.push_back(at);
-            ids[at] = p.second.id;
+            ids[at] = p.second.id_;
         }
 
         std::sort(ats.begin(), ats.end(), std::greater<uint64_t>());
@@ -478,7 +479,7 @@ struct Main: tau::Toplevel {
         return true;
     }
 
-    void on_watch(unsigned mask, const tau::ustring & path, const Page & page) {
+    void on_watch(unsigned mask, const tau::ustring & path, Page & page) {
         std::cout << "on_watch " << std::hex << mask << std::dec << ", " << path << std::endl;
     }
 
@@ -491,7 +492,7 @@ struct Main: tau::Toplevel {
             kstate_.set_string(kstate_.root(), "font", rspec);
 
             for (Page & pg: pages_) {
-                pg.edit.style().font("font").set(tau::font_size_change(font_spec_, 0 != pg.font_size ? pg.font_size : font_size_));
+                pg.edit_.style().font(tau::STYLE_FONT).set(tau::font_size_change(font_spec_, 0 != pg.font_size_ ? pg.font_size_ : font_size_));
             }
         }
     }
@@ -512,13 +513,13 @@ struct Main: tau::Toplevel {
         for (auto & i: v) {
             auto & sect = ksession_.section(tau::str_format("Page_", i));
             uint64_t metaid = ksession_.get_integer(sect, "metaid");
-            auto j = std::find_if(metas_.begin(), metas_.end(), [metaid](auto & p) { return p.second.id == metaid; } );
-            if (j != metas_.end()) { open_file(j->second.path); }
+            auto j = std::find_if(metas_.begin(), metas_.end(), [metaid](auto & p) { return p.second.id_ == metaid; } );
+            if (j != metas_.end()) { open_file(j->second.path_); }
         }
 
         uint64_t current_metaid = ksession_.get_integer(ksession_.root(), "current");
-        auto k = std::find_if(pages_.begin(), pages_.end(), [current_metaid](auto & pg) { return pg.metaid == current_metaid; } );
-        if (k != pages_.end()) { notebook_.show_page(k->page); }
+        auto k = std::find_if(pages_.begin(), pages_.end(), [current_metaid](auto & pg) { return pg.metaid_ == current_metaid; } );
+        if (k != pages_.end()) { notebook_.show_page(k->page_); }
     }
 
     void save_session() {
@@ -529,10 +530,10 @@ struct Main: tau::Toplevel {
 
         for (int n = 0; n < npages; ++n) {
             for (Page & pg: pages_) {
-                if (n == pg.page && !pg.path.empty()) {
+                if (n == pg.page_ && !pg.path_.empty()) {
                     auto & sect = ksession_.section(tau::str_format("Page_", page++));
-                    ksession_.set_integer(sect, "metaid", pg.metaid);
-                    if (pg.page == notebook_.current_page()) { current_metaid = pg.metaid; }
+                    ksession_.set_integer(sect, "metaid", pg.metaid_);
+                    if (pg.page_ == notebook_.current_page()) { current_metaid = pg.metaid_; }
                 }
             }
         }
@@ -569,9 +570,9 @@ struct Main: tau::Toplevel {
                         tau::Key_section & sect = kf.section(s);
                         auto now = tau::Timeval::now();
                         Meta_holder hol;
-                        hol.path = kf.get_string(sect, "path", s);
-                        hol.atime = kf.get_integer(sect, "atime", now);
-                        hol.id = kf.get_integer(sect, "id", now);
+                        hol.path_ = kf.get_string(sect, "path", s);
+                        hol.atime_ = kf.get_integer(sect, "atime", now);
+                        hol.id_ = kf.get_integer(sect, "id", now);
                         metas_[s] = hol;
                     }
                 }
@@ -594,183 +595,182 @@ struct Main: tau::Toplevel {
     uint64_t find_metaid(const tau::ustring & path) {
         load_metas();
         auto iter = metas_.find(tau::path_real(path));
-        return metas_.end() != iter ? iter->second.id : 0;
+        return metas_.end() != iter ? iter->second.id_ : 0;
     }
 
     // Connected to editor's signal_focus_in().
     void update_pos(Page & pg) {
-        tau::Buffer_citer i = pg.edit.caret();
+        tau::Buffer_citer i = pg.edit_.caret();
 
         if (i) {
-            pg.row_value.assign(tau::str_format(1+i.row()));
-            pg.rows_value.assign(tau::str_format(std::max(std::size_t(1), pg.edit.buffer().rows())));
-            pg.col_value.assign(tau::str_format(1+i.col()));
-            pg.uni_value.assign(tau::key_code_to_string(*i));
+            pg.row_value_.assign(tau::str_format(1+i.row()));
+            pg.rows_value_.assign(tau::str_format(std::max(std::size_t(1), pg.edit_.buffer().rows())));
+            pg.col_value_.assign(tau::str_format(1+i.col()));
+            pg.uni_value_.assign(tau::key_code_to_string(*i));
         }
 
         else {
-            pg.row_value.assign("0");
-            pg.col_value.assign("0");
-            pg.uni_value.assign("U+0000");
+            pg.row_value_.assign("0");
+            pg.col_value_.assign("0");
+            pg.uni_value_.assign("U+0000");
         }
     }
 
     // Connected to editor's signal_focus_in().
     void on_edit_focus_in(Page & pg) {
-        if (pg.edit.modified()) { file_save_action_.enable(); }
+        if (pg.edit_.modified()) { file_save_action_.enable(); }
         else { file_save_action_.disable(); }
-        if (pg.edit.undo_action().enabled()) { edit_undo_action_.enable(); }
+        if (pg.edit_.undo_action().enabled()) { edit_undo_action_.enable(); }
         else { edit_undo_action_.disable(); }
-        if (pg.edit.redo_action().enabled()) { edit_redo_action_.enable(); }
+        if (pg.edit_.redo_action().enabled()) { edit_redo_action_.enable(); }
         else { edit_redo_action_.disable(); }
-        pg.on_edit_focus_in_cx = pg.edit.undo_action().signal_enable().connect(tau::fun(edit_undo_action_, &tau::Action::enable));
-        pg.on_edit_focus_out_cx = pg.edit.undo_action().signal_disable().connect(tau::fun(edit_undo_action_, &tau::Action::disable));
-        pg.enable_redo_cx = pg.edit.redo_action().signal_enable().connect(tau::fun(edit_redo_action_, &tau::Action::enable));
-        pg.disable_redo_cx = pg.edit.redo_action().signal_disable().connect(tau::fun(edit_redo_action_, &tau::Action::disable));
+        pg.enable_undo_cx_ = pg.edit_.undo_action().signal_enable().connect(tau::fun(edit_undo_action_, &tau::Action::enable));
+        pg.disable_undo_cx_ = pg.edit_.undo_action().signal_disable().connect(tau::fun(edit_undo_action_, &tau::Action::disable));
+        pg.enable_redo_cx_ = pg.edit_.redo_action().signal_enable().connect(tau::fun(edit_redo_action_, &tau::Action::enable));
+        pg.disable_redo_cx_ = pg.edit_.redo_action().signal_disable().connect(tau::fun(edit_redo_action_, &tau::Action::disable));
     }
 
     // Connected to editor's signal_focus_out().
     void on_edit_focus_out(Page & pg) {
         edit_undo_action_.disable();
         edit_redo_action_.disable();
-        pg.on_edit_focus_in_cx.drop();
-        pg.enable_redo_cx.drop();
-        pg.on_edit_focus_out_cx.drop();
-        pg.disable_redo_cx.drop();
+        pg.enable_undo_cx_.drop();
+        pg.enable_redo_cx_.drop();
+        pg.disable_undo_cx_.drop();
+        pg.disable_redo_cx_.drop();
     }
 
     void on_utimer(Page & pg) {
         update_pos(pg);
-        pg.meta_cx.drop();
-        pg.meta_cx = loop_.signal_alarm(7735).connect(tau::bind(tau::fun(this, &Main::save_metadata), std::ref(pg)));
+        pg.meta_cx_ = loop_.signal_alarm(7735).connect(tau::bind(tau::fun(this, &Main::save_metadata), std::ref(pg)));
     }
 
     void on_caret_motion(Page & pg) {
-        pg.motion_timer.start(50);
+        pg.motion_timer_.start(50);
     }
 
     Page & new_editor(tau::Buffer buffer) {
         pages_.emplace_back();
         Page & pg = pages_.back();
-        pg.motion_timer.signal_alarm().connect(tau::bind(tau::fun(this, &Main::on_utimer), std::ref(pg)));
+        pg.motion_timer_.signal_alarm().connect(tau::bind(tau::fun(this, &Main::on_utimer), std::ref(pg)));
 
-        pg.tab.set_spacing(2);
-        pg.tab.hint_margin(2, 2, 0, 0);
-        pg.tab.append(pg.save_ico, true);
-        pg.save_ico.hide();
-        pg.title.hint_min_size(22, 0);
-        pg.title.hint_max_size(142, 0);
-        pg.title.set_wrap_mode(tau::WRAP_ELLIPSIZE_CENTER);
-        pg.tab.append(pg.title);
-        tau::Button btn(pg.ico);
+        pg.tab_.set_spacing(2);
+        pg.tab_.hint_margin(2, 2, 0, 0);
+        pg.tab_.append(pg.save_ico_, true);
+        pg.save_ico_.hide();
+        pg.title_.hint_min_size(22, 0);
+        pg.title_.hint_max_size(142, 0);
+        pg.title_.set_wrap_mode(tau::WRAP_ELLIPSIZE_CENTER);
+        pg.tab_.append(pg.title_);
+        tau::Button btn(pg.ico_);
         btn.hide_relief();
         btn.signal_click().connect(tau::bind(tau::fun(this, &Main::on_page_button_click), std::ref(pg)));
-        pg.tab.append(btn, true);
+        pg.tab_.append(btn, true);
 
-        pg.tooltip.hint_max_size(320, 0);
-        pg.tooltip.set_wrap_mode(tau::WRAP_ELLIPSIZE_END);
-        pg.tooltip.style().font("font").resize(7);
+        pg.tooltip_.hint_max_size(320, 0);
+        pg.tooltip_.set_wrap_mode(tau::WRAP_ELLIPSIZE_END);
+        pg.tooltip_.style().font(tau::STYLE_FONT).resize(7);
 
-        pg.edit.assign(buffer);
-        pg.encoding_cx = pg.edit.buffer().signal_encoding_changed().connect(tau::bind(tau::fun(this, &Main::on_buffer_encoding_changed), std::ref(pg)));
-        pg.edit.buffer().signal_changed().connect(tau::bind(tau::fun(this, &Main::on_edit_changed), std::ref(pg)));
+        pg.edit_.assign(buffer);
+        pg.encoding_cx_ = pg.edit_.buffer().signal_encoding_changed().connect(tau::bind(tau::fun(this, &Main::on_buffer_encoding_changed), std::ref(pg)));
+        pg.edit_.buffer().signal_changed().connect(tau::bind(tau::fun(this, &Main::on_edit_changed), std::ref(pg)));
 
-        pg.edit.style().font("font").set(tau::font_size_change(font_spec_, font_size_));
-        pg.edit.style().get("font").signal_changed().connect(tau::bind(tau::fun(this, &Main::on_edit_font_changed), std::ref(pg)));
-        pg.edit.signal_caret_motion().connect(tau::bind(tau::fun(this, &Main::on_caret_motion), std::ref(pg)));
-        pg.edit.signal_focus_in().connect(tau::bind(tau::fun(this, &Main::update_pos), std::ref(pg)));
-        pg.edit.signal_focus_in().connect(tau::bind(tau::fun(this, &Main::on_edit_focus_in), std::ref(pg)));
-        pg.edit.signal_focus_out().connect(tau::bind(tau::fun(this, &Main::on_edit_focus_out), std::ref(pg)));
-        pg.edit.signal_focus_out().connect(tau::fun(pg.edit, &tau::Widget::hide_tooltip));
-        pg.edit.signal_selection_changed().connect(tau::bind(tau::fun(this, &Main::on_edit_selection_changed), std::ref(pg)));
-        pg.edit.signal_modified().connect(tau::bind(tau::fun(this, &Main::on_modified), std::ref(pg)));
-        pg.edit.insert_action().connect(tau::bind(tau::fun(this, &Main::on_edit_insert_toggled), std::ref(pg)));
-        signal_modified_.connect(tau::fun(pg.edit, &tau::Edit::modified));
-        pg.edit.cancel_action().disable();
+        pg.edit_.style().font(tau::STYLE_FONT).set(tau::font_size_change(font_spec_, font_size_));
+        pg.edit_.style().get(tau::STYLE_FONT).signal_changed().connect(tau::bind(tau::fun(this, &Main::on_edit_font_changed), std::ref(pg)));
+        pg.edit_.signal_caret_motion().connect(tau::bind(tau::fun(this, &Main::on_caret_motion), std::ref(pg)));
+        pg.edit_.signal_focus_in().connect(tau::bind(tau::fun(this, &Main::update_pos), std::ref(pg)));
+        pg.edit_.signal_focus_in().connect(tau::bind(tau::fun(this, &Main::on_edit_focus_in), std::ref(pg)));
+        pg.edit_.signal_focus_out().connect(tau::bind(tau::fun(this, &Main::on_edit_focus_out), std::ref(pg)));
+        pg.edit_.signal_focus_out().connect(tau::fun(pg.edit_, &tau::Widget::hide_tooltip));
+        pg.edit_.signal_selection_changed().connect(tau::bind(tau::fun(this, &Main::on_edit_selection_changed), std::ref(pg)));
+        pg.edit_.signal_modified().connect(tau::bind(tau::fun(this, &Main::on_modified), std::ref(pg)));
+        pg.edit_.insert_action().connect(tau::bind(tau::fun(this, &Main::on_edit_insert_toggled), std::ref(pg)));
+        signal_modified_.connect(tau::fun(pg.edit_, &tau::Edit::modified));
+        pg.edit_.cancel_action().disable();
 
-        pg.zin_action.set_master_action(view_increase_font_master_action_);
-        pg.edit.connect_action(pg.zin_action);
-        pg.zin_action.connect(tau::bind(tau::fun(this, &Main::on_edit_increase_font), std::ref(pg)));
+        pg.zin_action_.set_master_action(view_increase_font_master_action_);
+        pg.edit_.connect_action(pg.zin_action_);
+        pg.zin_action_.connect(tau::bind(tau::fun(this, &Main::on_edit_increase_font), std::ref(pg)));
 
-        pg.zout_action.set_master_action(view_decrease_font_master_action_);
-        pg.edit.connect_action(pg.zout_action);
-        pg.zout_action.connect(tau::bind(tau::fun(this, &Main::on_edit_decrease_font), std::ref(pg)));
+        pg.zout_action_.set_master_action(view_decrease_font_master_action_);
+        pg.edit_.connect_action(pg.zout_action_);
+        pg.zout_action_.connect(tau::bind(tau::fun(this, &Main::on_edit_decrease_font), std::ref(pg)));
 
-        pg.edit.select_all_action().set_master_action(edit_select_all_master_action_);
-        pg.edit.copy_action().set_master_action(edit_copy_master_action_);
-        pg.edit.cut_action().set_master_action(edit_cut_master_action_);
-        pg.edit.paste_action().set_master_action(edit_paste_master_action_);
-        pg.edit.undo_action().set_master_action(edit_undo_master_action_);
-        pg.edit.redo_action().set_master_action(edit_redo_master_action_);
+        pg.edit_.select_all_action().set_master_action(edit_select_all_master_action_);
+        pg.edit_.copy_action().set_master_action(edit_copy_master_action_);
+        pg.edit_.cut_action().set_master_action(edit_cut_master_action_);
+        pg.edit_.paste_action().set_master_action(edit_paste_master_action_);
+        pg.edit_.undo_action().set_master_action(edit_undo_master_action_);
+        pg.edit_.redo_action().set_master_action(edit_redo_master_action_);
 
         tau::Scroller scroller;
         tau::Slider vslider(scroller, tau::OR_DOWN), hslider(scroller, tau::OR_EAST);
         tau::Table table;
 
-        scroller.insert(pg.edit);
-        pg.cont.put(scroller, 0, 0);
-        pg.cont.put(vslider, 1, 0, 1, 1, true, false);
-        pg.cont.put(hslider, 0, 1, 1, 1, false, true);
-        pg.cont.put(pg.status_box, 0, 2, 2, 1, false, true);
+        scroller.insert(pg.edit_);
+        pg.cont_.put(scroller, 0, 0);
+        pg.cont_.put(vslider, 1, 0, 1, 1, true, false);
+        pg.cont_.put(hslider, 0, 1, 1, 1, false, true);
+        pg.cont_.put(pg.status_box_, 0, 2, 2, 1, false, true);
 
         // Status bar.
-        pg.status_box.hint_margin(2);
-        pg.status_box.style().font("font").enlarge(-2);
+        pg.status_box_.hint_margin(2);
+        pg.status_box_.style().font(tau::STYLE_FONT).enlarge(-2);
 
         {   // Current line label.
             tau::Frame frame(tau::BORDER_INSET);
-            pg.status_box.append(frame, true);
+            pg.status_box_.append(frame, true);
             tau::Box box(tau::OR_RIGHT, 3);
             frame.insert(box);
             tau::Text line("Line");
             line.hint_margin(0, 4, 0, 0);
             box.append(line, true);
-            box.append(pg.row_value, true);
-            pg.row_value.set_tooltip("Shows current line number\nwithin text file.");
+            box.append(pg.row_value_, true);
+            pg.row_value_.set_tooltip("Shows current line number\nwithin text file.");
 
             tau::Text of("of ");
             box.append(of, true);
-            box.append(pg.rows_value, true);
-            pg.rows_value.set_tooltip("Shows total line count\nwithin text file.");
-            pg.lines = pg.edit.buffer().rows();
-            pg.rows_value.assign(tau::str_format(pg.lines));
+            box.append(pg.rows_value_, true);
+            pg.rows_value_.set_tooltip("Shows total line count\nwithin text file.");
+            pg.lines_ = pg.edit_.buffer().rows();
+            pg.rows_value_.assign(tau::str_format(pg.lines_));
         }
 
         {   // Current position label.
             tau::Frame frame(tau::BORDER_INSET);
-            pg.status_box.append(frame, true);
+            pg.status_box_.append(frame, true);
             tau::Box box(tau::OR_RIGHT, 3);
             frame.insert(box);
             tau::Text pos("Pos:");
             box.append(pos, true);
-            box.append(pg.col_value, true);
-            pg.col_value.set_tooltip("Shows current character index\nwithin current line");
+            box.append(pg.col_value_, true);
+            pg.col_value_.set_tooltip("Shows current character index\nwithin current line");
         }
 
         {   // Current unicode label.
             tau::Frame frame(tau::BORDER_INSET);
-            pg.status_box.append(frame, true);
-            frame.insert(pg.uni_value);
-            pg.uni_value.set_tooltip("Shows current character\nUnicode value.");
+            pg.status_box_.append(frame, true);
+            frame.insert(pg.uni_value_);
+            pg.uni_value_.set_tooltip("Shows current character\nUnicode value.");
         }
 
         {   // Input mode indicator.
             tau::Frame frame(tau::BORDER_INSET);
-            pg.status_box.append(frame, true);
+            pg.status_box_.append(frame, true);
             tau::Card cd;
             cd.set_tooltip("Click here to change\nthe input mode");
             cd.signal_mouse_down().connect(tau::bind(tau::fun(this, &Main::on_insert_card), std::ref(pg)));
-            cd.insert(pg.insert_label);
-            cd.insert(pg.replace_label);
+            cd.insert(pg.insert_label_);
+            cd.insert(pg.replace_label_);
             frame.insert(cd);
         }
 
         {   // Text encoding label.
             tau::Frame frame(tau::BORDER_INSET);
-            pg.status_box.append(frame, true);
-            pg.enc_label.assign(buffer.encoding().name());
-            frame.insert(pg.enc_label);
-            pg.enc_label.set_tooltip("Shows text encoding.");
+            pg.status_box_.append(frame, true);
+            pg.enc_label_.assign(buffer.encoding().name());
+            frame.insert(pg.enc_label_);
+            pg.enc_label_.set_tooltip("Shows text encoding.");
         }
 
         update_pos(pg);
@@ -779,10 +779,10 @@ struct Main: tau::Toplevel {
 
     bool on_insert_card(int mbt, int mm, const tau::Point & pt, Page & pg) {
         if (tau::MBT_LEFT == mbt) {
-            auto & action = pg.edit.insert_action();
+            auto & action = pg.edit_.insert_action();
             action.toggle();
-            if (action.get()) { pg.replace_label.show(); }
-            else { pg.insert_label.show(); }
+            if (action.get()) { pg.replace_label_.show(); }
+            else { pg.insert_label_.show(); }
             return true;
         }
 
@@ -791,25 +791,26 @@ struct Main: tau::Toplevel {
 
     void on_menu_file_new() {
         Page & pg = new_editor(tau::Buffer());
-        pg.page = notebook_.append_page(pg.cont, pg.tab);
-        pg.title.assign("New File");
-        pg.metaid = tau::Timeval::now();
-        notebook_.show_page(pg.page);
+        pg.page_ = notebook_.append_page(pg.cont_, pg.tab_);
+        pg.title_.assign("New File");
+        pg.metaid_ = tau::Timeval::now();
+        notebook_.show_page(pg.page_);
     }
 
     void save_metadata(Page & pg) {
-        pg.meta_cx.drop();
+        pg.meta_cx_.drop();
 
-        if (!pg.path.empty()) {
+        if (!pg.path_.empty()) {
             tau::Key_file kf;
-            kf.set_integer(kf.section("pos"), "row", pg.edit.caret().row());
-            kf.set_integer(kf.section("pos"), "col", pg.edit.caret().col());
-            if (0 != pg.font_size) { kf.set_integer(kf.section("font"), "size", pg.font_size); }
+            auto caret = pg.edit_.caret();
+            kf.set_integer(kf.section("pos"), "row", caret.row());
+            kf.set_integer(kf.section("pos"), "col", caret.col());
+            if (0 != pg.font_size_) { kf.set_integer(kf.section("font"), "size", pg.font_size_); }
 
             try {
                 tau::ustring dir = tau::path_build(tau::path_user_data_dir(), tau::program_name(), "meta");
                 tau::path_mkdir(dir);
-                tau::ustring name = tau::str_format(pg.metaid, ".ini");
+                tau::ustring name = tau::str_format(pg.metaid_, ".ini");
                 tau::ustring path = tau::path_build(dir, name);
                 kf.save(path);
                 // std::cout << "save_metadata " << path << '\n';
@@ -838,11 +839,10 @@ struct Main: tau::Toplevel {
             tau::Key_file kf;
 
             for (auto & p: metas_) {
-                const Meta_holder & hol = p.second;
                 auto & sect = kf.section(p.first);
-                kf.set_integer(sect, "atime", hol.atime);
-                kf.set_integer(sect, "id", hol.id);
-                kf.set_string(sect, "path", hol.path);
+                kf.set_integer(sect, "atime", p.second.atime_);
+                kf.set_integer(sect, "id", p.second.id_);
+                kf.set_string(sect, "path", p.second.path_);
             }
 
             try {
@@ -890,11 +890,10 @@ struct Main: tau::Toplevel {
             file_close_all_action_.disable();
         }
 
-        auto i = std::find_if(pages_.begin(), pages_.end(), [page](auto & p) { return page == p.page; } );
+        auto i = std::find_if(pages_.begin(), pages_.end(), [page](auto & p) { return page == p.page_; } );
 
         if (i != pages_.end()) {
-            i->encoding_cx.drop();
-            if (!i->path.empty()) { save_metadata(*i); }
+            if (!i->path_.empty()) { save_metadata(*i); }
             pages_.erase(i);
         }
 
@@ -909,25 +908,25 @@ struct Main: tau::Toplevel {
 
     void on_notebook_page_reordered(int old_page, int new_page) {
         for (Page & pg: pages_) {
-            if (old_page == pg.page) {
-                pg.page = new_page;
+            if (old_page == pg.page_) {
+                pg.page_ = new_page;
                 break;
             }
         }
     }
 
     void on_notebook_page_changed(int page) {
-        auto i = std::find_if(pages_.begin(), pages_.end(), [page](auto & p) { return p.page == page; } );
+        auto i = find_page(page);
 
         if (i != pages_.end()) {
-            i->edit.take_focus();
+            i->edit_.take_focus();
             file_close_action_.enable();
             if (pages_.size() > 1) { file_close_others_action_.enable(); }
             else { file_close_others_action_.disable(); }
             file_save_as_action_.enable();
             edit_select_all_master_action_.enable();
 
-            if (i->edit.has_selection()) {
+            if (i->edit_.has_selection()) {
                 edit_copy_master_action_.enable();
                 edit_cut_master_action_.enable();
             }
@@ -1002,8 +1001,8 @@ struct Main: tau::Toplevel {
     }
 
     void close_page(Page & pg) {
-        if (!pg.path.empty()) { save_metadata(pg); }
-        notebook_.remove_page(pg.tab);
+        if (!pg.path_.empty()) { save_metadata(pg); }
+        notebook_.remove_page(pg.tab_);
     }
 
     void close_others() {
@@ -1012,8 +1011,8 @@ struct Main: tau::Toplevel {
             int page = notebook_.current_page();
 
             for (Page & pg: pages_) {
-                if (page == pg.page) {
-                    metaid = pg.metaid;
+                if (page == pg.page_) {
+                    metaid = pg.metaid_;
                     break;
                 }
             }
@@ -1025,7 +1024,7 @@ struct Main: tau::Toplevel {
                     done = true;
 
                     for (Page & pg: pages_) {
-                        if (metaid != pg.metaid) {
+                        if (metaid != pg.metaid_) {
                             close_page(pg);
                             done = false;
                             break;
@@ -1043,30 +1042,29 @@ struct Main: tau::Toplevel {
     }
 
     void on_buffer_encoding_changed(const tau::Encoding & enc, Page & pg) {
-        pg.enc_label.assign(enc.name());
+        pg.enc_label_.assign(enc.name());
     }
 
-    void on_edit_insert_toggled(bool toggled, Page & pg) {
-        if (toggled) { pg.replace_label.show(); }
-        else { pg.insert_label.show(); }
+    void on_edit_insert_toggled(bool replace, Page & pg) {
+        if (replace) { pg.replace_label_.show(); }
+        else { pg.insert_label_.show(); }
     }
 
     void on_edit_changed(Page & pg) {
-        std::size_t lines = pg.edit.buffer().rows();
+        std::size_t lines = pg.edit_.buffer().rows();
 
-        if (lines != pg.lines) {
-            pg.lines = lines;
-            pg.rows_value.assign(tau::str_format(pg.lines));
+        if (lines != pg.lines_) {
+            pg.lines_ = lines;
+            pg.rows_value_.assign(tau::str_format(pg.lines_));
         }
 
-        pg.meta_cx.drop();
-        pg.meta_cx = loop_.signal_alarm(7439).connect(tau::bind(tau::fun(this, &Main::save_metadata), std::ref(pg)));
+        pg.meta_cx_ = loop_.signal_alarm(7439).connect(tau::bind(tau::fun(this, &Main::save_metadata), std::ref(pg)));
     }
 
     void on_edit_selection_changed(Page & pg) {
         if (!notebook_.hidden()) {
-            if (notebook_.current_page() == pg.page) {
-                if (pg.edit.has_selection()) {
+            if (notebook_.current_page() == pg.page_) {
+                if (pg.edit_.has_selection()) {
                     edit_copy_master_action_.enable();
                     edit_cut_master_action_.enable();
                     edit_unselect_action_.enable();
@@ -1087,10 +1085,10 @@ struct Main: tau::Toplevel {
     }
 
     void on_modified(bool modified, Page & pg) {
-        if (modified) { pg.save_ico.show(); }
-        else { pg.save_ico.hide(); }
+        if (modified) { pg.save_ico_.show(); }
+        else { pg.save_ico_.hide(); }
 
-        if (!pg.path.empty() && pg.edit.focused()) {
+        if (!pg.path_.empty() && pg.edit_.focused()) {
             if (modified) { file_save_action_.enable(); }
             else { file_save_action_.disable(); }
         }
@@ -1099,10 +1097,10 @@ struct Main: tau::Toplevel {
     }
 
     void save_page(Page & pg) {
-        if (!pg.path.empty()) {
+        if (!pg.path_.empty()) {
             save_metadata(pg);
-            pg.edit.buffer().save_to_file(pg.path);
-            pg.save_ico.hide();
+            pg.edit_.buffer().save_to_file(pg.path_);
+            pg.save_ico_.hide();
         }
     }
 
@@ -1134,8 +1132,8 @@ struct Main: tau::Toplevel {
             tau::ustring path = path_build(fman.uri(), f);
 
             for (const Page & pg: pages_) {
-                if (pg.path == path) {
-                    exist_page = pg.page;
+                if (pg.path_ == path) {
+                    exist_page = pg.page_;
                     break;
                 }
             }
@@ -1167,8 +1165,8 @@ struct Main: tau::Toplevel {
 
         if (page >= 0) {
             for (const Page & pg: pages_) {
-                if (pg.page == page) {
-                    path = tau::path_dirname(pg.path);
+                if (pg.page_ == page) {
+                    path = tau::path_dirname(pg.path_);
                     break;
                 }
             }
@@ -1220,7 +1218,7 @@ struct Main: tau::Toplevel {
         int page = notebook_.current_page();
 
         for (Page & pg: pages_) {
-            if (pg.page == page) {
+            if (pg.page_ == page) {
                 save_page(pg);
                 break;
             }
@@ -1234,8 +1232,8 @@ struct Main: tau::Toplevel {
 
             if (page >= 0) {
                 for (Page & pg: pages_) {
-                    if (pg.page == page) {
-                        path = tau::path_dirname(pg.path);
+                    if (pg.page_ == page) {
+                        path = tau::path_dirname(pg.path_);
                         break;
                     }
                 }
@@ -1268,7 +1266,7 @@ struct Main: tau::Toplevel {
         int page = notebook_.current_page();
 
         for (Page & pg: pages_) {
-            if (pg.page == page) {
+            if (pg.page_ == page) {
                 close_page(pg);
                 break;
             }
@@ -1278,8 +1276,8 @@ struct Main: tau::Toplevel {
     void on_menu_edit_undo() {
         if (!notebook_.hidden()) {
             for (Page & pg: pages_) {
-                if (pg.page == notebook_.current_page()) {
-                    pg.edit.undo_action().exec();
+                if (pg.page_ == notebook_.current_page()) {
+                    pg.edit_.undo_action().exec();
                     break;
                 }
             }
@@ -1289,8 +1287,8 @@ struct Main: tau::Toplevel {
     void on_menu_edit_redo() {
         if (!notebook_.hidden()) {
             for (Page & pg: pages_) {
-                if (pg.page == notebook_.current_page()) {
-                    pg.edit.redo_action().exec();
+                if (pg.page_ == notebook_.current_page()) {
+                    pg.edit_.redo_action().exec();
                     break;
                 }
             }
@@ -1300,8 +1298,8 @@ struct Main: tau::Toplevel {
     void on_menu_edit_cut() {
         if (!notebook_.hidden()) {
             for (Page & pg: pages_) {
-                if (pg.page == notebook_.current_page()) {
-                    pg.edit.cut_action().exec();
+                if (pg.page_ == notebook_.current_page()) {
+                    pg.edit_.cut_action().exec();
                     break;
                 }
             }
@@ -1311,8 +1309,8 @@ struct Main: tau::Toplevel {
     void on_menu_edit_copy() {
         if (!notebook_.hidden()) {
             for (Page & pg: pages_) {
-                if (pg.page == notebook_.current_page()) {
-                    pg.edit.copy_action().exec();
+                if (pg.page_ == notebook_.current_page()) {
+                    pg.edit_.copy_action().exec();
                     break;
                 }
             }
@@ -1322,8 +1320,8 @@ struct Main: tau::Toplevel {
     void on_menu_edit_paste() {
         if (!notebook_.hidden()) {
             for (Page & pg: pages_) {
-                if (pg.page == notebook_.current_page()) {
-                    pg.edit.paste_action().exec();
+                if (pg.page_ == notebook_.current_page()) {
+                    pg.edit_.paste_action().exec();
                     break;
                 }
             }
@@ -1333,8 +1331,8 @@ struct Main: tau::Toplevel {
     void on_menu_edit_select_all() {
         if (!notebook_.hidden()) {
             for (Page & pg: pages_) {
-                if (pg.page == notebook_.current_page()) {
-                    pg.edit.select_all();
+                if (pg.page_ == notebook_.current_page()) {
+                    pg.edit_.select_all();
                     break;
                 }
             }
@@ -1344,8 +1342,8 @@ struct Main: tau::Toplevel {
     void on_menu_edit_unselect() {
         if (!notebook_.hidden()) {
             for (Page & pg: pages_) {
-                if (pg.page == notebook_.current_page()) {
-                    pg.edit.unselect();
+                if (pg.page_ == notebook_.current_page()) {
+                    pg.edit_.unselect();
                     break;
                 }
             }
@@ -1361,25 +1359,24 @@ struct Main: tau::Toplevel {
     }
 
     void on_edit_font_changed(Page & pg) {
-        pg.meta_cx.drop();
-        pg.meta_cx = loop_.signal_alarm(5767).connect(tau::bind(tau::fun(this, &Main::save_metadata), std::ref(pg)));
-        pg.font_size = pg.edit.style().font("font").size();
+        pg.meta_cx_ = loop_.signal_alarm(5767).connect(tau::bind(tau::fun(this, &Main::save_metadata), std::ref(pg)));
+        pg.font_size_ = pg.edit_.style().font(tau::STYLE_FONT).size();
     }
 
     void show_font_tooltip(Page & pg) {
-        tau::Text text(pg.edit.style().font("font"));
-        text.style().font("font").resize(18);
-        pg.edit.show_tooltip(text, tau::Rect(pg.edit.size()).center(), tau::GRAVITY_CENTER, 2678);
+        tau::Text text(pg.edit_.style().font(tau::STYLE_FONT));
+        text.style().font(tau::STYLE_FONT).resize(18);
+        pg.edit_.show_tooltip(text, tau::Rect(pg.edit_.size()).center(), tau::GRAVITY_CENTER, 2678);
     }
 
     void on_edit_increase_font(Page & pg) {
-        auto fs = pg.edit.style().font("font");
+        auto fs = pg.edit_.style().font(tau::STYLE_FONT);
         double pts = fs.size();
         if (pts < 100.0) { fs.grow(1.0); show_font_tooltip(pg); }
     }
 
     void on_edit_decrease_font(Page & pg) {
-        auto fs = pg.edit.style().font("font");
+        auto fs = pg.edit_.style().font(tau::STYLE_FONT);
         double pts = fs.size();
         if (pts >= 2.0) { fs.grow(-1.0); show_font_tooltip(pg); }
     }
@@ -1414,11 +1411,11 @@ struct Main: tau::Toplevel {
 
                 if (-1 != page) {
                     for (auto & pg: pages_) {
-                        if (pg.page == page) {
+                        if (pg.page_ == page) {
                             title += ": ";
-                            if (!pg.path.empty()) { title += tau::path_notdir(pg.path); }
+                            if (!pg.path_.empty()) { title += tau::path_notdir(pg.path_); }
                             else { title += "(unnamed)"; }
-                            pg.edit.take_focus();
+                            pg.edit_.take_focus();
                             break;
                         }
                     }
@@ -1526,8 +1523,8 @@ struct Main: tau::Toplevel {
             unsigned font_size = font_size_;
 
             for (const Page & pg: pages_) {
-                if (pg.page == notebook_.current_page()) {
-                    if (0 != pg.font_size) { font_size = pg.font_size; }
+                if (pg.page_ == notebook_.current_page()) {
+                    if (0 != pg.font_size_) { font_size = pg.font_size_; }
                     break;
                 }
             }

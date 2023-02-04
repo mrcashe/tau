@@ -39,7 +39,7 @@ public:
     Navigator_impl(const ustring & uri=ustring());
    ~Navigator_impl();
 
-    ustring uri() const;
+    ustring uri() const { return uri_; }
     void set_uri(const ustring & uri);
     void refresh();
 
@@ -106,34 +106,34 @@ private:
 
     // The record holding single file information.
     struct Rec {
-        ustring                 name;
-        ustring                 type;
-        Fileinfo                fi;
-        bool                    hidden = false;
-        bool                    filtered = false;
-        int                     br = INT_MIN;
+        ustring                 name_;
+        ustring                 type_;
+        Fileinfo                fi_;
+        bool                    hidden_ = false;
+        bool                    filtered_ = false;
+        int                     row_ = INT_MIN;
     };
 
     using Recs = std::vector<Rec>;
 
     // The structure holding directory entry information.
     struct Holder {
-        ustring                 path;
-        Recs                    recs;           // File/dir records.
-        std::vector<unsigned>   indice;         // Index table.
-        bool                    prep = false;   // Preprocess (filter & sort) done.
-        Fileinfo                finfo;
-        Timer                   mon_timer;      // File monitor timer.
+        ustring                 path_;
+        Recs                    recs_;              // File/dir records.
+        std::vector<unsigned>   indice_;            // Index table.
+        bool                    prep_ = false;      // Preprocess (filter & sort) done.
+        Fileinfo                finfo_;
+        Timer                   wtimer_;            // File monitor timer.
+        connection              wcx_ { true };      // Watch connection.
     };
 
     using Holders = std::list<Holder *>;
 
-    List_ptr                    list_;                  // File panel as list.
+    List_ptr                    list_;              // File panel as list.
     Holder *                    holder_ = nullptr;
     Holders                     hcache_;
-    ustring                     user_path_;
+    ustring                     uri_;
     std::vector<ustring>        filters_;
-    Timer                       timer_ { fun(this, &Navigator_impl::on_timer) };
     Pixmap_cptr                 dir_icon_;
     Pixmap_cptr                 unknown_icon_;
 
@@ -146,8 +146,6 @@ private:
     bool                        bytes_visible_ = true;
     bool                        date_visible_ = true;
 
-    connection                  paint_cx_;
-
     signal<void(const ustring &)> signal_file_select_;
     signal<void(const ustring &)> signal_file_unselect_;
     signal<void(const ustring &)> signal_file_activate_;
@@ -155,6 +153,7 @@ private:
 
 private:
 
+    void cleanup();
     void new_dir(const ustring & path);
     void show_record(Rec & rec);
     void read_dir(Holder * hol);
@@ -167,16 +166,15 @@ private:
     void select_name(const ustring & name);
     void limit_name_column();
 
-    bool on_paint(Painter pr, const Rect & inval);
-    void on_timer();
     void on_file_select(const ustring & filename);
     void on_file_unselect(const ustring & filename);
     void on_list_activate(int br);
     bool on_list_mark_validate(int br);
     void on_list_header_click(int column);
     void on_list_header_width_changed(int column);
-    void on_file_monitor(unsigned event, const ustring & filename, const ustring & dirname);
-    void on_file_monitor_timer(const ustring & dirname);
+    void on_watch(unsigned event, const ustring & filename, const ustring & dirname);
+    void on_watch_timer(const ustring & dirname);
+    void on_display();
     void on_unparent();
 };
 

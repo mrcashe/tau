@@ -36,7 +36,6 @@ namespace tau {
 Buffer::Buffer():
     impl(std::make_shared<Buffer_impl>())
 {
-    impl->newlines_ = str_newlines();
 }
 
 Buffer::~Buffer() {}
@@ -44,21 +43,18 @@ Buffer::~Buffer() {}
 Buffer::Buffer(const ustring & s):
     impl(std::make_shared<Buffer_impl>())
 {
-    impl->newlines_ = str_newlines();
     assign(s);
 }
 
 Buffer::Buffer(const std::u32string & s):
     impl(std::make_shared<Buffer_impl>())
 {
-    impl->newlines_ = str_newlines();
     assign(s);
 }
 
 Buffer::Buffer(std::istream & is):
     impl(std::make_shared<Buffer_impl>())
 {
-    impl->newlines_ = str_newlines();
     insert(cend(), is);
 }
 
@@ -82,55 +78,7 @@ Buffer_citer Buffer::replace(Buffer_citer i, const ustring & str) {
 }
 
 Buffer_citer Buffer::replace(Buffer_citer i, const std::u32string & str) {
-    if (locked() || str.empty()) {
-        return i;
-    }
-
-    std::size_t n = 0, len = str.size();
-
-    while (n < len) {
-        if (i.row() >= impl->rows_.size()) {
-            return insert(i, str);
-        }
-
-        if (i.row() == impl->rows_.size()-1 && i.col() >= impl->rows_[i.row()].s.size()) {
-            return insert(i, str);
-        }
-
-        std::size_t eol = str.find_first_of(impl->newlines_, n);
-        if (ustring::npos == eol) { eol = len; }
-
-        if (eol > n) {
-            std::u32string & d = impl->rows_[i.row()].s;
-            std::size_t d_eol = d.find_first_of(impl->newlines_);
-            if (std::u32string::npos == d_eol) { d_eol = d.size(); }
-            std::size_t n_repl = std::min(eol-n, (i.col() < d_eol ? d_eol-i.col() : 0));
-
-            if (0 != n_repl) {
-                std::u32string replaced_text = d.substr(i.col(), n_repl);
-                d.replace(i.col(), n_repl, str, n, n_repl);
-                std::size_t col = i.col()+n_repl;
-                impl->signal_replace_(i, citer(i.row(), col), replaced_text);
-                i.move_to_col(col);
-            }
-
-            if (eol-n > n_repl) {
-                i = insert(i, str.substr(n+n_repl, eol-n-n_repl));
-            }
-        }
-
-        if (eol < len) {
-            if (U'\x000d' == str[eol] && eol+1 < len && U'\x000a' == str[eol+1]) { ++eol; }
-            ++eol;
-            i.move_forward_line();
-        }
-
-        n = eol;
-    }
-
-    impl->changed_ = true;
-    impl->signal_changed_();
-    return i;
+    return impl->replace(i, str);
 }
 
 Buffer_citer Buffer::insert(Buffer_citer i, const std::u32string & str) {
@@ -146,43 +94,7 @@ Buffer_citer Buffer::insert(Buffer_citer i, const ustring & str) {
 }
 
 Buffer_citer Buffer::erase(Buffer_citer b, Buffer_citer e) {
-    Buffer_citer ret(b);
-
-    if (!locked() && !empty() && b && e && b != e) {
-        if (e < b) { std::swap(b, e); }
-        std::size_t row1 = b.row(), col1 = b.col(), row2 = e.row(), col2 = e.col();
-
-        if (row1 < impl->rows_.size() && col1 < impl->rows_[row1].s.size()) {
-            row2 = std::min(row2, impl->rows_.size());
-
-            if (row2 < impl->rows_.size()) {
-                col2 = std::min(col2, impl->rows_[row2].s.size());
-                std::size_t nlines = row2-row1;
-                std::u32string erased_text = text32(b, e);
-
-                if (0 == nlines) {
-                    if (col2 > col1) {
-                        impl->rows_[row1].s.erase(col1, col2-col1);
-                    }
-                }
-
-                else {
-                    impl->rows_[row1].s.erase(col1);
-                    impl->rows_[row1].s.append(impl->rows_[row2].s.substr(col2));
-                    impl->rows_[row2].s.erase(0, col2);
-                    while (nlines--) { impl->rows_.erase(impl->rows_.begin()+row1+1); }
-                }
-
-                if (1 == impl->rows_.size() && 0 == impl->rows_[0].s.size()) { impl->rows_.clear(); }
-                ret = citer(row2, col2);
-                impl->signal_erase_(b, ret, erased_text);
-                impl->changed_ = true;
-                impl->signal_changed_();
-            }
-        }
-    }
-
-    return ret;
+    return impl->erase(b, e);
 }
 
 void Buffer::save(std::ostream & os) {
@@ -190,11 +102,7 @@ void Buffer::save(std::ostream & os) {
 }
 
 void Buffer::save_to_file(const ustring & path) {
-    auto & io = Locale().iocharset();
-    std::ofstream os(io.is_utf8() ? std::string(path) : io.encode(path));
-    if (!os.good()) { throw sys_error(); }
-    save(os);
-    os.close();
+    impl->save_to_file(path);
 }
 
 std::size_t Buffer::size() const {
@@ -284,21 +192,15 @@ void Buffer::save() {
 }
 
 void Buffer::lock() {
-    if (!impl->lock_) {
-        impl->lock_ = true;
-        signal_lock()();
-    }
-}
-
-bool Buffer::locked() const {
-    return impl->lock_;
+    impl->lock();
 }
 
 void Buffer::unlock() {
-    if (impl->lock_) {
-        impl->lock_ = false;
-        signal_unlock()();
-    }
+    impl->unlock();
+}
+
+bool Buffer::locked() const {
+    return impl->locked_;
 }
 
 void Buffer::enable_bom() {
@@ -314,39 +216,39 @@ bool Buffer::bom_enabled() const {
 }
 
 signal<void(Buffer_citer, Buffer_citer, const std::u32string &)> & Buffer::signal_erase() {
-    return impl->signal_erase_;
+    return impl->signal_erase();
 }
 
 signal<void(Buffer_citer, Buffer_citer)> & Buffer::signal_insert() {
-    return impl->signal_insert_;
+    return impl->signal_insert();
 }
 
 signal<void(Buffer_citer, Buffer_citer, const std::u32string &)> & Buffer::signal_replace() {
-    return impl->signal_replace_;
+    return impl->signal_replace();
 }
 
 signal<void()> & Buffer::signal_changed() {
-    return impl->signal_changed_;
+    return impl->signal_changed();
 }
 
 signal<void()> & Buffer::signal_flush() {
-    return impl->signal_flush_;
+    return impl->signal_flush();
 }
 
 signal<void()> & Buffer::signal_lock() {
-    return impl->signal_lock_;
+    return impl->signal_lock();
 }
 
 signal<void()> & Buffer::signal_unlock() {
-    return impl->signal_unlock_;
+    return impl->signal_unlock();
 }
 
 signal<void(const Encoding &)> & Buffer::signal_encoding_changed() {
-    return impl->signal_encoding_changed_;
+    return impl->signal_encoding_changed();
 }
 
 signal<void()> & Buffer::signal_bom_changed() {
-    return impl->signal_bom_changed_;
+    return impl->signal_bom_changed();
 }
 
 } // namespace tau

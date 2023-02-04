@@ -62,24 +62,23 @@ void Loop_win::done() {
 }
 
 // Overrides pure Loop_impl.
-bool Loop_win::iterate(int timeout_ms) {
+void Loop_win::iterate(int timeout_ms) {
     std::size_t n = std::min(std::size_t(MAXIMUM_WAIT_OBJECTS), handles_.size());
-    DWORD result = MsgWaitForMultipleObjects(n, handles_.data(), false, timeout_ms, QS_ALLINPUT);
-    if (WAIT_TIMEOUT == result) { return false; }
+    DWORD result = MsgWaitForMultipleObjects(n, handles_.data(), false, std::max(1, timeout_ms), QS_ALLINPUT);
 
-    if (0 != n && result < WAIT_OBJECT_0+n) {
-        HANDLE handle = handles_[result-WAIT_OBJECT_0];
-        signal_chain_poll_(handle);
+    if (WAIT_TIMEOUT != result) {
+        if (0 != n && result < WAIT_OBJECT_0+n) {
+            HANDLE handle = handles_[result-WAIT_OBJECT_0];
+            signal_chain_poll_(handle);
+        }
+
+        MSG msg;
+
+        while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE)) {
+            TranslateMessage(&msg);
+            DispatchMessageW(&msg);
+        }
     }
-
-    MSG msg;
-
-    while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE)) {
-        TranslateMessage(&msg);
-        DispatchMessageW(&msg);
-    }
-
-    return true;
 }
 
 // Overrides pure Loop_impl.

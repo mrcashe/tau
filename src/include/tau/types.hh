@@ -54,7 +54,7 @@ using Buffer_ptr = std::shared_ptr<Buffer_impl>;
 using Buffer_cptr = std::shared_ptr<const Buffer_impl>;
 
 class Buffer_citer;
-class Buffer_citer_impl;
+struct Buffer_citer_impl;
 
 class Check;
 class Check_menu_item;

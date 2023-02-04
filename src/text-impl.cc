@@ -30,6 +30,7 @@
 #include <tau/painter.hh>
 #include <tau/string.hh>
 #include <display-impl.hh>
+#include <loop-impl.hh>
 #include <painter-impl.hh>
 #include <scroller-impl.hh>
 #include <text-impl.hh>
@@ -71,9 +72,20 @@ Text_impl::Text_impl(Buffer buf, Align xalign, Align yalign):
     init();
 }
 
+extern unsigned nwidgets_;
+
+Text_impl::~Text_impl() {
+    --nwidgets_;
+    if (actions_) { delete actions_; }
+    if (signal_selection_changed_) { delete signal_selection_changed_; }
+    if (signal_caret_motion_) { delete signal_caret_motion_; }
+    if (signal_click_) { delete signal_click_; }
+}
+
 void Text_impl::init() {
+    ++nwidgets_;
+
     fonts_.emplace_back(Font());
-    caret_timer_.signal_alarm().connect(fun(this, &Text_impl::on_caret_timer));
 
     auto & fi = style_.get(STYLE_FONT);
     fi.signal_changed().connect(fun(this, &Text_impl::update_font));
@@ -105,42 +117,11 @@ void Text_impl::init() {
     signal_focus_in_.connect(fun(this, &Text_impl::on_focus_in));
     signal_focus_out_.connect(fun(this, &Text_impl::hide_caret));
 
-    signal_caret_motion_.connect(fun(this, &Text_impl::refresh_caret));
-    signal_caret_motion_.connect(fun(this, &Text_impl::scroll_to_caret));
-
     signal_mouse_down_.connect(fun(this, &Text_impl::on_mouse_down));
     signal_mouse_up_.connect(fun(this, &Text_impl::on_mouse_up));
     signal_mouse_motion_.connect(fun(this, &Text_impl::on_mouse_motion));
     signal_paint_.connect(fun(this, &Text_impl::on_paint));
     signal_take_focus_.connect(fun(this, &Text_impl::on_take_focus));
-
-    connect_action(move_left_action_);
-    connect_action(select_left_action_);
-    connect_action(move_right_action_);
-    connect_action(select_right_action_);
-    connect_action(move_up_action_);
-    connect_action(select_up_action_);
-    connect_action(move_down_action_);
-    connect_action(select_down_action_);
-    connect_action(move_word_left_action_);
-    connect_action(select_word_left_action_);
-    connect_action(move_word_right_action_);
-    connect_action(select_word_right_action_);
-    connect_action(move_home_action_);
-    connect_action(select_home_action_);
-    connect_action(move_to_eol_action_);
-    connect_action(select_to_eol_action_);
-    connect_action(move_to_sof_action_);
-    connect_action(select_to_sof_action_);
-    connect_action(move_to_eof_action_);
-    connect_action(select_to_eof_action_);
-    connect_action(move_page_up_action_);
-    connect_action(select_page_up_action_);
-    connect_action(move_page_down_action_);
-    connect_action(select_page_down_action_);
-    connect_action(select_all_action_);
-    connect_action(copy_action_);
-    connect_action(cancel_action_);
 
     init_buffer();
 }
@@ -167,7 +148,7 @@ bool Text_impl::on_mouse_down(int mbt, int mm, const Point & pt) {
         if (select_allowed_) { enable_caret(); msel_ = i; }
         if (caret_enabled_) { move_to(i); }
         grab_focus();
-        signal_click_();
+        if (signal_click_) { (*signal_click_)(); }
     }
 
     return false;
@@ -200,7 +181,7 @@ void Text_impl::on_mouse_motion(int mm, const Point & pt) {
                 emsel_ = i;
             }
 
-            move_caret(i);
+            move_to(i);
         }
     }
 }
@@ -229,11 +210,11 @@ Painter Text_impl::wipe_area(int x1, int y1, int x2, int y2, Painter pr) {
 void Text_impl::on_buffer_replace(Buffer_citer b, Buffer_citer e, const std::u32string & replaced) {
     if (b.row() == e.row()) {
         auto i = rows_.begin()+b.row();
-        int h0 = i->ascent+i->descent;
+        int h0 = i->ascent_+i->descent_;
         load_rows(i, i);
         calc_row(i);
-        int h1 = i->ascent+i->descent;
-        if (i->width < text_width_) { text_width_ = calc_width(i, rows_.end()); }
+        int h1 = i->ascent_+i->descent_;
+        if (i->width_ < text_width_) { text_width_ = calc_width(i, rows_.end()); }
         e.move_to_eol();
         if (h1 != h0) { translate_rows(i+1, rows_.end(), h1-h0); e = buffer_.cend(); }
         update_requisition();
@@ -243,7 +224,7 @@ void Text_impl::on_buffer_replace(Buffer_citer b, Buffer_citer e, const std::u32
 }
 
 void Text_impl::on_buffer_replace_move(Buffer_citer b, Buffer_citer e, const std::u32string & replaced) {
-    move_caret(e);
+    move_to(e);
     hint_x();
 }
 
@@ -258,22 +239,22 @@ void Text_impl::on_buffer_erase(Buffer_citer b, Buffer_citer e, const std::u32st
     auto i = rows_.begin()+b.row();
 
     if (e.row() == b.row()) {
-        int h0 = i->ascent+i->descent;
-        int y1 = oy_+i->ybase-i->ascent;
-        int y2 = oy_+i->ybase+i->descent;
+        int h0 = i->ascent_+i->descent_;
+        int y1 = oy_+i->ybase_-i->ascent_;
+        int y2 = oy_+i->ybase_+i->descent_;
 
         load_rows(i, i);
         calc_row(i);
-        int h1 = i->ascent+i->descent;
-        y1 = std::min(y1, oy_+i->ybase-i->ascent);
-        y2 = std::max(y2, oy_+i->ybase+i->descent);
+        int h1 = i->ascent_+i->descent_;
+        y1 = std::min(y1, oy_+i->ybase_-i->ascent_);
+        y2 = std::max(y2, oy_+i->ybase_+i->descent_);
 
         if (xalign_ != ALIGN_START) {
             wipe_area(va_.left(), y1, va_.right(), y2);
             b.move_to_sol();
         }
 
-        if (i->width < text_width_) { text_width_ = calc_width(rows_.begin(), rows_.end()); }
+        if (i->width_ < text_width_) { text_width_ = calc_width(rows_.begin(), rows_.end()); }
         e.move_to_eol();
         if (h1 != h0) { translate_rows(i+1, rows_.end(), h1-h0); e = buffer_.cend(); }
     }
@@ -286,7 +267,7 @@ void Text_impl::on_buffer_erase(Buffer_citer b, Buffer_citer e, const std::u32st
         load_rows(i, j);
         calc_rows();
         e = buffer_.cend();
-        wipe_area(va_.x(), i->ybase-i->ascent, va_.right(), va_.bottom());
+        wipe_area(va_.x(), i->ybase_-i->ascent_, va_.right(), va_.bottom());
     }
 
     update_requisition();
@@ -296,7 +277,7 @@ void Text_impl::on_buffer_erase(Buffer_citer b, Buffer_citer e, const std::u32st
 }
 
 void Text_impl::on_buffer_erase_move(Buffer_citer b, Buffer_citer e, const std::u32string & erased) {
-    move_caret(b);
+    move_to(b);
     hint_x();
 }
 
@@ -305,7 +286,7 @@ void Text_impl::on_buffer_insert(Buffer_citer b, Buffer_citer e) {
 }
 
 void Text_impl::on_buffer_insert_move(Buffer_citer b, Buffer_citer e) {
-    move_caret(e);
+    move_to(e);
     hint_x();
 }
 
@@ -326,13 +307,13 @@ void Text_impl::assign(Buffer buf) {
     clear();
     buffer_ = buf;
     init_buffer();
-    signal_caret_motion_();
 }
 
 // Overriden by Edit_impl.
 void Text_impl::assign(const ustring & s) {
     clear();
     buffer_.assign(s);
+    if (caret_ >= buffer_.cend()) { move_to(buffer_.cend()); }
 }
 
 // Overriden by Edit_impl.
@@ -351,9 +332,8 @@ void Text_impl::clear() {
     esel_.reset();
     msel_.reset();
     emsel_.reset();
-    caret_ = buffer_.cbegin();
     update_requisition();
-    signal_caret_motion_();
+    move_to(buffer_.cbegin());
 }
 
 // Overriden by Edit_impl.
@@ -364,8 +344,11 @@ void Text_impl::init_buffer() {
     insert_move_cx_ = buffer_.signal_insert().connect(fun(this, &Text_impl::on_buffer_insert_move));
     replace_move_cx_ = buffer_.signal_replace().connect(fun(this, &Text_impl::on_buffer_replace_move));
     erase_move_cx_ = buffer_.signal_erase().connect(fun(this, &Text_impl::on_buffer_erase_move));
-    caret_ = buffer_.cbegin();
     insert_range(buffer_.cbegin(), buffer_.cend());
+    caret_ = buffer_.cbegin();
+    xhint_ = 0;
+    refresh_caret();
+    scroll_to_caret();
 }
 
 void Text_impl::hint_x() {
@@ -406,14 +389,14 @@ bool Text_impl::align_rows(R_iter first, R_iter last) {
         if (oy_ != oy) { oy_ = oy; changed = true; }
 
         for (; first != rows_.end() && first <= last; ++first) {
-            int ex = w-first->width, ox = 0;
+            int ex = w-first->width_, ox = 0;
 
             if (ex > 0) {
                 if (ALIGN_CENTER == xalign_) { ox = ex/2; }
                 else if (ALIGN_END == xalign_) { ox = ex; }
             }
 
-            if (first->ox != ox) { first->ox = ox; changed = true; }
+            if (first->ox_ != ox) { first->ox_ = ox; changed = true; }
         }
     }
 
@@ -428,7 +411,7 @@ void Text_impl::align_all() {
 
 void Text_impl::translate_rows(R_iter first, R_iter last, int dy) {
     if (last < first) { std::swap(first, last); }
-    for (; first != rows_.end() && first <= last; ++first) { first->ybase += dy; }
+    for (; first != rows_.end() && first <= last; ++first) { first->ybase_ += dy; }
 }
 
 void Text_impl::update_requisition() {
@@ -481,7 +464,7 @@ void Text_impl::update_selection(Buffer_citer i, Buffer_citer j) {
             }
         }
 
-        signal_selection_changed_();
+        if (signal_selection_changed_) { signal_selection_changed_->operator()(); }
     }
 }
 
@@ -490,9 +473,9 @@ void Text_impl::update_range(Buffer_citer b, Buffer_citer e) {
         if (e < b) { std::swap(b, e); }
         if (0 == e.row()) { --e; }
 
-        const Row & line1 = rows_[b.row()], line2 = rows_[e.row()];
-        int y1 = oy_+line1.ybase-line1.ascent;
-        int y2 = oy_+line2.ybase+line2.descent;
+        auto & row1 = rows_[b.row()], row2 = rows_[e.row()];
+        int y1 = oy_+row1.ybase_-row1.ascent_;
+        int y2 = oy_+row2.ybase_+row2.descent_;
         if (e.row() >= rows_.size()-1) { y2 = va_.bottom(); }
         int x1 = va_.left(), x2 = va_.right();
 
@@ -507,43 +490,42 @@ void Text_impl::update_range(Buffer_citer b, Buffer_citer e) {
 
 void Text_impl::load_rows(R_iter first, R_iter last) {
     for (; first != rows_.end() && first <= last; ++first) {
-        first->frags.clear();
+        first->frags_.clear();
         auto rn = first-rows_.begin();
         auto b = buffer_.citer(rn, 0), e = b; e.move_to_eol();
-        std::u32string s = buffer_.text32(b, e);
-        first->ncols = s.size();
-        first->poss.assign(first->ncols, 0);
-        first->frags.emplace_back();
-        Frag & frag = first->frags.back();
-        frag.start = 0;
-        frag.ncols = first->ncols;
+        first->ncols_ = b.length(e);
+        first->poss_.assign(first->ncols_, 0);
+        first->frags_.emplace_back();
+        Frag & frag = first->frags_.back();
+        frag.start_ = 0;
+        frag.ncols_ = first->ncols_;
     }
 }
 
 void Text_impl::calc_row(R_iter i, Painter pr) {
     if (!pr) { pr = priv_painter(); }
-    i->ascent = 0;
-    i->descent = 0;
-    i->width = 0;
-    i->ox = 0;
+    i->ascent_ = 0;
+    i->descent_ = 0;
+    i->width_ = 0;
+    i->ox_ = 0;
     int x = 0;
 
     if (pr) {
         std::size_t pos = 0;
         auto rn = i-rows_.begin();
-        auto b = buffer_.citer(rn, 0), e = buffer_.citer(rn, i->ncols);
+        auto b = buffer_.citer(rn, 0), e = b; b.move_to_col(i->ncols_);
         std::u32string s = buffer_.text32(b, e);
 
-        for (Frag & frag: i->frags) {
-            Font font = fonts_[frag.font];
+        for (Frag & frag: i->frags_) {
+            Font font = fonts_[frag.font_];
             pr.set_font(font);
-            i->ascent = std::max(i->ascent, int(std::ceil(font.ascent())));
-            i->descent = std::max(i->descent, int(std::ceil(fabs(font.descent()))));
+            i->ascent_ = std::max(i->ascent_, int(std::ceil(font.ascent())));
+            i->descent_ = std::max(i->descent_, int(std::ceil(fabs(font.descent()))));
             std::u32string acc;
 
-            for (std::size_t j = 0; j < frag.ncols; ++j) {
-                i->poss[j+frag.start] = x+std::ceil(pr.text_size(acc).x());
-                char32_t c = s[j+frag.start];
+            for (std::size_t j = 0; j < frag.ncols_; ++j) {
+                i->poss_[j+frag.start_] = x+std::ceil(pr.text_size(acc).x());
+                char32_t c = s[j+frag.start_];
 
                 if (0x0009 == c) {
                     std::size_t n_spaces = tab_width_-(pos%tab_width_);
@@ -557,58 +539,58 @@ void Text_impl::calc_row(R_iter i, Painter pr) {
                 }
             }
 
-            frag.width = std::ceil(pr.text_size(acc).x());
-            x += frag.width;
+            frag.width_ = std::ceil(pr.text_size(acc).x());
+            x += frag.width_;
         }
 
-        i->width = x;
-        i->ellipsized.clear();
+        i->width_ = x;
+        i->ellipsized_.clear();
 
-        if (0 != ellipsis_width_ && va_.iwidth() >= ellipsis_width_ && i->ncols > 1) {
-            if (i->width > va_.iwidth()) {
+        if (0 != ellipsis_width_ && va_.iwidth() >= ellipsis_width_ && i->ncols_ > 1) {
+            if (i->width_ > va_.iwidth()) {
                 std::size_t col = 1;
                 int w = va_.width()-ellipsis_width_;
 
                 if (WRAP_ELLIPSIZE_START == wrap_) {
-                    i->ellipsized += ellipsis_;
-                    int skip = i->width-w, skipped = 0;
-                    while (skipped < skip && col < i->ncols) { skipped = i->poss[col++]; }
-                    i->ellipsized += s.substr(col-1);
+                    i->ellipsized_ += ellipsis_;
+                    int skip = i->width_-w, skipped = 0;
+                    while (skipped < skip && col < i->ncols_) { skipped = i->poss_[col++]; }
+                    i->ellipsized_ += s.substr(col-1);
                 }
 
                 else if (WRAP_ELLIPSIZE_CENTER == wrap_) {
                     int lpart = w/2, wnext = 0;
 
-                    while (wnext < lpart && col < i->ncols) {
-                        wnext = i->poss[col];
-                        if (wnext < lpart) { i->ellipsized += s[col-1]; }
+                    while (wnext < lpart && col < i->ncols_) {
+                        wnext = i->poss_[col];
+                        if (wnext < lpart) { i->ellipsized_ += s[col-1]; }
                         ++col;
                     }
 
-                    i->ellipsized += ellipsis_;
-                    col = i->ncols-1;
-                    int rpart = i->width-(w/2), rpos = i->width;
+                    i->ellipsized_ += ellipsis_;
+                    col = i->ncols_-1;
+                    int rpart = i->width_-(w/2), rpos = i->width_;
 
                     while (rpos > rpart && 0 != col) {
-                        rpos = i->poss[col];
+                        rpos = i->poss_[col];
                         if (rpos > rpart) { --col; }
                     }
 
-                    if (col < i->ncols-1) { ++col; }
-                    i->ellipsized += s.substr(col);
+                    if (col < i->ncols_-1) { ++col; }
+                    i->ellipsized_ += s.substr(col);
                 }
 
                 // Assume WRAP_ELLIPSIZE_END.
                 else {
                     int wnext = 0;
 
-                    while (wnext < w && col < i->ncols) {
-                        wnext = i->poss[col];
-                        if (wnext < w) { i->ellipsized += s[col-1]; }
+                    while (wnext < w && col < i->ncols_) {
+                        wnext = i->poss_[col];
+                        if (wnext < w) { i->ellipsized_ += s[col-1]; }
                         ++col;
                     }
 
-                    i->ellipsized += ellipsis_;
+                    i->ellipsized_ += ellipsis_;
                 }
             }
         }
@@ -622,11 +604,11 @@ void Text_impl::calc_rows() {
 
     for (auto i = rows_.begin(); i != rows_.end(); ++i) {
         calc_row(i, pr);
-        i->ybase = ybase+i->ascent;
-        ybase += i->ascent+i->descent+spacing_;
-        text_height_ += i->ascent+i->descent;
+        i->ybase_ = ybase+i->ascent_;
+        ybase += i->ascent_+i->descent_+spacing_;
+        text_height_ += i->ascent_+i->descent_;
         if (i+1 < rows_.end()) { text_height_ += spacing_; }
-        text_width_ = std::max(text_width_, i->width);
+        text_width_ = std::max(text_width_, i->width_);
     }
 
     update_requisition();
@@ -638,7 +620,7 @@ int Text_impl::calc_height(R_citer first, R_citer last) {
     int h = 0;
 
     for (; first != rows_.end() && first <= last; ) {
-        h += first->ascent+first->descent;
+        h += first->ascent_+first->descent_;
         if (++first != rows_.end()) { h += spacing_; }
     }
 
@@ -650,7 +632,7 @@ int Text_impl::calc_width(R_citer first, R_citer last) {
     int w = 0;
 
     for (; first != rows_.end() && first <= last; ++first) {
-        w = std::max(w, first->width);
+        w = std::max(w, first->width_);
     }
 
     return w;
@@ -664,10 +646,10 @@ void Text_impl::update_caret() {
         if (caret_.row() < rows_.size()) {
             const Row & row = rows_[caret_.row()];
             x1 = x_at_col(row, caret_.col());
-            y1 += row.ybase-row.ascent;
-            y2 += row.ybase+row.descent;
+            y1 += row.ybase_-row.ascent_;
+            y2 += row.ybase_+row.descent_;
 
-            if (!insert_ && caret_.col() < row.ncols) {
+            if (!insert_ && caret_.col() < row.ncols_) {
                 x2 = std::max(x2, x_at_col(row, caret_.col()+1));
             }
         }
@@ -696,7 +678,7 @@ void Text_impl::update_caret() {
     rcaret_.update_width(x2-x1);
     rcaret_.update_origin(x1, y1);
     rcaret_.update_height(y2-y1);
-    ccaret_ = style().get("foreground").get();
+    ccaret_ = style().get(STYLE_FOREGROUND).get();
 }
 
 void Text_impl::draw_caret(Painter pr) {
@@ -718,7 +700,7 @@ void Text_impl::on_caret_timer() {
 
 void Text_impl::refresh_caret() {
     if (caret_enabled_ && caret_visible_) {
-        caret_timer_.restart(CARET_TIMEOUT, true);
+        if (loop_) { caret_cx_ = loop_->signal_alarm(CARET_TIMEOUT, true).connect(fun(this, &Text_impl::on_caret_timer)); }
         wipe_caret();
         update_caret();
         expose_caret();
@@ -743,8 +725,8 @@ void Text_impl::scroll_to_caret() {
     if (caret_enabled_ && !buffer_.empty() && caret_.row() < rows_.size() && va_) {
         Point ofs(va_.origin());
         const Row & row = rows_[caret_.row()];
-        int y1 = oy_+row.ybase-row.ascent;
-        int y2 = oy_+row.ybase+row.descent;
+        int y1 = oy_+row.ybase_-row.ascent_;
+        int y2 = oy_+row.ybase_+row.descent_;
         int x1 = x_at_col(caret_.row(), caret_.col());
         int x2 = x1+8;
 
@@ -772,20 +754,17 @@ void Text_impl::scroll_to_caret() {
     }
 }
 
-void Text_impl::move_caret(std::size_t row, std::size_t col) {
-    if (caret_enabled_) {
-        caret_.move_to(row, col);
-        signal_caret_motion_();
-    }
-}
-
-void Text_impl::move_caret(Buffer_citer i) {
-    move_caret(i.row(), i.col());
-}
-
 void Text_impl::move_to(std::size_t row, std::size_t col) {
-    move_caret(row, col);
-    hint_x();
+    if (caret_enabled_) {
+        auto c(caret_);
+        caret_.move_to(row, col);
+
+        if (caret_ != c) {
+            if (signal_caret_motion_) { (*signal_caret_motion_)(); }
+            refresh_caret();
+            scroll_to_caret();
+        }
+    }
 }
 
 void Text_impl::move_to(const Buffer_citer i) {
@@ -802,8 +781,10 @@ Buffer_citer Text_impl::iter(std::size_t row, std::size_t col) const {
 
 void Text_impl::enable_caret() {
     if (!caret_enabled_) {
+        if (!loop_) { loop_ = Loop_impl::this_loop(); }
         unselect();
         caret_enabled_ = true;
+        init_actions();
         allow_focus();
         update_requisition();
         refresh_caret();
@@ -813,9 +794,9 @@ void Text_impl::enable_caret() {
 void Text_impl::disable_caret() {
     if (caret_enabled_) {
         caret_enabled_ = false;
-        unselect();
+        caret_cx_.drop();
         hide_caret();
-        drop_focus();
+        unselect();
         disallow_focus();
         update_requisition();
     }
@@ -831,7 +812,7 @@ void Text_impl::show_caret() {
 void Text_impl::hide_caret() {
     if (caret_visible_) {
         if (caret_exposed_) { wipe_caret(); }
-        caret_timer_.stop();
+        caret_cx_.drop();
         caret_visible_ = false;
     }
 }
@@ -840,21 +821,16 @@ std::size_t Text_impl::hinted_pos(std::size_t ri) {
     int x1 = 0;
 
     if (xhint_ > 0 && ri < rows_.size()) {
-        const Row & row = rows_[ri];
+        auto & row = rows_[ri];
 
-        for (std::size_t n = 1; n < row.ncols; ++n) {
+        for (std::size_t n = 1; n < row.ncols_; ++n) {
             int x2 = x_at_col(row, n);
 
             if (x2 >= xhint_) {
                 std::size_t col = x2-xhint_ < xhint_-x1 ? n : n-1;
-
-                for (Buffer_citer c(caret_, ri, col); col < row.ncols; ++c, ++col) {
-                    if (!char32_is_modifier(*c)) {
-                        break;
-                    }
-                }
-
-                return col;
+                Buffer_citer c(caret_, ri, col);
+                if (char32_is_modifier(*c)) { ++c; }
+                return c.col();
             }
 
             else {
@@ -862,14 +838,14 @@ std::size_t Text_impl::hinted_pos(std::size_t ri) {
             }
         }
 
-        return row.ncols;
+        return row.ncols_;
     }
 
     return x1;
 }
 
 int Text_impl::x_at_col(const Row & row, std::size_t col) const {
-    return row.ox+(col < row.ncols ? row.poss[col] : row.width);
+    return row.ox_+(col < row.ncols_ ? row.poss_[col] : row.width_);
 }
 
 int Text_impl::x_at_col(std::size_t ri, std::size_t col) const {
@@ -880,25 +856,24 @@ int Text_impl::x_at_col(std::size_t ri, std::size_t col) const {
     return 0;
 }
 
-std::size_t Text_impl::col_at_x(const Row & line, int x) const {
+std::size_t Text_impl::col_at_x(const Row & row, int x) const {
     std::size_t col = 0;
-    x -= line.ox;
+    x -= row.ox_;
 
     if (x > 0) {
-        if (x >= line.width) {
-            col = line.ncols;
+        if (x >= row.width_) {
+            col = row.ncols_;
         }
 
         else {
-            for (std::size_t n = 0; n < line.ncols; ++n, ++col) {
-                int x0 = line.poss[n];
-                int x1 = n+1 < line.ncols ? line.poss[n+1] : line.width;
+            for (std::size_t n = 0; n < row.ncols_; ++n, ++col) {
+                int x0 = row.poss_[n];
+                int x1 = n+1 < row.ncols_ ? row.poss_[n+1] : row.width_;
                 if (x >= x0 && x < x1) { break; }
             }
         }
     }
 
-    // std::cout << "col_at_x " << line.text << " " << x << " " << line.ox << " " << col << '\n';
     return col;
 }
 
@@ -911,12 +886,9 @@ std::size_t Text_impl::col_at_x(std::size_t ri, int x) const {
 }
 
 std::size_t Text_impl::row_at_y(int y) const {
-    if (y >= 0) {
-        for (auto i = rows_.begin(); i != rows_.end(); ++i) {
-            int ymax = oy_+i->ybase+i->descent;
-            if (y < ymax) { return i-rows_.begin(); }
-        }
-
+    if (!rows_.empty() && y >= 0) {
+        auto i = std::find_if(rows_.begin(), rows_.end(), [y](auto & row) { return row.ybase_+row.descent_ >= y; } );
+        if (i != rows_.end()) { return i-rows_.begin(); }
         return rows_.size()-1;
     }
 
@@ -924,45 +896,39 @@ std::size_t Text_impl::row_at_y(int y) const {
 }
 
 int Text_impl::baseline(std::size_t ri) const {
-    if (ri < rows_.size()) {
-        return rows_[ri].ybase;
-    }
-
-    return 0;
+    return ri < rows_.size() ? rows_[ri].ybase_ : 0;
 }
 
-void Text_impl::get_row_bounds(std::size_t ln, int & top, int & bottom) const {
-    if (ln < rows_.size()) {
-        const Row & line = rows_[ln];
-        top = oy_+line.ybase-line.ascent;
-        bottom = oy_+line.ybase+line.descent;
-    }
+void Text_impl::get_row_bounds(std::size_t rn, int & top, int & bottom) const {
+    top = bottom = 0;
 
-    else {
-        top = bottom = 0;
+    if (rn < rows_.size()) {
+        const Row & row = rows_[rn];
+        top = oy_+row.ybase_-row.ascent_;
+        bottom = oy_+row.ybase_+row.descent_;
     }
 }
 
 Buffer_citer Text_impl::iter_from_point(const Point & pt) {
-    std::size_t ln = row_at_y(pt.y());
-    std::size_t col = col_at_x(ln, pt.x());
-    return iter(ln, col);
+    std::size_t row = row_at_y(pt.y());
+    std::size_t col = col_at_x(row, pt.x());
+    return iter(row, col);
 }
 
-void Text_impl::paint_ellipsized(const Row & line, Painter pr) {
-    int ybase = oy_+line.ybase;
-    wipe_area(va_.left(), ybase-line.ascent, va_.right(), ybase+line.descent, pr);
+void Text_impl::paint_ellipsized(const Row & row, Painter pr) {
+    int ybase = oy_+row.ybase_;
+    wipe_area(va_.left(), ybase-row.ascent_, va_.right(), ybase+row.descent_, pr);
     pr.move_to(0, ybase);
     select_font(pr);
-    pr.text(line.ellipsized, enabled() ? style_.color(STYLE_FOREGROUND) : style_.color(STYLE_BACKGROUND).get().inactive());
+    pr.text(row.ellipsized_, enabled() ? style_.color(STYLE_FOREGROUND) : style_.color(STYLE_BACKGROUND).get().inactive());
     pr.stroke();
 }
 
 void Text_impl::paint_row(R_citer ri, std::size_t pos, Painter pr) {
-    pos = std::min(pos, ri->ncols);
+    pos = std::min(pos, ri->ncols_);
     std::size_t scol = std::max(pos, col_at_x(*ri, va_.left()));            // Starting column.
-    std::size_t ecol = std::min(ri->ncols, 1+col_at_x(*ri, va_.right()));   // Ending column.
-    auto rn = ri-rows_.begin();
+    std::size_t ecol = std::min(ri->ncols_, 1+col_at_x(*ri, va_.right()));   // Ending column.
+    std::size_t rn = ri-rows_.begin();
 
     // Include modifiers before starting column.
     for (Buffer_citer i = buffer_.citer(rn, scol); scol > 0; --scol, --i) {
@@ -970,7 +936,7 @@ void Text_impl::paint_row(R_citer ri, std::size_t pos, Painter pr) {
     }
 
     // Include modifiers after ending column.
-    for (Buffer_citer i = buffer_.citer(rn, ecol); i.col() < ri->ncols; ++ecol, ++i) {
+    for (Buffer_citer i = buffer_.citer(rn, ecol); i.col() < ri->ncols_; ++ecol, ++i) {
         if (!char32_is_modifier(*i)) { break; }
     }
 
@@ -981,17 +947,17 @@ void Text_impl::paint_row(R_citer ri, std::size_t pos, Painter pr) {
     }
 
     std::size_t col0 = 0;
-    int ybase = oy_+ri->ybase;
-    int y1 = ybase-ri->ascent;
-    int y2 = ybase+ri->descent;
+    int ybase = oy_+ri->ybase_;
+    int y1 = ybase-ri->ascent_;
+    int y2 = ybase+ri->descent_;
 
     // Loop over fragmens.
-    for (const Frag & frag: ri->frags) {
-        std::size_t fend = col0+frag.ncols;
+    for (const Frag & frag: ri->frags_) {
+        std::size_t fend = col0+frag.ncols_;
         std::size_t col = std::max(scol, col0);
 
         if (fend > scol) {
-            auto b = buffer_.citer(rn, 0), e = buffer_.citer(rn, ri->ncols);
+            auto b = buffer_.citer(rn, 0), e = buffer_.citer(rn, ri->ncols_);
             const std::u32string s = buffer_.text32(b, e);
             std::size_t col1 = std::min(ecol, fend);
 
@@ -1045,14 +1011,14 @@ void Text_impl::paint_row(R_citer ri, std::size_t pos, Painter pr) {
             }
         }
 
-        col0 += frag.ncols;
+        col0 += frag.ncols_;
         if (col0 > ecol) { break; }
     }
 
     // Draw an empty rectangle after EOL.
-    if (ecol >= ri->ncols) {
-        if (esel_ && esel_.row() == rn && esel_.col() <= ri->ncols) { bg = style().color(STYLE_BACKGROUND); }
-        pr.rectangle(ri->ox+ri->width, y1, va_.right(), y2);
+    if (ecol >= ri->ncols_) {
+        if (esel_ && esel_.row() == rn && esel_.col() <= ri->ncols_) { bg = style().color(STYLE_BACKGROUND); }
+        pr.rectangle(ri->ox_+ri->width_, y1, va_.right(), y2);
         pr.set_brush(bg);
         pr.fill();
     }
@@ -1065,12 +1031,13 @@ void Text_impl::redraw(const Rect & r, Painter pr) {
         bool caret_exposed = caret_exposed_;
         wipe_caret();
         pr.push();
-        std::size_t top = row_at_y(r.top()), bottom = row_at_y(r.bottom());
-        auto last = rows_.begin()+bottom;
 
-        for (auto i = rows_.begin()+top; i != rows_.end() && i <= last; ++i) {
-            if (!i->ellipsized.empty()) { paint_ellipsized(*i, pr); }
-            else { paint_row(i, col_at_x(*i, r.x()), pr); }
+        R_iter b = std::find_if(rows_.begin(), rows_.end(), [r](auto & row) { return row.ybase_+row.descent_ >= r.top(); } );
+        R_iter e = std::find_if(b, rows_.end(), [r](auto & row) { return row.ybase_-row.ascent_ > r.bottom(); } );
+
+        for (; b != e && b != rows_.end(); ++b) {
+            if (!b->ellipsized_.empty()) { paint_ellipsized(*b, pr); }
+            else { paint_row(b, col_at_x(*b, r.x()), pr); }
         }
 
         pr.pop();
@@ -1156,7 +1123,7 @@ void Text_impl::select(Buffer_citer b, Buffer_citer e) {
         sel_ = b;
         esel_ = e;
         update_range(b, e);
-        signal_selection_changed_();
+        if (signal_selection_changed_) { signal_selection_changed_->operator()(); }
     }
 }
 
@@ -1171,7 +1138,7 @@ void Text_impl::unselect() {
         Buffer_citer b(sel_), e(esel_);
         sel_.reset(); esel_.reset();
         update_range(b, e);
-        signal_selection_changed_();
+        if (signal_selection_changed_) { signal_selection_changed_->operator()(); }
     }
 }
 
@@ -1219,10 +1186,10 @@ void Text_impl::left() {
         }
 
         else {
-            while (!(--j).sof() && char32_is_modifier(*j)) {}
+            --j;
         }
 
-        move_caret(j);
+        move_to(j);
         hint_x();
     }
 }
@@ -1247,10 +1214,10 @@ void Text_impl::right() {
         }
 
         else {
-            while (!(++j).eof() && char32_is_modifier(*j)) {}
+            ++j;
         }
 
-        move_caret(j);
+        move_to(j);
         hint_x();
     }
 }
@@ -1272,7 +1239,7 @@ void Text_impl::up() {
             Buffer_citer i = caret_;
             std::size_t pos = 0 != xhint_ ? hinted_pos(i.row()-1) : i.col();
             i.move_to(i.row()-1, pos);
-            move_caret(i);
+            move_to(i);
         }
     }
 }
@@ -1296,7 +1263,7 @@ void Text_impl::down() {
             Buffer_citer i = caret_;
             std::size_t pos = 0 != xhint_ ? hinted_pos(dest_row) : i.col();
             i.move_to(dest_row, pos);
-            move_caret(i);
+            move_to(i);
         }
     }
 }
@@ -1317,7 +1284,7 @@ void Text_impl::move_word_left() {
         unselect();
         Buffer_citer i = caret_;
         i.move_word_left();
-        move_caret(i);
+        move_to(i);
         hint_x();
     }
 }
@@ -1326,7 +1293,7 @@ void Text_impl::select_word_left() {
     if (caret_) {
         Buffer_citer i(caret_), j(caret_);
         j.move_word_left();
-        move_caret(j);
+        move_to(j);
         update_selection(i, j);
         hint_x();
     }
@@ -1337,7 +1304,7 @@ void Text_impl::move_word_right() {
         unselect();
         Buffer_citer i = caret_;
         i.move_word_right();
-        move_caret(i);
+        move_to(i);
         hint_x();
     }
 }
@@ -1346,7 +1313,7 @@ void Text_impl::select_word_right() {
     if (caret_) {
         Buffer_citer i(caret_), j(caret_);
         j.move_word_right();
-        move_caret(j);
+        move_to(j);
         update_selection(i, j);
         hint_x();
     }
@@ -1354,12 +1321,11 @@ void Text_impl::select_word_right() {
 
 void Text_impl::home() {
     if (caret_ && caret_.col() > 0) {
-        Buffer_citer i = caret_;
+        auto i(caret_);
         i.move_to_sol();
         i.skip_blanks();
-        if (i.col() < caret_.col()) { caret_ = i; }
-        else { i.move_to_sol(); }
-        move_caret(i);
+        if (i.col() >= caret_.col()) { i.move_to_sol(); }
+        move_to(i);
         hint_x();
     }
 }
@@ -1380,7 +1346,7 @@ void Text_impl::move_to_eol() {
         unselect();
         Buffer_citer i(caret_);
         i.move_to_eol();
-        move_caret(i);
+        move_to(i);
         hint_x();
     }
 }
@@ -1389,7 +1355,7 @@ void Text_impl::select_to_eol() {
     if (caret_) {
         Buffer_citer i(caret_), j(caret_);
         j.move_to_eol();
-        move_caret(j);
+        move_to(j);
         update_selection(i, j);
         hint_x();
     }
@@ -1400,7 +1366,7 @@ void Text_impl::move_to_sof() {
         unselect();
         Buffer_citer i(caret_);
         i.move_to(0, 0);
-        move_caret(i);
+        move_to(i);
         hint_x();
     }
 }
@@ -1409,7 +1375,7 @@ void Text_impl::select_to_sof() {
     if (caret_) {
         Buffer_citer i(caret_), j(caret_);
         j.move_to(0, 0);
-        move_caret(j);
+        move_to(j);
         update_selection(i, j);
         hint_x();
     }
@@ -1418,7 +1384,7 @@ void Text_impl::select_to_sof() {
 void Text_impl::move_to_eof() {
     if (caret_) {
         unselect();
-        move_caret(buffer_.cend());
+        move_to(buffer_.cend());
         hint_x();
     }
 }
@@ -1426,7 +1392,7 @@ void Text_impl::move_to_eof() {
 void Text_impl::select_to_eof() {
     if (caret_) {
         Buffer_citer i(caret_);
-        move_caret(buffer_.cend());
+        move_to(buffer_.cend());
         update_selection(i, caret_);
         hint_x();
     }
@@ -1438,38 +1404,38 @@ void Text_impl::page_up() {
 
         if (ri < nrows && ri > 0) {
             const Row & row1 = rows_[ri];
-            int yb = oy_+row1.ybase-va_.height(), y2 = std::max(0, yb);
+            int yb = oy_+row1.ybase_-va_.height(), y2 = std::max(0, yb);
             std::size_t ri2;
 
             for (ri2 = ri; ri2 > 0; --ri2) {
                 const Row & row2 = rows_[ri2-1];
-                if (oy_+row2.ybase <= y2) break;
+                if (oy_+row2.ybase_ <= y2) break;
             }
 
             if (ri2 > 0) {
                 const Row & row3 = rows_[ri2];
-                int top1 = oy_+row1.ybase-row1.ascent;
-                int top3 = oy_+row3.ybase-row3.ascent;
+                int top1 = oy_+row1.ybase_-row1.ascent_;
+                int top3 = oy_+row3.ybase_-row3.ascent_;
                 Point sp;
 
                 if (top1 < va_.y()) {
-                    sp.set(va_.x(), oy_+row3.ybase-row3.ascent);
+                    sp.set(va_.x(), oy_+row3.ybase_-row3.ascent_);
                 }
 
                 else if (top1 > va_.bottom()) {
-                    sp.set(va_.x(), oy_+row3.ybase+row3.descent-va_.height());
+                    sp.set(va_.x(), oy_+row3.ybase_+row3.descent_-va_.height());
                 }
 
                 else if (top3 < va_.y()) {
-                    sp.set(va_.x(), oy_+row3.ybase-row3.ascent-top1+va_.y());
+                    sp.set(va_.x(), oy_+row3.ybase_-row3.ascent_-top1+va_.y());
                 }
 
                 scroll_to(sp);
-                move_caret(ri2, caret_.col());
+                move_to(ri2, caret_.col());
             }
 
             else {
-                move_caret(0, 0);
+                move_to(0, 0);
             }
         }
     }
@@ -1492,39 +1458,39 @@ void Text_impl::page_down() {
 
         if (ri < nrows) {
             const Row & row1 = rows_[ri];
-            int y2 = oy_+va_.height()+row1.ybase;
+            int y2 = oy_+va_.height()+row1.ybase_;
             std::size_t ri2;
 
             for (ri2 = ri; ri2 < nrows; ++ri2) {
                 const Row & row2 = rows_[ri2+1];
-                if (oy_+row2.ybase >= y2) break;
+                if (oy_+row2.ybase_ >= y2) break;
             }
 
             if (ri2 < nrows) {
                 const Row & row3 = rows_[ri2];
-                int top1 = oy_+row1.ybase-row1.ascent;
-                int bottom3 = oy_+row3.ybase+row3.descent;
+                int top1 = oy_+row1.ybase_-row1.ascent_;
+                int bottom3 = oy_+row3.ybase_+row3.descent_;
                 Point sp;
 
                 if (top1 < va_.y()) {
-                    sp.set(va_.x(), oy_+row3.ybase-row3.ascent);
+                    sp.set(va_.x(), oy_+row3.ybase_-row3.ascent_);
                 }
 
                 else if (top1 > va_.bottom()) {
-                    sp.set(va_.x(), oy_+row3.ybase+row3.descent-va_.height());
+                    sp.set(va_.x(), oy_+row3.ybase_+row3.descent_-va_.height());
                 }
 
                 else if (bottom3 > va_.bottom()) {
-                    sp.set(va_.x(), oy_+row3.ybase-row3.ascent-top1+va_.y());
+                    sp.set(va_.x(), oy_+row3.ybase_-row3.ascent_-top1+va_.y());
                 }
 
                 scroll_to(sp);
-                move_caret(ri2, caret_.col());
+                move_to(ri2, caret_.col());
             }
 
             else {
                 Buffer_citer i(buffer_.cend());
-                move_caret(i.row(), i.col());
+                move_to(i.row(), i.col());
             }
         }
     }
@@ -1555,6 +1521,217 @@ bool Text_impl::on_take_focus() {
 
 void Text_impl::update_va() {
     va_ = visible_area();
+}
+
+void Text_impl::init_actions() {
+    if (!actions_) {
+        actions_ = new Actions;
+        actions_->move_left_action_.connect(fun(this, &Text_impl::move_left));
+        actions_->select_left_action_.connect(fun(this, &Text_impl::select_left));
+        actions_->move_right_action_.connect(fun(this, &Text_impl::move_right));
+        actions_->select_right_action_.connect(fun(this, &Text_impl::select_right));
+        actions_->move_up_action_.connect(fun(this, &Text_impl::move_up));
+        actions_->select_up_action_.connect(fun(this, &Text_impl::select_up));
+        actions_->move_down_action_.connect(fun(this, &Text_impl::move_down));
+        actions_->select_down_action_.connect(fun(this, &Text_impl::select_down));
+        actions_->move_word_left_action_.connect(fun(this, &Text_impl::move_word_left));
+        actions_->select_word_left_action_.connect(fun(this, &Text_impl::select_word_left));
+        actions_->move_word_right_action_.connect(fun(this, &Text_impl::move_word_right));
+        actions_->select_word_right_action_.connect(fun(this, &Text_impl::select_word_right));
+        actions_->move_home_action_.connect(fun(this, &Text_impl::move_home));
+        actions_->select_home_action_.connect(fun(this, &Text_impl::select_home));
+        actions_->move_to_eol_action_.connect(fun(this, &Text_impl::move_to_eol));
+        actions_->select_to_eol_action_.connect(fun(this, &Text_impl::select_to_eol));
+        actions_->move_to_sof_action_.connect(fun(this, &Text_impl::move_to_sof));
+        actions_->select_to_sof_action_.connect(fun(this, &Text_impl::select_to_sof));
+        actions_->move_to_eof_action_.connect(fun(this, &Text_impl::move_to_eof));
+        actions_->select_to_eof_action_.connect(fun(this, &Text_impl::select_to_eof));
+        actions_->move_page_up_action_.connect(fun(this, &Text_impl::move_page_up));
+        actions_->select_page_up_action_.connect(fun(this, &Text_impl::select_page_up));
+        actions_->move_page_down_action_.connect(fun(this, &Text_impl::move_page_down));
+        actions_->select_page_down_action_.connect(fun(this, &Text_impl::select_page_down));
+        actions_->select_all_action_.connect(fun(this, &Text_impl::select_all));
+        actions_->copy_action_.connect(fun(this, &Text_impl::copy));
+        actions_->cancel_action_.connect(fun(this, &Widget_impl::drop_focus));
+
+        connect_action(actions_->move_left_action_);
+        connect_action(actions_->select_left_action_);
+        connect_action(actions_->move_right_action_);
+        connect_action(actions_->select_right_action_);
+        connect_action(actions_->move_up_action_);
+        connect_action(actions_->select_up_action_);
+        connect_action(actions_->move_down_action_);
+        connect_action(actions_->select_down_action_);
+        connect_action(actions_->move_word_left_action_);
+        connect_action(actions_->select_word_left_action_);
+        connect_action(actions_->move_word_right_action_);
+        connect_action(actions_->select_word_right_action_);
+        connect_action(actions_->move_home_action_);
+        connect_action(actions_->select_home_action_);
+        connect_action(actions_->move_to_eol_action_);
+        connect_action(actions_->select_to_eol_action_);
+        connect_action(actions_->move_to_sof_action_);
+        connect_action(actions_->select_to_sof_action_);
+        connect_action(actions_->move_to_eof_action_);
+        connect_action(actions_->select_to_eof_action_);
+        connect_action(actions_->move_page_up_action_);
+        connect_action(actions_->select_page_up_action_);
+        connect_action(actions_->move_page_down_action_);
+        connect_action(actions_->select_page_down_action_);
+        connect_action(actions_->select_all_action_);
+        connect_action(actions_->copy_action_);
+        connect_action(actions_->cancel_action_);
+    }
+}
+
+Action & Text_impl::move_left_action() {
+    init_actions();
+    return actions_->move_left_action_;
+}
+
+Action & Text_impl::select_left_action() {
+    init_actions();
+    return actions_->select_left_action_;
+}
+
+Action & Text_impl::move_right_action() {
+    init_actions();
+    return actions_->move_right_action_;
+}
+
+Action & Text_impl::select_right_action() {
+    init_actions();
+    return actions_->select_right_action_;
+}
+
+Action & Text_impl::move_up_action() {
+    init_actions();
+    return actions_->move_up_action_;
+}
+
+Action & Text_impl::select_up_action() {
+    init_actions();
+    return actions_->select_up_action_;
+}
+
+Action & Text_impl::move_down_action() {
+    init_actions();
+    return actions_->move_down_action_;
+}
+
+Action & Text_impl::select_down_action() {
+    init_actions();
+    return actions_->select_down_action_;
+}
+
+Action & Text_impl::move_word_left_action() {
+    init_actions();
+    return actions_->move_word_left_action_;
+}
+
+Action & Text_impl::select_word_left_action() {
+    init_actions();
+    return actions_->select_word_left_action_;
+}
+
+Action & Text_impl::move_word_right_action() {
+    init_actions();
+    return actions_->move_word_right_action_;
+}
+
+Action & Text_impl::select_word_right_action() {
+    init_actions();
+    return actions_->select_word_right_action_;
+}
+
+Action & Text_impl::move_home_action() {
+    init_actions();
+    return actions_->move_home_action_;
+}
+
+Action & Text_impl::select_home_action() {
+    init_actions();
+    return actions_->select_home_action_;
+}
+
+Action & Text_impl::move_to_eol_action() {
+    init_actions();
+    return actions_->move_to_eol_action_;
+}
+
+Action & Text_impl::select_to_eol_action() {
+    init_actions();
+    return actions_->select_to_eol_action_;
+}
+
+Action & Text_impl::move_to_sof_action() {
+    init_actions();
+    return actions_->move_to_sof_action_;
+}
+
+Action & Text_impl::select_to_sof_action() {
+    init_actions();
+    return actions_->select_to_sof_action_;
+}
+
+Action & Text_impl::move_to_eof_action() {
+    init_actions();
+    return actions_->move_to_eof_action_;
+}
+
+Action & Text_impl::select_to_eof_action() {
+    init_actions();
+    return actions_->select_to_eof_action_;
+}
+
+Action & Text_impl::move_page_up_action() {
+    init_actions();
+    return actions_->move_page_up_action_;
+}
+
+Action & Text_impl::move_page_down_action() {
+    init_actions();
+    return actions_->move_page_down_action_;
+}
+
+Action & Text_impl::select_page_up_action() {
+    init_actions();
+    return actions_->select_page_up_action_;
+}
+
+Action & Text_impl::select_page_down_action() {
+    init_actions();
+    return actions_->select_page_down_action_;
+}
+
+Action & Text_impl::select_all_action() {
+    init_actions();
+    return actions_->select_all_action_;
+}
+
+Action & Text_impl::copy_action() {
+    init_actions();
+    return actions_->copy_action_;
+}
+
+Action & Text_impl::cancel_action() {
+    init_actions();
+    return actions_->cancel_action_;
+}
+
+signal<void()> & Text_impl::signal_caret_motion() {
+    if (!signal_caret_motion_) { signal_caret_motion_ = new signal<void()>; }
+    return *signal_caret_motion_;
+}
+
+signal<void()> & Text_impl::signal_selection_changed() {
+    if (!signal_selection_changed_) { signal_selection_changed_ = new signal<void()>; }
+    return *signal_selection_changed_;
+}
+
+signal<void()> & Text_impl::signal_click() {
+    if (!signal_click_) { signal_click_ = new signal<void()>; }
+    return *signal_click_;
 }
 
 } // namespace tau

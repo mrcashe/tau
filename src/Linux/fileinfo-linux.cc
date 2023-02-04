@@ -38,8 +38,14 @@ public:
     {
     }
 
+   ~Fileinfo_linux() {
+        if (signal_watch_) { delete signal_watch_; }
+    }
+
     // Overrides pure Fileinfo_impl.
     signal<void(int, const ustring &)> & signal_watch(int event_mask) override {
+        if (!signal_watch_) { signal_watch_ = new signal<void(int, const ustring &)>; }
+
         if (!mon_) {
             auto loop = Loop_linux::this_linux_loop();
             mon_ = loop->create_file_monitor(uri_, event_mask);
@@ -50,12 +56,12 @@ public:
             std::cerr << "** Fileinfo_linux: failed to watch file " << uri_ << std::endl;
         }
 
-        return signal_watch_;
+        return *signal_watch_;
     }
 
 private:
 
-    signal<void(int, const ustring &)> signal_watch_;
+    signal<void(int, const ustring &)> * signal_watch_ = nullptr;
     File_monitor_ptr mon_;
 };
 

@@ -43,7 +43,6 @@ Displays        dps_;
 std::atomic_int dpcnt_;
 
 tau::Display_linux_ptr new_display(std::thread::id tid, const tau::ustring & args) {
-//     std::cout << "Started new Linux Display, id is " << dpcnt_ << std::endl;
     auto dp = std::make_shared<tau::Display_linux>(tid, args);
     Lock lk(smx_);
     dps_[tid] = dp;

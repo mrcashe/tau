@@ -36,6 +36,8 @@
 
 namespace tau {
 
+extern uintmax_t signal_bytes_, slot_bytes_, islot_bytes_, func_bytes_;
+
 template <typename R, typename... Args> class fun_functor;
 template <class Class, typename R, typename... Args> class mem_functor;
 template <typename R, typename... Args> class slot;
@@ -53,16 +55,13 @@ protected:
 
     trackable * target_ = nullptr;
 
-    functor_base(trackable * target=nullptr):
-        target_(target)
-    {
-    }
+    functor_base(trackable * target=nullptr);
 
 public:
 
     virtual bool empty() const { return true; }
     virtual void reset() { target_ = nullptr; }
-    trackable * target() { return target_; }
+    trackable * target();
 };
 
 /// Functor for static functions and std::function objects.
@@ -323,11 +322,15 @@ struct slot_impl_F<functor_type, R(Args...)>: slot_impl_T<R(Args...)> {
         functor_(functor)
     {
         this->track(functor_.target());
+        islot_bytes_ += sizeof(*this)-sizeof(functor_);
+        func_bytes_ += sizeof(functor_);
     }
 
    ~slot_impl_F() {
         this->untrack();
-    }
+        islot_bytes_ -= sizeof(*this)-sizeof(functor_);
+        func_bytes_ -= sizeof(functor_);
+   }
 
     R operator()(Args... args) override {
         return !this->blocked() ? functor_(args...) : R();
@@ -474,7 +477,7 @@ public:
 
 protected:
 
-    signal_base() = default;
+    signal_base();
     connection link(slot_base & slot);
 };
 
@@ -519,27 +522,43 @@ class signal<R(Args...)>: public signal_base {
     void erase(slot_base * s) override {
         slots_.remove(*static_cast<slot_type *>(s));
         size_ = slots_.size();
+        slot_bytes_ -= sizeof(slot_type);
     }
 
 public:
 
     /// Default constructor.
-    signal() = default;
+    signal() { signal_bytes_ += sizeof(*this); }
 
     /// Copy constructor.
-    signal(const signal & other) = default;
+    signal(const signal & other):
+        slots_(other.slots_)
+    {
+        size_ = slots_.size();
+        signal_bytes_ += sizeof(*this);
+        slot_bytes_ += sizeof(slot_type)*size_;
+    }
 
     /// Copy operator.
-    signal & operator=(const signal & other) = default;
+    signal & operator=(const signal & other) {
+        if (this != &other) {
+            slot_bytes_ -= sizeof(slot_type)*size_;
+            slots_ = other.slots_;
+            size_ = slots_.size();
+            slot_bytes_ += sizeof(slot_type)*size_;
+        }
+
+        return *this;
+    }
 
     /// Destructor.
     /// @since 0.4.0 is explicitly defined (doesn't break API).
-   ~signal() { slots_.clear(); size_ = 0; }
+   ~signal() { signal_bytes_ -= sizeof(*this); slot_bytes_ -= sizeof(slot_type)*size_; slots_.clear(); size_ = 0; }
 
     /// Merge signals.
     void operator+=(const signal & other) {
         if (this != &other) {
-            for (auto & slot: other.slots_) { slots_.emplace_back(slot); }
+            for (auto & slot: other.slots_) { slots_.emplace_back(slot); slot_bytes_ += sizeof(slot_type); }
             size_ = slots_.size();
         }
     }
@@ -563,12 +582,14 @@ public:
         if (!prepend) {
             slots_.emplace_back(slot);
             ++size_;
+            slot_bytes_ += sizeof(slot_type);
             return link(slots_.back());
         }
 
         else {
             slots_.emplace_front(slot);
             ++size_;
+            slot_bytes_ += sizeof(slot_type);
             return link(slots_.front());
         }
     }
@@ -581,12 +602,14 @@ public:
         if (!prepend) {
             slots_.emplace_back(std::move(slot));
             ++size_;
+            slot_bytes_ += sizeof(slot_type);
             return link(slots_.back());
         }
 
         else {
             slots_.emplace_front(std::move(slot));
             ++size_;
+            slot_bytes_ += sizeof(slot_type);
             return link(slots_.front());
         }
     }

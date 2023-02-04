@@ -95,6 +95,6 @@ su-mxe-test: su-mxe-test-a su-mxe-test-so
 rm-mxe-test: rm-mxe-test-a rm-mxe-test-so
 	
 .PHONY:  su-mxe en-mxe rm-mxe
-en-mxe:  en-mxe-a en-mxe-so en-mxe-test-so
+en-mxe:  en-mxe-a en-mxe-so en-mxe-test
 su-mxe:  su-mxe-a su-mxe-so su-mxe-test
 rm-mxe:  rm-mxe-a rm-mxe-so rm-mxe-test

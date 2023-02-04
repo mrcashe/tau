@@ -85,6 +85,10 @@ public:
     /// Get an UTF-32 text containing specified character count.
     std::u32string text32(std::size_t nchars) const;
 
+    /// Get text length between two iterators.
+    /// @since 0.4.0
+    std::size_t length(Buffer_citer other) const;
+
     /// Advance pointer by one character.
     Buffer_citer & operator++();
 
@@ -229,7 +233,13 @@ public:
     void skip_whitespace();
 
     /// Move to specified position.
+    /// @overload move_to(std::size_t row, std::size_t col)
     void move_to(std::size_t row, std::size_t col);
+
+    /// Move to position specified by other iterator.
+    /// @overload move_to(Buffer_citer other)
+    /// @since 0.4.0
+    void move_to(Buffer_citer other);
 
     /// Move to specified column within current line.
     /// Tries to move to specified position.

@@ -736,7 +736,6 @@ bool Theme_impl::feed_icon_dir(const ustring & stop_after) const {
             return true;
         }
 
-
         {
             Lock lock(mx_);
             icon_dirs_.remove(dir);

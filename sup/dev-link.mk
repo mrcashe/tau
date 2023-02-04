@@ -63,7 +63,7 @@ install-host:
 	    echo "Description: C++ GUI toolkit">>$(unix_pc); \
 	    echo "Version: $(Major_).$(Minor_).$(Micro_)">>$(unix_pc); \
 	    echo "Requires:">>$(unix_pc); \
-	    echo -n "Libs: -L$$">>$(unix_pc); \
+	    echo -n "Libs: -pthread -L$$">>$(unix_pc); \
 	    echo -n "{lib_prefix}">>$(unix_pc); \
 	    [ -e $(unix_sopath) ] && echo -n " -ltau-$(Major_).$(Minor_)">>$(unix_pc); \
 	    echo "">>$(unix_pc); \
@@ -88,9 +88,9 @@ install-mxe:
 	    echo "Name: libtau">>$(mxe_pc); \
 	    echo "Description: C++ GUI toolkit using M cross environment (MXE)">>$(mxe_pc); \
 	    echo "Version: $(Major_).$(Minor_).$(Micro_)">>$(mxe_pc); \
-	    echo -n "Libs: -L$$">>$(mxe_pc); \
+	    echo -n "Libs: -pthread -L$$">>$(mxe_pc); \
 	    echo "{lib_prefix}">>$(mxe_pc); \
-	    echo -n "Cflags: -I$$">>$(mxe_pc); \
+	    echo -n "Cflags: -pthread -I$$">>$(mxe_pc); \
 	    echo "{includedir}">>$(mxe_pc); \
 	fi
 

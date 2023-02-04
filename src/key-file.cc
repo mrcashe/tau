@@ -164,12 +164,15 @@ struct Key_file_impl {
     Storage sections_;
     ustring path_;
     bool changed_ = false;
-    signal<void()> signal_changed_;
+    signal<void()> * signal_changed_ = nullptr;
+
+   ~Key_file_impl() {
+        if (signal_changed_) { delete signal_changed_; }
+    }
 
     Key_file_impl():
         root_(this, "root")
     {
-        signal_changed_.connect(fun(this, &Key_file_impl::on_changed));
     }
 
     Key_file_impl(const Key_file_impl & other):
@@ -182,7 +185,6 @@ struct Key_file_impl {
         changed_(other.changed_)
     {
         own();
-        signal_changed_.connect(fun(this, &Key_file_impl::on_changed));
     }
 
     Key_file_impl(Key_file_impl && other):
@@ -195,7 +197,6 @@ struct Key_file_impl {
         changed_(other.changed_)
     {
         own();
-        signal_changed_.connect(fun(this, &Key_file_impl::on_changed));
     }
 
     Key_file_impl & operator=(const Key_file_impl & other) {
@@ -225,8 +226,14 @@ struct Key_file_impl {
         return *this;
     }
 
-    void on_changed() {
+    signal<void()> & signal_changed() {
+        if (!signal_changed_) { signal_changed_ = new signal<void()>; }
+        return *signal_changed_;
+    }
+
+    void set_changed() {
         changed_ = true;
+        if (signal_changed_) { (*signal_changed_)(); }
     }
 
     void own() {
@@ -290,7 +297,7 @@ struct Key_file_impl {
         auto i = find(sect_name, similar);
         if (i != sections_.end()) { return i->second; }
         sections_.emplace_back(sect_name, Key_section(this, sect_name));
-        signal_changed_();
+        set_changed();
         return sections_.back().second;
     }
 
@@ -308,7 +315,7 @@ struct Key_file_impl {
             if (!sections_.empty()) { sections_.clear(); changed = true; }
         }
 
-        if (changed) { signal_changed_(); }
+        if (changed) { set_changed(); }
     }
 
     void remove_section(const ustring & sect_name, bool similar) {
@@ -320,7 +327,7 @@ struct Key_file_impl {
             if (i != sections_.end()) { sections_.erase(i); changed = true; }
         }
 
-        if (changed) { signal_changed_(); }
+        if (changed) { set_changed(); }
     }
 
     void remove_key(Key_section & sect, const ustring & key, bool similar) {
@@ -333,7 +340,7 @@ struct Key_file_impl {
             if (iter != sect.elems_.end()) { sect.elems_.erase(iter); changed = true; }
         }
 
-        if (changed) { signal_changed_(); }
+        if (changed) { set_changed(); }
     }
 
     std::vector<double> get_doubles(Key_section & sect, const ustring & key) {
@@ -504,7 +511,7 @@ struct Key_file_impl {
             }
         }
 
-        if (changed) { signal_changed_(); }
+        if (changed) { set_changed(); }
     }
 
     void set_comment(const ustring & comment) {
@@ -520,7 +527,7 @@ struct Key_file_impl {
             changed = sect.set_value(key, value);
         }
 
-        if (changed) { signal_changed_(); }
+        if (changed) { set_changed(); }
     }
 
     void set_string(const ustring & key, const ustring & value) {
@@ -536,7 +543,7 @@ struct Key_file_impl {
             changed = sect.set_value(key, str_implode(vec, lsep_));
         }
 
-        if (changed) { signal_changed_(); }
+        if (changed) { set_changed(); }
     }
 
     void set_strings(const ustring & key, const std::vector<ustring> & vec) {
@@ -552,7 +559,7 @@ struct Key_file_impl {
             changed = sect.set_value(key, value ? "true" : "false");
         }
 
-        if (changed) { signal_changed_(); }
+        if (changed) { set_changed(); }
     }
 
     void set_boolean(const ustring & key, bool value) {
@@ -570,7 +577,7 @@ struct Key_file_impl {
             changed = sect.set_value(key, str_implode(sv, lsep_));
         }
 
-        if (changed) { signal_changed_(); }
+        if (changed) { set_changed(); }
     }
 
     void set_booleans(const ustring & key, const std::vector<bool> & vec) {
@@ -586,7 +593,7 @@ struct Key_file_impl {
             changed = sect.set_value(key, str_format(value));
         }
 
-        if (changed) { signal_changed_(); }
+        if (changed) { set_changed(); }
     }
 
     void set_integer(const ustring & key, long long value) {
@@ -604,7 +611,7 @@ struct Key_file_impl {
             changed = sect.set_value(key, str_implode(sv, lsep_));
         }
 
-        if (changed) { signal_changed_(); }
+        if (changed) { set_changed(); }
     }
 
     void set_integers(const ustring & key, const std::vector<long long> & vec) {
@@ -620,7 +627,7 @@ struct Key_file_impl {
             changed = sect.set_value(key, str_format(value));
         }
 
-        if (changed) { signal_changed_(); }
+        if (changed) { set_changed(); }
     }
 
     void set_double(const ustring & key, double value) {
@@ -638,7 +645,7 @@ struct Key_file_impl {
             changed = sect.set_value(key, str_implode(sv, lsep_));
         }
 
-        if (changed) { signal_changed_(); }
+        if (changed) { set_changed(); }
     }
 
     void set_doubles(const ustring & key, const std::vector<double> & vec) {
@@ -723,7 +730,7 @@ struct Key_file_impl {
             csep_ = csep;
         }
 
-        if (changed) { signal_changed_(); }
+        if (changed) { set_changed(); }
     }
 };
 
@@ -1085,7 +1092,7 @@ bool Key_file::changed() const {
 }
 
 signal<void()> & Key_file::signal_changed() {
-    return impl->signal_changed_;
+    return impl->signal_changed();
 }
 
 std::istream & operator>>(std::istream & is, Key_file & kf) {

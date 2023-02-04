@@ -494,7 +494,7 @@ else
     echo "s+OUTPUT_DIRECTORY *=.*+OUTPUT_DIRECTORY = $doxydir+" >>$tmp
     echo "s+EXAMPLE_PATH *=.*+EXAMPLE_PATH = $topdir+" >>$tmp
     echo "s+INPUT *=.*+INPUT = $doxyinput+" >>$tmp
-    echo "s+IMAGE_PATH *=.*+IMAGE_PATH = $shdir/pixmaps $shdir/icons/actions/12 $shdir/icons/actions/22 $shdir/icons/devices/22 $shdir/icons/places/22+" >>$tmp
+    echo "s+IMAGE_PATH *=.*+IMAGE_PATH = $shdir/icons/actions/8 $shdir/icons/actions/12 $shdir/icons/actions/16 $shdir/icons/devices/16 $shdir/icons/places/16+" >>$tmp
     if [ 'YES' != "$disable_pdf" ] && [ -n "$which_latex" ]; then
         echo "s+GENERATE_LATEX *=.*+GENERATE_LATEX = YES+" >>$tmp
     fi

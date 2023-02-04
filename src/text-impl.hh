@@ -46,6 +46,8 @@ public:
     explicit Text_impl(const ustring & text, Align xalign=ALIGN_CENTER, Align yalign=ALIGN_CENTER);
     explicit Text_impl(Buffer buf, Align xalign=ALIGN_CENTER, Align yalign=ALIGN_CENTER);
 
+   ~Text_impl();
+
     void assign(Buffer buf);
     void assign(const ustring & text);
     bool empty() const;
@@ -97,64 +99,37 @@ public:
     Wrap_mode wrap_mode() const { return wrap_; }
     bool caret_enabled() const { return caret_enabled_; }
 
-    Action & move_left_action() { return move_left_action_; }
-    const Action & move_left_action() const { return move_left_action_; }
-    Action & select_left_action() { return select_left_action_; }
-    const Action & select_left_action() const { return select_left_action_; }
-    Action & move_right_action() { return move_right_action_; }
-    const Action & move_right_action() const { return move_right_action_; }
-    Action & select_right_action() { return select_right_action_; }
-    const Action & select_right_action() const { return select_right_action_; }
-    Action & move_up_action() { return move_up_action_; }
-    const Action & move_up_action() const { return move_up_action_; }
-    Action & select_up_action() { return select_up_action_; }
-    const Action & select_up_action() const { return select_up_action_; }
-    Action & move_down_action() { return move_down_action_; }
-    const Action & move_down_action() const { return move_down_action_; }
-    Action & select_down_action() { return select_down_action_; }
-    const Action & select_down_action() const { return select_down_action_; }
-    Action & move_word_left_action() { return move_word_left_action_; }
-    const Action & move_word_left_action() const { return move_word_left_action_; }
-    Action & select_word_left_action() { return select_word_left_action_; }
-    const Action & select_word_left_action() const { return select_word_left_action_; }
-    Action & move_word_right_action() { return move_word_right_action_; }
-    const Action & move_word_right_action() const { return move_word_right_action_; }
-    Action & select_word_right_action() { return select_word_right_action_; }
-    const Action & select_word_right_action() const { return select_word_right_action_; }
-    Action & move_home_action() { return move_home_action_; }
-    const Action & move_home_action() const { return move_home_action_; }
-    Action & select_home_action() { return select_home_action_; }
-    const Action & select_home_action() const { return select_home_action_; }
-    Action & move_to_eol_action() { return move_to_eol_action_; }
-    const Action & move_to_eol_action() const { return move_to_eol_action_; }
-    Action & select_to_eol_action() { return select_to_eol_action_; }
-    const Action & select_to_eol_action() const { return select_to_eol_action_; }
-    Action & move_to_sof_action() { return move_to_sof_action_; }
-    const Action & move_to_sof_action() const { return move_to_sof_action_; }
-    Action & select_to_sof_action() { return select_to_sof_action_; }
-    const Action & select_to_sof_action() const { return select_to_sof_action_; }
-    Action & move_to_eof_action() { return move_to_eof_action_; }
-    const Action & move_to_eof_action() const { return move_to_eof_action_; }
-    Action & select_to_eof_action() { return select_to_eof_action_; }
-    const Action & select_to_eof_action() const { return select_to_eof_action_; }
-    Action & move_page_up_action() { return move_page_up_action_; }
-    const Action & move_page_up_action() const { return move_page_up_action_; }
-    Action & move_page_down_action() { return move_page_down_action_; }
-    const Action & move_page_down_action() const { return move_page_down_action_; }
-    Action & select_page_up_action() { return select_page_up_action_; }
-    const Action & select_page_up_action() const { return select_page_up_action_; }
-    Action & select_page_down_action() { return select_page_down_action_; }
-    const Action & select_page_down_action() const { return select_page_down_action_; }
-    Action & select_all_action() { return select_all_action_; }
-    const Action & select_all_action() const { return select_all_action_; }
-    Action & copy_action() { return copy_action_; }
-    const Action & copy_action() const { return copy_action_; }
-    Action & cancel_action() { return cancel_action_; }
-    const Action & cancel_action() const { return cancel_action_; }
+    Action & move_left_action();
+    Action & select_left_action();
+    Action & move_right_action();
+    Action & select_right_action();
+    Action & move_up_action();
+    Action & select_up_action();
+    Action & move_down_action();
+    Action & select_down_action();
+    Action & move_word_left_action();
+    Action & select_word_left_action();
+    Action & move_word_right_action();
+    Action & select_word_right_action();
+    Action & move_home_action();
+    Action & select_home_action();
+    Action & move_to_eol_action();
+    Action & select_to_eol_action();
+    Action & move_to_sof_action();
+    Action & select_to_sof_action();
+    Action & move_to_eof_action();
+    Action & select_to_eof_action();
+    Action & move_page_up_action();
+    Action & move_page_down_action();
+    Action & select_page_up_action();
+    Action & select_page_down_action();
+    Action & select_all_action();
+    Action & copy_action();
+    Action & cancel_action();
 
-    signal<void()> & signal_caret_motion() { return signal_caret_motion_; }
-    signal<void()> & signal_selection_changed() { return signal_selection_changed_; }
-    signal<void()> & signal_click() { return signal_click_; }
+    signal<void()> & signal_caret_motion();
+    signal<void()> & signal_selection_changed();
+    signal<void()> & signal_click();
 
 protected:
 
@@ -163,51 +138,16 @@ protected:
     Buffer_citer        sel_;                   // Selection start.
     Buffer_citer        esel_;                  // Selection end.
     Painter             ppr_;                   // Private painter.
-
     bool                insert_ = true;
     bool                select_allowed_ = false;
     bool                caret_enabled_ = false;
 
-    Action              move_left_action_ { KC_LEFT, KM_NONE, fun(this, &Text_impl::move_left) };
-    Action              select_left_action_ { KC_LEFT, KM_SHIFT, fun(this, &Text_impl::select_left) };
-    Action              move_right_action_ { KC_RIGHT, KM_NONE, fun(this, &Text_impl::move_right) };
-    Action              select_right_action_ { KC_RIGHT, KM_SHIFT, fun(this, &Text_impl::select_right) };
-    Action              move_up_action_ { KC_UP, KM_NONE, fun(this, &Text_impl::move_up) };
-    Action              select_up_action_ { KC_UP, KM_SHIFT, fun(this, &Text_impl::select_up) };
-    Action              move_down_action_ { KC_DOWN, KM_NONE, fun(this, &Text_impl::move_down) };
-    Action              select_down_action_ { KC_DOWN, KM_SHIFT, fun(this, &Text_impl::select_down) };
-    Action              move_word_left_action_ { KC_LEFT, KM_CONTROL, fun(this, &Text_impl::move_word_left) };
-    Action              select_word_left_action_ { KC_LEFT, KM_CONTROL+KM_SHIFT, fun(this, &Text_impl::select_word_left) };
-    Action              move_word_right_action_ { KC_RIGHT, KM_CONTROL, fun(this, &Text_impl::move_word_right) };
-    Action              select_word_right_action_ { KC_RIGHT, KM_CONTROL+KM_SHIFT, fun(this, &Text_impl::select_word_right) };
-    Action              move_home_action_ { KC_HOME, KM_NONE, fun(this, &Text_impl::move_home) };
-    Action              select_home_action_ { KC_HOME, KM_SHIFT, fun(this, &Text_impl::select_home) };
-    Action              move_to_eol_action_ { KC_END, KM_NONE, fun(this, &Text_impl::move_to_eol) };
-    Action              select_to_eol_action_ { KC_END, KM_SHIFT, fun(this, &Text_impl::select_to_eol) };
-    Action              move_to_sof_action_ { KC_HOME, KM_CONTROL, fun(this, &Text_impl::move_to_sof) };
-    Action              select_to_sof_action_ { KC_HOME, KM_CONTROL+KM_SHIFT, fun(this, &Text_impl::select_to_sof) };
-    Action              move_to_eof_action_ { KC_END, KM_CONTROL, fun(this, &Text_impl::move_to_eof) };
-    Action              select_to_eof_action_ { KC_END, KM_CONTROL+KM_SHIFT, fun(this, &Text_impl::select_to_eof) };
-    Action              move_page_up_action_ { KC_PAGE_UP, KM_NONE, fun(this, &Text_impl::move_page_up) };
-    Action              select_page_up_action_ { KC_PAGE_UP, KM_SHIFT, fun(this, &Text_impl::select_page_up) };
-    Action              move_page_down_action_ { KC_PAGE_DOWN, KM_NONE, fun(this, &Text_impl::move_page_down) };
-    Action              select_page_down_action_ { KC_PAGE_DOWN, KM_SHIFT, fun(this, &Text_impl::select_page_down) };
-    Action              select_all_action_ { U'A', KM_CONTROL, fun(this, &Text_impl::select_all) };
-    Action              copy_action_ { "<Ctrl>C <Ctrl>Insert", fun(this, &Text_impl::copy) };
-    Action              cancel_action_ { "Escape Cancel", fun(this, &Widget_impl::drop_focus) };
-
-    signal<void()>      signal_selection_changed_;
-    signal<void()>      signal_caret_motion_;
-    signal<void()>      signal_click_;
-
 protected:
 
-    void show_caret();
-    void hide_caret();
-    void move_caret(Buffer_citer i);
-    void move_caret(std::size_t row, std::size_t col);
     void scroll_to_caret();
     void hint_x();
+    void init_actions();
+    void refresh_caret();
 
     // Overriden by Edit_impl.
     virtual void init_buffer();
@@ -249,11 +189,46 @@ protected:
 
 private:
 
+    struct Actions {
+        Action          move_left_action_ { KC_LEFT, KM_NONE };
+        Action          select_left_action_ { KC_LEFT, KM_SHIFT };
+        Action          move_right_action_ { KC_RIGHT, KM_NONE };
+        Action          select_right_action_ { KC_RIGHT, KM_SHIFT };
+        Action          move_up_action_ { KC_UP, KM_NONE };
+        Action          select_up_action_ { KC_UP, KM_SHIFT };
+        Action          move_down_action_ { KC_DOWN, KM_NONE };
+        Action          select_down_action_ { KC_DOWN, KM_SHIFT };
+        Action          move_word_left_action_ { KC_LEFT, KM_CONTROL };
+        Action          select_word_left_action_ { KC_LEFT, KM_CONTROL+KM_SHIFT };
+        Action          move_word_right_action_ { KC_RIGHT, KM_CONTROL };
+        Action          select_word_right_action_ { KC_RIGHT, KM_CONTROL+KM_SHIFT };
+        Action          move_home_action_ { KC_HOME, KM_NONE };
+        Action          select_home_action_ { KC_HOME, KM_SHIFT };
+        Action          move_to_eol_action_ { KC_END, KM_NONE };
+        Action          select_to_eol_action_ { KC_END, KM_SHIFT };
+        Action          move_to_sof_action_ { KC_HOME, KM_CONTROL };
+        Action          select_to_sof_action_ { KC_HOME, KM_CONTROL+KM_SHIFT };
+        Action          move_to_eof_action_ { KC_END, KM_CONTROL };
+        Action          select_to_eof_action_ { KC_END, KM_CONTROL+KM_SHIFT };
+        Action          move_page_up_action_ { KC_PAGE_UP, KM_NONE };
+        Action          select_page_up_action_ { KC_PAGE_UP, KM_SHIFT };
+        Action          move_page_down_action_ { KC_PAGE_DOWN, KM_NONE };
+        Action          select_page_down_action_ { KC_PAGE_DOWN, KM_SHIFT };
+        Action          select_all_action_ { U'A', KM_CONTROL };
+        Action          copy_action_ { ustring("<Ctrl>C <Ctrl>Insert") };
+        Action          cancel_action_ { ustring("Escape Cancel") };
+    };
+
+    Actions *           actions_ = nullptr;
+    signal<void()> *    signal_selection_changed_ = nullptr;
+    signal<void()> *    signal_caret_motion_ = nullptr;
+    signal<void()> *    signal_click_ = nullptr;
+
     struct Frag {
-        std::size_t     start  = 0;
-        std::size_t     ncols  = 0;
-        int             width  = 0;
-        int             font = 0;
+        std::size_t     start_      = 0;
+        std::size_t     ncols_      = 0;
+        int             width_      = 0;
+        int             font_       = 0;
     };
 
     // Fragments.
@@ -264,46 +239,47 @@ private:
 
     // Row structure.
     struct Row {
-        std::size_t     ncols   = 0;            // Number of columns (characters).
-        int             width   = 0;            // Width in pixels.
-        int             ascent  = 0;            // Ascent in pixels.
-        int             descent = 0;            // Descent in pixels.
-        int             ybase   = 0;            // Baseline within entire widget area.
-        int             ox      = 0;            // Offset within X coordinate.
-        std::u32string  ellipsized;
-        Frags           frags;
-        Poss            poss;
+        std::size_t     ncols_      = 0;            // Number of columns (characters).
+        int             width_      = 0;            // Width in pixels.
+        int             ascent_     = 0;            // Ascent in pixels.
+        int             descent_    = 0;            // Descent in pixels.
+        int             ybase_      = 0;            // Baseline within entire widget area.
+        int             ox_         = 0;            // Offset within X coordinate.
+        std::u32string  ellipsized_;
+        Frags           frags_;
+        Poss            poss_;
     };
 
     using Rows = std::vector<Row>;
     using R_iter = Rows::iterator;
     using R_citer = Rows::const_iterator;
 
+    Loop_ptr            loop_;
     Rows                rows_;
-    Buffer_citer        msel_;                  // Mouse selection start.
-    Buffer_citer        emsel_;                 // Mouse selection last.
+    Buffer_citer        msel_;                      // Mouse selection start.
+    Buffer_citer        emsel_;                     // Mouse selection last.
     bool                caret_visible_ = false;
     bool                caret_exposed_ = false;
 
     std::vector<Font>   fonts_;
-    int                 xhint_ = 0;             // Desired x offset for up/down caret navigation.
+    int                 xhint_ = 0;                 // Desired x offset for up/down caret navigation.
     int                 font_height_ = 0;
     int                 text_width_ = 0;
     int                 tab_width_ = 8;
     int                 space_width_ = 0;
     int                 ellipsis_width_ = 0;
     int                 text_height_ = 0;
-    int                 oy_ = 0;                // Vertical offset.
-    Rect                va_;                    // Visible area.
-    Rect                rcaret_;                // Caret rectangle.
-    Color               ccaret_;                // Caret color.
+    int                 oy_ = 0;                    // Vertical offset.
+    Rect                va_;                        // Visible area.
+    Rect                rcaret_;                    // Caret rectangle.
+    Color               ccaret_;                    // Caret color.
     Align               xalign_ = ALIGN_CENTER;
     Align               yalign_ = ALIGN_CENTER;
     Wrap_mode           wrap_ = WRAP_NONE;
     std::u32string      ellipsis_ = U"...";// U"…";
     std::size_t         spacing_ = 0;
 
-    Timer               caret_timer_;
+    connection          caret_cx_ { true };
     connection          insert_cx_ { true };
     connection          replace_cx_ { true };
     connection          erase_cx_ { true };
@@ -317,7 +293,8 @@ private:
     void draw_caret(Painter pr);
     void expose_caret();
     void wipe_caret();
-    void refresh_caret();
+    void show_caret();
+    void hide_caret();
 
     Buffer_citer iter_from_point(const Point & pt);
     int x_at_col(const Row & row, std::size_t col) const;

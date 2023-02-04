@@ -166,11 +166,11 @@ int List_impl::append_row(Widget_ptr wp, Align align, bool shrink) {
     table_->set_column_margin(0, 2, 2);
     table_->set_row_margin(trunk_max_, 1, 1);
     table_->align(wp.get(), align, ALIGN_CENTER);
-    int br = trunk_max_++;
-    selectables_[br] = Selectable { 0, 0 };
-    if (INT_MIN == selected_row() && focused()) { select_row(br); }
+    int row = trunk_max_++;
+    selectables_[row] = Selectable { 0, 0 };
+    if (INT_MIN == selected_row() && focused()) { select_row(row); }
     adjust();
-    return br;
+    return row;
 }
 
 int List_impl::append_row(Widget_ptr wp, bool shrink) {
@@ -260,8 +260,8 @@ int List_impl::append(Widget_ptr wp, Align align) {
 
 int List_impl::prepend(int row, Widget_ptr wp, Align align, bool shrink) {
     try {
-        Selectable & br = selectables_.at(row);
-        int tpos = --br.min;
+        auto & sel = selectables_.at(row);
+        int tpos = --sel.min;
         table_->put(wp, tpos, row, 1, 1, shrink, true);
         table_->set_column_margin(tpos, 2, 2);
         table_->set_row_margin(row, 1, 1);
@@ -598,15 +598,15 @@ int List_impl::select_back() {
     return INT_MIN;
 }
 
-int List_impl::select_row(int br) {
-    if (selectables_.end() != selectables_.find(br)) {
+int List_impl::select_row(int row) {
+    if (selectables_.end() != selectables_.find(row)) {
         Table::Span sel = table_->selection();
-        if (sel.ymax > sel.ymin && br == sel.ymin) { return br; }
-        table_->unmark_row(br);
-        table_->select_row(br);
-        signal_row_selected_(br);
+        if (sel.ymax > sel.ymin && row == sel.ymin) { return row; }
+        table_->unmark_row(row);
+        table_->select_row(row);
+        signal_row_selected_(row);
         scroll_to_selection();
-        return br;
+        return row;
     }
 
     return INT_MIN;
@@ -1142,7 +1142,7 @@ void List_impl::adjust() {
 }
 
 void List_impl::on_focus_in() {
-    update_selection();
+    if (INT_MIN == selected_row()) { select_row(trunk_min_); }
 }
 
 } // namespace tau

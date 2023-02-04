@@ -254,6 +254,7 @@ void Box_impl::rm_child(Holder & hol) {
     unparent_child(hol.wp);
     update_requisition();
     queue_arrange();
+    invalidate();
 }
 
 void Box_impl::append(Widget_ptr wp, bool shrink) {

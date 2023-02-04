@@ -32,45 +32,67 @@
 
 namespace tau {
 
-class Buffer_citer_impl {
-protected:
-
-    friend Buffer_citer;
+struct Buffer_citer_impl {
     Buffer_citer_impl(const Buffer_citer_impl & other) = delete;
     Buffer_citer_impl & operator=(const Buffer_citer_impl & other) = delete;
-
-public:
 
     Buffer_citer_impl() = default;
     static Buffer_citer_impl * create();
     static Buffer_citer_impl * create(Buffer_ptr buf, std::size_t row, std::size_t col);
 
-private:
-
-    Buffer_ptr  buf;
-    std::size_t row = 0;
-    std::size_t col = 0;
-    bool        busy = false;
-    bool        heap = false;
+    Buffer_ptr  buf_;
+    std::size_t row_ = 0;
+    std::size_t col_ = 0;
+    bool        busy_ = false;
+    bool        heap_ = false;
 };
 
 struct Buffer_impl {
-    Buffer_impl() = default;
+
+    Buffer_impl();
+   ~Buffer_impl();
 
     char32_t at(std::size_t row, std::size_t col) const;
     std::size_t size() const;
     std::size_t rows() const;
-    std::size_t length(std::size_t r1, std::size_t c1, std::size_t r2, std::size_t c2) const;
-    std::size_t length(std::size_t row) const;
     void change_encoding(const Encoding & enc);
     Buffer_citer insert(Buffer_citer i, const std::u32string & str);
     Buffer_citer insert(Buffer_citer i, std::istream & is);
+    Buffer_citer replace(Buffer_citer i, const std::u32string & str);
+    Buffer_citer erase(Buffer_citer b, Buffer_citer e);
     void save(std::ostream & os);
-    std::u32string text(std::size_t r1, std::size_t c1, std::size_t r2, std::size_t c2) const;
+    void save_to_file(const ustring & path);
     bool empty() const;
     void enable_bom();
     void disable_bom();
     void save();
+    void lock();
+    void unlock();
+
+    std::u32string text(std::size_t r1, std::size_t c1, std::size_t r2, std::size_t c2) const;
+
+    std::u32string text(Buffer_citer b, Buffer_citer e) const {
+        if (e < b) { std::swap(b, e); }
+        return text(b.row(), b.col(), e.row(), e.col());
+    }
+
+    std::size_t length(std::size_t r1, std::size_t c1, std::size_t r2, std::size_t c2) const;
+    std::size_t length(std::size_t row) const;
+
+    std::size_t length(Buffer_citer b, Buffer_citer e) const {
+        if (e < b) { std::swap(b, e); }
+        return length(b.row(), b.col(), e.row(), e.col());
+    }
+
+    signal<void(Buffer_citer, Buffer_citer, const std::u32string &)> & signal_erase();
+    signal<void(Buffer_citer, Buffer_citer)> & signal_insert();
+    signal<void(Buffer_citer, Buffer_citer, const std::u32string &)> & signal_replace();
+    signal<void()> & signal_changed();
+    signal<void()> & signal_flush();
+    signal<void()> & signal_lock();
+    signal<void()> & signal_unlock();
+    signal<void(const Encoding &)> & signal_encoding_changed();
+    signal<void()> & signal_bom_changed();
 
     struct Holder {
         std::u32string  s;
@@ -82,7 +104,7 @@ struct Buffer_impl {
     using Rows = std::vector<Holder>;
 
     Rows                rows_;
-    bool                lock_ = false;
+    bool                locked_ = false;
     bool                bom_ = false;
     bool                changed_ = false;
     Encoding            encoding_ { "UTF-8" };
@@ -94,15 +116,15 @@ struct Buffer_impl {
     std::u32string      newlines_;
     ustring             path_;
 
-    signal<void(Buffer_citer, Buffer_citer, const std::u32string &)> signal_erase_;
-    signal<void(Buffer_citer, Buffer_citer)> signal_insert_;
-    signal<void(Buffer_citer, Buffer_citer, const std::u32string &)> signal_replace_;
-    signal<void()> signal_changed_;
-    signal<void()> signal_flush_;
-    signal<void()> signal_lock_;
-    signal<void()> signal_unlock_;
-    signal<void(const Encoding &)> signal_encoding_changed_;
-    signal<void()> signal_bom_changed_;
+    signal<void(Buffer_citer, Buffer_citer, const std::u32string &)> * signal_erase_ = nullptr;
+    signal<void(Buffer_citer, Buffer_citer)> * signal_insert_ = nullptr;
+    signal<void(Buffer_citer, Buffer_citer, const std::u32string &)> * signal_replace_ = nullptr;
+    signal<void()> * signal_changed_ = nullptr;
+    signal<void()> * signal_flush_ = nullptr;
+    signal<void()> * signal_lock_ = nullptr;
+    signal<void()> * signal_unlock_ = nullptr;
+    signal<void(const Encoding &)> * signal_encoding_changed_ = nullptr;
+    signal<void()> * signal_bom_changed_ = nullptr;
 };
 
 } // namespace tau
