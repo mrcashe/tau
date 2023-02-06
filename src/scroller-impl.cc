@@ -36,8 +36,8 @@ Scroller_impl::Scroller_impl():
     Container_impl()
 {
     signal_arrange_.connect(fun(this, &Scroller_impl::arrange));
-    signal_mouse_down_.connect(fun(this, &Scroller_impl::on_mouse_down));
-    signal_mouse_wheel_.connect(fun(this, &Scroller_impl::on_mouse_wheel));
+    signal_mouse_down().connect(fun(this, &Scroller_impl::on_mouse_down));
+    signal_mouse_wheel().connect(fun(this, &Scroller_impl::on_mouse_wheel));
     signal_size_changed_.connect(fun(this, &Scroller_impl::arrange));
     signal_size_changed_.connect(fun(this, &Scroller_impl::limit_scroll));
     signal_logical_size_changed_.connect(fun(this, &Scroller_impl::limit_scroll));
@@ -184,7 +184,6 @@ void Scroller_impl::pan_to_y(int y) {
 bool Scroller_impl::update_offset(const Point & pt) {
     if (cp_) {
         if (pan_.update(pt)) {
-            cp_->signal_scroll_changed()();
             signal_pan_changed_();
             return true;
         }

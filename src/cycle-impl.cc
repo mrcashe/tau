@@ -82,8 +82,8 @@ Cycle_impl::Cycle_impl(Border_style bs):
     connect_action(down_action_);
     connect_accel(escape_accel_);
 
-    signal_mouse_wheel_.connect(fun(this, &Cycle_impl::on_mouse_wheel), true);
-    signal_mouse_down_.connect(fun(this, &Cycle_impl::on_mouse_down));
+    signal_mouse_wheel().connect(fun(this, &Cycle_impl::on_mouse_wheel), true);
+    signal_mouse_down().connect(fun(this, &Cycle_impl::on_mouse_down));
     signal_focus_in_.connect(fun(this, &Cycle_impl::on_focus_in));
     signal_focus_out_.connect(fun(this, &Cycle_impl::on_focus_out));
 }

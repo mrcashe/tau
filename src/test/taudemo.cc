@@ -63,6 +63,7 @@ struct Main: tau::Toplevel {
     std::size_t         prev_row_ = 0;
     tau::Progress       progress_;
     std::vector<tau::ustring> color_names_;
+    tau::Widget         color_cont_;
 
     struct Color_widgets {
         tau::Text       name { tau::ALIGN_START };
@@ -197,7 +198,7 @@ struct Main: tau::Toplevel {
         {
             tau::Text label("tau::Button", tau::ALIGN_START);
             table.put(label, 0, row, 1, 1, true);
-            tau::Icon ico("document-save", tau::MEDIUM_ICON);
+            tau::Icon ico(tau::ICON_DOCUMENT_SAVE, tau::MEDIUM_ICON);
             tau::Button push_button(ico);
             table.put(push_button, 7, row, 1, 1, true, true);
         }
@@ -303,6 +304,7 @@ struct Main: tau::Toplevel {
         color_names_ = tau::Color::list_css_names();
         color_widgets_.resize(color_names_.size());
         tau::Table table;
+        color_cont_ = table;
         table.set_column_spacing(6);
         table.set_row_spacing(5);
         tau::Scroller scroller;
@@ -395,7 +397,7 @@ struct Main: tau::Toplevel {
     }
 
     int init_colorsel_page(int pg) {
-        tau::Colorsel colorsel(tau::Color(kstate_.get_string(kstate_.root(), "colorsel", "Blue")));
+        tau::Colorsel colorsel(tau::Color(kstate_.get_string(kstate_.root(), "colorsel", tau::COLOR_BLUE)));
         colorsel.cancel_action().disable();
         colorsel.hint_margin(4);
         colorsel.signal_color_changed().connect(tau::fun(this, &Main::on_colorsel));
@@ -447,7 +449,7 @@ struct Main: tau::Toplevel {
     void set_row_color(std::size_t row, const tau::ustring & cname) {
         tau::Color c(cname);
         color_widgets_[row].name.assign(cname);
-        color_widgets_[row].w.style().get("background").set(cname);
+        color_widgets_[row].w.style().get(tau::STYLE_BACKGROUND).set(cname);
         color_widgets_[row].value.assign(c.html());
     }
 
@@ -485,9 +487,12 @@ struct Main: tau::Toplevel {
             progress_.set_value(value);
         }
 
-        std::size_t row = (double(rand())/RAND_MAX)*color_widgets_.size();
-        set_row_color(row, color_names_[prev_row_]);
-        prev_row_ = row;
+        if (color_cont_.visible()) {
+            std::size_t row = (double(rand())/RAND_MAX)*color_widgets_.size();
+            set_row_color(row, color_names_[prev_row_]);
+            prev_row_ = row;
+        }
+
         if (++div == 8) { div = 0; }
     }
 
@@ -528,6 +533,7 @@ struct Main: tau::Toplevel {
 
         tau::Box ctlbox(tau::OR_WEST, 4);
         ctlbox.hint_margin(2, 2, 8, 2);
+        ctlbox.style().get(tau::STYLE_WHITESPACE_BACKGROUND).set("BlanchedAlmond");
         box0.append(ctlbox, true);
 
         {
@@ -541,7 +547,6 @@ struct Main: tau::Toplevel {
 
             box.append(ymax_);
             ymax_.set_tooltip("Sets maximal window height, in pixels");
-            ymax_.style().get("whitespace/background").set("BlanchedAlmond");
             ymax_.append("px", 2, 2);
             ymax_.prepend("h:", 2, 2);
             ymax_.set_value(max_size_hint().height());
@@ -550,7 +555,6 @@ struct Main: tau::Toplevel {
 
             box.append(xmax_);
             xmax_.set_tooltip("Sets maximal window width, in pixels");
-            xmax_.style().get("whitespace/background").set("BlanchedAlmond");
             xmax_.append("px", 2, 2);
             xmax_.prepend("w:", 2, 2);
             xmax_.set_value(max_size_hint().width());
@@ -572,7 +576,6 @@ struct Main: tau::Toplevel {
 
             box.append(ymin_);
             ymin_.set_tooltip("Sets minimal window height, in pixels");
-            ymin_.style().get("whitespace/background").set("BlanchedAlmond");
             ymin_.append("px", 2, 2);
             ymin_.prepend("h:", 2, 2);
             ymin_.set_value(min_size_hint().height());
@@ -581,7 +584,6 @@ struct Main: tau::Toplevel {
 
             box.append(xmin_);
             xmin_.set_tooltip("Sets minimal window width, in pixels");
-            xmin_.style().get("whitespace/background").set("BlanchedAlmond");
             xmin_.append("px", 2, 2);
             xmin_.prepend("w:", 2, 2);
             xmin_.set_value(min_size_hint().width());

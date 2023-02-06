@@ -30,8 +30,9 @@
 #include <types-impl.hh>
 #include <sys-impl.hh>
 #include <tau/signal.hh>
-#include <vector>
+#include <map>
 #include <thread>
+#include <vector>
 
 namespace tau {
 
@@ -73,7 +74,7 @@ protected:
 
 protected:
 
-    using Timers = std::list<Timer_ptr>;
+    using Timers = std::multimap<uint64_t, Timer_ptr>;
 
     int             runlevel_ = 0;
     Timers          timers_;

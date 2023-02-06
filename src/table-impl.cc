@@ -49,7 +49,10 @@ Table_impl::Table_impl():
     signal_display_.connect(fun(this, &Table_impl::update_requisition));
     signal_backpaint_.connect(fun(this, &Table_impl::on_backpaint));
     signal_take_focus_.connect(fun(this, &Table_impl::on_take_focus));
-    table_bytes_ += sizeof(*this);
+    signal_child_requisition_.connect(fun(this, &Table_impl::on_child_requisition_changed));
+    signal_child_hints_.connect(fun(this, &Table_impl::on_child_requisition_changed));
+    signal_child_show_.connect(fun(this, &Table_impl::on_child_show));
+    signal_child_hide_.connect(fun(this, &Table_impl::on_child_hide));
     // std::cout << "Table_impl::():       " << ++ntables_ << " " << str_bytes(table_bytes_) << std::endl;
 }
 
@@ -73,10 +76,6 @@ void Table_impl::put(Widget_ptr wp, int x, int y, unsigned xspan, unsigned yspan
         hol.ymax_ = y+std::max(1U, yspan);
         hol.xsh_ = 1 == hol.xmax_-hol.xmin_ && xsh;
         hol.ysh_ = 1 == hol.ymax_-hol.ymin_ && ysh;
-        hol.hints_cx_ = wp->signal_requisition_changed().connect(tau::bind(fun(this, &Table_impl::on_child_requisition_changed), wp.get()));
-        hol.req_cx_ = wp->signal_requisition_changed().connect(tau::bind(fun(this, &Table_impl::on_child_requisition_changed), wp.get()));
-        hol.show_cx_ = wp->signal_show().connect(tau::bind(fun(this, &Table_impl::on_child_show), wp.get()), true);
-        hol.hide_cx_ = wp->signal_hide().connect(tau::bind(fun(this, &Table_impl::on_child_hide), wp.get()), true);
         dist_holder(hol);
         update_requisition();
         queue_arrange();

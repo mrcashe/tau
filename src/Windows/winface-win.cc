@@ -322,7 +322,7 @@ void Winface_win::handle_restore() {
 void Winface_win::handle_visibility(bool visible) {
     if (visible_ != visible) {
         visible_ = visible;
-        self_->on_owner_show(visible);
+        self_->handle_visible(visible);
     }
 }
 

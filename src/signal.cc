@@ -35,19 +35,19 @@ uintmax_t max_bytes_, signal_bytes_, slot_bytes_, islot_bytes_, func_bytes_, cx_
 unsigned nsignals_, nslots_, ncx_, nwidgets_;
 
 static void report(void * p, const char * met) {
-    // uintmax_t all_bytes = signal_bytes_+slot_bytes_+islot_bytes_+func_bytes_+cx_bytes_;
-    // max_bytes_ = std::max(max_bytes_, all_bytes);
-    //
-    // std::cout << p << ": " << met;
-    // std::cout << " S:" << str_bytes(signal_bytes_) << "[" << nsignals_ << "]";
-    // std::cout << " s:" << str_bytes(slot_bytes_);
-    // std::cout << " i:" << str_bytes(islot_bytes_) << "[" << nslots_ << "]";
-    // std::cout << " f:" << str_bytes(func_bytes_);
-    // std::cout << " c:" << str_bytes(cx_bytes_) << "[" << ncx_ << "]";
-    // std::cout << " T:" << str_bytes(all_bytes);
-    // std::cout << " M:" << str_bytes(max_bytes_);
-    // std::cout << " W:" << nwidgets_;
-    // std::cout << std::endl;
+    uintmax_t all_bytes = signal_bytes_+slot_bytes_+islot_bytes_+func_bytes_+cx_bytes_;
+    max_bytes_ = std::max(max_bytes_, all_bytes);
+
+    std::cout << p << ": " << met;
+    std::cout << " S:" << str_bytes(signal_bytes_) << "[" << nsignals_ << "]";
+    std::cout << " s:" << str_bytes(slot_bytes_);
+    std::cout << " i:" << str_bytes(islot_bytes_) << "[" << nslots_ << "]";
+    std::cout << " f:" << str_bytes(func_bytes_);
+    std::cout << " c:" << str_bytes(cx_bytes_) << "[" << ncx_ << "]";
+    std::cout << " T:" << str_bytes(all_bytes);
+    std::cout << " M:" << str_bytes(max_bytes_);
+    std::cout << " W:" << nwidgets_;
+    std::cout << std::endl;
 }
 
 trackable::trackable() {}
@@ -57,17 +57,15 @@ trackable::trackable(const trackable & src) {}
 trackable::trackable(trackable && src) {}
 
 trackable::~trackable() {
-    for (auto s: slots_) { s->reset(); s->disconnect(); }
+    for (auto s: tracks_) { s->reset(); s->disconnect(); }
 }
 
 void trackable::track(slot_impl * s) {
-    if (std::find(slots_.begin(), slots_.end(), s) == slots_.end()) {
-        slots_.push_back(s);
-    }
+    tracks_.push_front(s);
 }
 
 void trackable::untrack(slot_impl * s) {
-    slots_.remove(s);
+    tracks_.remove(s);
 }
 
 trackable & trackable::operator=(const trackable & src) {
@@ -142,32 +140,31 @@ connection::connection(bool autodrop):
 {
     cx_bytes_ += sizeof(*this);
     ++ncx_;
-    // report(this, " cx():     ");
 }
 
 connection::~connection() {
     if (autodrop_) { drop(); }
     cx_bytes_ -= sizeof(*this);
     --ncx_;
-    // report(this, "~cx():     ");
 }
 
 connection::connection(const connection & other):
     slot_(other.slot_),
     autodrop_(other.autodrop_)
 {
+    other.autodrop_ = false;
     cx_bytes_ += sizeof(*this);
     ++ncx_;
-    // report(this, " cx():     ");
 }
 
 connection::connection(connection && other):
-    slot_(other.slot_)
+    slot_(other.slot_),
+    autodrop_(other.autodrop_)
 {
+    other.autodrop_ = false;
     other.slot_.reset();
     cx_bytes_ += sizeof(*this);
     ++ncx_;
-    // report(this, " cx():     ");
 }
 
 connection::connection(slot_ptr slot):
@@ -175,13 +172,13 @@ connection::connection(slot_ptr slot):
 {
     cx_bytes_ += sizeof(*this);
     ++ncx_;
-    // report(this, " cx():     ");
 }
 
 connection & connection::operator=(const connection & other) {
     if (this != &other) {
         if (autodrop_) { drop(); }
         slot_ = other.slot_;
+        other.autodrop_ = false;
     }
 
     return *this;
@@ -191,6 +188,7 @@ connection & connection::operator=(connection && other) {
     if (this != &other) {
         if (autodrop_) { drop(); }
         slot_ = other.slot_;
+        other.autodrop_ = false;
         other.slot_.reset();
     }
 

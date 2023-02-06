@@ -35,7 +35,7 @@ class Loop_impl;
 class Timer;
 
 struct Timer_impl: public trackable {
-    Timer_impl();
+    Timer_impl(int time_ms=0, bool periodical=false);
     Timer_impl(const Timer_impl & other) = delete;
     Timer_impl & operator=(const Timer_impl & other) = delete;
     Timer_impl(Timer_impl && other) = delete;
@@ -43,12 +43,12 @@ struct Timer_impl: public trackable {
 
     void on_loop_quit();
 
-    Loop_impl *  loop;
-    bool         running = false;
-    bool         periodical = false;
-    unsigned     time_ms = 0;
-    uint64_t     time_point = 0;
-    signal<void()> signal_alarm;
+    Loop_impl *  loop_;
+    uint64_t     time_point_ = 0;
+    int          time_ms_ = 0;
+    bool         periodical_: 1;
+    bool         running_ : 1;
+    signal<void()> signal_alarm_;
 };
 
 } // namespace tau

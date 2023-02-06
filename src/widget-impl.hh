@@ -96,10 +96,33 @@ public:
     virtual bool handle_input(const ustring & s);
 
     // Overriden by Container_impl.
+    virtual bool handle_mouse_down(int mbt, int mm, const Point & pt);
+
+    // Overriden by Container_impl.
+    virtual bool handle_mouse_up(int mbt, int mm, const Point & pt);
+
+    // Overriden by Container_impl.
+    virtual bool handle_mouse_double_click(int mbt, int mm, const Point & pt);
+
+    virtual void handle_mouse_motion(int mm, const Point & pt);
+    virtual void handle_mouse_enter(const Point & pt);
+    virtual void handle_mouse_leave();
+    virtual bool handle_mouse_wheel(int delta, int mm, const Point & pt);
+
+    // Overriden by Container_impl.
     virtual void handle_paint(Painter pr, const Rect & inval);
 
     // Overriden by Container_impl.
     virtual void handle_backpaint(Painter pr, const Rect & inval);
+
+    // Overriden by Container_impl.
+    virtual void handle_display();
+
+    // Overriden by Container_impl.
+    virtual void handle_parent();
+
+    // Overriden by Container_impl.
+    virtual void handle_unparent();
 
     // Overriden by Window_impl.
     virtual bool has_modal() const;
@@ -185,9 +208,17 @@ public:
     // Overriden by Dialog_impl.
     virtual bool running() const { return !signal_run_.empty(); }
 
+    // Overriden by Container_impl.
+    virtual void shutdown(bool yes);
+
+    // Overriden by Container_impl.
+    virtual void update_pdata();
+
+    // Overriden by Container_impl.
+    virtual Action_base * lookup_action(char32_t kc, int km);
+
     connection connect_accel(Accel & accel, bool prepend=false);
     void connect_action(Action_base & action, bool prepend=false);
-    Action_base * lookup_action(char32_t kc, int km);
 
     void  enable();
     void  disable();
@@ -261,8 +292,8 @@ public:
     const Container_impl * parent() const { return parent_; }
     void  unparent();
 
-    void on_owner_show(bool show);
-    void on_owner_enable(bool yes);
+    void handle_visible(bool show);
+    void handle_enable(bool yes);
 
     void   scroll_to(const Point & pt);
     void   scroll_to(int x, int y);
@@ -305,20 +336,20 @@ public:
 
     signal<bool(Painter, Rect)> & signal_paint() { return signal_paint_; }
     signal<bool(Painter, Rect)> & signal_backpaint() { return signal_backpaint_; }
-    signal<bool(char32_t, int)> & signal_key_down() { return signal_key_down_; }
-    signal<bool(char32_t, int)> & signal_key_up() { return signal_key_up_; }
-    signal<bool(const ustring &)> & signal_input() { return signal_input_; }
-    signal<bool(char32_t, int)> & signal_accel() { return signal_accel_; }
-    signal<bool(int, int, Point)> & signal_mouse_down() { return signal_mouse_down_; }
-    signal<bool(int, int, Point)> & signal_mouse_double_click() { return signal_mouse_double_click_; }
-    signal<bool(int, int, Point)> & signal_mouse_up() { return signal_mouse_up_; }
-    signal<void(int, Point)> & signal_mouse_motion() { return signal_mouse_motion_; }
-    signal<void(Point)> & signal_mouse_enter() { return signal_mouse_enter_; }
-    signal<void()> & signal_mouse_leave() { return signal_mouse_leave_; }
-    signal<bool(int, int, Point)> & signal_mouse_wheel() { return signal_mouse_wheel_; }
+    signal<bool(char32_t, int)> & signal_key_down();
+    signal<bool(char32_t, int)> & signal_key_up();
+    signal<bool(const ustring &)> & signal_input();
+    signal<bool(char32_t, int)> & signal_accel();
+    signal<bool(int, int, Point)> & signal_mouse_down();
+    signal<bool(int, int, Point)> & signal_mouse_double_click();
+    signal<bool(int, int, Point)> & signal_mouse_up();
+    signal<void(int, Point)> & signal_mouse_motion();
+    signal<void(Point)> & signal_mouse_enter();
+    signal<void()> & signal_mouse_leave();
+    signal<bool(int, int, Point)> & signal_mouse_wheel();
     signal<void()> & signal_origin_changed() { return signal_origin_changed_; }
     signal<void()> & signal_size_changed() { return signal_size_changed_; }
-    signal<void()> & signal_scroll_changed() { return signal_scroll_changed_; }
+    signal<void()> & signal_scroll_changed();
     signal<void()> & signal_hints_changed() { return signal_hints_changed_; }
     signal<void()> & signal_requisition_changed() { return signal_requisition_changed_; }
     signal<void()> & signal_enable() { return signal_enable_; }
@@ -331,18 +362,16 @@ public:
     signal<void()> & signal_unselect() { return signal_unselect_; }
     signal<void()> & signal_show() { return signal_show_; }
     signal<void()> & signal_hide() { return signal_hide_; }
-    signal<void()> & signal_parent() { return signal_parent_; }
+    signal<void()> & signal_parent();
     signal<void()> & signal_display() { return signal_display_; }
     signal<void()> & signal_unparent() { return signal_unparent_; }
     signal<void()> & signal_destroy() { return signal_destroy_; }
     signal<bool()> & signal_take_focus() { return signal_take_focus_; }
-    signal<void()> & signal_geometry_notify() { return signal_geometry_notify_; }
-    signal<Action_base *(char32_t, int)> & signal_lookup_action() { return signal_lookup_action_; }
-    signal<void(bool)> & signal_shut() { return signal_shut_; }
 
 protected:
 
     Container_impl *    parent_ = nullptr;
+    Scroller_impl *     scroller_ = nullptr;
     Cursor_ptr          cursor_;
     bool                cursor_hidden_ = false;
     bool                focus_allowed_ = false;
@@ -352,20 +381,8 @@ protected:
 
     signal<bool(Painter, Rect)> signal_paint_;
     signal<bool(Painter, Rect)> signal_backpaint_;
-    signal<bool(char32_t, int)> signal_key_down_;
-    signal<bool(char32_t, int)> signal_key_up_;
-    signal<bool(const ustring &)> signal_input_;
-    signal<bool(char32_t, int)> signal_accel_;
-    signal<bool(int, int, Point)> signal_mouse_down_;
-    signal<bool(int, int, Point)> signal_mouse_double_click_;
-    signal<bool(int, int, Point)> signal_mouse_up_;
-    signal<void(int, Point)> signal_mouse_motion_;
-    signal<void(Point)> signal_mouse_enter_;
-    signal<void()> signal_mouse_leave_;
-    signal<bool(int, int, Point)> signal_mouse_wheel_;
     signal<void()> signal_size_changed_;
     signal<void()> signal_origin_changed_;
-    signal<void()> signal_scroll_changed_;
     signal<void()> signal_hints_changed_;
     signal<void()> signal_requisition_changed_;
     signal<void()> signal_enable_;
@@ -378,15 +395,11 @@ protected:
     signal<void()> signal_unselect_;
     signal<void()> signal_show_;
     signal<void()> signal_hide_;
-    signal<void()> signal_parent_;
     signal<void()> signal_display_;
     signal<void()> signal_unparent_;
     signal<void()> signal_destroy_;
-    signal<void(bool)> signal_shut_;
     signal<bool()> signal_take_focus_;
     signal<void()> signal_pdata_changed_;
-    signal<void()> signal_geometry_notify_;
-    signal<Action_base *(char32_t, int)> signal_lookup_action_;
     signal<void()> signal_run_;
 
 protected:
@@ -403,7 +416,7 @@ private:
     ustring     tooltip_text_;
     Widget_ptr  tooltip_widget_;
     unsigned    tooltip_delay_ = 611;
-    connection  tooltip_cx_;
+    connection  tooltip_cx_ { true };
 
     ustring     cursor_name_;
     unsigned    cursor_size_ = 0;
@@ -430,35 +443,39 @@ private:
     unsigned    margin_top_hint_ = 0;
     unsigned    margin_bottom_hint_ = 0;
 
-    connection  parent_cx_;
-    connection  unparent_cx_;
-    connection  display_cx_;
-    connection  visible_cx_;
-    connection  invisible_cx_;
-    connection  shut_cx_;
-    connection  lookup_action_cx_;
+    connection  pan_cx_;
 
     connection  cursor_theme_cx_;
-    connection  geometry_notify_cx_;
-    connection  pdata_cx_;
+    signal<void()> * signal_scroll_changed_ = nullptr;
+    signal<bool(char32_t, int)> * signal_accel_ = nullptr;
+    signal<Action_base *(char32_t, int)> * signal_lookup_action_ = nullptr;
+    signal<void()> * signal_parent_ = nullptr;
+    signal<bool(char32_t, int)> * signal_key_down_ = nullptr;
+    signal<bool(char32_t, int)> * signal_key_up_ = nullptr;
+    signal<bool(const ustring &)> * signal_input_ = nullptr;
+    signal<bool(int, int, Point)> * signal_mouse_down_ = nullptr;
+    signal<bool(int, int, Point)> * signal_mouse_double_click_ = nullptr;
+    signal<bool(int, int, Point)> * signal_mouse_up_ = nullptr;
+    signal<void(int, Point)> * signal_mouse_motion_ = nullptr;
+    signal<void(Point)> * signal_mouse_enter_ = nullptr;
+    signal<void()> * signal_mouse_leave_ = nullptr;
+    signal<bool(int, int, Point)> * signal_mouse_wheel_ = nullptr;
 
 private:
 
     void update_cursor();
-    void update_pdata();
     void enter_cursor();
     void leave_cursor();
+    void delete_signals();
 
     bool on_backpaint(Painter pr, const Rect & inval);
-    void on_mouse_enter(const Point & pt);
-    void on_mouse_leave();
     void on_tooltip_timer();
     void on_enable();
     void on_disable();
     void on_tooltip_close();
     void on_tooltip_mouse_leave();
     void on_action_accel_added(Accel & accel);
-    void on_shut(bool yes);
+    void on_pan_changed();
 };
 
 } // namespace tau

@@ -30,6 +30,7 @@
 #include <tau/enums.hh>
 #include <tau/action.hh>
 #include <container-impl.hh>
+#include <list>
 
 namespace tau {
 

@@ -50,44 +50,25 @@ void Loop_impl::boot() {
 
 void Loop_impl::start_timer(Timer_ptr tp) {
     if (runlevel_ >= 0) {
-        // Check existance.
-        if (timers_.end() != std::find(timers_.begin(), timers_.end(), tp)) { return; }
-        tp->time_point = Timeval::future(1000*tp->time_ms);
-        tp->running = true;
-
-        // No timers -> put first and last same time.
-        if (timers_.empty()) { timers_.push_front(tp); return; }
-
-        // Put in front of queue.
-        if (tp->time_point <= timers_.front()->time_point) { timers_.push_front(tp); return; }
-
-        // Put behind the last.
-        if (tp->time_point > timers_.back()->time_point) { timers_.push_back(tp); return; }
-
-        // Search throught the list.
-        for (auto iter = timers_.begin(); iter != timers_.end(); ++iter) {
-            if (tp->time_point <= (*iter)->time_point) {
-                timers_.insert(iter, tp);
-                return;
-            }
-        }
+        tp->time_point_ = Timeval::future(1000*tp->time_ms_);
+        tp->running_ = true;
+        timers_.emplace(tp->time_point_, tp);
     }
 }
 
 void Loop_impl::stop_timer(Timer_impl * tpi) {
     if (tpi) {
-        tpi->running = false;
-        timers_.remove_if([tpi](Timer_ptr tp) { return tp.get() == tpi; } );
+        tpi->running_ = false;
+        auto i = std::find_if(timers_.begin(), timers_.end(), [tpi](auto & p) { return p.second.get() == tpi; } );
+        if (i != timers_.end()) { timers_.erase(i); }
     }
 }
 
 signal<void()> & Loop_impl::signal_alarm(int timeout_ms, bool periodical) {
     if (runlevel_ < 0) { throw user_error("Loop_impl::signal_alarm(): dead loop"); }
-    Timer_ptr tp = std::make_shared<Timer_impl>();
-    tp->time_ms = std::max(1, timeout_ms);
-    tp->periodical = periodical;
+    Timer_ptr tp = std::make_shared<Timer_impl>(std::max(1, timeout_ms), periodical);
     start_timer(tp);
-    return tp->signal_alarm;
+    return tp->signal_alarm_;
 }
 
 void Loop_impl::run() {
@@ -106,7 +87,7 @@ void Loop_impl::run() {
 
         // Have pending timer at the front of timer queue?
         if (!timers_.empty()) {
-            uint64_t t = timers_.front()->time_point;
+            uint64_t t = timers_.begin()->second->time_point_;
             if (t <= now) { ts = now; }
             else if (t < ts) { ts = t; }
         }
@@ -124,13 +105,13 @@ void Loop_impl::run() {
 
         // In result of iterate() call timer queue may be modified, so test it again.
         while (!timers_.empty()) {
-            Timer_ptr tp = timers_.front();
+            Timer_ptr tp = timers_.begin()->second;
 
-            if (now >= tp->time_point) {
-                tp->running = false;
-                timers_.pop_front();
-                tp->signal_alarm();
-                if (tp->periodical && !tp->signal_alarm.empty()) { start_timer(tp); }
+            if (now >= tp->time_point_) {
+                tp->running_ = false;
+                timers_.erase(timers_.begin());
+                tp->signal_alarm_();
+                if (tp->periodical_ && !tp->signal_alarm_.empty()) { start_timer(tp); }
             }
 
             else {

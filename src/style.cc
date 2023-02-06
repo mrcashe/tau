@@ -53,10 +53,9 @@ struct Style_impl {
     using Item_cptr = std::shared_ptr<const Style_item>;
     using Items = std::unordered_map<std::string, Item_ptr>;
 
+    Style_wptr      parent_;
     Items           items_, redir_;
     Style_item      mt_;
-    connection      find_cx_;
-    signal<Style_item *(const std::string &)> signal_find_;
 
     Style_impl() = default;
     Style_impl(const Style_impl & other) = default;
@@ -64,8 +63,8 @@ struct Style_impl {
     Style_impl(Style_impl && other) = default;
     Style_impl & operator=(Style_impl && other) = default;
 
-    void set_parent(Style_impl * parent) {
-        find_cx_ = signal_find_.connect(fun(parent, &Style_impl::find));
+    void set_parent(Style_ptr parent) {
+        parent_ = parent;
 
         for (auto & p: items_) {
             if (auto pi = parent->find(p.first)) {
@@ -77,9 +76,9 @@ struct Style_impl {
     }
 
     void unparent() {
-        if (!find_cx_.empty()) {
+        if (auto pp = parent_.lock()) {
             for (auto & p: items_) { p.second->cx_.drop(); }
-            find_cx_.drop();
+            parent_.reset();
         }
     }
 
@@ -102,9 +101,11 @@ struct Style_impl {
             Item_ptr item = std::make_shared<Style_item>(value);
             items_[name] = item;
 
-            if (auto pi = signal_find_(name)) {
-                item->set_pvalue(pi->get());
-                item->cx_ = pi->signal_value_changed_.connect(fun(item, &Style_item::set_pvalue));
+            if (auto pp = parent_.lock()) {
+                if (auto pi = pp->find(name)) {
+                    item->set_pvalue(pi->get());
+                    item->cx_ = pi->signal_value_changed_.connect(fun(item, &Style_item::set_pvalue));
+                }
             }
 
             return item;
@@ -116,7 +117,7 @@ struct Style_impl {
         }
     }
 
-    Style_item * find(const std::string & name) {
+    Style_item * find(const std::string & name) const {
         auto i = items_.find(name);
         if (i != items_.end()) { return i->second.get(); }
         i = redir_.find(name);
@@ -360,22 +361,20 @@ Color_style & Color_style::operator=(const Color & color) {
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
 
-Style::Style() {
-    impl = new Style_impl;
+Style::Style():
+    impl(std::make_shared<Style_impl>())
+{
 }
 
-Style::~Style() {
-    delete impl;
-}
+Style::~Style() {}
 
 Style::Style(const Style & other) {
-    impl = new Style_impl(*(other.impl));
+    impl = std::make_shared<Style_impl>(*(other.impl));
 }
 
 Style & Style::operator=(const Style & other) {
     if (this != &other) {
-        delete impl;
-        impl = new Style_impl(*(other.impl));
+        impl = std::make_shared<Style_impl>(*(other.impl));
     }
 
     return *this;

@@ -1036,7 +1036,7 @@ void Display_xcb::handle_xcb_event(xcb_generic_event_t * event) {
                 }
 
                 set_mouse_owner(wip, pt);
-                wip->signal_mouse_motion()(mm_from_state(motion->state), pt);
+                wip->handle_mouse_motion(mm_from_state(motion->state), pt);
             }
         }
             break;
@@ -1279,11 +1279,11 @@ void Display_xcb::handle_button(bool press, xcb_button_press_event_t * event) {
 
             if (button > 0 && button < 4) {
                 if (button == last_button_ && last_clicker_ == wii && now-click_ts_ < dclick_time_) {
-                    wii->signal_mouse_double_click()(button, mm, pt);
+                    wii->handle_mouse_double_click(button, mm, pt);
                 }
 
                 else {
-                    wii->signal_mouse_down()(button, mm, pt);
+                    wii->handle_mouse_down(button, mm, pt);
                 }
 
                 click_ts_ = now;
@@ -1292,16 +1292,16 @@ void Display_xcb::handle_button(bool press, xcb_button_press_event_t * event) {
             }
 
             else if (4 == button) {
-                wii->signal_mouse_wheel()(-1, mm, pt);
+                wii->handle_mouse_wheel(-1, mm, pt);
             }
 
             else if (5 == button) {
-                wii->signal_mouse_wheel()(+1, mm, pt);
+                wii->handle_mouse_wheel(+1, mm, pt);
             }
         }
 
         else {
-            wii->signal_mouse_up()(button, mm, pt);
+            wii->handle_mouse_up(button, mm, pt);
         }
     }
 }

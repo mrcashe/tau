@@ -32,7 +32,7 @@
 namespace tau {
 
 class Container_impl: public Widget_impl {
-    friend class Container;
+    friend Container;
 
 public:
 
@@ -52,10 +52,40 @@ public:
     bool handle_input(const ustring & s) override;
 
     // Overrides Widget_impl.
+    bool handle_mouse_down(int mbt, int mm, const Point & pt) override;
+
+    // Overrides Widget_impl.
+    bool handle_mouse_up(int mbt, int mm, const Point & pt) override;
+
+    // Overrides Widget_impl.
+    bool handle_mouse_double_click(int mbt, int mm, const Point & pt) override;
+
+    // Overrides Widget_impl.
+    void handle_mouse_motion(int mm, const Point & pt) override;
+
+    // Overrides Widget_impl.
+    void handle_mouse_enter(const Point & pt) override;
+
+    // Overrides Widget_impl.
+    void handle_mouse_leave() override;
+
+    // Overrides Widget_impl.
+    bool handle_mouse_wheel(int delta, int mm, const Point & pt) override;
+
+    // Overrides Widget_impl.
     void handle_paint(Painter pr, const Rect & inval) override;
 
     // Overrides Widget_impl.
     void handle_backpaint(Painter pr, const Rect & inval) override;
+
+    // Overrides Widget_impl.
+    void handle_display() override;
+
+    // Overrides Widget_impl.
+    void handle_parent() override;
+
+    // Overrides Widget_impl.
+    void handle_unparent() override;
 
     // Overriden by Window_impl.
     // Overrides Widget_impl.
@@ -104,11 +134,24 @@ public:
     // Overriden by Dialog_impl.
     bool running() const override;
 
+    // Overrides Widget_impl.
+    void shutdown(bool yes) override;
+
+    // Overrides Widget_impl.
+    void update_pdata() override;
+
+    // Overrides Widget_impl.
+    Action_base * lookup_action(char32_t kc, int km) override;
+
     void queue_arrange();
     void sync_arrange();
     void ungrab_mouse_down();
-    void on_child_visibility(Widget_impl * wi);
-    void on_obscure(Widget_impl * wi, bool yes);
+
+    void on_child_obscured(Widget_impl * wi, bool yes);
+    void on_child_requisition(Widget_impl * wi);
+    void on_child_hints(Widget_impl * wi);
+    void on_child_show(Widget_impl * wi);
+    void on_child_hide(Widget_impl * wi);
 
     const Widget_impl * focused_child() const { return focused_child_; }
     const Widget_impl * modal_child() const { return modal_child_; }
@@ -130,6 +173,7 @@ public:
 
 protected:
 
+    bool            arrange_ = false;   // Arrange queued.
     Widget_impl *   focused_child_ = nullptr;
     Widget_impl *   modal_child_ = nullptr;
     Widget_impl *   mouse_grabber_ = nullptr;
@@ -137,6 +181,13 @@ protected:
 
     signal<void()>  signal_arrange_;
     signal<void()>  signal_children_changed_;
+    signal<void(Widget_impl *)> signal_child_requisition_;
+    signal<void(Widget_impl *)> signal_child_hints_;
+    signal<void(Widget_impl *)> signal_child_show_;
+    signal<void(Widget_impl *)> signal_child_hide_;
+
+    // Overriden by Window_impl.
+    virtual void queue_arrange_up();
 
 protected:
 
@@ -159,15 +210,14 @@ protected:
 private:
 
     using Children = std::vector<Widget_ptr>;
-    using Containers = std::list<Container_impl *>;
-    using Obscured = std::list<Widget_impl *>;
+    using Containers = std::forward_list<Container_impl *>;
+    using Obscured = std::forward_list<Widget_impl *>;
 
     Children        children_;          // Children.
     Children        woff_;              // Written off children.
     Containers      containers_;        // Owning containers.
     Obscured        obscured_;          // Currently obscured children.
-    connection      woff_cx_ { true };
-    connection      arrange_cx_ { true };
+    Timer           woff_timer_ { fun(this, &Container_impl::on_woff_timer) };
 
 private:
 
@@ -175,12 +225,8 @@ private:
     Widget_impl * mouse_target_update(const Point & pt);
     void set_mouse_owner(Widget_impl * wi, const Point & pt=Point());
     void update_mouse_owner();
-
     void paint_children(Painter pr, const Rect & inval, bool backpaint);
 
-    bool on_mouse_down(int mbt, int mm, const Point & pt);
-    bool on_mouse_double_click(int mbt, int mm, const Point & pt);
-    bool on_mouse_up(int mbt, int mm, const Point & pt);
     void on_mouse_motion(int mm, const Point & pt);
     bool on_mouse_wheel(int delta, int mm, const Point & pt);
     void on_mouse_enter(const Point & pt);

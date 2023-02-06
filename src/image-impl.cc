@@ -50,6 +50,13 @@ Image_impl::Image_impl(Pixmap_cptr pix, bool transparent):
     set_pixmap(pix, transparent);
 }
 
+Image_impl::Image_impl(Pixmap_ptr pix, bool transparent):
+    Widget_impl()
+{
+    init();
+    set_pixmap(pix, transparent);
+}
+
 Image_impl::Image_impl(const ustring & pixmap_name, bool transparent):
     Widget_impl(),
     transparent_(transparent),
@@ -66,17 +73,32 @@ void Image_impl::init() {
 }
 
 void Image_impl::clear() {
-    film_.clear();
+    filmc_.clear();
     cur_ = 0;
     invalidate();
 }
 
 void Image_impl::add_pixmap(Pixmap_cptr pix, unsigned delay) {
     if (pix) {
+        filmc_.emplace_back();
+        auto & ff = filmc_.back();
+        ff.pix = pix;
+        ff.delay = delay;
+        Size sz;
+        for (auto & f: filmc_) { sz |= f.pix->size(); }
+        require_size(sz);
+        invalidate();
+        start_timer_if_needed();
+    }
+}
+
+void Image_impl::add_pixmap(Pixmap_ptr pix, unsigned delay) {
+    if (pix) {
         film_.emplace_back();
         auto & ff = film_.back();
         ff.pix = pix;
         ff.delay = delay;
+        ff.changed_cx = pix->signal_changed().connect(tau::bind(fun(this, &Image_impl::on_pix_changed), film_.size()-1));
         Size sz;
         for (auto & f: film_) { sz |= f.pix->size(); }
         require_size(sz);
@@ -94,13 +116,22 @@ void Image_impl::set_pixmap(Pixmap_cptr pix, bool transparent) {
     }
 }
 
+void Image_impl::set_pixmap(Pixmap_ptr pix, bool transparent) {
+    transparent_ = transparent;
+
+    if (pix) {
+        clear();
+        add_pixmap(pix);
+    }
+}
+
 void Image_impl::reset_gray() {
     gray_.reset();
 }
 
 void Image_impl::create_gray() {
-    if (!shut_ && !gray_ && !film_.empty()) {
-        auto orig = film_.front().pix;
+    if (!shut_ && !gray_ && !filmc_.empty()) {
+        auto orig = filmc_.front().pix;
 
         if (32 == orig->depth() && transparent_) {
             gray_ = Pixmap_impl::create(32, orig->size());
@@ -121,7 +152,7 @@ void Image_impl::create_gray() {
 }
 
 void Image_impl::on_display() {
-    if (film_.empty() && !pixmap_name_.empty()) {
+    if (filmc_.empty() && !pixmap_name_.empty()) {
         if (auto pix = Theme_impl::root()->find_pixmap(pixmap_name_)) {
             set_pixmap(pix, transparent_);
         }
@@ -129,12 +160,12 @@ void Image_impl::on_display() {
 }
 
 void Image_impl::on_enable() {
-    if (!shut_ && !film_.empty() && gray_) {
-        if (auto dp = display()) {
-            if (auto loop = dp->loop()) {
-                gray_cx_ = loop->signal_alarm(73869).connect(fun(this, &Image_impl::reset_gray));
-            }
-        }
+    if (!shut_ && !filmc_.empty() && gray_) {
+        // if (auto dp = display()) {
+        //     if (auto loop = dp->loop()) {
+        //         gray_cx_ = loop->signal_alarm(73869).connect(fun(this, &Image_impl::reset_gray));
+        //     }
+        // }
 
         invalidate();
     }
@@ -143,15 +174,15 @@ void Image_impl::on_enable() {
 void Image_impl::on_disable() {
     gray_cx_.drop();
 
-    if (!film_.empty()) {
+    if (!filmc_.empty()) {
         create_gray();
         invalidate();
     }
 }
 
 void Image_impl::on_timer() {
-    if (film_.size() > 1) {
-        if (++cur_ >= film_.size()) { cur_ = 0; }
+    if (filmc_.size() > 1) {
+        if (++cur_ >= filmc_.size()) { cur_ = 0; }
         timer_.start(calc_delay());
         redraw();
     }
@@ -169,6 +200,13 @@ void Image_impl::redraw() {
     }
 }
 
+void Image_impl::on_pix_changed(std::size_t index) {
+    if (index < film_.size() && cur_ == index) {
+        gray_.reset();
+        invalidate();
+    }
+}
+
 void Image_impl::paint_pixmap(Painter pr) {
     if (irect_) {
         pr.set_brush(Color(style().color(STYLE_BACKGROUND)));
@@ -178,7 +216,12 @@ void Image_impl::paint_pixmap(Painter pr) {
 
     if (!enabled()) { create_gray(); }
 
-    if (auto pix = !enabled() ? gray_ : (cur_ < film_.size() ? film_[cur_].pix : nullptr)) {
+    Pixmap_cptr pix = nullptr;
+    if (!enabled()) { pix = gray_; }
+    else if (!film_.empty() && cur_ < film_.size()) { pix = film_[cur_].pix; }
+    else if (!filmc_.empty() && cur_ < filmc_.size()) { pix = filmc_[cur_].pix; }
+
+    if (pix) {
         auto pri = strip(pr);
         Rect r(pix->size()), rr(size());
         r.center_to(rr.center());
@@ -203,14 +246,14 @@ void Image_impl::set_delay(unsigned delay) {
 }
 
 void Image_impl::start_timer_if_needed() {
-    if (film_.size() > 1) {
+    if (filmc_.size() > 1) {
         timer_.start(calc_delay());
     }
 }
 
 unsigned Image_impl::calc_delay() const {
-    if (cur_ < film_.size()) {
-        auto & ff = film_[cur_];
+    if (cur_ < filmc_.size()) {
+        auto & ff = filmc_[cur_];
         if (0 != ff.delay) { return ff.delay; }
     }
 

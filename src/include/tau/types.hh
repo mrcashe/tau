@@ -180,6 +180,9 @@ class Size;
 
 class Style;
 struct Style_impl;
+using Style_ptr = std::shared_ptr<Style_impl>;
+using Style_cptr = std::shared_ptr<const Style_impl>;
+using Style_wptr = std::weak_ptr<const Style_impl>;
 
 class Territory;
 

@@ -41,7 +41,7 @@ Timer::~Timer() {}
 Timer::Timer(slot<void()> slot_alarm, int time_ms, bool periodical):
     impl(std::make_shared<Timer_impl>())
 {
-    impl->signal_alarm.connect(slot_alarm);
+    impl->signal_alarm_.connect(slot_alarm);
     restart(time_ms, periodical);
 }
 
@@ -54,38 +54,41 @@ void Timer::start(int time_ms, bool periodical) {
 void Timer::restart(int time_ms, bool periodical) {
     if (time_ms > 0) {
         stop();
-        impl->time_ms = time_ms;
-        impl->periodical = periodical;
-        if (impl->loop) { impl->loop->start_timer(impl); }
+        impl->time_ms_ = time_ms;
+        impl->periodical_ = periodical;
+        if (impl->loop_) { impl->loop_->start_timer(impl); }
     }
 }
 
 void Timer::stop() {
-    if (running() && impl->loop) {
-        impl->loop->stop_timer(impl.get());
+    if (running() && impl->loop_) {
+        impl->loop_->stop_timer(impl.get());
     }
 }
 
 bool Timer::running() const {
-    return impl->running;
+    return impl->running_;
 }
 
 signal<void()> & Timer::signal_alarm() {
-    return impl->signal_alarm;
+    return impl->signal_alarm_;
 }
 
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
 
-Timer_impl::Timer_impl():
-    trackable()
+Timer_impl::Timer_impl(int time_ms, bool periodical):
+    trackable(),
+    time_ms_(time_ms),
+    periodical_(periodical),
+    running_(false)
 {
-    loop = Loop_impl::this_loop().get();
-    loop->signal_quit().connect(fun(this, &Timer_impl::on_loop_quit));
+    loop_ = Loop_impl::this_loop().get();
+    loop_->signal_quit().connect(fun(this, &Timer_impl::on_loop_quit));
 }
 
 void Timer_impl::on_loop_quit() {
-    loop = nullptr;
+    loop_ = nullptr;
 }
 
 } // namespace tau

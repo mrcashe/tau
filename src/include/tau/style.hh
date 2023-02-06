@@ -228,7 +228,7 @@ public:
 
 private:
 
-    Style_impl * impl;
+    Style_ptr impl;
 };
 
 /// @name String variables providing style names

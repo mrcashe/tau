@@ -29,6 +29,7 @@
 #ifndef TAU_SIGNAL_HH
 #define TAU_SIGNAL_HH
 
+#include <forward_list>
 #include <functional>
 #include <list>
 #include <memory>
@@ -40,6 +41,9 @@ extern uintmax_t signal_bytes_, slot_bytes_, islot_bytes_, func_bytes_;
 
 template <typename R, typename... Args> class fun_functor;
 template <class Class, typename R, typename... Args> class mem_functor;
+template <class Class, typename R, typename... Args> class cmem_functor;
+template <class Class, typename R, typename... Args> class vmem_functor;
+template <class Class, typename R, typename... Args> class cvmem_functor;
 template <typename R, typename... Args> class slot;
 template <typename R, typename... Args> class signal;
 template <class Slot, typename R, typename... Args> struct signal_emitter;
@@ -119,7 +123,8 @@ protected:
 template <class Class, typename R, typename... Args>
 class mem_functor<Class, R(Args...)>: public mem_functor_base<std::is_base_of<trackable, Class>::value, Class> {
     using base_type = mem_functor_base<std::is_base_of<trackable, Class>::value, Class>;
-    using function_type = std::function<R(Class *, Args...)>;
+    // using function_type = std::function<R(Class *, Args...)>;
+    using function_type = R (Class::*)(Args...);
 
     Class *         obj_;
     function_type   fun_;
@@ -136,7 +141,109 @@ public:
     }
 
     R operator()(Args... args) const {
-        return fun_ ? fun_(obj_, args...) : R();
+        return fun_ ? (obj_->*fun_)(args...) : R();
+    }
+
+    void reset() override {
+        base_type::reset();
+        fun_ = nullptr;
+    }
+
+    bool empty() const override {
+        return !fun_;
+    }
+};
+
+/// @ingroup signal_group
+template <class Class, typename R, typename... Args>
+class cmem_functor<Class, R(Args...)>: public mem_functor_base<std::is_base_of<trackable, Class>::value, Class> {
+    using base_type = mem_functor_base<std::is_base_of<trackable, Class>::value, Class>;
+    using function_type = R (Class::*)(Args...) const;
+
+    Class *         obj_;
+    function_type   fun_;
+
+public:
+
+    using result_type = R;
+
+    cmem_functor(Class * obj, const function_type & fun):
+        base_type(obj),
+        obj_(obj),
+        fun_(fun)
+    {
+    }
+
+    R operator()(Args... args) const {
+        return fun_ ? (obj_->*fun_)(args...) : R();
+    }
+
+    void reset() override {
+        base_type::reset();
+        fun_ = nullptr;
+    }
+
+    bool empty() const override {
+        return !fun_;
+    }
+};
+
+/// @ingroup signal_group
+template <class Class, typename R, typename... Args>
+class vmem_functor<Class, R(Args...)>: public mem_functor_base<std::is_base_of<trackable, Class>::value, Class> {
+    using base_type = mem_functor_base<std::is_base_of<trackable, Class>::value, Class>;
+    using function_type = R (Class::*)(Args...) volatile;
+
+    Class *         obj_;
+    function_type   fun_;
+
+public:
+
+    using result_type = R;
+
+    vmem_functor(Class * obj, const function_type & fun):
+        base_type(obj),
+        obj_(obj),
+        fun_(fun)
+    {
+    }
+
+    R operator()(Args... args) const {
+        return fun_ ? (obj_->*fun_)(args...) : R();
+    }
+
+    void reset() override {
+        base_type::reset();
+        fun_ = nullptr;
+    }
+
+    bool empty() const override {
+        return !fun_;
+    }
+};
+
+/// @ingroup signal_group
+template <class Class, typename R, typename... Args>
+class cvmem_functor<Class, R(Args...)>: public mem_functor_base<std::is_base_of<trackable, Class>::value, Class> {
+    using base_type = mem_functor_base<std::is_base_of<trackable, Class>::value, Class>;
+    using function_type = R (Class::*)(Args...) const volatile;
+
+    Class *         obj_;
+    function_type   fun_;
+
+public:
+
+    using result_type = R;
+
+    cvmem_functor(Class * obj, const function_type & fun):
+        base_type(obj),
+        obj_(obj),
+        fun_(fun)
+    {
+    }
+
+    R operator()(Args... args) const {
+        return fun_ ? (obj_->*fun_)(args...) : R();
     }
 
     void reset() override {
@@ -205,6 +312,7 @@ public:
 
     void reset() override {
         functor_.reset();
+        functor_base::reset();
     }
 };
 
@@ -222,21 +330,21 @@ class slot_base {
     void disconnect();
     void link(signal_base * signal);
 
-public:
-
-   ~slot_base();
-    connection cx();
-
 protected:
 
     slot_ptr      impl_;
     signal_base * signal_ = nullptr;
+
+public:
+
+   ~slot_base();
+    connection cx();
 };
 
 /// An object that tracks signal->slot connections automatically.
 /// @ingroup signal_group
 class trackable {
-    std::list<slot_impl *> slots_;
+    std::forward_list<slot_impl *> tracks_;
 
     friend slot_impl;
 
@@ -376,9 +484,7 @@ public:
 
     /// Copy constructor.
     slot(const slot & other) {
-        if (other.impl_) {
-            impl_ = other.impl_->clone(this);
-        }
+        if (other.impl_) { impl_ = other.impl_->clone(this); }
     }
 
     /// Copy operator.
@@ -388,6 +494,19 @@ public:
             if (other.impl_) { impl_ = other.impl_->clone(this); }
         }
 
+        return *this;
+    }
+
+    slot(slot && other) {
+        impl_ = other.impl_;
+        if (impl_) { impl_->link(this); }
+        other.impl_.reset();
+    }
+
+    slot & operator=(slot && other) {
+        impl_ = other.impl_;
+        if (impl_) { impl_->link(this); }
+        other.impl_.reset();
         return *this;
     }
 
@@ -459,11 +578,9 @@ public:
 
 private:
 
-    slot_ptr    slot_;
-    bool        autodrop_ = false;
-
-    friend class slot_base;
-
+    slot_ptr     slot_;
+    mutable bool autodrop_ = false;
+    friend slot_base;
     connection(slot_ptr slot);
 };
 
@@ -521,7 +638,7 @@ class signal<R(Args...)>: public signal_base {
 
     void erase(slot_base * s) override {
         slots_.remove(*static_cast<slot_type *>(s));
-        size_ = slots_.size();
+        --size_;
         slot_bytes_ -= sizeof(slot_type);
     }
 
@@ -542,10 +659,10 @@ public:
     /// Copy operator.
     signal & operator=(const signal & other) {
         if (this != &other) {
-            slot_bytes_ -= sizeof(slot_type)*size_;
+            slot_bytes_ -= sizeof(slot_type)*size();
             slots_ = other.slots_;
             size_ = slots_.size();
-            slot_bytes_ += sizeof(slot_type)*size_;
+            slot_bytes_ += sizeof(slot_type)*size();
         }
 
         return *this;
@@ -553,7 +670,7 @@ public:
 
     /// Destructor.
     /// @since 0.4.0 is explicitly defined (doesn't break API).
-   ~signal() { signal_bytes_ -= sizeof(*this); slot_bytes_ -= sizeof(slot_type)*size_; slots_.clear(); size_ = 0; }
+   ~signal() { signal_bytes_ -= sizeof(*this); slot_bytes_ -= sizeof(slot_type)*size(); slots_.clear(); size_ = 0; }
 
     /// Merge signals.
     void operator+=(const signal & other) {
@@ -565,7 +682,7 @@ public:
 
     /// Test if empty.
     bool empty() const {
-        return 0 == size_;
+        return 0 == size();
     }
 
     /// Count slots connected.
@@ -616,9 +733,9 @@ public:
 
     /// Emit the %signal.
     R operator()(Args... args) {
-        if (0 != size_) {
+        if (0 != size()) {
             using ptr_type = std::shared_ptr<impl_type>;
-            std::size_t n = std::min(size_, (512*1024U)/sizeof(ptr_type)), nn = n;
+            std::size_t n = std::min(size(), (512*1024U)/sizeof(ptr_type)), nn = n;
             ptr_type tmp[n], * d = tmp;
 
             for (auto i = slots_.begin(); nn && i != slots_.end(); ++i, --nn) {
@@ -675,73 +792,73 @@ fun(Obj & obj, R (Class::*fun)(Args...)) {
 /// Create functor from pointer to object of some class and const-qualified method of that class.
 /// @ingroup signal_group
 template <typename R, typename Obj, class Class, typename... Args>
-inline mem_functor<Obj, R(Args...)>
+inline cmem_functor<Obj, R(Args...)>
 fun(Obj * obj, R (Class::*fun)(Args...) const) {
-    return mem_functor<Obj, R(Args...)>(obj, fun);
+    return cmem_functor<Obj, R(Args...)>(obj, fun);
 }
 
 /// Create functor from shared pointer to object of some class and const-qualified method of that class.
 /// @ingroup signal_group
 template <typename R, typename Obj, class Class, typename... Args>
-inline mem_functor<Obj, R(Args...)>
+inline cmem_functor<Obj, R(Args...)>
 fun(std::shared_ptr<Obj> obj_ptr, R (Class::*fun)(Args...) const) {
-    return mem_functor<Obj, R(Args...)>(obj_ptr.get(), fun);
+    return cmem_functor<Obj, R(Args...)>(obj_ptr.get(), fun);
 }
 
 /// Create functor from link to object of some class and const-qualified method of that class.
 /// @ingroup signal_group
 template <typename R, typename Obj, class Class, typename... Args>
-inline mem_functor<Obj, R(Args...)>
+inline cmem_functor<Obj, R(Args...)>
 fun(Obj & obj, R (Class::*fun)(Args...) const) {
-    return mem_functor<Obj, R(Args...)>(&obj, fun);
+    return cmem_functor<Obj, R(Args...)>(&obj, fun);
 }
 
 /// Create functor from pointer to object of some class and volatile-qualified method of that class.
 /// @ingroup signal_group
 template <typename R, typename Obj, class Class, typename... Args>
-inline mem_functor<Obj, R, Args...>
+inline vmem_functor<Obj, R, Args...>
 fun(Obj * obj, R (Class::*fun)(Args...) volatile) {
-    return mem_functor<Obj, R(Args...)>(obj, fun);
+    return vmem_functor<Obj, R(Args...)>(obj, fun);
 }
 
 /// Create functor from shared pointer to object of some class and volatile-qualified method of that class.
 /// @ingroup signal_group
 template <typename R, typename Obj, class Class, typename... Args>
-inline mem_functor<Obj, R, Args...>
+inline vmem_functor<Obj, R, Args...>
 fun(std::shared_ptr<Obj> obj_ptr, R (Class::*fun)(Args...) volatile) {
-    return mem_functor<Obj, R(Args...)>(obj_ptr.get(), fun);
+    return vmem_functor<Obj, R(Args...)>(obj_ptr.get(), fun);
 }
 
 /// Create functor from link to object of some class and volatile-qualified method of that class.
 /// @ingroup signal_group
 template <typename R, typename Obj, class Class, typename... Args>
-inline mem_functor<Obj, R(Args...)>
+inline vmem_functor<Obj, R(Args...)>
 fun(Obj & obj, R (Class::*fun)(Args...) volatile) {
-    return mem_functor<Obj, R(Args...)>(&obj, fun);
+    return vmem_functor<Obj, R(Args...)>(&obj, fun);
 }
 
 /// Create functor from pointer to object of some class and const-volatile-qualified method of that class.
 /// @ingroup signal_group
 template <typename R, typename Obj, class Class, typename... Args>
-inline mem_functor<Obj, R(Args...)>
+inline cvmem_functor<Obj, R(Args...)>
 fun(Obj * obj, R (Class::*fun)(Args...) const volatile) {
-    return mem_functor<Obj, R(Args...)>(obj, fun);
+    return cvmem_functor<Obj, R(Args...)>(obj, fun);
 }
 
 /// Create functor from shared pointer to object of some class and const-volatile-qualified method of that class.
 /// @ingroup signal_group
 template <typename R, typename Obj, class Class, typename... Args>
-inline mem_functor<Obj, R(Args...)>
+inline cvmem_functor<Obj, R(Args...)>
 fun(std::shared_ptr<Obj> obj_ptr, R (Class::*fun)(Args...) const volatile) {
-    return mem_functor<Obj, R(Args...)>(obj_ptr.get(), fun);
+    return cvmem_functor<Obj, R(Args...)>(obj_ptr.get(), fun);
 }
 
 /// Create functor from link to object of some class and const-volatile-qualified method of that class.
 /// @ingroup signal_group
 template <typename R, typename Obj, class Class, typename... Args>
-inline mem_functor<Obj, R(Args...)>
+inline cvmem_functor<Obj, R(Args...)>
 fun(Obj & obj, R (Class::*fun)(Args...) const volatile) {
-    return mem_functor<Obj, R(Args...)>(&obj, fun);
+    return cvmem_functor<Obj, R(Args...)>(&obj, fun);
 }
 
 /// Create functor from a reference to the signal.

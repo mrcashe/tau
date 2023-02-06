@@ -587,7 +587,7 @@ LRESULT Display_win::handle(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 auto p = set_mouse_owner(wii, pt);
 
                 if (p == wii) {
-                    p->signal_mouse_motion()(mm_from_wp(wp), pt);
+                    p->handle_mouse_motion(mm_from_wp(wp), pt);
                     wf->track_mouse_event();
                     return TRUE;
                 }
@@ -611,7 +611,7 @@ LRESULT Display_win::handle(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 auto p = set_mouse_owner(wii, pt);
 
                 if (p == wii) {
-                    wii->signal_mouse_wheel()(d < 0 ? +1 : -1, mm_from_wp(wp), pt);
+                    wii->handle_mouse_wheel(d < 0 ? +1 : -1, mm_from_wp(wp), pt);
                     return TRUE;
                 }
             }
@@ -804,7 +804,7 @@ bool Display_win::handle_mouse_down(HWND hwnd, int mbt, WPARAM wp, LPARAM lp) {
         auto p = set_mouse_owner(wii, pt);
 
         if (p == wii) {
-            wii->signal_mouse_down()(mbt, mm_from_wp(wp) & ~(MM_LEFT|MM_MIDDLE|MM_RIGHT), pt);
+            wii->handle_mouse_down(mbt, mm_from_wp(wp) & ~(MM_LEFT|MM_MIDDLE|MM_RIGHT), pt);
             return true;
         }
     }
@@ -825,7 +825,7 @@ bool Display_win::handle_mouse_double_click(HWND hwnd, int mbt, WPARAM wp, LPARA
         auto p = set_mouse_owner(wii, pt);
 
         if (p == wii) {
-            wii->signal_mouse_double_click()(mbt, mm_from_wp(wp) & ~(MM_LEFT|MM_MIDDLE|MM_RIGHT), pt);
+            wii->handle_mouse_double_click()(mbt, mm_from_wp(wp) & ~(MM_LEFT|MM_MIDDLE|MM_RIGHT), pt);
             return true;
         }
     }
@@ -846,7 +846,7 @@ bool Display_win::handle_mouse_up(HWND hwnd, int mbt, WPARAM wp, LPARAM lp) {
         auto p = set_mouse_owner(wii, pt);
 
         if (p == wii) {
-            wii->signal_mouse_up()(mbt, mm_from_wp(wp) & ~(MM_LEFT|MM_MIDDLE|MM_RIGHT), pt);
+            wii->handle_mouse_up(mbt, mm_from_wp(wp) & ~(MM_LEFT|MM_MIDDLE|MM_RIGHT), pt);
             return true;
         }
     }

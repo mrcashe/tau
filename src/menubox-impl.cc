@@ -154,6 +154,7 @@ Window_ptr Menubox_impl::popup(Window_impl * root, Widget_ptr self, const Point 
             grab_modal();
             grab_mouse();
             select_item(current_item());
+            // std::cout << "Popup: " << signal_hide_.size() << std::endl;
             return wip;
         }
     }

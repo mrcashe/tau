@@ -30,6 +30,7 @@
 #include <tau/table.hh>
 #include <container-impl.hh>
 #include <climits>
+#include <list>
 #include <map>
 
 namespace tau {
@@ -183,10 +184,6 @@ private:
         unsigned        hmax_ = 0;          // Calculated maximal height.
         unsigned        wmin_ = 0;          // Calculated minimal width.
         unsigned        hmin_ = 0;          // Calculated minimal height.
-        connection      hints_cx_ { true };
-        connection      req_cx_ { true };
-        connection      show_cx_ { true };
-        connection      hide_cx_ { true };
     };
 
     struct Col {

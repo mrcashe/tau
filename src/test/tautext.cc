@@ -64,9 +64,9 @@ struct Main: tau::Toplevel {
         tau::Action     zout_action_;
         tau::Timer      motion_timer_;
         tau::Icon       ico_ { "window-close", tau::SMALL_ICON };
-        tau::Icon       save_ico_ { "document-save", tau::SMALL_ICON };
+        tau::Icon       save_ico_ { tau::ICON_DOCUMENT_SAVE, tau::SMALL_ICON };
         tau::ustring    path_;
-        tau::connection meta_cx_ { true };
+        tau::Timer      meta_timer_;
         tau::connection wcx_ { true };
         tau::connection encoding_cx_ { true };
         tau::connection enable_undo_cx_ { true };
@@ -642,7 +642,7 @@ struct Main: tau::Toplevel {
 
     void on_utimer(Page & pg) {
         update_pos(pg);
-        pg.meta_cx_ = loop_.signal_alarm(7735).connect(tau::bind(tau::fun(this, &Main::save_metadata), std::ref(pg)));
+        pg.meta_timer_.restart(7735);
     }
 
     void on_caret_motion(Page & pg) {
@@ -687,6 +687,7 @@ struct Main: tau::Toplevel {
         pg.edit_.insert_action().connect(tau::bind(tau::fun(this, &Main::on_edit_insert_toggled), std::ref(pg)));
         signal_modified_.connect(tau::fun(pg.edit_, &tau::Edit::modified));
         pg.edit_.cancel_action().disable();
+        pg.meta_timer_.signal_alarm().connect(tau::bind(tau::fun(this, &Main::save_metadata), std::ref(pg)));
 
         pg.zin_action_.set_master_action(view_increase_font_master_action_);
         pg.edit_.connect_action(pg.zin_action_);
@@ -798,7 +799,7 @@ struct Main: tau::Toplevel {
     }
 
     void save_metadata(Page & pg) {
-        pg.meta_cx_.drop();
+        pg.meta_timer_.stop();
 
         if (!pg.path_.empty()) {
             tau::Key_file kf;
@@ -1058,7 +1059,7 @@ struct Main: tau::Toplevel {
             pg.rows_value_.assign(tau::str_format(pg.lines_));
         }
 
-        pg.meta_cx_ = loop_.signal_alarm(7439).connect(tau::bind(tau::fun(this, &Main::save_metadata), std::ref(pg)));
+        pg.meta_timer_.restart(7439);
     }
 
     void on_edit_selection_changed(Page & pg) {
@@ -1359,7 +1360,7 @@ struct Main: tau::Toplevel {
     }
 
     void on_edit_font_changed(Page & pg) {
-        pg.meta_cx_ = loop_.signal_alarm(5767).connect(tau::bind(tau::fun(this, &Main::save_metadata), std::ref(pg)));
+        pg.meta_timer_.restart(5767);
         pg.font_size_ = pg.edit_.style().font(tau::STYLE_FONT).size();
     }
 

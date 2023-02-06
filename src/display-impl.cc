@@ -62,12 +62,12 @@ Window_impl * Display_impl::set_mouse_owner(Window_impl * wii, const Point & pt)
     mouse_owner_ = nullptr;
 
     if (mo && (mo != wii || !wii->enabled())) {
-        mo->signal_mouse_leave()();
+        mo->handle_mouse_leave();
     }
 
     if (wii->enabled()) {
         mouse_owner_ = wii;
-        if (mo != wii) { wii->signal_mouse_enter()(pt); }
+        if (mo != wii) { wii->handle_mouse_enter(pt); }
     }
 
     return mouse_owner_;
@@ -76,7 +76,7 @@ Window_impl * Display_impl::set_mouse_owner(Window_impl * wii, const Point & pt)
 void Display_impl::reset_mouse_owner() {
     Window_impl * wii = mouse_owner_;
     mouse_owner_ = nullptr;
-    if (wii) { wii->signal_mouse_leave()(); }
+    if (wii) { wii->handle_mouse_leave(); }
 }
 
 Window_ptr Display_impl::winptr(Widget_impl * wi) {
@@ -108,9 +108,9 @@ void Display_impl::add_window(Window_ptr wip) {
     wii->signal_enable().connect(tau::bind(fun(this, &Display_impl::on_window_sensitivity), wii));
     wii->signal_disable().connect(tau::bind(fun(this, &Display_impl::on_window_sensitivity), wii));
     Theme_impl::root()->init_window_style(wii->style());
-    wii->on_owner_enable(true);
+    wii->handle_enable(true);
     wii->signal_parent()();
-    wii->signal_display()();
+    wii->handle_display();
 }
 
 void Display_impl::remove_window(Window_impl * wii) {

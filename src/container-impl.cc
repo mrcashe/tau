@@ -41,13 +41,6 @@ Container_impl::Container_impl():
 {
     allow_focus();
 
-    signal_mouse_down_.connect(fun(this, &Container_impl::on_mouse_down));
-    signal_mouse_double_click_.connect(fun(this, &Container_impl::on_mouse_double_click));
-    signal_mouse_up_.connect(fun(this, &Container_impl::on_mouse_up));
-    signal_mouse_motion_.connect(fun(this, &Container_impl::on_mouse_motion));
-    signal_mouse_wheel_.connect(fun(this, &Container_impl::on_mouse_wheel));
-    signal_mouse_enter_.connect(fun(this, &Container_impl::on_mouse_enter));
-    signal_mouse_leave_.connect(tau::bind(fun(this, &Container_impl::set_mouse_owner), nullptr, Point()));
     signal_size_changed_.connect(fun(this, &Container_impl::update_mouse_owner));
     signal_visible_.connect(fun(this, &Container_impl::on_visible));
     signal_invisible_.connect(fun(this, &Container_impl::on_invisible));
@@ -65,11 +58,11 @@ void Container_impl::make_child(Widget_ptr wp) {
     if (!wp) { throw internal_error("Container_impl::make_child(): got a pure widget pointer"); }
     if (wp->parent()) { throw user_error(str_format("Container_impl::make_child(): widget ", wp.get(), " already has parent")); }
     children_.push_back(wp);
-    if (auto * ci = dynamic_cast<Container_impl *>(wp.get())) { containers_.push_back(ci); }
+    if (auto * ci = dynamic_cast<Container_impl *>(wp.get())) { containers_.push_front(ci); }
     wp->set_parent(this);
-    wp->on_owner_enable(enabled());
-    if (display()) { wp->signal_display()(); }
-    wp->on_owner_show(visible());
+    wp->handle_enable(enabled());
+    if (display()) { wp->handle_display(); }
+    wp->handle_visible(visible());
     signal_children_changed_();
 }
 
@@ -85,7 +78,7 @@ void Container_impl::unparent_child(Widget_impl * wi) {
         obscured_.remove(wi);
         woff_.push_back(*i);
         children_.erase(i);
-        woff_cx_ = Loop_impl::this_loop()->signal_alarm(11, true).connect(fun(this, &Container_impl::on_woff_timer));
+        woff_timer_.restart(11, true);
         if (wi == modal_child_) { modal_child_ = nullptr; }
         if (wi == focused_child_) { focused_child_ = nullptr; }
         if (wi == mouse_grabber_) { mouse_grabber_ = nullptr; }
@@ -96,12 +89,8 @@ void Container_impl::unparent_child(Widget_impl * wi) {
 }
 
 void Container_impl::unparent_all() {
-    for (auto wp: children_) {
-        woff_.push_back(wp);
-        wp->unparent();
-    }
-
-    if (!woff_.empty()) { woff_cx_ = Loop_impl::this_loop()->signal_alarm(11, true).connect(fun(this, &Container_impl::on_woff_timer)); }
+    for (auto wp: children_) { woff_.push_back(wp); wp->unparent(); }
+    woff_timer_.restart(11, true);
     children_.clear();
     obscured_.clear();
     containers_.clear();
@@ -154,11 +143,28 @@ void Container_impl::handle_backpaint(Painter pr, const Rect & inval) {
     paint_children(pr, inval, true);
 }
 
-void Container_impl::on_obscure(Widget_impl * wi, bool yes) {
+void Container_impl::on_child_obscured(Widget_impl * wi, bool yes) {
     if (!shut_) {
-        if (yes) { obscured_.push_back(wi); }
+        if (yes) { obscured_.push_front(wi); }
         else { obscured_.remove(wi); }
+        update_mouse_owner();
     }
+}
+
+void Container_impl::on_child_requisition(Widget_impl * wi) {
+    signal_child_requisition_(wi);
+}
+
+void Container_impl::on_child_hints(Widget_impl * wi) {
+    signal_child_hints_(wi);
+}
+
+void Container_impl::on_child_show(Widget_impl * wi) {
+    signal_child_show_(wi);
+}
+
+void Container_impl::on_child_hide(Widget_impl * wi) {
+    signal_child_hide_(wi);
 }
 
 // Overrides Widget_impl.
@@ -174,7 +180,7 @@ bool Container_impl::handle_accel(char32_t kc, int km) {
             }
         }
 
-        return signal_accel_(kc, km);
+        return Widget_impl::handle_accel(kc, km);
     }
 
     return false;
@@ -193,7 +199,7 @@ bool Container_impl::handle_input(const ustring & s) {
             }
         }
 
-        return signal_input_(std::cref(s));
+        return Widget_impl::handle_input(std::cref(s));
     }
 
     return false;
@@ -212,7 +218,7 @@ bool Container_impl::handle_key_down(char32_t kc, int km) {
             }
         }
 
-        return signal_key_down_(kc, km);
+        return Widget_impl::handle_key_down(kc, km);
     }
 
     return false;
@@ -231,10 +237,43 @@ bool Container_impl::handle_key_up(char32_t kc, int km) {
             }
         }
 
-        return signal_key_up_(kc, km);
+        return Widget_impl::handle_key_up(kc, km);
     }
 
     return false;
+}
+
+// Overrides Widget_impl.
+void Container_impl::handle_display() {
+    Widget_impl::handle_display();
+
+    if (!shut_) {
+        for (auto wp: children_) {
+            wp->handle_display();
+        }
+    }
+}
+
+// Overrides Widget_impl.
+void Container_impl::handle_parent() {
+    Widget_impl::handle_parent();
+
+    if (!shut_) {
+        for (auto wp: children_) {
+            wp->handle_parent();
+        }
+    }
+}
+
+// Overrides Widget_impl.
+void Container_impl::handle_unparent() {
+    if (!shut_) {
+        for (auto wp: children_) {
+            wp->handle_unparent();
+        }
+    }
+
+    Widget_impl::handle_unparent();
 }
 
 // Private.
@@ -270,12 +309,12 @@ void Container_impl::set_mouse_owner(Widget_impl * wi, const Point & pt) {
     if (mouse_owner_ != wi) {
         if (auto mo = mouse_owner_) {
             mouse_owner_ = nullptr;
-            if (mo != mouse_grabber_) { mo->signal_mouse_leave()(); }
+            if (mo != mouse_grabber_) { mo->handle_mouse_leave(); }
         }
 
         if (wi) {
             mouse_owner_ = wi;
-            wi->signal_mouse_enter()(pt-wi->origin());
+            wi->handle_mouse_enter(pt-wi->origin());
         }
     }
 }
@@ -289,46 +328,71 @@ void Container_impl::update_mouse_owner() {
     }
 }
 
-bool Container_impl::on_mouse_down(int mbt, int mm, const Point & pt) {
+// Overrides Widget_impl.
+bool Container_impl::handle_mouse_down(int mbt, int mm, const Point & pt) {
     if (auto wt = mouse_target_update(pt)) {
-        return wt->signal_mouse_down()(mbt, mm, pt+wt->scroll_position()-wt->origin());
+        if (wt->handle_mouse_down(mbt, mm, pt+wt->scroll_position()-wt->origin())) {
+            return true;
+        }
     }
 
-    return false;
+    return Widget_impl::handle_mouse_down(mbt, mm, pt);
 }
 
-bool Container_impl::on_mouse_double_click(int mbt, int mm, const Point & pt) {
+// Overrides Widget_impl.
+bool Container_impl::handle_mouse_up(int mbt, int mm, const Point & pt) {
     if (auto wt = mouse_target_update(pt)) {
-        return wt->signal_mouse_double_click()(mbt, mm, pt+wt->scroll_position()-wt->origin());
+        if (wt->handle_mouse_up(mbt, mm, pt+wt->scroll_position()-wt->origin())) {
+            return true;
+        }
     }
 
-    return false;
+    return Widget_impl::handle_mouse_up(mbt, mm, pt);
 }
 
-bool Container_impl::on_mouse_up(int mbt, int mm, const Point & pt) {
+// Overrides Widget_impl.
+bool Container_impl::handle_mouse_double_click(int mbt, int mm, const Point & pt) {
     if (auto wt = mouse_target_update(pt)) {
-        return wt->signal_mouse_up()(mbt, mm, pt+wt->scroll_position()-wt->origin());
+        if (wt->handle_mouse_double_click(mbt, mm, pt+wt->scroll_position()-wt->origin())) {
+            return true;
+        }
     }
 
-    return false;
+    return Widget_impl::handle_mouse_double_click(mbt, mm, pt);
 }
 
-bool Container_impl::on_mouse_wheel(int delta, int mm, const Point & pt) {
+// Overrides Widget_impl.
+bool Container_impl::handle_mouse_wheel(int delta, int mm, const Point & pt) {
     if (auto wt = mouse_target_update(pt)) {
-        return wt->signal_mouse_wheel()(delta, mm, pt+wt->scroll_position()-wt->origin());
+        if (wt->handle_mouse_wheel(delta, mm, pt+wt->scroll_position()-wt->origin())) {
+            return true;
+        }
     }
 
-    return false;
+    return Widget_impl::handle_mouse_wheel(delta, mm, pt);
 }
 
-void Container_impl::on_mouse_motion(int mm, const Point & pt) {
+// Overrides Widget_impl.
+void Container_impl::handle_mouse_motion(int mm, const Point & pt) {
     if (auto wt = mouse_target_update(pt)) {
-        wt->signal_mouse_motion()(mm, pt+wt->scroll_position()-wt->origin());
+        wt->handle_mouse_motion(mm, pt+wt->scroll_position()-wt->origin());
+    }
+
+    else {
+        Widget_impl::handle_mouse_motion(mm, pt);
     }
 }
 
-void Container_impl::on_mouse_enter(const Point & pt) {
+// Overrides Widget_impl.
+void Container_impl::handle_mouse_enter(const Point & pt) {
+    Widget_impl::handle_mouse_enter(pt);
     mouse_target_update(pt);
+}
+
+// Overrides Widget_impl.
+void Container_impl::handle_mouse_leave() {
+    set_mouse_owner(nullptr);
+    Widget_impl::handle_mouse_leave();
 }
 
 // Overriden by Window_impl.
@@ -386,12 +450,12 @@ void Container_impl::ungrab_mouse_down() {
         }
 
         else {
-            mg->signal_mouse_leave()();
+            mg->handle_mouse_leave();
         }
     }
 
     if (parent_ && this != parent_->mouse_owner()) {
-        signal_mouse_leave_();
+        Widget_impl::handle_mouse_leave();
     }
 }
 
@@ -579,46 +643,46 @@ void Container_impl::show_cursor_up() {
     }
 }
 
-void Container_impl::on_child_visibility(Widget_impl * wi) {
-    update_mouse_owner();
-}
-
 void Container_impl::sync_arrange() {
     if (visible()) {
-        arrange_cx_.drop();
-        signal_arrange_();
+        if (arrange_) { arrange_ = false; signal_arrange_(); }
         for (auto ci: containers_) { ci->sync_arrange(); }
     }
 }
 
+// Overriden by Window_impl.
+void Container_impl::queue_arrange_up() {
+    if (parent_) { parent_->queue_arrange_up(); }
+}
+
 void Container_impl::queue_arrange() {
-    arrange_cx_ = Loop_impl::this_loop()->signal_alarm(31).connect(fun(this, &Container_impl::sync_arrange));
+    arrange_ = true;
+    queue_arrange_up();
 }
 
 void Container_impl::on_visible() {
     for (auto wp: children_) {
         if (!std::dynamic_pointer_cast<Window_impl>(wp)) {
-            wp->on_owner_show(true);
+            wp->handle_visible(true);
         }
     }
 }
 
 void Container_impl::on_invisible() {
     suspend_focus();
-    for (auto wp: children_) { wp->on_owner_show(false); }
+    for (auto wp: children_) { wp->handle_visible(false); }
 }
 
 void Container_impl::on_enable() {
-    for (auto wp: children_) { wp->on_owner_enable(true); }
+    for (auto wp: children_) { wp->handle_enable(true); }
 }
 
 void Container_impl::on_disable() {
     suspend_focus();
-    for (auto wp: children_) { wp->on_owner_enable(false); }
+    for (auto wp: children_) { wp->handle_enable(false); }
 }
 
 void Container_impl::on_unparent() {
-    arrange_cx_.drop();
     obscured_.clear();
     focused_child_ = nullptr;
     modal_child_ = nullptr;
@@ -628,7 +692,7 @@ void Container_impl::on_unparent() {
 
 void Container_impl::on_woff_timer() {
     for (auto wp: woff_) { if (wp->running()) return; }
-    woff_cx_.drop();
+    woff_timer_.stop();
     woff_.clear();
 }
 
@@ -700,6 +764,29 @@ bool Container_impl::update_child_bounds(Widget_impl * wp, int x, int y, const S
 
 bool Container_impl::update_child_bounds(Widget_impl * wp, int x, int y, unsigned w, unsigned h) {
     return update_child_bounds(wp, Point(x, y), Size(w, h));
+}
+
+// Overrides Widget_impl.
+void Container_impl::shutdown(bool yes) {
+    Widget_impl::shutdown(yes);
+    for (auto wp: children_) { wp->shutdown(yes); }
+}
+
+// Overrides Widget_impl.
+void Container_impl::update_pdata() {
+    Widget_impl::update_pdata();
+    for (auto wp: children_) { wp->update_pdata(); }
+}
+
+// Overrides Widget_impl.
+Action_base * Container_impl::lookup_action(char32_t kc, int km) {
+    for (auto wp: children_) {
+        if (auto action = wp->lookup_action(kc, km)) {
+            return action;
+        }
+    }
+
+    return Widget_impl::lookup_action(kc, km);
 }
 
 } // namespace tau

@@ -28,6 +28,7 @@
 #define TAU_ABSOLUTE_IMPL_HH
 
 #include <container-impl.hh>
+#include <list>
 
 namespace tau {
 

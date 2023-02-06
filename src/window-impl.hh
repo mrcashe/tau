@@ -212,11 +212,15 @@ protected:
     Window_impl();
    ~Window_impl() { signal_destroy_(); }
 
+    // Overrides Container_impl.
+    void queue_arrange_up() override;
+
 private:
 
-    connection          tooltip_cx_;            // Tooltip signal_alarm connection.
+    connection          tooltip_cx_ { true };   // Tooltip signal_alarm connection.
     Window_ptr          tooltip_;               // Tooltip window.
     Widget_impl *       tooltip_widget_ = nullptr; // Widget called show_tooltip.
+    Timer               arrange_timer_ { fun(this, &Container_impl::sync_arrange) };
 
 private:
 

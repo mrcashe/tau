@@ -41,35 +41,22 @@
 
 namespace tau {
 
+extern unsigned nwidgets_;
+
 Widget_impl::Widget_impl():
     trackable()
 {
+    ++nwidgets_;
     Theme_impl::root()->init_style(style_);
     style_.get(STYLE_BACKGROUND).signal_changed().connect(tau::bind(fun(this, &Widget_impl::invalidate), Rect()));
-
-    signal_origin_changed_.connect(fun(signal_geometry_notify_));
-    signal_origin_changed_.connect(tau::bind(fun(this, &Widget_impl::invalidate), Rect()));
-
-    signal_size_changed_.connect(fun(signal_geometry_notify_));
-    signal_size_changed_.connect(tau::bind(fun(this, &Widget_impl::invalidate), Rect()));
-
-    signal_scroll_changed_.connect(fun(signal_geometry_notify_));
-    signal_scroll_changed_.connect(tau::bind(fun(this, &Widget_impl::invalidate), Rect()));
-
-    pdata_cx_ = signal_geometry_notify_.connect(fun(this, &Widget_impl::update_pdata));
-
+    signal_origin_changed_.connect(bind(fun(this, &Widget_impl::invalidate), Rect()));
+    signal_size_changed_.connect(bind(fun(this, &Widget_impl::invalidate), Rect()));
     signal_backpaint_.connect(fun(this, &Widget_impl::on_backpaint));
-    signal_mouse_enter_.connect(fun(this, &Widget_impl::on_mouse_enter));
-    signal_mouse_leave_.connect(fun(this, &Widget_impl::on_mouse_leave));
 
     signal_visible_.connect(fun(this, &Widget_impl::update_pdata));
-    signal_visible_.connect(fun(pdata_cx_, &connection::unblock));
-    signal_visible_.connect(fun(geometry_notify_cx_, &connection::unblock));
-    signal_visible_.connect(tau::bind(fun(this, &Widget_impl::invalidate), Rect()));
+    signal_visible_.connect(bind(fun(this, &Widget_impl::invalidate), Rect()));
 
     signal_invisible_.connect(fun(this, &Widget_impl::update_pdata));
-    signal_invisible_.connect(fun(pdata_cx_, &connection::block));
-    signal_invisible_.connect(fun(geometry_notify_cx_, &connection::block));
     signal_invisible_.connect(fun(this, &Widget_impl::hide_tooltip));
 
     signal_hide_.connect(fun(this, &Widget_impl::clear_focus));
@@ -79,80 +66,65 @@ Widget_impl::Widget_impl():
     signal_disable_.connect(fun(this, &Widget_impl::on_disable));
 
     signal_display_.connect(fun(this, &Widget_impl::update_cursor));
-    signal_display_.connect(fun(signal_geometry_notify_));
-    signal_shut_.connect(fun(this, &Widget_impl::on_shut));
-    signal_destroy_.connect(bind(fun(signal_shut_), true));
+    signal_display_.connect(fun(this, &Widget_impl::update_pdata));
+    signal_destroy_.connect(bind(fun(this, &Widget_impl::shutdown), true));
 
     signal_focus_in_.connect(fun(this, &Widget_impl::hide_tooltip));
 }
 
 Widget_impl::~Widget_impl() {
+    --nwidgets_;
     signal_destroy_();
+    delete_signals();
 }
 
-void Widget_impl::on_shut(bool yes) {
-    shut_ = yes;
+void Widget_impl::delete_signals() {
+    if (signal_accel_) { delete signal_accel_; signal_accel_ = nullptr; }
+    if (signal_scroll_changed_) { delete signal_scroll_changed_; signal_scroll_changed_ = nullptr; }
+    if (signal_lookup_action_) { delete signal_lookup_action_; signal_lookup_action_ = nullptr; }
+    if (signal_parent_) { delete signal_parent_; signal_parent_ = nullptr; }
+    if (signal_key_down_) { delete signal_key_down_; signal_key_down_ = nullptr; }
+    if (signal_key_up_) { delete signal_key_up_; signal_key_up_ = nullptr; }
+    if (signal_input_) { delete signal_input_; signal_input_ = nullptr; }
+    if (signal_mouse_down_) { delete signal_mouse_down_; signal_mouse_down_ = nullptr; }
+    if (signal_mouse_double_click_) { delete signal_mouse_double_click_; signal_mouse_double_click_ = nullptr; }
+    if (signal_mouse_up_) { delete signal_mouse_up_; signal_mouse_up_ = nullptr; }
+    if (signal_mouse_wheel_) { delete signal_mouse_wheel_; signal_mouse_wheel_ = nullptr; }
+    if (signal_mouse_motion_) { delete signal_mouse_motion_; signal_mouse_motion_ = nullptr; }
+    if (signal_mouse_enter_) { delete signal_mouse_enter_; signal_mouse_enter_ = nullptr; }
+    if (signal_mouse_leave_) { delete signal_mouse_leave_; signal_mouse_leave_ = nullptr; }
 }
 
 // Overriden by Popup_impl.
 // Overriden by Toplevel_impl.
 void Widget_impl::set_parent(Container_impl * parent) {
     parent_ = parent;
-    signal_shut_(false);
+    shutdown(false);
     style_.set_parent(parent->style());
-    parent_cx_ = parent->signal_parent().connect(fun(signal_parent_));
-    unparent_cx_ = parent->signal_unparent().connect(fun(signal_unparent_));
-    display_cx_ = parent->signal_display().connect(fun(signal_display_));
-    shut_cx_ = parent->signal_shut().connect(fun(signal_shut_));
-    lookup_action_cx_ = parent->signal_lookup_action().connect(fun(signal_lookup_action_));
-    geometry_notify_cx_ = parent->signal_geometry_notify().connect(fun(signal_geometry_notify_));
-    visible_cx_ = signal_visible_.connect(bind(fun(parent_, &Container_impl::on_child_visibility), this));
-    invisible_cx_ = signal_invisible_.connect(bind(fun(parent_, &Container_impl::on_child_visibility), this));
-    signal_parent_();
+
+    if ((scroller_ = dynamic_cast<Scroller_impl *>(parent_))) {
+        if (signal_scroll_changed_) { delete signal_scroll_changed_; signal_scroll_changed_ = nullptr; }
+        pan_cx_ = scroller_->signal_pan_changed().connect(fun(this, &Widget_impl::on_pan_changed));
+    }
+
+    handle_parent();
 }
 
 void Widget_impl::unparent() {
+    shutdown(true);
     hide_tooltip();
     bool vis = visible();
     enabled_ = disabled_ = frozen_ = upshow_ = false;
     if (!shut_ && vis) { signal_invisible_(); }
     style_.unparent();
-    parent_cx_.drop();
-    unparent_cx_.drop();
-    display_cx_.drop();
-    visible_cx_.drop();
-    invisible_cx_.drop();
-    shut_cx_.drop();
-    lookup_action_cx_.drop();
-    geometry_notify_cx_.drop();
+    pan_cx_.drop();
+    scroller_ = nullptr;
     parent_ = nullptr;
     origin_.set(INT_MIN, INT_MIN);
     size_.reset();
     required_size_.reset();
-    signal_unparent_();
-}
-
-connection Widget_impl::connect_accel(Accel & accel, bool prepend) {
-    return signal_accel_.connect(fun(accel, &Accel::handle_accel), prepend);
-}
-
-void Widget_impl::connect_action(Action_base & action, bool prepend) {
-    auto & accels = action.accels();
-
-    for (auto i = accels.rbegin(); i != accels.rend(); ++i) {
-        signal_accel_.connect(fun(*i, &Accel::handle_accel), prepend);
-    }
-
-    action.signal_accel_added().connect(fun(this, &Widget_impl::on_action_accel_added));
-    signal_lookup_action_.connect(fun(action, &Action_base::lookup));
-}
-
-Action_base * Widget_impl::lookup_action(char32_t kc, int km) {
-    return signal_lookup_action_(kc, km);
-}
-
-void Widget_impl::on_action_accel_added(Accel & accel) {
-    signal_accel_.connect(fun(accel, &Accel::handle_accel));
+    handle_unparent();
+    delete_signals();
 }
 
 void Widget_impl::enable() {
@@ -192,6 +164,7 @@ void Widget_impl::show() {
         hidden_ = false;
 
         if (!shut_ && !disappeared_) {
+            if (parent_) { parent_->on_child_show(this); }
             signal_show_();
             if (visible()) { signal_visible_(); }
         }
@@ -203,6 +176,7 @@ void Widget_impl::appear() {
         disappeared_ = false;
 
         if (!shut_ && !hidden_) {
+            if (parent_) { parent_->on_child_show(this); }
             signal_show_();
             if (visible()) { signal_visible_(); }
         }
@@ -215,6 +189,7 @@ void Widget_impl::hide() {
         hidden_ = true;
 
         if (!shut_ && !disappeared_) {
+            if (parent_) { parent_->on_child_hide(this); }
             signal_hide_();
             if (was_visible) { signal_invisible_(); }
         }
@@ -227,6 +202,7 @@ void Widget_impl::disappear() {
         disappeared_ = true;
 
         if (!shut_ && !hidden_) {
+            if (parent_) { parent_->on_child_hide(this); }
             signal_hide_();
             if (was_visible) { signal_invisible_(); }
         }
@@ -270,7 +246,12 @@ bool Widget_impl::hover() const {
 bool Widget_impl::hint_margin_left(unsigned left) {
     if (margin_left_hint_ != left) {
         margin_left_hint_ = left;
-        if (!shut_) { signal_hints_changed_(); }
+
+        if (!shut_) {
+            if (parent_) { parent_->on_child_hints(this); }
+            signal_hints_changed_();
+        }
+
         return true;
     }
 
@@ -280,7 +261,12 @@ bool Widget_impl::hint_margin_left(unsigned left) {
 bool Widget_impl::hint_margin_right(unsigned right) {
     if (margin_right_hint_ != right) {
         margin_right_hint_ = right;
-        if (!shut_) { signal_hints_changed_(); }
+
+        if (!shut_) {
+            if (parent_) { parent_->on_child_hints(this); }
+            signal_hints_changed_();
+        }
+
         return true;
     }
 
@@ -290,7 +276,12 @@ bool Widget_impl::hint_margin_right(unsigned right) {
 bool Widget_impl::hint_margin_top(unsigned top) {
     if (margin_top_hint_ != top) {
         margin_top_hint_ = top;
-        if (!shut_) { signal_hints_changed_(); }
+
+        if (!shut_) {
+            if (parent_) { parent_->on_child_hints(this); }
+            signal_hints_changed_();
+        }
+
         return true;
     }
 
@@ -300,7 +291,12 @@ bool Widget_impl::hint_margin_top(unsigned top) {
 bool Widget_impl::hint_margin_bottom(unsigned bottom) {
     if (margin_bottom_hint_ != bottom) {
         margin_bottom_hint_ = bottom;
-        if (!shut_) { signal_hints_changed_(); }
+
+        if (!shut_) {
+            if (parent_) { parent_->on_child_hints(this); }
+            signal_hints_changed_();
+        }
+
         return true;
     }
 
@@ -331,6 +327,7 @@ bool Widget_impl::hint_margin(unsigned left, unsigned right, unsigned top, unsig
     }
 
     if (!shut_ && changed) {
+        if (parent_) { parent_->on_child_hints(this); }
         signal_hints_changed_();
     }
 
@@ -343,6 +340,7 @@ bool Widget_impl::hint_margin(unsigned w) {
 
 bool Widget_impl::hint_size(const Size & sz) {
     if (size_hint_.update(sz) && !shut_) {
+        if (parent_) { parent_->on_child_hints(this); }
         signal_hints_changed_();
         return true;
     }
@@ -356,6 +354,7 @@ bool Widget_impl::hint_size(unsigned width, unsigned height) {
 
 bool Widget_impl::hint_min_size(const Size & sz) {
     if (min_size_hint_.update(sz) && !shut_) {
+        if (parent_) { parent_->on_child_hints(this); }
         signal_hints_changed_();
         return true;
     }
@@ -369,6 +368,7 @@ bool Widget_impl::hint_min_size(unsigned width, unsigned height) {
 
 bool Widget_impl::hint_max_size(const Size & sz) {
     if (max_size_hint_.update(sz) && !shut_) {
+        if (parent_) { parent_->on_child_hints(this); }
         signal_hints_changed_();
         return true;
     }
@@ -382,6 +382,7 @@ bool Widget_impl::hint_max_size(unsigned width, unsigned height) {
 
 bool Widget_impl::require_size(const Size & size) {
     if (required_size_.update(size) && !shut_) {
+        if (parent_) { parent_->on_child_requisition(this); }
         signal_requisition_changed_();
         return true;
     }
@@ -423,7 +424,7 @@ bool Widget_impl::update_size(const Size & size) {
 
 // Return false to allow user append it's own slot after this one.
 bool Widget_impl::on_backpaint(Painter pr, const Rect & inval) {
-    auto & ci = style_.get("background");
+    auto & ci = style_.get(STYLE_BACKGROUND);
 
     if (ci.is_set()) {
         pr.set_brush(Color(ci.get()));
@@ -435,16 +436,18 @@ bool Widget_impl::on_backpaint(Painter pr, const Rect & inval) {
 
 // Overriden by Window_xxx.
 Painter Widget_impl::painter() {
-    if (auto wnd = window()) {
-        if (auto pr = wnd->painter()) {
-            if (auto pi = pr.impl) {
-                pi->capture(this);
-                signal_visible_.connect(tau::bind(fun(pi, &Painter_impl::capture), this));
-                signal_invisible_.connect(tau::bind(fun(pi, &Painter_impl::capture), this));
-                signal_pdata_changed_.connect(tau::bind(fun(pi, &Painter_impl::capture), this));
-            }
+    if (!shut_) {
+        if (auto wnd = window()) {
+            if (auto pr = wnd->painter()) {
+                if (auto pi = pr.impl) {
+                    pi->capture(this);
+                    signal_visible_.connect(tau::bind(fun(pi, &Painter_impl::capture), this));
+                    signal_invisible_.connect(tau::bind(fun(pi, &Painter_impl::capture), this));
+                    signal_pdata_changed_.connect(tau::bind(fun(pi, &Painter_impl::capture), this));
+                }
 
-            return pr;
+                return pr;
+            }
         }
     }
 
@@ -467,7 +470,7 @@ bool Widget_impl::grab_mouse() {
 
     if (grab_mouse_up(this)) {
         if (!had_mouse) {
-            signal_mouse_enter_(where_mouse());
+            handle_mouse_enter(where_mouse());
         }
 
         return true;
@@ -486,7 +489,7 @@ bool Widget_impl::ungrab_mouse() {
     bool had_mouse = hover();
 
     if (ungrab_mouse_up(this)) {
-        if (!hover() && had_mouse) { signal_mouse_leave_(); }
+        if (!hover() && had_mouse) { handle_mouse_leave(); }
         return true;
     }
 
@@ -629,11 +632,12 @@ void Widget_impl::show_tooltip(Widget_ptr tooltip_widget, const Point & pt, Grav
 }
 
 void Widget_impl::hide_tooltip() {
+    tooltip_cx_.drop();
+
     if (tooltip_exposed_) {
         if (auto wip = window()) { wip->close_tooltip(this); }
         block_tooltip_ = false;
         tooltip_exposed_ = false;
-        tooltip_cx_.drop();
     }
 }
 
@@ -643,25 +647,6 @@ void Widget_impl::on_tooltip_timer() {
         else if (!tooltip_text_.empty()) { show_tooltip(tooltip_text_); }
         tooltip_delay_ = std::min(3015U, tooltip_delay_+212U);
     }
-}
-
-void Widget_impl::on_mouse_enter(const Point & pt) {
-    enter_cursor();
-
-    if (has_tooltip() && !block_tooltip_ && !tooltip_exposed_) {
-        if (auto dp = display()) {
-            if (auto loop = dp->loop()) {
-                tooltip_cx_.drop();
-                tooltip_cx_ = loop->signal_alarm(tooltip_delay_).connect(fun(this, &Widget_impl::on_tooltip_timer));
-            }
-        }
-    }
-
-    block_tooltip_ = false;
-}
-
-void Widget_impl::on_mouse_leave() {
-    leave_cursor();
 }
 
 void Widget_impl::enter_cursor() {
@@ -698,21 +683,11 @@ void Widget_impl::on_disable() {
 }
 
 void Widget_impl::scroll_to(const Point & pt) {
-    if (Scroller_impl * pp = dynamic_cast<Scroller_impl *>(parent_)) {
-        pp->pan_to(pt);
-    }
+    if (scroller_) { scroller_->pan_to(pt); }
 }
 
 void Widget_impl::scroll_to(int x, int y) {
     scroll_to(Point(x, y));
-}
-
-Point Widget_impl::scroll_position() const {
-    if (const Scroller_impl * pp = dynamic_cast<const Scroller_impl *>(parent_)) {
-        return pp->pan();
-    }
-
-    return Point();
 }
 
 void Widget_impl::scroll_to_x(int x) {
@@ -721,6 +696,21 @@ void Widget_impl::scroll_to_x(int x) {
 
 void Widget_impl::scroll_to_y(int y) {
     scroll_to(Point(scroll_position().x(), y));
+}
+
+Point Widget_impl::scroll_position() const {
+    return scroller_ ? scroller_->pan() : Point();
+}
+
+signal<void()> & Widget_impl::signal_scroll_changed() {
+    if (scroller_) { return scroller_->signal_pan_changed(); }
+    if (!signal_scroll_changed_) { signal_scroll_changed_ = new signal<void()>; }
+    return *signal_scroll_changed_;
+}
+
+void Widget_impl::on_pan_changed() {
+    update_pdata();
+    invalidate();
 }
 
 // Overriden by Container_impl.
@@ -953,32 +943,186 @@ void Widget_impl::quit_dialog() {
     if (!shut_ && parent_) { parent_->quit_dialog(); }
 }
 
+signal<bool(char32_t, int)> & Widget_impl::signal_accel() {
+    if (!signal_accel_) { signal_accel_ = new signal<bool(char32_t, int)>; }
+    return *signal_accel_;
+}
+
+connection Widget_impl::connect_accel(Accel & accel, bool prepend) {
+    return signal_accel().connect(fun(accel, &Accel::handle_accel), prepend);
+}
+
+void Widget_impl::connect_action(Action_base & action, bool prepend) {
+    auto & accels = action.accels();
+
+    for (auto i = accels.rbegin(); i != accels.rend(); ++i) {
+        signal_accel().connect(fun(*i, &Accel::handle_accel), prepend);
+    }
+
+    action.signal_accel_added().connect(fun(this, &Widget_impl::on_action_accel_added));
+    if (!signal_lookup_action_) { signal_lookup_action_ = new signal<Action_base *(char32_t, int)>; }
+    signal_lookup_action_->connect(fun(action, &Action_base::lookup));
+}
+
+// Overriden by Container_impl.
+Action_base * Widget_impl::lookup_action(char32_t kc, int km) {
+    return signal_lookup_action_ ? (*signal_lookup_action_)(kc, km) : nullptr;
+}
+
+void Widget_impl::on_action_accel_added(Accel & accel) {
+    connect_accel(accel);
+}
+
 // Overriden by Container_impl.
 bool Widget_impl::handle_accel(char32_t kc, int km) {
-    return enabled() && signal_accel_(kc, km);
+    return enabled() && signal_accel_ && (*signal_accel_)(kc, km);
 }
 
 // Overriden by Container_impl.
 bool Widget_impl::handle_key_down(char32_t kc, int km) {
-    return signal_key_down_(kc, km);
+    return enabled() && signal_key_down_ && (*signal_key_down_)(kc, km);
+}
+
+signal<bool(char32_t, int)> & Widget_impl::signal_key_down() {
+    if (!signal_key_down_) { signal_key_down_ = new signal<bool(char32_t, int)>; }
+    return *signal_key_down_;
 }
 
 // Overriden by Container_impl.
 bool Widget_impl::handle_key_up(char32_t kc, int km) {
-    return signal_key_up_(kc, km);
+    return enabled() && signal_key_up_ && (*signal_key_up_)(kc, km);
+}
+
+signal<bool(char32_t, int)> & Widget_impl::signal_key_up() {
+    if (!signal_key_up_) { signal_key_up_ = new signal<bool(char32_t, int)>; }
+    return *signal_key_up_;
+}
+
+signal<bool(const ustring &)> & Widget_impl::signal_input() {
+    if (!signal_input_) { signal_input_ = new signal<bool(const ustring &)>; }
+    return *signal_input_;
 }
 
 // Overriden by Container_impl.
 bool Widget_impl::handle_input(const ustring & s) {
-    return signal_input_(std::cref(s));
+    return enabled() && signal_input_ && (*signal_input_)(std::cref(s));
 }
 
+// Overriden by Container_impl.
+bool Widget_impl::handle_mouse_down(int mbt, int mm, const Point & pt) {
+    return signal_mouse_down_ && (*signal_mouse_down_)(mbt, mm, pt);
+}
+
+// Overriden by Container_impl.
+bool Widget_impl::handle_mouse_up(int mbt, int mm, const Point & pt) {
+    return enabled() && signal_mouse_up_ && (*signal_mouse_up_)(mbt, mm, pt);
+}
+
+// Overriden by Container_impl.
+bool Widget_impl::handle_mouse_double_click(int mbt, int mm, const Point & pt) {
+    return enabled() && signal_mouse_double_click_ && (*signal_mouse_double_click_)(mbt, mm, pt);
+}
+
+signal<bool(int, int, Point)> & Widget_impl::signal_mouse_down() {
+    if (!signal_mouse_down_) { signal_mouse_down_ = new signal<bool(int, int, Point)>; }
+    return *signal_mouse_down_;
+}
+
+signal<bool(int, int, Point)> & Widget_impl::signal_mouse_double_click() {
+    if (!signal_mouse_double_click_) { signal_mouse_double_click_ = new signal<bool(int, int, Point)>; }
+    return *signal_mouse_double_click_;
+}
+
+signal<bool(int, int, Point)> & Widget_impl::signal_mouse_up() {
+    if (!signal_mouse_up_) { signal_mouse_up_ = new signal<bool(int, int, Point)>; }
+    return *signal_mouse_up_;
+}
+
+// Overriden by Container_impl.
+void Widget_impl::handle_mouse_motion(int mm, const Point & pt) {
+    if (enabled() && signal_mouse_motion_) { (*signal_mouse_motion_)(mm, pt); }
+}
+
+// Overriden by Container_impl.
+void Widget_impl::handle_mouse_enter(const Point & pt) {
+    enter_cursor();
+
+    if (enabled()) {
+        if (has_tooltip() && !block_tooltip_ && !tooltip_exposed_) {
+            if (tooltip_cx_.empty()) {
+                if (auto dp = display()) {
+                    if (auto loop = dp->loop()) {
+                        tooltip_cx_ = loop->signal_alarm(tooltip_delay_).connect(fun(this, &Widget_impl::on_tooltip_timer));
+                    }
+                }
+            }
+        }
+
+        block_tooltip_ = false;
+        if (signal_mouse_enter_) { (*signal_mouse_enter_)(pt); }
+    }
+}
+
+// Overriden by Container_impl.
+void Widget_impl::handle_mouse_leave() {
+    tooltip_cx_.drop();
+    leave_cursor();
+    if (enabled() && signal_mouse_leave_) { (*signal_mouse_leave_)(); }
+}
+
+// Overriden by Container_impl.
+bool Widget_impl::handle_mouse_wheel(int delta, int mm, const Point & pt) {
+    return enabled() && signal_mouse_wheel_ && (*signal_mouse_wheel_)(delta, mm, pt);
+}
+
+signal<void(int, Point)> & Widget_impl::signal_mouse_motion() {
+    if (!signal_mouse_motion_) { signal_mouse_motion_ = new signal<void(int, Point)>; }
+    return *signal_mouse_motion_;
+}
+
+signal<void(Point)> & Widget_impl::signal_mouse_enter() {
+    if (!signal_mouse_enter_) { signal_mouse_enter_ = new signal<void(Point)>; }
+    return *signal_mouse_enter_;
+}
+
+signal<void()> & Widget_impl::signal_mouse_leave() {
+    if (!signal_mouse_leave_) { signal_mouse_leave_ = new signal<void()>; }
+    return *signal_mouse_leave_;
+}
+
+signal<bool(int, int, Point)> & Widget_impl::signal_mouse_wheel() {
+    if (!signal_mouse_wheel_) { signal_mouse_wheel_ = new signal<bool(int, int, Point)>; }
+    return *signal_mouse_wheel_;
+}
+
+// Overriden by Container_impl.
 void Widget_impl::handle_paint(Painter pr, const Rect & inval) {
     signal_paint_(pr, inval.translated(scroll_position()));
 }
 
+// Overriden by Container_impl.
 void Widget_impl::handle_backpaint(Painter pr, const Rect & inval) {
     signal_backpaint_(pr, inval.translated(scroll_position()));
+}
+
+// Overriden by Container_impl.
+void Widget_impl::handle_display() {
+    if (!shut_) { signal_display_(); }
+}
+
+// Overriden by Container_impl.
+void Widget_impl::handle_parent() {
+    if (!shut_ && signal_parent_) { (*signal_parent_)(); }
+}
+
+signal<void()> & Widget_impl::signal_parent() {
+    if (!signal_parent_) { signal_parent_ = new signal<void()>; }
+    return *signal_parent_;
+}
+
+// Overriden by Container_impl.
+void Widget_impl::handle_unparent() {
+    if (!shut_) { signal_unparent_(); }
 }
 
 // Overriden by Window_impl.
@@ -991,10 +1135,10 @@ bool Widget_impl::has_parent() const {
 }
 
 bool Widget_impl::scrollable() const {
-    return parent_ && dynamic_cast<Scroller_impl *>(parent_);
+    return nullptr != scroller_;
 }
 
-void Widget_impl::on_owner_enable(bool enable) {
+void Widget_impl::handle_enable(bool enable) {
     if (enabled_ != enable) {
         enabled_ = enable;
 
@@ -1009,7 +1153,7 @@ bool Widget_impl::visible() const {
     return !hidden() && size() && upshow_;
 }
 
-void Widget_impl::on_owner_show(bool show) {
+void Widget_impl::handle_visible(bool show) {
     if (upshow_ != show) {
         upshow_ = show;
 
@@ -1020,6 +1164,7 @@ void Widget_impl::on_owner_show(bool show) {
     }
 }
 
+// Overriden by Container_impl.
 void Widget_impl::update_pdata() {
     worigin_.set(INT_MIN, INT_MIN);
     Point po = scroll_position()-origin();
@@ -1056,7 +1201,7 @@ void Widget_impl::update_pdata() {
     }
 
     if (obscured_changed && parent_) {
-        parent_->on_obscure(this, !cr.empty());
+        parent_->on_child_obscured(this, !cr.empty());
     }
 
     if (changed) {
@@ -1070,6 +1215,11 @@ Painter Widget_impl::wrap_painter(Painter_ptr pp) {
 
 Painter_ptr Widget_impl::strip(Painter pr) {
     return pr.impl;
+}
+
+// Overriden by Container_impl.
+void Widget_impl::shutdown(bool yes) {
+    shut_ = yes;
 }
 
 } // namespace tau

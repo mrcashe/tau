@@ -248,12 +248,12 @@ void Winface_xcb::handle_map(xcb_map_notify_event_t * event) {
         grab_mouse();
     }
 
-    self_->on_owner_show(true);
+    self_->handle_visible(true);
 }
 
 void Winface_xcb::handle_unmap(xcb_unmap_notify_event_t * event) {
     mapped_ = false;
-    self_->on_owner_show(false);
+    self_->handle_visible(false);
 }
 
 void Winface_xcb::handle_configure(xcb_configure_notify_event_t * event) {

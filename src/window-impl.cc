@@ -43,8 +43,10 @@ Window_impl::Window_impl():
 }
 
 void Window_impl::close() {
+    tooltip_cx_.drop();
     if (tooltip_) { tooltip_->close(); }
     tooltip_widget_ = nullptr;
+    arrange_timer_.stop();
     end_modal();
     ungrab_mouse();
     hide();
@@ -259,8 +261,8 @@ bool Window_impl::has_window() const {
 }
 
 void Window_impl::on_tooltip_close() {
-    tooltip_.reset();
     tooltip_cx_.drop();
+    tooltip_.reset();
     tooltip_widget_ = nullptr;
 }
 
@@ -275,15 +277,15 @@ void Window_impl::on_tooltip_mouse_motion(int mm, const Point & pt) {
 
 bool Window_impl::on_tooltip_mouse_down(int mbt, int mm, const Point & pt) {
     Point mpt = where_mouse();
-    signal_mouse_down_(mbt, mm, mpt);
-    signal_mouse_up_(mbt, mm, mpt);
+    signal_mouse_down()(mbt, mm, mpt);
+    signal_mouse_up()(mbt, mm, mpt);
     close_tooltip(tooltip_widget_);
     return true;
 }
 
 bool Window_impl::on_tooltip_mouse_wheel(int d, int mm, const Point & pt) {
     close_tooltip(tooltip_widget_);
-    signal_mouse_wheel_(d, mm, where_mouse());
+    signal_mouse_wheel()(d, mm, where_mouse());
     return true;
 }
 
@@ -369,9 +371,10 @@ Window_ptr Window_impl::open_tooltip(Widget_impl * caller, Widget_ptr tooltip) {
 }
 
 void Window_impl::close_tooltip(Widget_impl * caller) {
+    tooltip_cx_.drop();
+
     if (caller == tooltip_widget_) {
         if (tooltip_) { tooltip_->close(); }
-        tooltip_cx_.drop();
         tooltip_widget_ = nullptr;
     }
 }
@@ -403,6 +406,11 @@ Widget_cptr Window_impl::focus_owner() const {
     if (parent_) { return Container_impl::focus_owner(); }
     if (auto cp = Container_impl::focus_owner()) { return cp; }
     return display() ? display()->winptr(this) : nullptr;
+}
+
+// Overrides Container_impl.
+void Window_impl::queue_arrange_up() {
+    arrange_timer_.start(31);
 }
 
 } // namespace tau

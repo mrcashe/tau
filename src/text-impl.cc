@@ -41,13 +41,23 @@ namespace tau {
 static const unsigned CARET_TIMEOUT = 511;
 
 Text_impl::Text_impl():
-    Widget_impl()
+    Widget_impl(),
+    caret_visible_(false),
+    caret_exposed_(false),
+    caret_refresh_(false),
+    caret_enabled_(false),
+    select_allowed_(false)
 {
     init();
 }
 
 Text_impl::Text_impl(Align xalign, Align yalign):
     Widget_impl(),
+    caret_visible_(false),
+    caret_exposed_(false),
+    caret_refresh_(false),
+    caret_enabled_(false),
+    select_allowed_(false),
     xalign_(xalign),
     yalign_(yalign)
 {
@@ -56,6 +66,11 @@ Text_impl::Text_impl(Align xalign, Align yalign):
 
 Text_impl::Text_impl(const ustring & text, Align xalign, Align yalign):
     Widget_impl(),
+    caret_visible_(false),
+    caret_exposed_(false),
+    caret_refresh_(false),
+    caret_enabled_(false),
+    select_allowed_(false),
     xalign_(xalign),
     yalign_(yalign)
 {
@@ -66,16 +81,18 @@ Text_impl::Text_impl(const ustring & text, Align xalign, Align yalign):
 Text_impl::Text_impl(Buffer buf, Align xalign, Align yalign):
     Widget_impl(),
     buffer_(buf),
+    caret_visible_(false),
+    caret_exposed_(false),
+    caret_refresh_(false),
+    caret_enabled_(false),
+    select_allowed_(false),
     xalign_(xalign),
     yalign_(yalign)
 {
     init();
 }
 
-extern unsigned nwidgets_;
-
 Text_impl::~Text_impl() {
-    --nwidgets_;
     if (actions_) { delete actions_; }
     if (signal_selection_changed_) { delete signal_selection_changed_; }
     if (signal_caret_motion_) { delete signal_caret_motion_; }
@@ -83,8 +100,6 @@ Text_impl::~Text_impl() {
 }
 
 void Text_impl::init() {
-    ++nwidgets_;
-
     fonts_.emplace_back(Font());
 
     auto & fi = style_.get(STYLE_FONT);
@@ -103,27 +118,26 @@ void Text_impl::init() {
     signal_size_changed_.connect(fun(this, &Text_impl::refresh_caret));
     signal_size_changed_.connect(fun(this, &Text_impl::scroll_to_caret));
 
-    signal_scroll_changed_.connect(fun(this, &Text_impl::update_va));
-
     signal_visible_.connect(fun(this, &Text_impl::update_va));
 
     signal_invisible_.connect(fun(this, &Text_impl::update_va));
 
-    signal_display_.connect(fun(this, &Text_impl::update_font));
-    signal_display_.connect(fun(this, &Text_impl::calc_rows));
-    signal_display_.connect(fun(this, &Text_impl::refresh_caret));
-    signal_display_.connect(fun(this, &Text_impl::scroll_to_caret));
-
+    signal_display_.connect(fun(this, &Text_impl::on_display));
     signal_focus_in_.connect(fun(this, &Text_impl::on_focus_in));
     signal_focus_out_.connect(fun(this, &Text_impl::hide_caret));
 
-    signal_mouse_down_.connect(fun(this, &Text_impl::on_mouse_down));
-    signal_mouse_up_.connect(fun(this, &Text_impl::on_mouse_up));
-    signal_mouse_motion_.connect(fun(this, &Text_impl::on_mouse_motion));
     signal_paint_.connect(fun(this, &Text_impl::on_paint));
     signal_take_focus_.connect(fun(this, &Text_impl::on_take_focus));
 
     init_buffer();
+}
+
+void Text_impl::on_display() {
+    update_font();
+    calc_rows();
+    refresh_caret();
+    scroll_to_caret();
+    if (scrollable()) { signal_scroll_changed().connect(fun(this, &Text_impl::update_va)); }
 }
 
 bool Text_impl::empty() const {
@@ -694,13 +708,17 @@ void Text_impl::draw_caret(Painter pr) {
 }
 
 void Text_impl::on_caret_timer() {
-    if (caret_exposed_) { wipe_caret(); }
-    else { expose_caret(); }
+    if (!caret_refresh_) {
+        if (caret_exposed_) { wipe_caret(); }
+        else { expose_caret(); }
+    }
+
+    caret_refresh_ = false;
 }
 
 void Text_impl::refresh_caret() {
     if (caret_enabled_ && caret_visible_) {
-        if (loop_) { caret_cx_ = loop_->signal_alarm(CARET_TIMEOUT, true).connect(fun(this, &Text_impl::on_caret_timer)); }
+        caret_refresh_ = true;
         wipe_caret();
         update_caret();
         expose_caret();
@@ -781,7 +799,6 @@ Buffer_citer Text_impl::iter(std::size_t row, std::size_t col) const {
 
 void Text_impl::enable_caret() {
     if (!caret_enabled_) {
-        if (!loop_) { loop_ = Loop_impl::this_loop(); }
         unselect();
         caret_enabled_ = true;
         init_actions();
@@ -805,6 +822,8 @@ void Text_impl::disable_caret() {
 void Text_impl::show_caret() {
     if (!caret_visible_) {
         caret_visible_ = true;
+        if (!loop_) { loop_ = Loop_impl::this_loop(); }
+        if (loop_) { caret_cx_ = loop_->signal_alarm(CARET_TIMEOUT, true).connect(fun(this, &Text_impl::on_caret_timer)); }
         refresh_caret();
     }
 }
@@ -1074,6 +1093,9 @@ void Text_impl::allow_select() {
         select_allowed_ = true;
         unselect();
         set_cursor("text:ibeam");
+        mouse_down_cx_ = signal_mouse_down().connect(fun(this, &Text_impl::on_mouse_down));
+        mouse_up_cx_ = signal_mouse_up().connect(fun(this, &Text_impl::on_mouse_up));
+        mouse_motion_cx_ = signal_mouse_motion().connect(fun(this, &Text_impl::on_mouse_motion));
     }
 }
 
@@ -1081,6 +1103,9 @@ void Text_impl::disallow_select() {
     if (select_allowed_) {
         unselect();
         select_allowed_ = false;
+        mouse_down_cx_.drop();
+        mouse_up_cx_.drop();
+        mouse_motion_cx_.drop();
         disable_caret();
         unset_cursor();
     }

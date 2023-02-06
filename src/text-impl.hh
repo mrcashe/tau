@@ -35,6 +35,7 @@
 #include <tau/font.hh>
 #include <tau/painter.hh>
 #include <widget-impl.hh>
+#include <list>
 
 namespace tau {
 
@@ -139,8 +140,6 @@ protected:
     Buffer_citer        esel_;                  // Selection end.
     Painter             ppr_;                   // Private painter.
     bool                insert_ = true;
-    bool                select_allowed_ = false;
-    bool                caret_enabled_ = false;
 
 protected:
 
@@ -258,8 +257,11 @@ private:
     Rows                rows_;
     Buffer_citer        msel_;                      // Mouse selection start.
     Buffer_citer        emsel_;                     // Mouse selection last.
-    bool                caret_visible_ = false;
-    bool                caret_exposed_ = false;
+    bool                caret_visible_:  1;
+    bool                caret_exposed_:  1;
+    bool                caret_refresh_:  1;
+    bool                caret_enabled_:  1;
+    bool                select_allowed_: 1;
 
     std::vector<Font>   fonts_;
     int                 xhint_ = 0;                 // Desired x offset for up/down caret navigation.
@@ -286,6 +288,9 @@ private:
     connection          insert_move_cx_ { true };
     connection          replace_move_cx_ { true };
     connection          erase_move_cx_ { true };
+    connection          mouse_down_cx_ { true };
+    connection          mouse_up_cx_ { true };
+    connection          mouse_motion_cx_ { true };
 
 private:
 
@@ -338,6 +343,8 @@ private:
     void on_buffer_insert_move(Buffer_citer b, Buffer_citer e);
     void on_buffer_replace_move(Buffer_citer b, Buffer_citer e, const std::u32string & replaced);
     void on_buffer_erase_move(Buffer_citer b, Buffer_citer e, const std::u32string & erased);
+
+    void on_display();
 };
 
 } // namespace tau

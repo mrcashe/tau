@@ -61,8 +61,8 @@ void Edit_impl::init() {
     allow_edit();
 
     style_.redirect(STYLE_WHITESPACE_BACKGROUND, STYLE_BACKGROUND);
-    signal_key_down_.connect(fun(this, &Edit_impl::on_key_down));
-    signal_input_.connect(fun(this, &Edit_impl::on_input));
+    signal_key_down().connect(fun(this, &Edit_impl::on_key_down));
+    signal_input().connect(fun(this, &Edit_impl::on_input));
     signal_display_.connect(fun(this, &Edit_impl::on_display), true);
 
     undo_action_.disable();

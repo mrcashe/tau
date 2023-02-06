@@ -77,6 +77,7 @@ void Navigator_impl::cleanup() {
     }
 
     if (holder_) { delete holder_; holder_ = nullptr; }
+    hcache_.clear();
 }
 
 Navigator_impl::~Navigator_impl() {
