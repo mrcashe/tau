@@ -256,6 +256,18 @@ void Menu_impl::activate_current() {
 
 void Menu_impl::select_item(Menu_item_ptr item) {
     close_submenu();
+    Rect pva(item->to_parent(scroller_.get()), item->size());
+
+    if (horizontal()) {
+        if (pva.right() > offset()+scroller_->size().width()) { roll_to(pva.right()-scroller_->size().width()); }
+        else if (pva.left() < offset()) { roll_to(pva.left()); }
+    }
+
+    else {
+        if (pva.bottom() > offset()+scroller_->size().height()) { roll_to(pva.bottom()-scroller_->size().height()); }
+        else if (pva.top() < offset()) { roll_to(pva.top()); }
+    }
+
     current_item_ = item;
     mark();
 }

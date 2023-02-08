@@ -41,12 +41,9 @@
 
 namespace tau {
 
-extern unsigned nwidgets_;
-
 Widget_impl::Widget_impl():
     trackable()
 {
-    ++nwidgets_;
     Theme_impl::root()->init_style(style_);
     style_.get(STYLE_BACKGROUND).signal_changed().connect(tau::bind(fun(this, &Widget_impl::invalidate), Rect()));
     signal_origin_changed_.connect(bind(fun(this, &Widget_impl::invalidate), Rect()));
@@ -73,7 +70,6 @@ Widget_impl::Widget_impl():
 }
 
 Widget_impl::~Widget_impl() {
-    --nwidgets_;
     signal_destroy_();
     if (signal_accel_) { delete signal_accel_; }
     if (signal_scroll_changed_) { delete signal_scroll_changed_; }

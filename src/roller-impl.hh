@@ -49,12 +49,15 @@ public:
     void set_start(Widget_ptr wp);
     void set_end(Widget_ptr wp);
 
-private:
+protected:
 
-    bool         autohide_;
     Widget_ptr   start_;
     Widget_ptr   end_;
     Scroller_ptr scroller_;
+    bool         autohide_;
+
+private:
+
     bool         rmax_ = false; // Roll to maximal.
 
 private:

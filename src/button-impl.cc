@@ -96,15 +96,15 @@ void Button_base_impl::init() {
     set_border(1);
     set_border_style(BORDER_OUTSET);
 
-    style_.redirect("button/background", "background");
-    style_.get("background").signal_changed().connect(fun(this, &Button_base_impl::redraw));
-    style_.get("foreground").signal_changed().connect(fun(this, &Button_base_impl::redraw));
+    style_.redirect(STYLE_BUTTON_BACKGROUND, STYLE_BACKGROUND);
+    style_.get(STYLE_BACKGROUND).signal_changed().connect(fun(this, &Button_base_impl::redraw));
+    style_.get(STYLE_FOREGROUND).signal_changed().connect(fun(this, &Button_base_impl::redraw));
 
     table_ = std::make_shared<Table_impl>();
     table_->set_column_spacing(5);
     table_->set_column_margin(0, 1, 0);
     table_->set_column_margin(1, 0, 1);
-    table_->set_row_margin(0, 1, 1);
+    table_->set_rows_margin(1, 1);
     insert(table_);
 
     signal_mouse_enter().connect(fun(this, &Button_base_impl::on_mouse_enter));
@@ -270,10 +270,10 @@ void Button_base_impl::redraw() {
     Color c;
 
     if (relief_visible_) {
-        c = style().color("background").get();
+        c = style().color(STYLE_BACKGROUND);
 
         if (hover() && enabled() && !pressed_) {
-            set_border_color(style().get("select/background").get());
+            set_border_color(style().color(STYLE_SELECT_BACKGROUND));
             set_border_style(BORDER_SOLID);
         }
 
@@ -284,7 +284,7 @@ void Button_base_impl::redraw() {
     }
 
     else {
-        c = style().color("background").get();
+        c = style().color(STYLE_BACKGROUND);
     }
 
     if (enabled()) {
@@ -299,7 +299,7 @@ void Button_base_impl::redraw() {
         }
     }
 
-    table_->style().color("background").set(c);
+    table_->style().color(STYLE_BUTTON_BACKGROUND).set(c);
 }
 
 void Button_base_impl::press() {

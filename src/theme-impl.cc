@@ -1369,7 +1369,7 @@ void Theme_impl::init_style(Style & st) {
 
 void Theme_impl::init_window_style(Style & st) {
     for (std::size_t i = 0; items_[i].name; ++i) { st.set(items_[i].name, items_[i].value); }
-    st.set("font", Font::normal());
+    st.set(STYLE_FONT, Font::normal());
 }
 
 } // namespace tau

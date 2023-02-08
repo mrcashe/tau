@@ -31,25 +31,6 @@
 
 namespace tau {
 
-uintmax_t max_bytes_, signal_bytes_, slot_bytes_, islot_bytes_, func_bytes_, cx_bytes_;
-unsigned nsignals_, nslots_, ncx_, nwidgets_;
-
-static void report(void * p, const char * met) {
-    uintmax_t all_bytes = signal_bytes_+slot_bytes_+islot_bytes_+func_bytes_+cx_bytes_;
-    max_bytes_ = std::max(max_bytes_, all_bytes);
-
-    std::cout << p << ": " << met;
-    std::cout << " S:" << str_bytes(signal_bytes_) << "[" << nsignals_ << "]";
-    std::cout << " s:" << str_bytes(slot_bytes_);
-    std::cout << " i:" << str_bytes(islot_bytes_) << "[" << nslots_ << "]";
-    std::cout << " f:" << str_bytes(func_bytes_);
-    std::cout << " c:" << str_bytes(cx_bytes_) << "[" << ncx_ << "]";
-    std::cout << " T:" << str_bytes(all_bytes);
-    std::cout << " M:" << str_bytes(max_bytes_);
-    std::cout << " W:" << nwidgets_;
-    std::cout << std::endl;
-}
-
 trackable::trackable() {}
 
 trackable::trackable(const trackable & src) {}
@@ -61,11 +42,12 @@ trackable::~trackable() {
 }
 
 void trackable::track(slot_impl * s) {
-    tracks_.push_front(s);
+    tracks_.push_back(s);
 }
 
 void trackable::untrack(slot_impl * s) {
-    tracks_.remove(s);
+    auto i = std::find(tracks_.begin(), tracks_.end(), s);
+    if (i != tracks_.end()) { tracks_.erase(i); }
 }
 
 trackable & trackable::operator=(const trackable & src) {
@@ -92,18 +74,13 @@ trackable * functor_base::target() {
 // ----------------------------------------------------------------------------
 
 signal_base::signal_base() {
-    ++nsignals_;
-    report(this, " signal(): ");
 }
 
 signal_base::~signal_base() {
-    --nsignals_;
-    report(this, "~signal(): ");
 }
 
 connection signal_base::link(slot_base & slot) {
     slot.link(this);
-    report(this, "connect(): ");
     return slot.cx();
 }
 
@@ -119,7 +96,6 @@ slot_base::~slot_base() {
 void slot_base::disconnect() {
     if (auto s = signal_) {
         signal_ = nullptr;
-        report(this, "dconnect():");
         s->erase(this);
     }
 }
@@ -138,14 +114,10 @@ connection slot_base::cx() {
 connection::connection(bool autodrop):
     autodrop_(autodrop)
 {
-    cx_bytes_ += sizeof(*this);
-    ++ncx_;
 }
 
 connection::~connection() {
     if (autodrop_) { drop(); }
-    cx_bytes_ -= sizeof(*this);
-    --ncx_;
 }
 
 connection::connection(const connection & other):
@@ -153,8 +125,6 @@ connection::connection(const connection & other):
     autodrop_(other.autodrop_)
 {
     other.autodrop_ = false;
-    cx_bytes_ += sizeof(*this);
-    ++ncx_;
 }
 
 connection::connection(connection && other):
@@ -163,15 +133,11 @@ connection::connection(connection && other):
 {
     other.autodrop_ = false;
     other.slot_.reset();
-    cx_bytes_ += sizeof(*this);
-    ++ncx_;
 }
 
 connection::connection(slot_ptr slot):
     slot_(slot)
 {
-    cx_bytes_ += sizeof(*this);
-    ++ncx_;
 }
 
 connection & connection::operator=(const connection & other) {
@@ -238,11 +204,9 @@ bool connection::empty() const {
 slot_impl::slot_impl(slot_base * base):
     base_(base)
 {
-    ++nslots_;
 }
 
 slot_impl::~slot_impl() {
-    --nslots_;
 }
 
 bool slot_impl::blocked() const {

@@ -239,38 +239,43 @@ private:
 
     unsigned            xspacing_ = 0;
     unsigned            yspacing_ = 0;
+    Align               xalign_ = ALIGN_CENTER;
+    Align               yalign_ = ALIGN_CENTER;
     unsigned            columns_left_ = 0;
     unsigned            columns_right_ = 0;
     unsigned            rows_top_ = 0;
     unsigned            rows_bottom_ = 0;
 
-    Align               xalign_ = ALIGN_CENTER;
-    Align               yalign_ = ALIGN_CENTER;
+    unsigned            nvcol_ = 0;         // Current visible columns count.
+    unsigned            nvrow_ = 0;         // Current visible rows count.
+    unsigned            xspc_ = 0;          // Current X space value (calculated).
+    unsigned            yspc_ = 0;          // Current Y space value (calculated).
 
     Span                sel_;
     Marks               marks_;
-    Timer               loarr_tmr_ { fun(this, &Table_impl::place_widgets) }; // Local Arrange Timer.
-    connection          async_clear_cx_;
 
 private:
 
-    Size get_requisition();
+    void update_all();
+    void rearrange();
     void update_requisition();
     void alloc_child(Holder & hol);
     void alloc_cols();
     void alloc_rows();
     void place_widgets();
     void place_holder(Holder & hol, Rect * inval=nullptr);
+    Col & new_col(int xx);
+    Row & new_row(int yy);
+    Col & new_col(int xx, const Col & src);
+    Row & new_row(int yy, const Row & src);
     void erase_col(Col_iter & i);
     void unref_col(Col_iter & i);
     void erase_row(Row_iter & i);
     void unref_row(Row_iter & i);
-
-    Col & new_col(int xx);
-    Row & new_row(int yy);
-
-    Col & new_col(int xx, const Col & src);
-    Row & new_row(int yy, const Row & src);
+    bool col_erasable(const Col & col) const;
+    bool row_erasable(const Row & row) const;
+    void change_visibility(Col & col, bool show);
+    void change_visibility(Row & row, bool show);
 
     void wipe_holder(Holder & hol);
     void dist_holder(Holder & hol);

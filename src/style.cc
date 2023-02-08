@@ -29,6 +29,7 @@
 #include <tau/font.hh>
 #include <tau/string.hh>
 #include <tau/style.hh>
+#include <forward_list>
 #include <iostream>
 
 namespace tau {
@@ -251,12 +252,6 @@ struct Style_impl {
                 i = std::find(ip->from_->predirs_.begin(), ip->from_->predirs_.end(), ip);
                 if (i != ip->from_->predirs_.end()) { ip->from_->predirs_.erase(i); }
                 ip->from_ = nullptr;
-
-                if (auto pp = parent_.lock()) {
-                    if (auto pi = pp->ifind(ip->name_)) {
-                        pset(*ip, pp->iget(*pi));
-                    }
-                }
             }
         }
     }
@@ -265,6 +260,12 @@ struct Style_impl {
         ustring val = i.value_;
         i.value_.clear();
         unredirect(i.name_);
+
+        if (auto pp = parent_.lock()) {
+            if (auto pi = pp->ifind(i.name_)) {
+                pset(i, pp->iget(*pi));
+            }
+        }
 
         if (!val.empty()) {
             for (auto sty: children_) { sty->npset(i.name_, iget(i)); }
