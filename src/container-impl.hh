@@ -210,8 +210,8 @@ protected:
 private:
 
     using Children = std::vector<Widget_ptr>;
-    using Containers = std::forward_list<Container_impl *>;
-    using Obscured = std::forward_list<Widget_impl *>;
+    using Containers = std::vector<Container_impl *>;
+    using Obscured = std::vector<Widget_impl *>;
 
     Children        children_;          // Children.
     Children        woff_;              // Written off children.

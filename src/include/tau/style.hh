@@ -40,17 +40,14 @@ namespace tau {
 class Style_item: public trackable {
 public:
 
-    /// Default constructor.
-    Style_item() = default;
+    /// @private
+    Style_item(Style_impl * sty=nullptr);
 
     /// Copy constructor.
     Style_item(const Style_item & other) = default;
 
     /// Copy operator.
     Style_item & operator=(const Style_item & other) = default;
-
-    /// Constructor with value.
-    Style_item(const ustring & val);
 
     /// Get value.
     ustring get() const;
@@ -64,9 +61,6 @@ public:
     /// Unset value.
     void unset();
 
-    /// Get format string.
-    ustring format() const;
-
     /// Get "signal_changed".
     signal<void()> & signal_changed();
 
@@ -75,18 +69,11 @@ private:
     friend Style_impl;
     friend Font_style;
 
-    ustring     value_;
-    ustring     pvalue_;
-    ustring     fmt_;
-    bool        set_ = false;
-    connection  cx_;
-
-    signal<void(ustring)> signal_value_changed_;
-    signal<void()> signal_changed_;
+    Style_impl * sty_ = nullptr;
 
 private:
 
-    void set_pvalue(const ustring & pvalue);
+    ustring & format();
 };
 
 /// Font style item.

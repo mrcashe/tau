@@ -34,7 +34,6 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
-#include <list>
 #include <mutex>
 
 namespace {

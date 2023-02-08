@@ -32,7 +32,6 @@
 #include <event-impl.hh>
 #include <loop-impl.hh>
 #include <poll.h>
-#include <list>
 
 namespace tau {
 

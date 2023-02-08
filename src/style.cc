@@ -25,11 +25,11 @@
 // ----------------------------------------------------------------------------
 
 #include <types-impl.hh>
+#include <tau/exception.hh>
 #include <tau/font.hh>
 #include <tau/string.hh>
 #include <tau/style.hh>
 #include <iostream>
-#include <unordered_map>
 
 namespace tau {
 
@@ -49,95 +49,263 @@ const char * STYLE_BUTTON_BACKGROUND = "button/background";
 const char * STYLE_SLIDER_BACKGROUND = "slider/background";
 
 struct Style_impl {
-    using Item_ptr = std::shared_ptr<Style_item>;
-    using Item_cptr = std::shared_ptr<const Style_item>;
-    using Items = std::unordered_map<std::string, Item_ptr>;
+    struct Item {
+        std::string name_;
+        Style_item  si_;
+        ustring     value_;
+        ustring     pvalue_;
+        ustring     fmt_;
+        Item *      from_ = nullptr;
+        std::vector<Item *> redirs_;
+        std::vector<Item *> predirs_;
+
+        signal<void()> * signal_changed_ = nullptr;
+
+        Item(const std::string & name, Style_impl * sty, const ustring & value):
+            name_(name),
+            si_(sty),
+            value_(value)
+        {
+        }
+
+       ~Item() {
+            if (signal_changed_) { delete signal_changed_; }
+        }
+    };
+
+    using Items = std::forward_list<Item>;
+    using Children = std::vector<Style_impl *>;
 
     Style_wptr      parent_;
-    Items           items_, redir_;
+    Items           items_;
+    Children        children_;
     Style_item      mt_;
 
     Style_impl() = default;
-    Style_impl(const Style_impl & other) = default;
-    Style_impl & operator=(const Style_impl & other) = default;
-    Style_impl(Style_impl && other) = default;
-    Style_impl & operator=(Style_impl && other) = default;
 
-    void set_parent(Style_ptr parent) {
-        parent_ = parent;
+   ~Style_impl() {
+       unparent();
+    }
 
-        for (auto & p: items_) {
-            if (auto pi = parent->find(p.first)) {
-                auto ip = p.second;
-                ip->set_pvalue(pi->get());
-                ip->cx_ = pi->signal_value_changed_.connect(fun(ip, &Style_item::set_pvalue));
-            }
+    Style_impl(const Style_impl & other):
+        items_(other.items_)
+    {
+    }
+
+    Style_impl & operator=(const Style_impl & other) {
+        if (this != &other) {
+            items_ = other.items_;
         }
+
+        return *this;
+    }
+
+    Style_impl(Style_impl && other):
+        items_(std::move(other.items_))
+    {
+    }
+
+    Style_impl & operator=(Style_impl && other) {
+        items_ = std::move(other.items_);
+        return *this;
+    }
+
+    Item * ifind(const std::string & name) {
+        auto i = std::find_if(items_.begin(), items_.end(), [name](auto & ip) { return str_similar(name, ip.name_); } );
+        if (i != items_.end()) { return &(*i); }
+        return nullptr;
+    }
+
+    const Item * ifind(const std::string & name) const {
+        auto i = std::find_if(items_.begin(), items_.end(), [name](auto & ip) { return str_similar(name, ip.name_); } );
+        if (i != items_.end()) { return &(*i); }
+        return nullptr;
+    }
+
+    Item * ifind(Style_item * si) {
+        auto i = std::find_if(items_.begin(), items_.end(), [si](auto & ip) { return si == &ip.si_; } );
+        if (i != items_.end()) { return &(*i); }
+        return nullptr;
+    }
+
+    const Item * ifind(const Style_item * si) const {
+        auto i = std::find_if(items_.begin(), items_.end(), [si](auto & ip) { return si == &ip.si_; } );
+        if (i != items_.end()) { return &(*i); }
+        return nullptr;
+    }
+
+    signal<void()> & signal_changed(Item * ip) {
+        if (!ip->signal_changed_) { ip->signal_changed_ = new signal<void()>; }
+        return *ip->signal_changed_;
     }
 
     void unparent() {
         if (auto pp = parent_.lock()) {
-            for (auto & p: items_) { p.second->cx_.drop(); }
+            for (auto & i: items_) {
+                std::vector<std::string> v;
+                for (auto ip: i.predirs_) { v.push_back(ip->name_); }
+                for (auto & s: v) { unredirect(s); }
+            }
+
+            auto j = std::find(pp->children_.begin(), pp->children_.end(), this);
+            if (j != pp->children_.end()) { pp->children_.erase(j); }
             parent_.reset();
         }
     }
 
+    void set_parent(Style_ptr parent) {
+        parent_ = parent;
+        parent->children_.push_back(this);
+
+        for (auto & ip: items_) {
+            if (!ip.from_) {
+                if (auto pi = parent->ifind(ip.name_)) {
+                    pset(ip, parent->iget(*pi));
+                    for (auto ri: pi->redirs_) { redirect(pi->name_, ri->name_, true); }
+                    for (auto ri: pi->predirs_) { redirect(pi->name_, ri->name_, true); }
+                }
+            }
+        }
+    }
+
+    void pset(Item & i, const ustring & pvalue) {
+        ustring val = i.pvalue_;
+        i.pvalue_ = pvalue;
+
+        if (pvalue != val) {
+            for (auto sty: children_) { sty->npset(i.name_, iget(i)); }
+            if (i.signal_changed_) { (*i.signal_changed_)(); }
+        }
+
+        for (auto ip: i.redirs_) { pset(*ip, pvalue); }
+        for (auto ip: i.predirs_) { pset(*ip, pvalue); }
+    }
+
+    void iset(Item & i, const ustring & val) {
+        if (val.find(U'%') < val.size()) {
+            if (i.fmt_ != val) {
+                i.fmt_ = val;
+                for (auto sty: children_) { sty->npset(i.name_, iget(i)); }
+                if (i.signal_changed_) { (*i.signal_changed_)(); }
+            }
+        }
+
+        else {
+            if (i.value_ != val) {
+                i.value_ = val;
+                for (auto sty: children_) { sty->npset(i.name_, iget(i)); }
+                if (i.signal_changed_) { (*i.signal_changed_)(); }
+            }
+        }
+
+        for (auto ip: i.redirs_) { iset(*ip, val); }
+        for (auto ip: i.predirs_) { iset(*ip, val); }
+    }
+
+    ustring iget(const Item & i) const {
+        if (i.fmt_.empty()) {
+            return i.value_.empty() ? i.pvalue_ : i.value_;
+        }
+
+        ustring res;
+        std::size_t pos, len = i.fmt_.size(), fspec, end;
+
+        for (pos = 0; pos < len; pos = end) {
+            fspec = i.fmt_.find(U'%', pos);
+            end = std::min(len, fspec);
+            res += i.fmt_.substr(pos, end-pos);
+
+            if (fspec < len) {
+                switch (i.fmt_[fspec+1]) {
+                    case U'%': res += U'%'; break;
+                    case U'v': res += i.value_.empty() ? i.pvalue_ : i.value_; break;
+                }
+
+                end += 2;
+            }
+        }
+
+        return res;
+    }
+
+    void redirect(const std::string & src, const std::string & dest, bool from_parent=false) {
+        auto i = ifind(src), j = ifind(dest);
+
+        if (i && j && i != j && !j->si_.is_set()) {
+            if (from_parent) { i->predirs_.push_back(j); }
+            else { i->redirs_.push_back(j); }
+            j->from_ = i;
+            j->fmt_ = i->fmt_;
+            pset(*j, i->pvalue_);
+            iset(*j, i->value_);
+
+            for (auto sty: children_) { sty->redirect(src, dest, true); }
+        }
+    }
+
+    void unredirect(const std::string & name) {
+        if (auto ip = ifind(name)) {
+            if (ip->from_) {
+                auto i = std::find(ip->from_->redirs_.begin(), ip->from_->redirs_.end(), ip);
+                if (i != ip->from_->redirs_.end()) { ip->from_->redirs_.erase(i); }
+                i = std::find(ip->from_->predirs_.begin(), ip->from_->predirs_.end(), ip);
+                if (i != ip->from_->predirs_.end()) { ip->from_->predirs_.erase(i); }
+                ip->from_ = nullptr;
+
+                if (auto pp = parent_.lock()) {
+                    if (auto pi = pp->ifind(ip->name_)) {
+                        pset(*ip, pp->iget(*pi));
+                    }
+                }
+            }
+        }
+    }
+
+    void iunset(Item & i) {
+        ustring val = i.value_;
+        i.value_.clear();
+        unredirect(i.name_);
+
+        if (!val.empty()) {
+            for (auto sty: children_) { sty->npset(i.name_, iget(i)); }
+            if (i.signal_changed_) { (*i.signal_changed_)(); }
+        }
+    }
+
+    Style_item * set(const std::string & name, const ustring & value) {
+        if (auto ip = ifind(name)) {
+            iset(*ip, value);
+            return &ip->si_;
+        }
+
+        items_.emplace_front(name, this, value);
+
+        if (auto pp = parent_.lock()) {
+            if (auto pi = pp->ifind(name)) {
+                pset(items_.front(), pp->iget(*pi));
+            }
+        }
+
+        return &items_.front().si_;
+    }
+
+    void npset(const std::string & name, const ustring & pvalue) {
+        if (auto ip = ifind(name)) {
+            if (!ip->from_) {
+                pset(*ip, pvalue);
+            }
+        }
+    }
+
     void unset(const std::string & name) {
-        if (auto ip = find(name)) {
-            ip->unset();
+        if (auto ip = ifind(name)) {
+            ip->si_.unset();
         }
     }
 
     void unset() {
         for (auto & p: items_) {
-            p.second->unset();
-        }
-    }
-
-    Item_ptr set(const std::string & name, const ustring & value) {
-        auto i = items_.find(name);
-
-        if (i == items_.end()) {
-            Item_ptr item = std::make_shared<Style_item>(value);
-            items_[name] = item;
-
-            if (auto pp = parent_.lock()) {
-                if (auto pi = pp->find(name)) {
-                    item->set_pvalue(pi->get());
-                    item->cx_ = pi->signal_value_changed_.connect(fun(item, &Style_item::set_pvalue));
-                }
-            }
-
-            return item;
-        }
-
-        else {
-            i->second->set(value);
-            return i->second;
-        }
-    }
-
-    Style_item * find(const std::string & name) const {
-        auto i = items_.find(name);
-        if (i != items_.end()) { return i->second.get(); }
-        i = redir_.find(name);
-        return i != redir_.end() ? i->second.get() : nullptr;
-    }
-
-    void redirect(const std::string & src, const std::string & dest) {
-        if (redir_.end() == redir_.find(dest)) {
-            auto i = items_.find(src), j = items_.find(dest);
-
-            if (i != items_.end() && j != items_.end()) {
-                Item_ptr s = i->second, d = j->second;
-                s->signal_value_changed_ += d->signal_value_changed_;
-                s->signal_changed_ += d->signal_changed_;
-                items_.erase(j);
-                redir_[dest] = s;
-                s->set_ = true;
-                s->signal_value_changed_(s->get());
-                s->signal_changed_();
-            }
+            p.si_.unset();
         }
     }
 };
@@ -145,87 +313,65 @@ struct Style_impl {
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
 
-Style_item::Style_item(const ustring & value):
-    trackable()
+Style_item::Style_item(Style_impl * sty):
+    sty_(sty)
 {
-    set(value);
 }
 
 ustring Style_item::get() const {
-    if (fmt_.empty()) {
-        return value_.empty() ? pvalue_ : value_;
-    }
-
-    ustring res;
-    std::size_t pos, len = fmt_.size(), fspec, end;
-
-    for (pos = 0; pos < len; pos = end) {
-        fspec = fmt_.find(U'%', pos);
-        end = std::min(len, fspec);
-        res += fmt_.substr(pos, end-pos);
-
-        if (fspec < len) {
-            switch (fmt_[fspec+1]) {
-                case U'%': res += U'%'; break;
-                case U'v': res += value_.empty() ? pvalue_ : value_; break;
-            }
-
-            end += 2;
+    if (sty_) {
+        if (auto ip = sty_->ifind(this)) {
+            return sty_->iget(*ip);
         }
     }
 
-    return res;
+    return ustring();
 }
 
 void Style_item::set(const ustring & val) {
-    if (val.find(U'%') < val.size()) {
-        if (fmt_ != val) {
-            fmt_ = val;
-            signal_value_changed_(get());
-            signal_changed_();
-        }
-    }
-
-    else {
-        if (value_ != val) {
-            value_ = val;
-            signal_value_changed_(get());
-            signal_changed_();
+    if (sty_) {
+        if (auto ip = sty_->ifind(this)) {
+            sty_->iset(*ip, val);
         }
     }
 }
 
-void Style_item::set_pvalue(const ustring & pvalue) {
-    ustring val  = pvalue_;
-    pvalue_ = pvalue;
-
-    if (set_ || (pvalue != val)) {
-        signal_value_changed_(get());
-        signal_changed_();
+ustring & Style_item::format() {
+    if (sty_) {
+        if (auto ip = sty_->ifind(this)) {
+            return ip->fmt_;
+        }
     }
-}
 
-void Style_item::unset() {
-    set_ = false;
-    ustring val = value_;
-    value_.clear();
-
-    if (!val.empty()) {
-        signal_value_changed_(get());
-        signal_changed_();
-    }
-}
-
-ustring Style_item::format() const {
-    return fmt_;
+    throw internal_error("Style_item::format(): have pure sty_");
 }
 
 signal<void()> & Style_item::signal_changed() {
-    return signal_changed_;
+    if (sty_) {
+        if (auto ip = sty_->ifind(this)) {
+            return sty_->signal_changed(ip);
+        }
+    }
+
+    throw internal_error("Style_item::signal_changed(): have pure sty_");
+}
+
+void Style_item::unset() {
+    if (sty_) {
+        if (auto ip = sty_->ifind(this)) {
+            sty_->iunset(*ip);
+        }
+    }
 }
 
 bool Style_item::is_set() const {
-    return set_ || !value_.empty();
+    if (sty_) {
+        if (auto ip = sty_->ifind(this)) {
+            return ip->from_ || !ip->redirs_.empty() || !ip->predirs_.empty() || !ip->value_.empty();
+        }
+    }
+
+    return false;
 }
 
 // ----------------------------------------------------------------------------
@@ -267,13 +413,13 @@ void Font_style::clear_size() {
         }
     } while (!done);
 
-    si_.fmt_ = str_implode(fv, ' ');
+    si_.format() = str_implode(fv, ' ');
 }
 
 void Font_style::resize(double pts) {
     if (pts > 0.0) {
         clear_size();
-        ustring fmt = si_.fmt_;
+        ustring fmt = si_.format();
         if (ustring::npos == fmt.find(U'%')) { fmt = "%v"; }
         fmt = str_format(fmt, " =", pts);
         set(fmt);
@@ -292,7 +438,7 @@ void Font_style::grow(double pts) {
 }
 
 void Font_style::enlarge(double pts) {
-    ustring fmt = si_.fmt_;
+    ustring fmt = si_.format();
     auto fv = str_explode(fmt, str_blanks());
     bool done;
 
@@ -315,7 +461,7 @@ void Font_style::enlarge(double pts) {
 }
 
 void Font_style::add_face(const ustring & face_elements) {
-    ustring fmt = si_.fmt_;
+    ustring fmt = si_.format();
     if (ustring::npos == fmt.find(U'%')) { fmt = "%v"; }
     fmt = str_format(fmt, " ", face_elements);
     set(fmt);
@@ -393,13 +539,13 @@ Style_item & Style::set(const std::string & name, const ustring & value) {
 }
 
 Style_item & Style::get(const std::string & name) {
-    auto ip = impl->find(name);
-    return ip ? *ip : impl->mt_;
+    auto ip = impl->ifind(name);
+    return ip ? ip->si_ : impl->mt_;
 }
 
 const Style_item & Style::get(const std::string & name) const {
-    auto ip = impl->find(name);
-    return ip ? *ip : impl->mt_;
+    auto ip = impl->ifind(name);
+    return ip ? ip->si_ : impl->mt_;
 }
 
 void Style::redirect(const std::string & src, const std::string & dest) {
@@ -415,13 +561,13 @@ void Style::unset() {
 }
 
 Font_style Style::font(const std::string & name) {
-    auto ip = impl->find(name);
-    return ip ? Font_style(*ip) : Font_style(impl->mt_);
+    auto ip = impl->ifind(name);
+    return ip ? Font_style(ip->si_) : Font_style(impl->mt_);
 }
 
 Color_style Style::color(const std::string & name) {
-    auto ip = impl->find(name);
-    return ip ? Color_style(*ip) : Color_style(impl->mt_);
+    auto ip = impl->ifind(name);
+    return ip ? Color_style(ip->si_) : Color_style(impl->mt_);
 }
 
 } // namespace tau

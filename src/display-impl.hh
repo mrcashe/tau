@@ -35,7 +35,6 @@
 #include <tau/timeval.hh>
 #include <timer-impl.hh>
 #include <window-impl.hh>
-#include <list>
 #include <thread>
 
 namespace tau {

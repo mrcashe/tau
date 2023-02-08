@@ -38,7 +38,6 @@
 #include <tau/ustring.hh>
 #include <loop-impl.hh>
 #include <atomic>
-#include <list>
 #include <map>
 #include <mutex>
 #include <vector>

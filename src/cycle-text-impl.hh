@@ -28,7 +28,6 @@
 #define TAU_CYCLE_TEXT_IMPL_HH
 
 #include <cycle-impl.hh>
-#include <list>
 
 namespace tau {
 

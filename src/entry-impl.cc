@@ -60,9 +60,9 @@ Entry_impl::Entry_impl(const ustring & text, Align text_align, Border_style bord
 void Entry_impl::init(Align text_align) {
     box_ = std::make_shared<Box_impl>(OR_RIGHT);
     insert(box_);
-    if (BORDER_NONE != border_left_style()) { box_->hint_margin(2); }
+    if (BORDER_NONE != border_left_style()) { box_->hint_margin(1); }
 
-    box_->style().redirect("whitespace/background", "background");
+    box_->style().redirect(STYLE_WHITESPACE_BACKGROUND, STYLE_BACKGROUND);
     box_->focus_next_action().disable();
     box_->focus_previous_action().disable();
 
@@ -78,7 +78,7 @@ void Entry_impl::init(Align text_align) {
     scroller_->end_action().disable();
 
     edit_ = std::make_shared<Edit_impl>(buffer_, text_align, ALIGN_CENTER);
-    edit_->style().unset("background");
+    edit_->style().unset(STYLE_BACKGROUND);
     scroller_->insert(edit_);
     edit_->enter_action().disable();
     edit_->tab_action().disable();

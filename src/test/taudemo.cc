@@ -75,8 +75,6 @@ struct Main: tau::Toplevel {
 
     int init_sysinfo_page(int pg) {
         tau::Table table;
-        table.style().font("font").set(tau::Font::mono());
-        table.style().redirect("whitespace/background",  "background");
         int page = notebook_.append_page(table, pages_[pg].title);
 
         tau::Scroller scr;
@@ -89,6 +87,8 @@ struct Main: tau::Toplevel {
         table.put(hs,  0,  1, 1, 1,  false, true);
 
         tau::Text text(tau::str_sysinfo(), tau::ALIGN_START, tau::ALIGN_START);
+        text.style().font(tau::STYLE_FONT).set(tau::Font::mono());
+        text.style().redirect(tau::STYLE_WHITESPACE_BACKGROUND, tau::STYLE_BACKGROUND);
         text.allow_select();
         scr.insert(text);
 

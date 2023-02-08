@@ -34,7 +34,6 @@
 #include <tau/pen.hh>
 #include <tau/signal.hh>
 #include <array>
-#include <list>
 #include <map>
 #include <vector>
 

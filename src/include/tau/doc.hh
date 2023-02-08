@@ -31,7 +31,6 @@
 
 #include <tau/types.hh>
 #include <tau/ustring.hh>
-#include <list>
 #include <vector>
 
 namespace tau {

@@ -30,7 +30,6 @@
 #include <tau/string.hh>
 #include <tau/fileinfo.hh>
 #include <bin-impl.hh>
-#include <list>
 
 namespace tau {
 

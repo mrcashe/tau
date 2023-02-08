@@ -75,24 +75,20 @@ Widget_impl::Widget_impl():
 Widget_impl::~Widget_impl() {
     --nwidgets_;
     signal_destroy_();
-    delete_signals();
-}
-
-void Widget_impl::delete_signals() {
-    if (signal_accel_) { delete signal_accel_; signal_accel_ = nullptr; }
-    if (signal_scroll_changed_) { delete signal_scroll_changed_; signal_scroll_changed_ = nullptr; }
-    if (signal_lookup_action_) { delete signal_lookup_action_; signal_lookup_action_ = nullptr; }
-    if (signal_parent_) { delete signal_parent_; signal_parent_ = nullptr; }
-    if (signal_key_down_) { delete signal_key_down_; signal_key_down_ = nullptr; }
-    if (signal_key_up_) { delete signal_key_up_; signal_key_up_ = nullptr; }
-    if (signal_input_) { delete signal_input_; signal_input_ = nullptr; }
-    if (signal_mouse_down_) { delete signal_mouse_down_; signal_mouse_down_ = nullptr; }
-    if (signal_mouse_double_click_) { delete signal_mouse_double_click_; signal_mouse_double_click_ = nullptr; }
-    if (signal_mouse_up_) { delete signal_mouse_up_; signal_mouse_up_ = nullptr; }
-    if (signal_mouse_wheel_) { delete signal_mouse_wheel_; signal_mouse_wheel_ = nullptr; }
-    if (signal_mouse_motion_) { delete signal_mouse_motion_; signal_mouse_motion_ = nullptr; }
-    if (signal_mouse_enter_) { delete signal_mouse_enter_; signal_mouse_enter_ = nullptr; }
-    if (signal_mouse_leave_) { delete signal_mouse_leave_; signal_mouse_leave_ = nullptr; }
+    if (signal_accel_) { delete signal_accel_; }
+    if (signal_scroll_changed_) { delete signal_scroll_changed_; }
+    if (signal_lookup_action_) { delete signal_lookup_action_; }
+    if (signal_parent_) { delete signal_parent_; }
+    if (signal_key_down_) { delete signal_key_down_; }
+    if (signal_key_up_) { delete signal_key_up_; }
+    if (signal_input_) { delete signal_input_; }
+    if (signal_mouse_down_) { delete signal_mouse_down_; }
+    if (signal_mouse_double_click_) { delete signal_mouse_double_click_; }
+    if (signal_mouse_up_) { delete signal_mouse_up_; }
+    if (signal_mouse_wheel_) { delete signal_mouse_wheel_; }
+    if (signal_mouse_motion_) { delete signal_mouse_motion_; }
+    if (signal_mouse_enter_) { delete signal_mouse_enter_; }
+    if (signal_mouse_leave_) { delete signal_mouse_leave_; }
 }
 
 // Overriden by Popup_impl.
@@ -124,7 +120,6 @@ void Widget_impl::unparent() {
     size_.reset();
     required_size_.reset();
     handle_unparent();
-    delete_signals();
 }
 
 void Widget_impl::enable() {

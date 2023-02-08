@@ -35,7 +35,6 @@
 #include <tau/font.hh>
 #include <tau/painter.hh>
 #include <widget-impl.hh>
-#include <list>
 
 namespace tau {
 

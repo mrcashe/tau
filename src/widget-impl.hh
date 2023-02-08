@@ -466,7 +466,6 @@ private:
     void update_cursor();
     void enter_cursor();
     void leave_cursor();
-    void delete_signals();
 
     bool on_backpaint(Painter pr, const Rect & inval);
     void on_tooltip_timer();

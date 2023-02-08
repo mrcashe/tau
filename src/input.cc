@@ -29,10 +29,10 @@
 #include <iomanip>
 #include <cctype>
 #include <map>
-#include <unordered_map>
-#include <list>
 #include <algorithm>
 #include <iostream>
+#include <forward_list>
+#include <unordered_map>
 
 namespace {
 
@@ -794,7 +794,7 @@ void key_spec_from_string(const ustring & spec, char32_t & kc, int & km) {
 }
 
 bool key_code_is_modifier(char32_t kc) {
-    static const std::list<char32_t> mods = {
+    static const std::forward_list<char32_t> mods = {
         KC_LSHIFT, KC_RSHIFT, KC_SHIFT, KC_LCONTROL, KC_RCONTROL, KC_CONTROL,
         KC_LALT, KC_RALT, KC_ALT, KC_LWIN, KC_RWIN, KC_WIN, KC_LSUPER, KC_RSUPER,
         KC_SUPER, KC_LMENU, KC_RMENU, KC_MENU, KC_LHYPER, KC_RHYPER, KC_HYPER, KC_GROUP,

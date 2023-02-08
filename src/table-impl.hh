@@ -29,8 +29,6 @@
 
 #include <tau/table.hh>
 #include <container-impl.hh>
-#include <climits>
-#include <list>
 #include <map>
 
 namespace tau {

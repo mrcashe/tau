@@ -58,7 +58,7 @@ void Container_impl::make_child(Widget_ptr wp) {
     if (!wp) { throw internal_error("Container_impl::make_child(): got a pure widget pointer"); }
     if (wp->parent()) { throw user_error(str_format("Container_impl::make_child(): widget ", wp.get(), " already has parent")); }
     children_.push_back(wp);
-    if (auto * ci = dynamic_cast<Container_impl *>(wp.get())) { containers_.push_front(ci); }
+    if (auto * ci = dynamic_cast<Container_impl *>(wp.get())) { containers_.push_back(ci); }
     wp->set_parent(this);
     wp->handle_enable(enabled());
     if (display()) { wp->handle_display(); }
@@ -74,8 +74,10 @@ void Container_impl::unparent_child(Widget_impl * wi) {
         wi->drop_focus();
         wi->ungrab_mouse();
         wi->unparent();
-        containers_.remove(static_cast<Container_impl *>(wi));
-        obscured_.remove(wi);
+        auto j = std::find(containers_.begin(), containers_.end(), static_cast<Container_impl *>(wi));
+        if (j != containers_.end()) { containers_.erase(j); }
+        auto k = std::find(obscured_.begin(), obscured_.end(), wi);
+        if (k != obscured_.end()) { obscured_.erase(k); }
         woff_.push_back(*i);
         children_.erase(i);
         woff_timer_.restart(11, true);
@@ -145,8 +147,15 @@ void Container_impl::handle_backpaint(Painter pr, const Rect & inval) {
 
 void Container_impl::on_child_obscured(Widget_impl * wi, bool yes) {
     if (!shut_) {
-        if (yes) { obscured_.push_front(wi); }
-        else { obscured_.remove(wi); }
+        if (yes) {
+            obscured_.push_back(wi);
+        }
+
+        else {
+            auto i = std::find(obscured_.begin(), obscured_.end(), wi);
+            if (i != obscured_.end()) { obscured_.erase(i); }
+        }
+
         update_mouse_owner();
     }
 }
