@@ -101,10 +101,7 @@ void Button_base_impl::init() {
     style_.get(STYLE_FOREGROUND).signal_changed().connect(fun(this, &Button_base_impl::redraw));
 
     table_ = std::make_shared<Table_impl>();
-    table_->set_column_spacing(5);
-    table_->set_column_margin(0, 1, 0);
-    table_->set_column_margin(1, 0, 1);
-    table_->set_rows_margin(1, 1);
+    table_->set_spacing(5);
     insert(table_);
 
     signal_mouse_enter().connect(fun(this, &Button_base_impl::on_mouse_enter));
@@ -148,7 +145,7 @@ void Button_base_impl::set_label(const ustring & s) {
 
     if (!s.empty()) {
         label_ = std::make_shared<Text_impl>(s);
-        if (relief_visible_) { label_->hint_margin(2); }
+        label_->hint_margin(1);
         table_->put(label_, 1, 0, 1, 1, false, true);
         table_->align(label_.get(), ALIGN_FILL, ALIGN_CENTER);
     }
@@ -158,6 +155,7 @@ void Button_base_impl::set_image(Widget_ptr wp) {
     table_->remove(image_.get());
     image_ = wp;
     table_->put(image_, 0, 0, 1, 1, true, true);
+    table_->set_column_margin(0, 1, 1);
     table_->align(image_.get(), ALIGN_FILL, ALIGN_CENTER);
 }
 

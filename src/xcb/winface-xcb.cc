@@ -219,6 +219,7 @@ void Winface_xcb::handle_map(xcb_map_notify_event_t * event) {
         first_map_ = false;
         move(Rect(upos_, usize_));
         if (hide_taskbar_hint_) { hide_taskbar_hint(); }
+        self_->handle_display();
     }
 
     Cursor_ptr cursor = self_->cursor();

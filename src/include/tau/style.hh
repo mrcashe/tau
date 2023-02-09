@@ -213,6 +213,11 @@ public:
     /// Unset all items.
     void unset();
 
+    /// Get "signal_changed" for specified item name.
+    /// @since 0.4.0
+    /// @throw user_error in case specified item not found.
+    signal<void()> & signal_changed(const std::string & name);
+
 private:
 
     Style_ptr impl;

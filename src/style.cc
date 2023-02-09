@@ -571,6 +571,14 @@ Color_style Style::color(const std::string & name) {
     return ip ? Color_style(ip->si_) : Color_style(impl->mt_);
 }
 
+signal<void()> & Style::signal_changed(const std::string & name) {
+    if (auto ip = impl->ifind(name)) {
+        return impl->signal_changed(ip);
+    }
+
+    throw user_error(str_format("Style::signal_changed(): item ", name, " not found"));
+}
+
 } // namespace tau
 
 //END

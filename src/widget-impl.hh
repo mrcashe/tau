@@ -245,6 +245,7 @@ public:
 
     Rect  exposed_area() const;
     bool  has_parent() const;
+    bool  has_parent(const Container_impl * ci) const;
     bool  scrollable() const;
 
     bool  hint_size(const Size & sz);

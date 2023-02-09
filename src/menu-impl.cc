@@ -42,6 +42,8 @@ Menu_impl::Menu_impl(Orientation orient):
     signal_focus_in().connect(fun(this, &Menu_impl::mark));
     connect_action(enter_action_);
     connect_action(cancel_action_);
+    connect_action(home_action_);
+    connect_action(end_action_);
 }
 
 Menu_item_ptr Menu_impl::current_item() {
@@ -256,20 +258,12 @@ void Menu_impl::activate_current() {
 
 void Menu_impl::select_item(Menu_item_ptr item) {
     close_submenu();
-    Rect pva(item->to_parent(scroller_.get()), item->size());
 
-    if (horizontal()) {
-        if (pva.right() > offset()+scroller_->size().width()) { roll_to(pva.right()-scroller_->size().width()); }
-        else if (pva.left() < offset()) { roll_to(pva.left()); }
+    if (item->enabled() && current_item_ != item) {
+        roll_to(item.get());
+        current_item_ = item;
+        mark();
     }
-
-    else {
-        if (pva.bottom() > offset()+scroller_->size().height()) { roll_to(pva.bottom()-scroller_->size().height()); }
-        else if (pva.top() < offset()) { roll_to(pva.top()); }
-    }
-
-    current_item_ = item;
-    mark();
 }
 
 void Menu_impl::remove_item(Widget_impl * wp) {
@@ -365,6 +359,48 @@ void Menu_impl::pass_quit() {
     ungrab_mouse();
     quit();
     if (pmenu) { pmenu->pass_quit(); }
+}
+
+void Menu_impl::on_home() {
+    int min = INT_MAX;
+    Menu_item_ptr first;
+
+    for (auto wp: items_) {
+        if (wp->enabled()) {
+            if (horizontal()) {
+                int x = wp->origin().x();
+                if (x < min) { first = wp; min = x; }
+            }
+
+            else {
+                int y = wp->origin().y();
+                if (y < min) { first = wp; min = y; }
+            }
+        }
+    }
+
+    if (first) { select_item(first); }
+}
+
+void Menu_impl::on_end() {
+    int max = INT_MIN;
+    Menu_item_ptr last;
+
+    for (auto wp: items_) {
+        if (wp->enabled()) {
+            if (horizontal()) {
+                int x = wp->origin().x();
+                if (x > max) { last = wp; max = x; }
+            }
+
+            else {
+                int y = wp->origin().y();
+                if (y > max) { last = wp; max = y; }
+            }
+        }
+    }
+
+    if (last) { select_item(last); }
 }
 
 } // namespace tau

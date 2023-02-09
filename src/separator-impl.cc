@@ -66,7 +66,7 @@ bool Separator_impl::on_paint(Painter pr, const Rect & inval) {
     if (!sz) { return true; }
 
     if (SEPARATOR_GROOVE == separator_style_) {
-        Color c = style().color("background");
+        Color c = style().color(STYLE_BACKGROUND);
         double f = 0.15;
         Color cdark  = c.darken(f);
         Color clight = c.lighten(f);
@@ -110,22 +110,19 @@ bool Separator_impl::on_paint(Painter pr, const Rect & inval) {
 
     else if (SEPARATOR_HANDLE == separator_style_) {
         if (sz.width() > sz.height()) {
-            int xmax = sz.width(), ymin = 0, ymax = sz.height()-1, step = 2*(ymax-ymin);
+            int xmax = sz.width(), ymin = 0, ymax = sz.height(), step = std::max(4, std::min(12, xmax/16));
             pr.move_to(0, ymin);
 
             for (int x = 0; x < xmax;) {
-                x += step;
-                pr.line_to(x, ymin);
-                x += ymax-ymin;
-                pr.line_to(x, ymax);
+                x += step; pr.line_to(x, ymin);
+                x += ymax-ymin; pr.line_to(x, ymax);
                 x += step; pr.line_to(x, ymax);
-                x += ymax-ymin;
-                pr.line_to(x, ymin);
+                x += ymax-ymin; pr.line_to(x, ymin);
             }
         }
 
         else {
-            int ymax = sz.height(), xmin = 0, xmax = sz.width()-1, step = 2*(xmax-xmin);
+            int ymax = sz.height(), xmin = 0, xmax = sz.width()-1, step = std::max(4, std::min(12, ymax/16));
             pr.move_to(xmin, 0);
 
             for (int y = 0; y < ymax;) {
@@ -136,14 +133,13 @@ bool Separator_impl::on_paint(Painter pr, const Rect & inval) {
             }
         }
 
-        pr.set_pen(Pen(Color(style().get("foreground").get()), 1));
+        pr.set_pen(Pen(Color(style().color(STYLE_FOREGROUND)).lighten(0.15), 1));
         pr.stroke();
     }
 
     else { // SEPARATOR_SOLID assumed
-        pr.rectangle(0, 0, sz.width(), sz.height());
-        pr.set_brush(Color(style().get("foreground").get()));
-        pr.fill();
+        pr.set_brush(Brush(style().color(STYLE_FOREGROUND)));
+        pr.paint();
     }
 
     return true;

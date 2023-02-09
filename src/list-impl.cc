@@ -930,8 +930,7 @@ void List_impl::show_header(int column, Widget_ptr title) {
     hdr.box = std::make_shared<Box_impl>(OR_RIGHT);
     hdr.box->signal_mouse_down().connect(tau::bind(fun(this, &List_impl::on_header_mouse_down), column));
     hdr.box->append(hdr.title);
-    hdr.sep = std::make_shared<Separator_impl>(SEPARATOR_SOLID);
-    hdr.sep->hint_size(2, 0);
+    hdr.sep = std::make_shared<Separator_impl>(SEPARATOR_HANDLE);
     hdr.sep->signal_mouse_down().connect(tau::bind(fun(this, &List_impl::on_sep_mouse_down), std::ref(hdr)));
     hdr.sep->signal_mouse_up().connect(tau::bind(fun(this, &List_impl::on_sep_mouse_up), std::ref(hdr)));
     hdr.sep->signal_mouse_motion().connect(tau::bind(fun(this, &List_impl::on_sep_mouse_motion), std::ref(hdr)));

@@ -32,7 +32,6 @@
 #include <loop-impl.hh>
 #include <table-impl.hh>
 #include <window-impl.hh>
-
 #include <iostream>
 
 namespace tau {
@@ -43,11 +42,11 @@ Table_impl::Table_impl():
     signal_arrange_.connect(fun(this, &Table_impl::arrange));
     signal_size_changed_.connect(fun(this, &Table_impl::arrange));
     signal_visible_.connect(fun(this, &Table_impl::arrange));
-    signal_display_.connect(fun(this, &Table_impl::update_all));
+    signal_display_.connect(fun(this, &Table_impl::recalc));
     signal_backpaint_.connect(fun(this, &Table_impl::on_backpaint));
     signal_take_focus_.connect(fun(this, &Table_impl::on_take_focus));
-    signal_child_requisition_.connect(fun(this, &Table_impl::on_child_requisition_changed));
-    signal_child_hints_.connect(fun(this, &Table_impl::on_child_requisition_changed));
+    signal_child_requisition_.connect(fun(this, &Table_impl::on_child_requisition));
+    signal_child_hints_.connect(fun(this, &Table_impl::on_child_requisition));
     signal_child_show_.connect(fun(this, &Table_impl::on_child_show));
     signal_child_hide_.connect(fun(this, &Table_impl::on_child_hide));
 }
@@ -71,7 +70,7 @@ void Table_impl::put(Widget_ptr wp, int x, int y, unsigned xspan, unsigned yspan
         hol.xsh_ = 1 == hol.xmax_-hol.xmin_ && xsh;
         hol.ysh_ = 1 == hol.ymax_-hol.ymin_ && ysh;
         dist_holder(hol);
-        rearrange();
+        rearrange1();
     }
 }
 
@@ -83,7 +82,7 @@ void Table_impl::remove(Widget_impl * wp) {
             wipe_holder(i->second);
             unparent_child(wp);
             holders_.erase(i);
-            rearrange();
+            rearrange1();
         }
     }
 }
@@ -95,13 +94,15 @@ void Table_impl::clear() {
     unselect();
     unparent_all();
     holders_.clear();
+    nvcol_ = nvrow_ = nucol_ = nurow_ = nshcol_ = nshrow_ = xspc_ = yspc_ = 0;
+    require_size(0);
 
     if (!cols_.empty()) {
         int xx = cols_.begin()->first, xm = cols_.rbegin()->first;
 
         for (; xx <= xm; ++xx) {
             auto i = cols_.find(xx);
-            if (i != cols_.end()) { erase_col(i); }
+            if (i != cols_.end()) { erase(i); }
         }
     }
 
@@ -110,19 +111,18 @@ void Table_impl::clear() {
 
         for (; yy <= ym; ++yy) {
             auto j = rows_.find(yy);
-            if (j != rows_.end()) { erase_row(j); }
+            if (j != rows_.end()) { erase(j); }
         }
     }
 
-    nvcol_ = nvrow_ = 0;
-    require_size(0);
     invalidate();
 }
 
 // Both hints & requisitions come here.
-void Table_impl::on_child_requisition_changed(Widget_impl * wi) {
-    if (shut_) { return; }
-    rearrange();
+void Table_impl::on_child_requisition(Widget_impl * wi) {
+    if (!shut_) {
+        rearrange1();
+    }
 }
 
 void Table_impl::on_child_show(Widget_impl * wi) {
@@ -134,17 +134,15 @@ void Table_impl::on_child_show(Widget_impl * wi) {
 
             for (int xx = hol.xmin_; xx < hol.xmax_; ++xx) {
                 Col & col = cols_[xx];
-                change_visibility(col, true);
-                if (hol.xsh_) { ++col.shrank_; }
+                change_visibility(col, true, hol.xsh_);
             }
 
             for (int yy = hol.ymin_; yy < hol.ymax_; ++yy) {
                 Row & row = rows_[yy];
-                change_visibility(row, true);
-                if (hol.ysh_) { ++row.shrank_; }
+                change_visibility(row, true, hol.ysh_);
             }
 
-            rearrange();
+            rearrange1();
         }
     }
 }
@@ -160,17 +158,15 @@ void Table_impl::on_child_hide(Widget_impl * wi) {
 
             for (int xx = hol.xmin_; xx < hol.xmax_; ++xx) {
                 Col & col = cols_[xx];
-                change_visibility(col, false);
-                if (hol.xsh_ && 0 != col.shrank_) { --col.shrank_; }
+                change_visibility(col, false, hol.xsh_);
             }
 
             for (int yy = hol.ymin_; yy < hol.ymax_; ++yy) {
                 Row & row = rows_[yy];
-                change_visibility(row, false);
-                if (hol.ysh_ && 0 != row.shrank_) { --row.shrank_; }
+                change_visibility(row, false, hol.ysh_);
             }
 
-            rearrange();
+            rearrange1();
         }
     }
 }
@@ -272,47 +268,13 @@ void Table_impl::alloc_child(Holder & hol) {
     }
 }
 
-void Table_impl::update_requisition() {
-    auto cb = cols_.begin(), ce = cols_.end();
-    auto rb = rows_.begin(), re = rows_.end();
+void Table_impl::recalc() {
+    for (auto & p: cols_) { p.second.rmin_ = p.second.rmax_ = 0; }
+    for (auto & p: rows_) { p.second.rmin_ = p.second.rmax_ = 0; }
 
-    xspc_ = nvcol_ > 1 ? xspacing_*(nvcol_-1) : 0;
-    unsigned rx = xspc_;
-
-    for (auto i(cb); i != ce; ++i) {
-        if (i->second.visible_) {
-            unsigned w = i->second.usize_ ? i->second.usize_ : std::max(i->second.rmin_, i->second.rmax_);
-            if (i->second.umax_) { w = std::min(w, i->second.umax_); }
-            w = std::max(w, i->second.umin_);
-            rx += w+i->second.left_+i->second.right_;
-        }
-    }
-
-    yspc_ = nvrow_ > 1 ? yspacing_*(nvrow_-1) : 0;
-    unsigned ry = yspc_;
-
-    for (auto i(rb); i != re; ++i) {
-        if (i->second.visible_) {
-            unsigned h = i->second.usize_ ? i->second.usize_ : std::max(i->second.rmin_, i->second.rmax_);
-            if (i->second.umax_) { h = std::min(h, i->second.umax_); }
-            h = std::max(h, i->second.umin_);
-            ry += h+i->second.top_+i->second.bottom_;
-        }
-    }
-
-    require_size(rx, ry);
-}
-
-void Table_impl::update_all() {
-    auto cb = cols_.begin(), ce = cols_.end();
-    auto rb = rows_.begin(), re = rows_.end();
-
-    for (auto i(cb); i != ce; ++i) { i->second.rmin_ = i->second.rmax_ = 0; }
-    for (auto i(rb); i != re; ++i) { i->second.rmin_ = i->second.rmax_ = 0; }
-
-    for (auto i = holders_.begin(); i != holders_.end(); ++i) {
-        if (!i->second.wp_->hidden()) {
-            alloc_child(i->second);
+    for (auto & p: holders_) {
+        if (!p.second.wp_->hidden()) {
+            alloc_child(p.second);
         }
     }
 
@@ -325,60 +287,79 @@ void Table_impl::arrange() {
     place_widgets();
 }
 
-void Table_impl::rearrange() {
-    update_all();
+void Table_impl::rearrange1() {
+    recalc();
     queue_arrange();
 }
 
-void Table_impl::alloc_cols() {
-    unsigned px;
-    unsigned user = 0;
-    unsigned sh = 0;
-    unsigned nsh = 0;
-    unsigned nfree = 0;
-    unsigned spc = xspc_;
+void Table_impl::rearrange2() {
+    update_requisition();
+    queue_arrange();
+}
 
-    auto cb = cols_.begin(), ce = cols_.end();
+bool Table_impl::update_requisition() {
+    rucol_ = rshcol_ = rurow_ = rshrow_ = 0;
+    unsigned rx = 0, ry = 0, px;
 
-    // First pass.
-    for (auto i(cb); i != ce; ++i) {
-        if (i->second.visible_) {
-            spc += i->second.left_+i->second.right_;
-
-            if (i->second.usize_) {
-                px = i->second.usize_;
-                if (i->second.umax_) { px = std::min(px, i->second.umax_); }
-                user += px;
-            }
-
-            else if (i->second.shrank_) {
-                px = i->second.rmax_;
-                if (i->second.umax_) { px = std::min(px, i->second.umax_); }
-                sh += px;
-                ++nsh;
+    for (auto & p: cols_) {
+        if (p.second.visible_) {
+            if (p.second.usize_) {
+                px = p.second.usize_;
+                if (p.second.umax_) { px = std::min(px, p.second.umax_); }
+                rucol_ += px;
             }
 
             else {
-                ++nfree;
+                px = std::max(p.second.rmin_, p.second.rmax_);
+                if (p.second.umax_) { px = std::min(px, p.second.umax_); }
+                if (p.second.shrank_) { rshcol_ += px; }
             }
+
+            rx += px;
         }
     }
 
-    int x = 0;
+    for (auto & p: rows_) {
+        if (p.second.visible_) {
+            if (p.second.usize_) {
+                px = p.second.usize_;
+                if (p.second.umax_) { px = std::min(px, p.second.umax_); }
+                rurow_ += px;
+            }
+
+            else {
+                px = std::max(p.second.rmin_, p.second.rmax_);
+                if (p.second.umax_) { px = std::min(px, p.second.umax_); }
+                if (p.second.shrank_) { rshrow_ += px; }
+            }
+
+            ry += px;
+        }
+    }
+
+    return require_size(xspc_+rx, yspc_+ry);
+}
+
+void Table_impl::alloc_cols() {
+    unsigned user = rucol_;
+    unsigned sh = rshcol_;
+    unsigned req = xspc_+rucol_+rshcol_;
+    unsigned nfree = nvcol_-nucol_-nshcol_;
+    unsigned nextra = nfree ? nfree : nshcol_;
     unsigned avail = size().width();
-    unsigned req = spc+user+sh;
     avail = avail > req ? avail-req : 0;
-    unsigned nextra = nfree ? nfree : nsh;
     unsigned extra = nextra ? avail/nextra : 0;
     unsigned rem = nextra ? avail%nextra : 0;
+    int x = 0;
+    auto ce = cols_.end();
 
-    // Second pass.
-    for (auto i(cb); i != ce; ++i) {
+    for (auto i(cols_.begin()); i != ce; ++i) {
         if (i->second.visible_) {
-            i->second.ox_ = i->second.x_;
-            i->second.ow_ = i->second.w_;
+            int ox = i->second.x_;
+            unsigned ow = i->second.w_;
             x += i->second.left_;
             i->second.x_ = x;
+            unsigned px;
 
             if (i->second.usize_) {
                 px = i->second.usize_;
@@ -411,60 +392,32 @@ void Table_impl::alloc_cols() {
             x += px;
             i->second.w_ = x-i->second.x_;
             x += i->second.right_+xspacing_;
-            if (i->second.ox_ != i->second.x_ || i->second.ow_ != i->second.w_) { signal_column_bounds_changed_(i->first); }
+            if (ox != i->second.x_ || ow != i->second.w_) { signal_column_bounds_changed_(i->first); }
         }
     }
 }
 
 void Table_impl::alloc_rows() {
-    unsigned px;
-    unsigned user = 0;
-    unsigned sh = 0;
-    unsigned nsh = 0;
-    unsigned nfree = 0;
-    unsigned spc = yspc_;
-
-    auto rb = rows_.begin(), re = rows_.end();
-
-    // First pass.
-    for (auto i(rb); i != re; ++i) {
-        if (i->second.visible_) {
-            spc += i->second.top_+i->second.bottom_;
-
-            if (i->second.usize_) {
-                px = std::max(i->second.usize_, i->second.umin_);
-                if (i->second.umax_) { px = std::min(px, i->second.umax_); }
-                user += px;
-            }
-
-            else if (i->second.shrank_) {
-                px = i->second.rmax_;
-                if (i->second.umax_) { px = std::min(px, i->second.umax_); }
-                sh += px;
-                ++nsh;
-            }
-
-            else {
-                ++nfree;
-            }
-        }
-    }
-
     int y = 0;
+    unsigned user = rurow_;
+    unsigned sh = rshrow_;
     unsigned avail = size().height();
-    unsigned req = spc+user+sh;
+    unsigned req = yspc_+user+sh;
     avail = avail > req ? avail-req : 0;
-    unsigned nextra = nfree ? nfree : nsh;
+    unsigned nfree = nvrow_-nurow_-nshrow_;
+    unsigned nextra = nfree ? nfree : nshrow_;
     unsigned extra = nextra ? avail/nextra : 0;
     unsigned rem = nextra ? avail%nextra : 0;
 
-    // Second pass.
-    for (auto i(rb); i != re; ++i) {
+    auto re = rows_.end();
+
+    for (auto i(rows_.begin()); i != re; ++i) {
         if (i->second.visible_) {
-            i->second.oy_ = i->second.y_;
-            i->second.oh_ = i->second.h_;
+            int oy = i->second.y_;
+            unsigned oh = i->second.h_;
             y += i->second.top_;
             i->second.y_ = y;
+            unsigned px;
 
             if (i->second.usize_) {
                 px = i->second.usize_;
@@ -497,7 +450,7 @@ void Table_impl::alloc_rows() {
             y += px;
             i->second.h_ = y-i->second.y_;
             y += i->second.bottom_+yspacing_;
-            if (i->second.oy_ != i->second.y_ || i->second.oh_ != i->second.h_) { signal_row_bounds_changed_(i->first); }
+            if (oy != i->second.y_ || oh != i->second.h_) { signal_row_bounds_changed_(i->first); }
         }
     }
 }
@@ -615,23 +568,172 @@ void Table_impl::place_widgets() {
     if (inval) { invalidate(inval); }
 }
 
-void Table_impl::set_column_spacing(unsigned spacing) {
-    if (xspacing_ != spacing) {
-        xspacing_ = spacing;
-        rearrange();
+bool Table_impl::set_column_spacing_i(unsigned xspacing) {
+    int d = xspacing-xspacing_;
+
+    if (0 != d) {
+        if (nvcol_ > 1) {
+            unsigned ud = abs(d)*(nvcol_-1);
+            if (d > 0) { xspc_ += ud; }
+            else { xspc_ = xspc_ > ud ? xspc_-ud : 0; }
+        }
+
+        xspacing_ = xspacing;
+        return true;
     }
+
+    return false;
 }
 
-void Table_impl::set_row_spacing(unsigned spacing) {
-    if (yspacing_ != spacing) {
-        yspacing_ = spacing;
-        rearrange();
+void Table_impl::set_column_spacing(unsigned xspacing) {
+    if (set_column_spacing_i(xspacing)) { rearrange2(); }
+}
+
+bool Table_impl::set_row_spacing_i(unsigned yspacing) {
+    int d = yspacing-yspacing_;
+
+    if (0 != d) {
+        if (nvrow_ > 1) {
+            unsigned ud = abs(d)*(nvrow_-1);
+            if (d > 0) { yspc_ += ud; }
+            else { yspc_ = yspc_ > ud ? yspc_-ud : 0; }
+        }
+
+        yspacing_ = yspacing;
+        return true;
     }
+
+    return false;
+}
+
+void Table_impl::set_row_spacing(unsigned yspacing) {
+    if (set_row_spacing_i(yspacing)) { rearrange2(); }
 }
 
 void Table_impl::set_spacing(unsigned xspacing, unsigned yspacing) {
-    set_column_spacing(xspacing);
-    set_row_spacing(yspacing);
+    bool changed = set_column_spacing_i(xspacing);
+    if (set_row_spacing_i(yspacing)) { changed = true; }
+    if (changed) { rearrange2(); }
+}
+
+void Table_impl::set_spacing(unsigned spacing) {
+    set_spacing(spacing, spacing);
+}
+
+void Table_impl::set_column_margin(int xx, unsigned left, unsigned right) {
+    auto i = cols_.find(xx);
+
+    if (i != cols_.end()) {
+        int dl = left-i->second.left_, dr = right-i->second.right_, d = dl+dr;
+        i->second.left_ = left;
+        i->second.right_ = right;
+
+        if (i->second.visible_ && (0 != dl || 0 != dl)) {
+            unsigned ud = abs(d);
+            if (d > 0) { xspc_ += ud; }
+            else { xspc_ = xspc_ > ud ? xspc_-ud : 0; }
+            rearrange2();
+        }
+    }
+
+    else {
+        if (0 != left || 0 != right) {
+            auto & col = new_col(xx);
+            col.left_ = left;
+            col.right_ = right;
+        }
+    }
+}
+
+void Table_impl::set_row_margin(int yy, unsigned top, unsigned bottom) {
+    auto i = rows_.find(yy);
+
+    if (i != rows_.end()) {
+        int dt = top-i->second.top_, db = bottom-i->second.bottom_, d = dt+db;
+        i->second.top_ = top;
+        i->second.bottom_ = bottom;
+
+        if (i->second.visible_ && (0 != dt || 0 != db)) {
+            unsigned ud = abs(d);
+            if (d > 0) { yspc_ += ud; }
+            else { yspc_ = yspc_ > ud ? yspc_-ud : 0; }
+            rearrange2();
+        }
+    }
+
+    else {
+        if (0 != top || 0 != bottom) {
+            auto & row = new_row(yy);
+            row.top_ = top;
+            row.bottom_ = bottom;
+        }
+    }
+}
+
+void Table_impl::set_columns_margin(unsigned left, unsigned right) {
+    if (columns_left_ != left || columns_right_ != right) {
+        columns_left_ = left;
+        columns_right_ = right;
+        bool changed = false;
+
+        for (auto & p: cols_) {
+            int dl = left-p.second.left_, dr = right-p.second.right_, d = dl+dr;
+            p.second.left_ = left;
+            p.second.right_ = right;
+
+            if (0 != d && p.second.visible_) {
+                changed = true;
+                unsigned ud = abs(d);
+                if (d > 0) { xspc_ += ud; }
+                else { xspc_ = xspc_ > ud ? xspc_-ud : 0; }
+            }
+        }
+
+        if (changed) { rearrange2(); }
+    }
+}
+
+void Table_impl::set_rows_margin(unsigned top, unsigned bottom) {
+    if (rows_top_ != top || rows_bottom_ != bottom) {
+        rows_top_ = top;
+        rows_bottom_ = bottom;
+        bool changed = false;
+
+        for (auto & p: rows_) {
+            int dt = top-p.second.top_, db = bottom-p.second.bottom_, d = dt+db;
+            p.second.top_ = top;
+            p.second.bottom_ = bottom;
+
+            if (0 != d && p.second.visible_) {
+                changed = true;
+                unsigned ud = abs(d);
+                if (d > 0) { yspc_ += ud; }
+                else { yspc_ = yspc_ > ud ? yspc_-ud : 0; }
+            }
+        }
+
+        if (changed) { rearrange2(); }
+    }
+}
+
+void Table_impl::get_column_margin(int xx, unsigned & left, unsigned & right) const {
+    left = right = 0;
+    auto i = cols_.find(xx);
+
+    if (i != cols_.end()) {
+        left = i->second.left_;
+        right = i->second.right_;
+    }
+}
+
+void Table_impl::get_row_margin(int yy, unsigned & top, unsigned & bottom) const {
+    top = bottom = 0;
+    auto i = rows_.find(yy);
+
+    if (i != rows_.end()) {
+        top = i->second.top_;
+        bottom = i->second.bottom_;
+    }
 }
 
 std::vector<Widget_impl *> Table_impl::children_within_range(int xmin, int ymin, int xmax, int ymax) {
@@ -870,36 +972,38 @@ void Table_impl::unalign_row(int yy) {
     }
 }
 
-bool Table_impl::col_erasable(const Col & col) const {
+bool Table_impl::erasable(const Col & col) const {
     return !col.align_set_ && !col.left_ && !col.right_
         && !col.umin_ && !col.umax_ && !col.usize_;
 }
 
-void Table_impl::erase_col(Col_iter & i) {
+void Table_impl::erase(Col_iter & i) {
     if (i != cols_.end()) {
-        i->second.ref_ = i->second.visible_ = 0;
-        if (col_erasable(i->second)) { cols_.erase(i); }
+        if (i->second.visible_ && nvcol_) { --nvcol_; }
+        i->second.ref_ = i->second.visible_ = i->second.visible_ = i->second.shrank_ = i->second.fill_ = 0;
+        if (erasable(i->second)) { cols_.erase(i); }
     }
 }
 
-void Table_impl::unref_col(Col_iter & i) {
-    if (i != cols_.end() && i->second.ref_ && --i->second.ref_ == 0) { erase_col(i); }
+void Table_impl::unref(Col_iter & i) {
+    if (i != cols_.end() && i->second.ref_ && --i->second.ref_ == 0) { erase(i); }
 }
 
-bool Table_impl::row_erasable(const Row & row) const {
+bool Table_impl::erasable(const Row & row) const {
     return !row.align_set_ && !row.top_ && !row.bottom_
         && !row.umin_ && !row.umax_ && !row.usize_;
 }
 
-void Table_impl::erase_row(Row_iter & i) {
+void Table_impl::erase(Row_iter & i) {
     if (i != rows_.end()) {
-        i->second.ref_ = i->second.visible_ = 0;
-        if (row_erasable(i->second)) { rows_.erase(i); }
+        if (i->second.visible_ && nvrow_) { --nvrow_; }
+        i->second.ref_ = i->second.visible_ = i->second.visible_ = i->second.shrank_ = i->second.fill_ = 0;
+        if (erasable(i->second)) { rows_.erase(i); }
     }
 }
 
-void Table_impl::unref_row(Row_iter & i) {
-    if (i != rows_.end() && i->second.ref_ && --i->second.ref_ == 0) { erase_row(i); }
+void Table_impl::unref(Row_iter & i) {
+    if (i != rows_.end() && i->second.ref_ && --i->second.ref_ == 0) { erase(i); }
 }
 
 Table_impl::Col & Table_impl::new_col(int xx) {
@@ -926,34 +1030,56 @@ Table_impl::Row & Table_impl::new_row(int yy, const Row & src) {
     return p.first->second;
 }
 
-void Table_impl::change_visibility(Col & col, bool show) {
+void Table_impl::change_visibility(Col & col, bool show, bool shrank) {
     if (show) {
-        if (0 == col.visible_++) { ++nvcol_; }
+        if (shrank) {
+            if (0 == col.shrank_++) { ++nshcol_; }
+        }
+
+        if (0 == col.visible_++) {
+            if (++nvcol_ > 1) { xspc_ += xspacing_; }
+            xspc_ += col.left_+col.right_;
+            if (col.usize_) { ++nucol_; }
+        }
     }
 
     else {
-        if (0 != col.visible_) {
-            if (--col.visible_ == 0) {
-                if (0 != nvcol_) {
-                    --nvcol_;
-                }
-            }
+        if (shrank && 0 != col.shrank_) {
+            if (--col.shrank_ == 0 && nshcol_) { --nshcol_; }
+        }
+
+        if (0 != col.visible_ && --col.visible_ == 0) {
+            if (1 < nvcol_--) { xspc_ -= xspacing_; }
+            unsigned d = col.left_+col.right_;
+            xspc_ = xspc_ > d ? xspc_-d : 0;
+            if (col.usize_ && nucol_) { ++nucol_; }
         }
     }
 }
 
-void Table_impl::change_visibility(Row & row, bool show) {
+void Table_impl::change_visibility(Row & row, bool show, bool shrank) {
     if (show) {
-        if (0 == row.visible_++) { ++nvrow_; }
+        if (shrank) {
+            if (0 == row.shrank_++) { ++nshrow_; }
+        }
+
+        if (0 == row.visible_++) {
+            if (++nvrow_ > 1) { yspc_ += yspacing_; }
+            yspc_ += row.top_+row.bottom_;
+            if (row.usize_) { ++nurow_; }
+        }
     }
 
     else {
-        if (0 != row.visible_) {
-            if (--row.visible_ == 0) {
-                if (0 != nvrow_) {
-                    --nvrow_;
-                }
-            }
+        if (shrank && 0 != row.shrank_) {
+            if (--row.shrank_ == 0 && nshrow_) { --nshrow_; }
+        }
+
+        if (0 != row.visible_ && --row.visible_ == 0) {
+            if (1 < nvrow_--) { yspc_ -= yspacing_; }
+            unsigned d = row.top_+row.bottom_;
+            yspc_ = yspc_ > d ? yspc_-d : 0;
+            if (row.usize_ && nurow_) { ++nurow_; }
         }
     }
 }
@@ -964,15 +1090,13 @@ void Table_impl::dist_holder(Holder & hol) {
 
         if (cols_.end() != i) {
             ++i->second.ref_;
-            if (hol.xsh_) { ++i->second.shrank_; }
-            if (!hol.wp_->hidden()) { change_visibility(i->second, true); }
+            if (!hol.wp_->hidden()) { change_visibility(i->second, true, hol.xsh_); }
         }
 
         else {
             auto & col = new_col(xx);
             col.ref_ = 1;
-            col.shrank_ = hol.xsh_ ? 1 : 0;
-            if (!hol.wp_->hidden()) { change_visibility(col, true); }
+            if (!hol.wp_->hidden()) { change_visibility(col, true, hol.xsh_); }
         }
     }
 
@@ -981,148 +1105,28 @@ void Table_impl::dist_holder(Holder & hol) {
 
         if (rows_.end() != i) {
             ++i->second.ref_;
-            if (hol.ysh_) { ++i->second.shrank_; }
-            if (!hol.wp_->hidden()) { change_visibility(i->second, true); }
+            if (!hol.wp_->hidden()) { change_visibility(i->second, true, hol.ysh_); }
         }
 
         else {
             auto & row = new_row(yy);
             row.ref_ = 1;
-            row.shrank_ = hol.ysh_ ? 1 : 0;
-            if (!hol.wp_->hidden()) { change_visibility(row, true); }
+            if (!hol.wp_->hidden()) { change_visibility(row, true, hol.ysh_); }
         }
     }
 }
 
 void Table_impl::wipe_holder(Holder & hol) {
-    auto ce = cols_.end();
-
-    for (auto i = cols_.find(hol.xmin_); i != ce && i->first < hol.xmax_; ++i) {
-        if (!hol.wp_->hidden()) { change_visibility(i->second, false); }
-        unref_col(i);
+    for (int xx = hol.xmin_; xx < hol.xmax_; ++xx) {
+        auto i = cols_.find(xx);
+        if (!hol.wp_->hidden()) { change_visibility(i->second, false, hol.xsh_); }
+        unref(i);
     }
 
-    auto re = rows_.end();
-
-    for (auto i = rows_.find(hol.ymin_); i != re && i->first < hol.ymax_; ++i) {
-        if (!hol.wp_->hidden()) { change_visibility(i->second, false); }
-        unref_row(i);
-    }
-}
-
-void Table_impl::set_column_margin(int xx, unsigned left, unsigned right) {
-    auto i = cols_.find(xx);
-
-    if (i != cols_.end()) {
-        bool changed = false;
-
-        if (i->second.left_ != left) {
-            i->second.left_ = left;
-            if (0 != i->second.ref_) { changed = true; }
-        }
-
-        if (i->second.right_ != right) {
-            i->second.right_ = right;
-            if (0 != i->second.ref_) { changed = true; }
-        }
-
-        if (changed) { rearrange(); }
-    }
-
-    else {
-        auto & col = new_col(xx);
-        col.left_ = left;
-        col.right_ = right;
-    }
-}
-
-void Table_impl::set_row_margin(int yy, unsigned top, unsigned bottom) {
-    auto i = rows_.find(yy);
-
-    if (i != rows_.end()) {
-        bool changed = false;
-
-        if (i->second.top_ != top) {
-            i->second.top_ = top;
-            if (0 != i->second.ref_) { changed = true; }
-        }
-
-        if (i->second.bottom_ != bottom) {
-            i->second.bottom_ = bottom;
-            if (0 != i->second.ref_) { changed = true; }
-        }
-
-        if (changed) { rearrange(); }
-    }
-
-    else {
-        auto & row = new_row(yy);
-        row.top_ = top;
-        row.bottom_ = bottom;
-    }
-}
-
-void Table_impl::set_columns_margin(unsigned left, unsigned right) {
-    if (columns_left_ != left || columns_right_ != right) {
-        columns_left_ = left;
-        columns_right_ = right;
-        bool changed = false;
-
-        for (auto & col: cols_) {
-            if (col.second.left_ != left) {
-                col.second.left_ = left;
-                if (0 != col.second.ref_) { changed = true; }
-            }
-
-            if (col.second.right_ != right) {
-                col.second.right_ = right;
-                if (0 != col.second.ref_) { changed = true; }
-            }
-        }
-
-        if (changed) { rearrange(); }
-    }
-}
-
-void Table_impl::set_rows_margin(unsigned top, unsigned bottom) {
-    if (rows_top_ != top || rows_bottom_ != bottom) {
-        rows_top_ = top;
-        rows_bottom_ = bottom;
-        bool changed = false;
-
-        for (auto & row: rows_) {
-            if (row.second.top_ != top) {
-                row.second.top_ = top;
-                if (0 != row.second.ref_) { changed = true; }
-            }
-
-            if (row.second.bottom_ != bottom) {
-                row.second.bottom_ = bottom;
-                if (0 != row.second.ref_) { changed = true; }
-            }
-        }
-
-        if (changed) { rearrange(); }
-    }
-}
-
-void Table_impl::get_column_margin(int xx, unsigned & left, unsigned & right) const {
-    left = right = 0;
-    auto i = cols_.find(xx);
-
-    if (i != cols_.end()) {
-        left = i->second.left_;
-        right = i->second.right_;
-    }
-}
-
-void Table_impl::get_row_margin(int yy, unsigned & top, unsigned & bottom) const {
-    top = bottom = 0;
-    auto i = rows_.find(yy);
-
-    if (i != rows_.end()) {
-        top = i->second.top_;
-        bottom = i->second.bottom_;
+    for (int yy = hol.ymin_; yy < hol.ymax_; ++yy) {
+        auto i = rows_.find(yy);
+        if (!hol.wp_->hidden()) { change_visibility(i->second, false, hol.ysh_); }
+        unref(i);
     }
 }
 
@@ -1223,7 +1227,7 @@ void Table_impl::respan(Widget_impl * wp, int x, int y, unsigned xspan, unsigned
             i->second.xsh_ = xsh;
             i->second.ysh_ = ysh;
             dist_holder(i->second);
-            rearrange();
+            rearrange1();
         }
     }
 }
@@ -1286,8 +1290,13 @@ void Table_impl::set_column_width(int xx, unsigned usize) {
 
     if (i != cols_.end()) {
         if (i->second.usize_ != usize) {
-            i->second.usize_ = usize;
-            if (i->second.w_ != usize) { rearrange(); }
+            std::swap(i->second.usize_, usize);
+
+            if (i->second.visible_) {
+                if (0 != usize) { ++nucol_; }
+                else if (0 == i->second.usize_ && nucol_) { --nucol_; }
+                if (i->second.w_ != i->second.usize_) { rearrange2(); }
+            }
         }
     }
 
@@ -1307,8 +1316,13 @@ void Table_impl::set_row_height(int yy, unsigned usize) {
 
     if (i != rows_.end()) {
         if (i->second.usize_ != usize) {
-            i->second.usize_ = usize;
-            if (i->second.h_ != usize) { rearrange(); }
+            std::swap(i->second.usize_, usize);
+
+            if (i->second.visible_) {
+                if (0 != usize) { ++nurow_; }
+                else if (0 == i->second.usize_ && nurow_) { --nurow_; }
+                if (i->second.h_ != i->second.usize_) { rearrange2(); }
+            }
         }
     }
 
@@ -1329,7 +1343,7 @@ void Table_impl::set_min_column_width(int xx, unsigned umin) {
     if (i != cols_.end()) {
         if (i->second.umin_ != umin) {
             i->second.umin_ = umin;
-            if (0 == umin || i->second.w_ < umin) { rearrange(); }
+            if (0 == umin || i->second.w_ < umin) { rearrange2(); }
         }
     }
 
@@ -1350,7 +1364,7 @@ void Table_impl::set_min_row_height(int yy, unsigned umin) {
     if (i != rows_.end()) {
         if (i->second.umin_ != umin) {
             i->second.umin_ = umin;
-            if (0 == umin || i->second.h_ < umin) { rearrange(); }
+            if (0 == umin || i->second.h_ < umin) { rearrange2(); }
         }
     }
 
@@ -1371,7 +1385,7 @@ void Table_impl::set_max_column_width(int xx, unsigned umax) {
     if (i != cols_.end()) {
         if (i->second.umax_ != umax) {
             i->second.umax_ = umax;
-            if (0 == umax || i->second.w_ > umax) { rearrange(); }
+            if (0 == umax || i->second.w_ > umax) { rearrange2(); }
         }
     }
 
@@ -1392,7 +1406,7 @@ void Table_impl::set_max_row_height(int yy, unsigned umax) {
     if (i != rows_.end()) {
         if (i->second.umax_ != umax) {
             i->second.umax_ = umax;
-            if (0 == umax || i->second.h_ > umax) { rearrange(); }
+            if (0 == umax || i->second.h_ > umax) { rearrange2(); }
         }
     }
 
@@ -1452,8 +1466,8 @@ void Table_impl::insert_columns(int xmin, unsigned n_columns) {
                     auto j = cols_.find(xx);
 
                     if (j != cols_.end()) {
-                        if (!i->second.wp_->hidden()) { change_visibility(j->second, false); }
-                        unref_col(j);
+                        if (!i->second.wp_->hidden()) { change_visibility(j->second, false, i->second.xsh_); }
+                        unref(j);
                     }
                 }
             }
@@ -1482,10 +1496,10 @@ void Table_impl::insert_columns(int xmin, unsigned n_columns) {
     // Remove columns.
     {
         auto e = cols_.find(xmax);
-        for (auto i = cols_.find(xmin); i != e; ++i) { erase_col(i); }
+        for (auto i = cols_.find(xmin); i != e; ++i) { erase(i); }
     }
 exit:
-    rearrange();
+    rearrange1();
 }
 
 void Table_impl::insert_rows(int ymin, unsigned n_rows) {
@@ -1533,8 +1547,8 @@ void Table_impl::insert_rows(int ymin, unsigned n_rows) {
                     auto j = rows_.find(yy);
 
                     if (j != rows_.end()) {
-                        if (!i->second.wp_->hidden()) { change_visibility(j->second, false); }
-                        unref_row(j);
+                        if (!i->second.wp_->hidden()) { change_visibility(j->second, false, i->second.ysh_); }
+                        unref(j);
                     }
                 }
             }
@@ -1563,10 +1577,10 @@ void Table_impl::insert_rows(int ymin, unsigned n_rows) {
     // Remove rows.
     {
         auto e = rows_.find(ymax);
-        for (auto i = rows_.find(ymin); i != e; ++i) { erase_row(i); }
+        for (auto i = rows_.find(ymin); i != e; ++i) { erase(i); }
     }
 exit:
-    rearrange();
+    rearrange1();
 }
 
 void Table_impl::remove_columns(int xmin, unsigned n_columns) {
@@ -1585,8 +1599,8 @@ void Table_impl::remove_columns(int xmin, unsigned n_columns) {
                     auto j = cols_.find(xx);
 
                     if (j != cols_.end()) {
-                        if (!i->second.wp_->hidden()) { change_visibility(j->second, false); }
-                        unref_col(j);
+                        if (!i->second.wp_->hidden()) { change_visibility(j->second, false, i->second.xsh_); }
+                        unref(j);
                     }
                 }
             }
@@ -1623,10 +1637,10 @@ void Table_impl::remove_columns(int xmin, unsigned n_columns) {
     // Remove columns.
     {
         auto e = cols_.find(last);
-        for (auto i = cols_.find(last-n_columns+1); i != e; ++i) { erase_col(i); }
+        for (auto i = cols_.find(last-n_columns+1); i != e; ++i) { erase(i); }
     }
 exit:
-    rearrange();
+    rearrange1();
 }
 
 void Table_impl::remove_rows(int ymin, unsigned n_rows) {
@@ -1645,8 +1659,8 @@ void Table_impl::remove_rows(int ymin, unsigned n_rows) {
                     auto j = rows_.find(yy);
 
                     if (j != rows_.end()) {
-                        if (!i->second.wp_->hidden()) { change_visibility(j->second, false); }
-                        unref_row(j);
+                        if (!i->second.wp_->hidden()) { change_visibility(j->second, false, i->second.ysh_); }
+                        unref(j);
                     }
                 }
             }
@@ -1683,10 +1697,10 @@ void Table_impl::remove_rows(int ymin, unsigned n_rows) {
     // Remove rows.
     {
         auto e = rows_.find(last);
-        for (auto i = rows_.find(last-n_rows+1); i != e; ++i) { erase_row(i); }
+        for (auto i = rows_.find(last-n_rows+1); i != e; ++i) { erase(i); }
     }
 exit:
-    rearrange();
+    rearrange1();
 }
 
 void Table_impl::select(int xmin, int ymin, unsigned xspan, unsigned yspan) {

@@ -91,7 +91,13 @@ public:
     void clear();
 
     /// Roll to specified position.
+    /// @overload roll_to(int pos)
     void roll_to(int pos);
+
+    /// Roll to specified child widget.
+    /// @since 0.4.0
+    /// @overload roll_to(Widget & w)
+    void roll_to(Widget & w);
 
     /// Get current offset.
     int offset() const;

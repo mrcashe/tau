@@ -78,7 +78,7 @@ protected:
     using Filmc = std::vector<Film_cframe>;
     using Film = std::vector<Film_frame>;
 
-    Filmc       filmc_;
+    Filmc       cfilm_;
     Film        film_;
     bool        transparent_ = false;
     ustring     pixmap_name_;

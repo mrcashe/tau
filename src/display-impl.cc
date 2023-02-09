@@ -109,8 +109,7 @@ void Display_impl::add_window(Window_ptr wip) {
     wii->signal_disable().connect(tau::bind(fun(this, &Display_impl::on_window_sensitivity), wii));
     Theme_impl::root()->init_window_style(wii->style());
     wii->handle_enable(true);
-    wii->signal_parent()();
-    wii->handle_display();
+    wii->handle_parent();
 }
 
 void Display_impl::remove_window(Window_impl * wii) {

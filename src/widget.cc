@@ -450,6 +450,10 @@ bool Widget::has_parent() const {
     return impl->has_parent();
 }
 
+bool Widget::has_parent(const Widget & w) const {
+    return impl->has_parent(static_cast<const Container_impl *>(w.ptr().get()));
+}
+
 bool Widget::has_window() const {
     return impl->has_window();
 }

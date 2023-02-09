@@ -133,6 +133,7 @@ private:
     RECT                keep_rect_;
     unsigned            keep_style_ = 0;
     bool                tme_ = false;  // TrackMouseEvent() called.
+    bool                display_handled_ = false;
     bool                want_fullscreen_ = false;
     bool                want_maximize_ = false;
     bool                want_minimize_ = false;

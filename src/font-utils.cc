@@ -129,7 +129,9 @@ ustring font_family_from_spec(const ustring & spec) {
 
 ustring font_spec_build(const std::vector<ustring> & specv) {
     double pts = font_size_from_spec(specv);
-    return font_family_from_spec(specv)+" "+font_face_from_spec(specv)+(pts >= 0.0 ? str_format(' ', pts) : "");
+    ustring face = font_face_from_spec(specv);
+    if (str_similar(face, faces_[0])) { face.clear(); }
+    return font_family_from_spec(specv)+" "+face+(pts >= 0.0 ? str_format(' ', pts) : "");
 }
 
 ustring font_spec_build(const ustring & family, const ustring & face, double pt) {

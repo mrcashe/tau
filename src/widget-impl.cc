@@ -1125,6 +1125,16 @@ bool Widget_impl::has_parent() const {
     return nullptr != parent_;
 }
 
+bool Widget_impl::has_parent(const Container_impl * ci) const {
+    for (auto cp = parent_; cp; cp = cp->parent()) {
+        if (cp == ci) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 bool Widget_impl::scrollable() const {
     return nullptr != scroller_;
 }

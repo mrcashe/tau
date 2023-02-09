@@ -107,6 +107,22 @@ void Roller_impl::roll_to(int pos) {
     }
 }
 
+void Roller_impl::roll_to(Widget_impl * wp) {
+    if (wp && !wp->hidden() && wp->has_parent(scroller_.get())) {
+        Rect pva(wp->to_parent(scroller_.get()), wp->size());
+
+        if (horizontal()) {
+            if (pva.right() > offset()+scroller_->size().width()) { roll_to(pva.right()-scroller_->size().width()); }
+            else if (pva.left() < offset()) { roll_to(pva.left()); }
+        }
+
+        else {
+            if (pva.bottom() > offset()+scroller_->size().height()) { roll_to(pva.bottom()-scroller_->size().height()); }
+            else if (pva.top() < offset()) { roll_to(pva.top()); }
+        }
+    }
+}
+
 void Roller_impl::update_roll() {
     if (rmax_) {
         Size max = scroller_->logical_size()-scroller_->size();

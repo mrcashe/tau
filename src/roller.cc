@@ -64,6 +64,10 @@ void Roller::roll_to(int pos) {
     ROLLER_IMPL->roll_to(pos);
 }
 
+void Roller::roll_to(Widget & w) {
+    ROLLER_IMPL->roll_to(w.ptr().get());
+}
+
 int Roller::offset() const {
     return ROLLER_IMPL->offset();
 }

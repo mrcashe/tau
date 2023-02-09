@@ -147,6 +147,7 @@ Window_ptr Menubox_impl::popup(Window_impl * root, Widget_ptr self, const Point 
             pmenu_ = pmenu;
             auto wip = dp->create_popup(dp, root, origin, gravity);
             wip->insert(self);
+            wip->style().unset(STYLE_BACKGROUND);
             wip->style().redirect(STYLE_MENU_BACKGROUND, STYLE_BACKGROUND);
             wip->signal_mouse_down().connect(fun(this, &Menubox_impl::on_popup_mouse_down), true);
             signal_quit_.connect(fun(wip, &Window_impl::close));

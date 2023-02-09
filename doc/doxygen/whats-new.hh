@@ -30,7 +30,7 @@ namespace tau {
 
 @page whats_new Whats New in 0.4.0
 
-@section new_widget_assignments New Widget assignment operators
+@section new_widget_assignments_040 New Widget assignment operators
 
 - Absolute::operator=(Widget_ptr wp)
 - Bin::operator=(Widget_ptr wp)
@@ -74,7 +74,23 @@ namespace tau {
 - Twins::operator=(Widget_ptr wp)
 - Widget::operator=(Widget_ptr wp)
 
-@section new_keyfile_methods New Key_file methods
+@section new_widget_methods_040 New Widget methods
+
+- Widget::has_parent(const Widget & w) const
+
+@section new_table_methods_040 New Table methods
+
+- Table::set_spacing(unsigned spacing)
+
+@section new_roller_methods_040 New Roller methods
+
+- Roller::roll_to(Widget & w)
+
+@section new_style_methods_040 New Style methods
+
+- Style::signal_changed()
+
+@section new_keyfile_methods_040 New Key_file methods
 
 - Key_file::flush()
 - Key_file::changed()
@@ -100,17 +116,17 @@ namespace tau {
 - Key_file::key_name(const ustring & similar_name) const
 - Key_file::remove_key(const ustring & key_name, bool similar)
 
-@section new_color_methods New Color methods
+@section new_color_methods_040 New Color methods
 
 - Color::alpha_blend()
 - Color::alpha_blended()
 
-@section new_buffer_citer_methods New Buffer_citer methods
+@section new_buffer_citer_methods_040 New Buffer_citer methods
 
 - Buffer_citer::length()
 - Buffer_citer::move_to(Buffer_citer other)
 
-@section new_icons New constant access strings with standard icon names
+@section new_icons_040 New constant access strings with standard icon names
 
 - @link ICON_DOCUMENT_NEW                 @endlink
 - @link ICON_DOCUMENT_OPEN_RECENT         @endlink

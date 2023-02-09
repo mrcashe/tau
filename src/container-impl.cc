@@ -653,9 +653,9 @@ void Container_impl::show_cursor_up() {
 }
 
 void Container_impl::sync_arrange() {
-    if (visible()) {
+    if (!shut_ && visible()) {
         if (arrange_) { arrange_ = false; signal_arrange_(); }
-        for (auto ci: containers_) { ci->sync_arrange(); }
+        if (!arrange_) { for (auto ci: containers_) { ci->sync_arrange(); } }
     }
 }
 
@@ -665,8 +665,10 @@ void Container_impl::queue_arrange_up() {
 }
 
 void Container_impl::queue_arrange() {
-    arrange_ = true;
-    queue_arrange_up();
+    if (!shut_) {
+        arrange_ = true;
+        queue_arrange_up();
+    }
 }
 
 void Container_impl::on_visible() {

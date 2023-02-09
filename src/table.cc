@@ -80,6 +80,10 @@ void Table::set_spacing(unsigned xspacing, unsigned yspacing) {
     TABLE_IMPL->set_spacing(xspacing, yspacing);
 }
 
+void Table::set_spacing(unsigned spacing) {
+    TABLE_IMPL->set_spacing(spacing);
+}
+
 unsigned Table::column_spacing() const {
     return TABLE_IMPL->column_spacing();
 }

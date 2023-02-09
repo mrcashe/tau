@@ -73,21 +73,22 @@ void Image_impl::init() {
 }
 
 void Image_impl::clear() {
-    filmc_.clear();
+    cfilm_.clear();
+    film_.clear();
     cur_ = 0;
-    invalidate();
+    redraw();
 }
 
 void Image_impl::add_pixmap(Pixmap_cptr pix, unsigned delay) {
     if (pix) {
-        filmc_.emplace_back();
-        auto & ff = filmc_.back();
+        cfilm_.emplace_back();
+        auto & ff = cfilm_.back();
         ff.pix = pix;
         ff.delay = delay;
         Size sz;
-        for (auto & f: filmc_) { sz |= f.pix->size(); }
+        for (auto & f: cfilm_) { sz |= f.pix->size(); }
         require_size(sz);
-        invalidate();
+        redraw();
         start_timer_if_needed();
     }
 }
@@ -102,7 +103,7 @@ void Image_impl::add_pixmap(Pixmap_ptr pix, unsigned delay) {
         Size sz;
         for (auto & f: film_) { sz |= f.pix->size(); }
         require_size(sz);
-        invalidate();
+        redraw();
         start_timer_if_needed();
     }
 }
@@ -130,17 +131,20 @@ void Image_impl::reset_gray() {
 }
 
 void Image_impl::create_gray() {
-    if (!shut_ && !gray_ && !filmc_.empty()) {
-        auto orig = filmc_.front().pix;
+    if (!shut_ && !gray_ && (!cfilm_.empty() || !film_.empty())) {
+        Pixmap_cptr orig = !cfilm_.empty() ? cfilm_.front().pix : film_.front().pix;
 
         if (32 == orig->depth() && transparent_) {
             gray_ = Pixmap_impl::create(32, orig->size());
+            Color white(1.0, 1.0, 1.0, 0.33);
 
             for (int y = 0; y < orig->size().iheight(); ++y) {
                 for (int x = 0; x < orig->size().iwidth(); ++x) {
-                    uint32_t px = orig->get_pixel(Point(x, y)).argb32();
-                    Color c = 0 == px >> 24 ? Color::from_argb32(0) : Color::from_gray(Color::from_argb32(px).gray());
-                    gray_->put_pixel(Point(x, y), c);
+                    Color c = orig->get_pixel(Point(x, y));
+                    double a = c.alpha();
+                    if (a > 0) { c.alpha_blend(white); }
+                    double g = c.gray();
+                    gray_->put_pixel(Point(x, y), Color(g, g, g, a));
                 }
             }
         }
@@ -152,7 +156,7 @@ void Image_impl::create_gray() {
 }
 
 void Image_impl::on_display() {
-    if (filmc_.empty() && !pixmap_name_.empty()) {
+    if (cfilm_.empty() && !pixmap_name_.empty()) {
         if (auto pix = Theme_impl::root()->find_pixmap(pixmap_name_)) {
             set_pixmap(pix, transparent_);
         }
@@ -160,29 +164,40 @@ void Image_impl::on_display() {
 }
 
 void Image_impl::on_enable() {
-    if (!shut_ && !filmc_.empty() && gray_) {
-        // if (auto dp = display()) {
-        //     if (auto loop = dp->loop()) {
-        //         gray_cx_ = loop->signal_alarm(73869).connect(fun(this, &Image_impl::reset_gray));
-        //     }
-        // }
+    if (!shut_ && gray_ && !gray_cx_.empty() && (!cfilm_.empty() || !film_.empty())) {
+        if (auto dp = display()) {
+            if (auto loop = dp->loop()) {
+                gray_cx_ = loop->signal_alarm(73054).connect(fun(this, &Image_impl::reset_gray));
+            }
+        }
 
-        invalidate();
+        redraw();
     }
 }
 
 void Image_impl::on_disable() {
     gray_cx_.drop();
-
-    if (!filmc_.empty()) {
-        create_gray();
-        invalidate();
-    }
+    if (!cfilm_.empty() || !film_.empty()) { create_gray(); redraw(); }
 }
 
 void Image_impl::on_timer() {
-    if (filmc_.size() > 1) {
-        if (++cur_ >= filmc_.size()) { cur_ = 0; }
+    std::size_t cur = cur_;
+
+    if (!cfilm_.empty()) {
+        if (cfilm_.size() > 1) {
+            if (++cur_ >= cfilm_.size()) {
+                cur_ = 0;
+            }
+        }
+    }
+
+    else if (film_.size() > 1) {
+        if (++cur_ >= film_.size()) {
+            cur_ = 0;
+        }
+    }
+
+    if (cur != cur_) {
         timer_.start(calc_delay());
         redraw();
     }
@@ -203,7 +218,7 @@ void Image_impl::redraw() {
 void Image_impl::on_pix_changed(std::size_t index) {
     if (index < film_.size() && cur_ == index) {
         gray_.reset();
-        invalidate();
+        redraw();
     }
 }
 
@@ -219,7 +234,7 @@ void Image_impl::paint_pixmap(Painter pr) {
     Pixmap_cptr pix = nullptr;
     if (!enabled()) { pix = gray_; }
     else if (!film_.empty() && cur_ < film_.size()) { pix = film_[cur_].pix; }
-    else if (!filmc_.empty() && cur_ < filmc_.size()) { pix = filmc_[cur_].pix; }
+    else if (!cfilm_.empty() && cur_ < cfilm_.size()) { pix = cfilm_[cur_].pix; }
 
     if (pix) {
         auto pri = strip(pr);
@@ -246,14 +261,27 @@ void Image_impl::set_delay(unsigned delay) {
 }
 
 void Image_impl::start_timer_if_needed() {
-    if (filmc_.size() > 1) {
+    if (!cfilm_.empty()) {
+        if (cfilm_.size() > 1) {
+            timer_.start(calc_delay());
+        }
+    }
+
+    else if (film_.size() > 1) {
         timer_.start(calc_delay());
     }
 }
 
 unsigned Image_impl::calc_delay() const {
-    if (cur_ < filmc_.size()) {
-        auto & ff = filmc_[cur_];
+    if (!cfilm_.empty()) {
+        if (cur_ < cfilm_.size()) {
+            auto & ff = cfilm_[cur_];
+            if (0 != ff.delay) { return ff.delay; }
+        }
+    }
+
+    if (cur_ < film_.size()) {
+        auto & ff = film_[cur_];
         if (0 != ff.delay) { return ff.delay; }
     }
 
@@ -267,21 +295,21 @@ unsigned Image_impl::calc_delay() const {
 void Image_impl::set_transparent() {
     if (!transparent_) {
         transparent_ = true;
-        invalidate();
+        redraw();
     }
 }
 
 void Image_impl::unset_transparent() {
     if (transparent_) {
         transparent_ = false;
-        invalidate();
+        redraw();
     }
 }
 
 void Image_impl::set_oper(Oper op) {
     if (oper_ != op) {
         oper_ = op;
-        invalidate();
+        redraw();
     }
 }
 

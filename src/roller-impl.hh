@@ -43,6 +43,7 @@ public:
     void insert(Widget_ptr wp);
     void clear();
     void roll_to(int pos);
+    void roll_to(Widget_impl * wp);
     int  offset() const;
     void set_step(int step);
     int  step() const;

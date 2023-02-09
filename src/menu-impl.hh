@@ -94,8 +94,10 @@ protected:
     Menu_ptr            submenu_;
     Menu_item_ptr       current_item_;
     Menu_item_impl *    marked_item_ = nullptr;
-    Action              enter_action_ { "Enter", fun(this, &Menu_impl::activate_current) };
-    Action              cancel_action_ { "Escape", fun(this, &Menu_impl::cancel) };
+    Action              enter_action_ { KC_ENTER, KM_NONE, fun(this, &Menu_impl::activate_current) };
+    Action              cancel_action_ { "Escape Cancel", fun(this, &Menu_impl::cancel) };
+    Action              home_action_ { KC_HOME, KM_NONE, fun(this, &Menu_impl::on_home) };
+    Action              end_action_ { KC_END, KM_NONE, fun(this, &Menu_impl::on_end) };
     signal<void()>      signal_quit_;
 
 protected:
@@ -127,6 +129,8 @@ private:
     void mark();
     void unmark();
     void step_scroller(bool increase);
+    void on_home();
+    void on_end();
 };
 
 // ----------------------------------------------------------------------------

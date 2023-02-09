@@ -133,7 +133,14 @@ public:
     /// Set column and row spacing.
     /// @param xspacing the spacing in pixels along X axis.
     /// @param yspacing the spacing in pixels along Y axis.
+    /// @overload set_spacing(unsigned xspacing, unsigned yspacing)
     void set_spacing(unsigned xspacing, unsigned yspacing);
+
+    /// Set column and row spacing.
+    /// @param spacing the spacing in pixels along both X and Y axes.
+    /// @since 0.4.0
+    /// @overload set_spacing(unsigned spacing)
+    void set_spacing(unsigned spacing);
 
     /// Get column (along X axis) spacing in pixels.
     /// @return column spacing in pixels.

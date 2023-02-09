@@ -39,7 +39,7 @@
 namespace tau {
 
 Slider_impl::Slider_impl():
-    Box_impl(OR_RIGHT, 2),
+    Box_impl(OR_RIGHT),
     orient_auto_(true),
     autohide_(false)
 {
@@ -47,7 +47,7 @@ Slider_impl::Slider_impl():
 }
 
 Slider_impl::Slider_impl(Orientation orient, bool autohide):
-    Box_impl(orient, 2),
+    Box_impl(orient),
     orient_auto_(false),
     autohide_(autohide)
 {
@@ -55,7 +55,7 @@ Slider_impl::Slider_impl(Orientation orient, bool autohide):
 }
 
 Slider_impl::Slider_impl(Scroller_ptr scroller):
-    Box_impl(OR_EAST, 2),
+    Box_impl(OR_EAST),
     orient_auto_(true),
     autohide_(false),
     scroller_(scroller)
@@ -64,7 +64,7 @@ Slider_impl::Slider_impl(Scroller_ptr scroller):
 }
 
 Slider_impl::Slider_impl(Scroller_ptr scroller, Orientation orient, bool autohide):
-    Box_impl(orient, 2),
+    Box_impl(orient),
     orient_auto_(false),
     autohide_(autohide),
     scroller_(scroller)
@@ -96,7 +96,7 @@ void Slider_impl::init() {
 
     start_->signal_click().connect(fun(this, &Slider_impl::on_start_click));
     end_->signal_click().connect(fun(this, &Slider_impl::on_end_click));
-    style().get(STYLE_SLIDER_FOREGROUND).signal_changed().connect(fun(this, &Slider_impl::paint_now));
+    style().signal_changed(STYLE_SLIDER_FOREGROUND).connect(fun(this, &Slider_impl::paint_now));
     area_->style().redirect(STYLE_SLIDER_BACKGROUND, STYLE_BACKGROUND);
     signal_size_changed().connect(fun(this, &Slider_impl::on_size_changed));
     signal_orientation_changed().connect(fun(this, &Slider_impl::update_arrows));
@@ -351,49 +351,47 @@ bool Slider_impl::on_area_mouse_wheel(int delta, int mm, const Point & where) {
 // Here is painter from area_ child.
 void Slider_impl::draw_slider(Painter pr, bool erase_bkgnd) {
     if (Size sz = area_->size()) {
-        int x, y, w, h;
+        int x1, y1, x2, y2, smin = 5;
 
         if (erase_bkgnd) {
             Color c = area_->style().color(STYLE_BACKGROUND);
-            Rect va = area_->visible_area();
-            pr.rectangle(va.left(), va.top(), va.right(), va.bottom());
             pr.set_brush(Brush(c));
-            pr.fill();
+            pr.paint();
         }
 
         if (horizontal()) {
             int rng = range_*sz.width();
+            rng = std::max(rng, smin);
             int xmax = sz.width()-rng;
             int x0 = loc_*sz.width();
-            x = std::min(x0, xmax);
-            y = 0;
-            w = std::max(5, rng);
-            h = sz.height()-1;
+            x1 = std::min(x0, xmax);
+            y1 = 0;
+            x2 = x1+rng;
+            y2 = y1+sz.height()-1;
         }
 
         else {
             int rng = range_*sz.height();
+            rng = std::max(rng, smin);
             int ymax = sz.height()-rng;
             int y0 = loc_*sz.height();
-            x = 0;
-            y = std::min(y0, ymax);
-            w = sz.width()-1;
-            h = std::max(5, rng);
+            x1 = 0;
+            y1 = std::min(y0, ymax);
+            x2 = x1+sz.width()-1;
+            y2 = y1+rng;
         }
 
-        if (w > 0 && h > 0) {
-            Color c = area_->style().color(STYLE_SLIDER_FOREGROUND);
-            if (press_) { c.darker(0.1); }
-            else if (mouse_on_slider_) { c.lighter(0.1); }
+        Color c = area_->style().color(STYLE_SLIDER_FOREGROUND);
+        if (press_) { c.darker(0.1); }
+        else if (mouse_on_slider_) { c.lighter(0.1); }
 
-            pr.rectangle(x, y, x+w-1, y+h-1);
-            pr.set_brush(Brush(c));
-            pr.fill_preserve();
+        pr.rectangle(x1, y1, x2, y2);
+        pr.set_brush(Brush(c));
+        pr.fill_preserve();
 
-            c.darker(0.15);
-            pr.set_pen(Pen(c));
-            pr.stroke();
-        }
+        c.darker(0.15);
+        pr.set_pen(Pen(c));
+        pr.stroke();
     }
 }
 

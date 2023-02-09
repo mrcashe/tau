@@ -105,7 +105,7 @@ Icon_impl::Icon_impl(Action_base & action, int icon_size, Action_items items):
 }
 
 void Icon_impl::on_display() {
-    if (filmc_.empty() && !icon_name_.empty()) {
+    if (cfilm_.empty() && !icon_name_.empty()) {
         Theme_impl::root()->signal_icons_changed().connect(fun(this, &Icon_impl::update_pixmap));
         update_pixmap();
     }

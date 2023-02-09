@@ -292,7 +292,7 @@ struct Main: tau::Toplevel {
             table.put(label, 0, row, 1, 1);
             progress_.set_format("%$%% complete");
             progress_.set_precision(1);
-            progress_.style().font("font").add_face("Bold");
+            progress_.style().font(tau::STYLE_FONT).add_face("Bold");
             progress_.set_border_style(tau::BORDER_SOLID);
             table.put(progress_, 1, row, 7, 1, false, true);
         }
@@ -305,17 +305,16 @@ struct Main: tau::Toplevel {
         color_widgets_.resize(color_names_.size());
         tau::Table table;
         color_cont_ = table;
-        table.set_column_spacing(6);
-        table.set_row_spacing(5);
+        table.set_spacing(6, 5);
         tau::Scroller scroller;
         scroller.insert(table);
         scroller.hint_margin(3, 3, 4, 4);
-        tau::Slider slider(scroller);
         tau::Box box(tau::OR_RIGHT, 2);
         tau::Text label(pages_[pg].title);
-        label.set_tooltip("This page shows\nnamed colors");
+        label.set_tooltip("This page shows\ncolor boxes");
         int page = notebook_.append_page(box, label);
         box.append(scroller);
+        tau::Slider slider(scroller);
         box.append(slider, true);
         std::size_t row = 0;
 

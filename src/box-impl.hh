@@ -37,7 +37,7 @@ class Box_impl: public Container_impl {
 public:
 
     explicit Box_impl(Orientation orient, unsigned spacing=0);
-   ~Box_impl() { signal_destroy_(); }
+   ~Box_impl();
 
     Align align() const { return align_; }
     void set_align(Align align);
@@ -88,18 +88,14 @@ public:
     Action & focus_previous_action() { return prev_action_; }
     const Action & focus_previous_action() const { return prev_action_; }
 
-    signal<void()> & signal_orientation_changed() { return signal_orientation_changed_; }
+    signal<void()> & signal_orientation_changed();
 
 private:
 
     struct Holder {
-        Widget_impl *   wp;
-        bool            sh = false;
-        Size            req;
-        connection      hints_cx { true };
-        connection      req_cx { true };
-        connection      show_cx { true };
-        connection      hide_cx { true };
+        Widget_impl *   wp_;
+        bool            sh_ = false;
+        Size            req_;
     };
 
     std::list<Holder>   holders_;
@@ -115,9 +111,9 @@ private:
 
     unsigned            nvisible_ = 0;  // Visible widgets count.
     unsigned            nsh_ = 0;       // Shrunk widget count.
-    unsigned            pbusy_ = 0;     // Sum spaces, shrunk requisitions and margins.
+    unsigned            req_ = 0;       // Sum of spaces, shrunk requisitions and margins.
 
-    signal<void()>      signal_orientation_changed_;
+    signal<void()> *    signal_orientation_changed_ = nullptr;
 
 private:
 

@@ -42,12 +42,41 @@ public:
    ~Table_impl();
 
     void put(Widget_ptr wp, int x, int y, unsigned xspan=1, unsigned yspan=1, bool xsh=false, bool ysh=false);
+    void remove(Widget_impl * wp);
+    void remove(int xmin, int ymin, int xmax, int ymax);
+
+    // Overriden by List_impl.
+    // Overriden by List_text_impl.
+    virtual void clear();
+
+    void respan(Widget_impl * wp, int x, int y, unsigned xspan, unsigned yspan);
+    void respan(Widget_impl * wp, int x, int y, unsigned xspan, unsigned yspan, bool xsh, bool ysh);
+    std::vector<Widget_impl *> children_within_range(int xmin, int ymin, int xmax, int ymax);
 
     void set_column_spacing(unsigned xspacing);
     void set_row_spacing(unsigned yspacing);
     void set_spacing(unsigned xspacing, unsigned yspacing);
+    void set_spacing(unsigned spacing);
     unsigned column_spacing() const { return xspacing_; }
     unsigned row_spacing() const { return yspacing_; }
+
+    void set_column_margin(int x, unsigned left, unsigned right);
+    void set_row_margin(int y, unsigned top, unsigned bottom);
+    void set_columns_margin(unsigned left, unsigned right);
+    void set_rows_margin(unsigned top, unsigned bottom);
+
+    void get_column_margin(int x, unsigned & left, unsigned & right) const;
+    void get_row_margin(int y, unsigned & top, unsigned & bottom) const;
+
+    void get_columns_margin(unsigned & left, unsigned & right) const {
+        left = columns_left_;
+        right = columns_right_;
+    }
+
+    void get_rows_margin(unsigned & top, unsigned & bottom) const {
+        top = rows_top_;
+        bottom = rows_bottom_;
+    }
 
     void align_columns(Align xalign);
     Align columns_align() const;
@@ -62,6 +91,16 @@ public:
     void align_row(int y, Align row_align);
     Align row_align(int y) const;
     void unalign_row(int y);
+
+    void align(Widget_impl * wp, Align xalign, Align yalign=ALIGN_CENTER);
+    void get_align(const Widget_impl * wp, Align & xalign, Align & yalign) const;
+    void unalign(Widget_impl * wp);
+
+    void insert_columns(int x, unsigned n_columns);
+    void insert_rows(int y, unsigned n_rows);
+
+    void remove_columns(int x, unsigned n_columns);
+    void remove_rows(int y, unsigned n_rows);
 
     void set_column_width(int column, unsigned width);
     unsigned column_width(int column) const;
@@ -81,34 +120,13 @@ public:
     void set_max_row_height(int row, unsigned height);
     unsigned max_row_height(int row) const;
 
-    void align(Widget_impl * wp, Align xalign, Align yalign=ALIGN_CENTER);
-    void get_align(const Widget_impl * wp, Align & xalign, Align & yalign) const;
-    void unalign(Widget_impl * wp);
-
     Span span() const;
+    Span span(const Widget_impl * wp) const;
     void get_column_span(int col, int & ymin, int & ymax);
     void get_row_span(int row, int & xmin, int & xmax);
     Rect bounds(int x, int y, unsigned xspan=1, unsigned yspan=1) const;
     void get_column_bounds(int col, int & xmin, int & xmax);
     void get_row_bounds(int row, int & ymin, int & ymax);
-
-    std::vector<Widget_impl *> children_within_range(int xmin, int ymin, int xmax, int ymax);
-    void remove(Widget_impl * wp);
-    void remove(int xmin, int ymin, int xmax, int ymax);
-
-    // Overriden by List_impl.
-    // Overriden by List_text_impl.
-    virtual void clear();
-
-    void respan(Widget_impl * wp, int x, int y, unsigned xspan, unsigned yspan);
-    void respan(Widget_impl * wp, int x, int y, unsigned xspan, unsigned yspan, bool xsh, bool ysh);
-    Table::Span span(const Widget_impl * wp) const;
-
-    void insert_columns(int x, unsigned n_columns);
-    void insert_rows(int y, unsigned n_rows);
-
-    void remove_columns(int x, unsigned n_columns);
-    void remove_rows(int y, unsigned n_rows);
 
     void select(int x, int y, unsigned xspan=1, unsigned yspan=1);
     void select_column(int nth_col);
@@ -124,25 +142,6 @@ public:
     void unmark_row(int y);
     void unmark_all();
     std::vector<Span> marks() const;
-
-    void set_column_margin(int x, unsigned left, unsigned right);
-    void get_column_margin(int x, unsigned & left, unsigned & right) const;
-
-    void set_row_margin(int y, unsigned top, unsigned bottom);
-    void get_row_margin(int y, unsigned & top, unsigned & bottom) const;
-
-    void set_columns_margin(unsigned left, unsigned right);
-    void set_rows_margin(unsigned top, unsigned bottom);
-
-    void get_columns_margin(unsigned & left, unsigned & right) const {
-        left = columns_left_;
-        right = columns_right_;
-    }
-
-    void get_rows_margin(unsigned & top, unsigned & bottom) const {
-        top = rows_top_;
-        bottom = rows_bottom_;
-    }
 
     int column_at_x(int x) const;
     int row_at_y(int y) const;
@@ -186,42 +185,38 @@ private:
 
     struct Col {
         int             x_ = 0;             // Origin.
-        int             ox_ = 0;            // Old origin.
-        unsigned        w_ = 0;             // Calculated width.
-        unsigned        ow_ = 0;            // Old width.
-        unsigned        left_ = 0;          // Left margin.
-        unsigned        right_ = 0;         // Right margin.
-        unsigned        usize_ = 0;         // User specified size.
+        unsigned        w_ = 0;             // Width.
+        unsigned        left_ = 0;          // User specified left margin.
+        unsigned        right_ = 0;         // User specified right margin.
+        unsigned        usize_ = 0;         // User specified exact size.
         unsigned        umin_ = 0;          // User specified minimal size.
         unsigned        umax_ = 0;          // User specified maximal size.
+        Align           xalign_;            // User specified align.
+        bool            align_set_ = false; // Align set by the user.
         unsigned        rmax_ = 0;          // Maximal requisition.
         unsigned        rmin_ = 0;          // Minimal requisition.
-        unsigned        ref_ = 0;           // Reference count (number of widgets within column).
+        unsigned        ref_ = 0;           // Widget count.
         unsigned        shrank_ = 0;        // Shrank widget count.
         unsigned        visible_ = 0;       // Visible widget count.
         unsigned        fill_ = 0;          // Widget count having ALIGN_FILL align set.
-        bool            align_set_ = false; // Align set by the user.
-        Align           xalign_;            // User specified align.
     };
 
     struct Row {
         int             y_ = 0;             // Origin.
-        int             oy_ = 0;            // Old origin.
-        unsigned        h_ = 0;             // Calculated height.
-        unsigned        oh_ = 0;            // Old height.
-        unsigned        top_ = 0;           // Top margin.
-        unsigned        bottom_ = 0;        // Bottom margin.
-        unsigned        usize_ = 0;         // User specified height.
-        unsigned        umin_ = 0;          // User specified minimal height.
-        unsigned        umax_ = 0;          // User specified maximal height.
+        unsigned        h_ = 0;             // Height.
+        unsigned        top_ = 0;           // User specified top margin.
+        unsigned        bottom_ = 0;        // User specified bottom margin.
+        unsigned        usize_ = 0;         // User specified exact size.
+        unsigned        umin_ = 0;          // User specified minimal size.
+        unsigned        umax_ = 0;          // User specified maximal size.
+        Align           yalign_;            // User specified align.
+        bool            align_set_ = false; // Align set by the user.
         unsigned        rmax_ = 0;          // Maximal requisition.
         unsigned        rmin_ = 0;          // Minimal requisition.
-        unsigned        ref_ = 0;           // Reference count (number of widgets within row).
+        unsigned        ref_ = 0;           // Widget count.
         unsigned        shrank_ = 0;        // Shrank widget count.
         unsigned        visible_ = 0;       // Visible widget count.
         unsigned        fill_ = 0;          // Widget count having ALIGN_FILL align set.
-        bool            align_set_ = false; // Align set by the user.
-        Align           yalign_;            // User specified align.
     };
 
     using Holders = std::map<Widget_impl *, Holder>;
@@ -248,17 +243,28 @@ private:
 
     unsigned            nvcol_ = 0;         // Current visible columns count.
     unsigned            nvrow_ = 0;         // Current visible rows count.
+    unsigned            nshcol_ = 0;        // Current shrank columns count.
+    unsigned            nshrow_ = 0;        // Current shrank rows count.
+    unsigned            nucol_ = 0;         // Current columns count having width set by user.
+    unsigned            nurow_ = 0;         // Current rows count having height set by user.
     unsigned            xspc_ = 0;          // Current X space value (calculated).
     unsigned            yspc_ = 0;          // Current Y space value (calculated).
+
+    unsigned            rucol_ = 0;         // Requisition of columns having width set by user.
+    unsigned            rshcol_ = 0;        // Shrank columns requisition.
+    unsigned            rurow_ = 0;         // Requisition of rows having width set by user.
+    unsigned            rshrow_ = 0;        // Shrank rows requisition.
 
     Span                sel_;
     Marks               marks_;
 
 private:
 
-    void update_all();
-    void rearrange();
-    void update_requisition();
+    void arrange();
+    void recalc();
+    void rearrange1();
+    void rearrange2();
+    bool update_requisition();
     void alloc_child(Holder & hol);
     void alloc_cols();
     void alloc_rows();
@@ -268,23 +274,23 @@ private:
     Row & new_row(int yy);
     Col & new_col(int xx, const Col & src);
     Row & new_row(int yy, const Row & src);
-    void erase_col(Col_iter & i);
-    void unref_col(Col_iter & i);
-    void erase_row(Row_iter & i);
-    void unref_row(Row_iter & i);
-    bool col_erasable(const Col & col) const;
-    bool row_erasable(const Row & row) const;
-    void change_visibility(Col & col, bool show);
-    void change_visibility(Row & row, bool show);
+    void erase(Col_iter & i);
+    void unref(Col_iter & i);
+    void erase(Row_iter & i);
+    void unref(Row_iter & i);
+    bool erasable(const Col & col) const;
+    bool erasable(const Row & row) const;
+    void change_visibility(Col & col, bool show, bool shrank);
+    void change_visibility(Row & row, bool show, bool shrank);
 
     void wipe_holder(Holder & hol);
     void dist_holder(Holder & hol);
+    bool set_column_spacing_i(unsigned xspacing);
+    bool set_row_spacing_i(unsigned yspacing);
     Rect range_bounds(const Span & rng) const;
 
-    void arrange();
-
     bool on_backpaint(Painter pr, const Rect & inval);
-    void on_child_requisition_changed(Widget_impl * wi);
+    void on_child_requisition(Widget_impl * wi);
     void on_child_show(Widget_impl * wi);
     void on_child_hide(Widget_impl * wi);
     bool on_take_focus();

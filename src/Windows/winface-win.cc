@@ -322,6 +322,7 @@ void Winface_win::handle_restore() {
 void Winface_win::handle_visibility(bool visible) {
     if (visible_ != visible) {
         visible_ = visible;
+        if (!display_handled_) { display_handled_ = true; self_->handle_display(); }
         self_->handle_visible(visible);
     }
 }

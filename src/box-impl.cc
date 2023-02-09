@@ -24,9 +24,8 @@
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ----------------------------------------------------------------------------
 
+#include <tau/theme.hh>
 #include <box-impl.hh>
-#include <theme-impl.hh>
-#include <climits>
 #include <iostream>
 
 namespace tau {
@@ -41,6 +40,10 @@ Box_impl::Box_impl(Orientation orient, unsigned spacing):
     signal_visible_.connect(fun(this, &Box_impl::arrange));
     signal_display_.connect(fun(this, &Box_impl::update_requisition));
     signal_take_focus_.connect(fun(this, &Box_impl::on_take_focus));
+    signal_child_requisition_.connect(fun(this, &Box_impl::on_child_requisition));
+    signal_child_hints_.connect(fun(this, &Box_impl::on_child_requisition));
+    signal_child_show_.connect(fun(this, &Box_impl::on_child_show));
+    signal_child_hide_.connect(fun(this, &Box_impl::on_child_hide));
 
     next_action_.set_master_action(ACTION_FOCUS_NEXT);
     prev_action_.set_master_action(ACTION_FOCUS_PREVIOUS);
@@ -49,47 +52,52 @@ Box_impl::Box_impl(Orientation orient, unsigned spacing):
     connect_action(prev_action_);
 }
 
+Box_impl::~Box_impl() {
+    signal_destroy_();
+    if (signal_orientation_changed_) { delete signal_orientation_changed_; }
+}
+
 void Box_impl::update_requisition() {
-    nvisible_ = nsh_ = pbusy_ = 0;
+    nvisible_ = nsh_ = req_ = 0;
     unsigned x = 0, y = 0;
 
     for (Holder & hol: holders_) {
-        if (!hol.wp->hidden()) {
+        if (!hol.wp_->hidden()) {
             ++nvisible_;
 
-            hol.req = hol.wp->required_size();
-            hol.req.update(hol.wp->size_hint(), true);
-            hol.req.update_max(hol.wp->min_size_hint());
-            hol.req.update_min(hol.wp->max_size_hint(), true);
-            Size mg(hol.wp->margin_hint());
+            hol.req_ = hol.wp_->required_size();
+            hol.req_.update(hol.wp_->size_hint(), true);
+            hol.req_.update_max(hol.wp_->min_size_hint());
+            hol.req_.update_min(hol.wp_->max_size_hint(), true);
+            Size mg(hol.wp_->margin_hint());
 
-            if (OR_RIGHT == orient_ || OR_LEFT == orient_) {
-                if (hol.sh) {
+            if (horizontal()) {
+                if (hol.sh_) {
                     ++nsh_;
-                    pbusy_ += hol.req.width();
+                    req_ += hol.req_.width();
                 }
 
-                x += hol.req.width()+mg.width();
-                pbusy_ += mg.width();
-                y = std::max(y, (hol.req.height()+mg.height()));
+                x += hol.req_.width()+mg.width();
+                req_ += mg.width();
+                y = std::max(y, (hol.req_.height()+mg.height()));
             }
 
             else {
-                if (hol.sh) {
+                if (hol.sh_) {
                     ++nsh_;
-                    pbusy_ += hol.req.height();
+                    req_ += hol.req_.height();
                 }
 
-                y += hol.req.height()+mg.height();
-                pbusy_ += mg.height();
-                x = std::max(x, (hol.req.width()+mg.width()));
+                y += hol.req_.height()+mg.height();
+                req_ += mg.height();
+                x = std::max(x, (hol.req_.width()+mg.width()));
             }
         }
     }
 
     unsigned nspace = nvisible_ > 1 ? spacing_*(nvisible_-1) : 0;
-    pbusy_ += nspace;
-    if (OR_RIGHT == orient_ || OR_LEFT == orient_) { x += nspace; }
+    req_ += nspace;
+    if (horizontal()) { x += nspace; }
     else { y += nspace; }
     require_size(x, y);
 }
@@ -100,11 +108,10 @@ void Box_impl::arrange() {
     Size  sz;
     unsigned rem = 0, nextra = nvisible_-nsh_;
     int avail;
-    bool changed;
 
-    if (OR_RIGHT == orient_ || OR_LEFT == orient_) {
+    if (horizontal()) {
         unsigned sw = size().width();
-        avail = sw > pbusy_ ? sw-pbusy_ : 0;
+        avail = sw > req_ ? sw-req_ : 0;
 
         if (nextra > 0) {
             rem = avail > 0 ? avail%nextra : 0;        // Calculate rem before nextra!
@@ -126,12 +133,12 @@ void Box_impl::arrange() {
         }
 
         for (Holder & hol: holders_) {
-            if (!hol.wp->hidden() && size().height()) {
-                Size mg = hol.wp->margin_hint();
+            if (!hol.wp_->hidden() && size().height()) {
+                Size mg = hol.wp_->margin_hint();
                 unsigned w;
 
-                if (hol.sh) {
-                    w = hol.req.width();
+                if (hol.sh_) {
+                    w = hol.req_.width();
                 }
 
                 else {
@@ -141,14 +148,14 @@ void Box_impl::arrange() {
                 }
 
                 origin.update((OR_RIGHT == orient_ ? x : x-w-mg.width()), 0);
-                origin.translate(hol.wp->margin_origin());
+                origin.translate(hol.wp_->margin_origin());
                 sz.update(w, size().height()-mg.height());
+                r.set(hol.wp_->origin(), hol.wp_->size());
 
-                changed = false;
-                r.set(hol.wp->origin(), hol.wp->size());
-                if (hol.wp->update_origin(origin)) { changed = true; }
-                if (hol.wp->update_size(sz)) { changed = true; }
-                if (changed) { inval.unite(r); inval.unite(Rect(origin, sz)); }
+                if (update_child_bounds(hol.wp_, origin, sz)) {
+                    inval.unite(r);
+                    inval.unite(Rect(origin, sz));
+                }
 
                 int d = spacing_+w+mg.width();
                 x += OR_RIGHT == orient_ ? d : -d;
@@ -158,7 +165,7 @@ void Box_impl::arrange() {
 
     else {
         unsigned sh = size().height();
-        avail = sh > pbusy_ ? sh-pbusy_ : 0;
+        avail = sh > req_ ? sh-req_ : 0;
 
         if (nextra > 0) {
             rem = avail > 0 ? avail%nextra : 0;        // Calculate rem before nextra!
@@ -180,12 +187,12 @@ void Box_impl::arrange() {
         }
 
         for (Holder & hol: holders_) {
-            if (!hol.wp->hidden() && size().width()) {
-                Size mg = hol.wp->margin_hint();
+            if (!hol.wp_->hidden() && size().width()) {
+                Size mg = hol.wp_->margin_hint();
                 unsigned h;
 
-                if (hol.sh) {
-                    h = hol.req.height();
+                if (hol.sh_) {
+                    h = hol.req_.height();
                 }
 
                 else {
@@ -195,13 +202,15 @@ void Box_impl::arrange() {
                 }
 
                 origin.update(0, (OR_DOWN == orient_ ? y : y-h-mg.height()));
-                origin.translate(hol.wp->margin_origin());
+                origin.translate(hol.wp_->margin_origin());
                 sz.update(size().width()-mg.width(), h);
-                r.set(hol.wp->origin(), hol.wp->size());
-                changed = false;
-                if (hol.wp->update_origin(origin)) { changed = true; }
-                if (hol.wp->update_size(sz)) { changed = true; }
-                if (changed) { inval.unite(r); inval.unite(Rect(origin, sz)); }
+                r.set(hol.wp_->origin(), hol.wp_->size());
+
+                if (update_child_bounds(hol.wp_, origin, sz)) {
+                    inval.unite(r);
+                    inval.unite(Rect(origin, sz));
+                }
+
                 int d = spacing_+h+mg.height();
                 y += OR_DOWN == orient_ ? d : -d;
             }
@@ -237,21 +246,17 @@ void Box_impl::on_child_show(Widget_impl * wi) {
 }
 
 void Box_impl::new_child(Holder & hol, Widget_ptr wp, bool shrink) {
-    make_child(wp);
     wp->update_origin(INT_MIN, INT_MIN);
     wp->update_size(0, 0);
-    hol.wp = wp.get();
-    hol.sh = shrink;
-    hol.hints_cx = wp->signal_hints_changed().connect(tau::bind(fun(this, &Box_impl::on_child_requisition), wp.get()));
-    hol.req_cx = wp->signal_requisition_changed().connect(tau::bind(fun(this, &Box_impl::on_child_requisition), wp.get()));
-    hol.show_cx = wp->signal_show().connect(tau::bind(fun(this, &Box_impl::on_child_show), wp.get()));
-    hol.hide_cx = wp->signal_hide().connect(tau::bind(fun(this, &Box_impl::on_child_hide), wp.get()));
+    hol.wp_ = wp.get();
+    hol.sh_ = shrink;
+    make_child(wp);
     update_requisition();
     queue_arrange();
 }
 
 void Box_impl::rm_child(Holder & hol) {
-    unparent_child(hol.wp);
+    unparent_child(hol.wp_);
     update_requisition();
     queue_arrange();
     invalidate();
@@ -276,7 +281,7 @@ void Box_impl::insert_before(Widget_ptr wp, const Widget_impl * other, bool shri
         auto i = holders_.begin();
 
         while (i != holders_.end()) {
-            if (other == i->wp) { break; }
+            if (other == i->wp_) { break; }
             ++i;
         }
 
@@ -289,7 +294,7 @@ void Box_impl::insert_after(Widget_ptr wp, const Widget_impl * other, bool shrin
         auto i = holders_.begin();
 
         while (i != holders_.end()) {
-            if (other == i->wp) { ++i; break; }
+            if (other == i->wp_) { ++i; break; }
             ++i;
         }
 
@@ -300,7 +305,7 @@ void Box_impl::insert_after(Widget_ptr wp, const Widget_impl * other, bool shrin
 void Box_impl::remove(Widget_impl * wp) {
     if (wp) {
         for (auto i = holders_.begin(); i != holders_.end(); ++i) {
-            if (wp == i->wp) {
+            if (wp == i->wp_) {
                 rm_child(*i);
                 holders_.erase(i);
                 break;
@@ -315,7 +320,7 @@ void Box_impl::remove_after(const Widget_impl * other) {
             auto i = holders_.begin();
 
             for (; i != holders_.end(); ++i) {
-                if (other == i->wp) {
+                if (other == i->wp_) {
                     break;
                 }
             }
@@ -338,7 +343,7 @@ void Box_impl::remove_before(const Widget_impl * other) {
             auto i = holders_.begin();
 
             for (; i != holders_.end(); ++i) {
-                if (other == i->wp) {
+                if (other == i->wp_) {
                     break;
                 }
             }
@@ -390,8 +395,8 @@ void Box_impl::set_align(Align align) {
 
 bool Box_impl::shrunk(const Widget_impl * wp) const {
     for (auto iter = holders_.begin(); iter != holders_.end(); ++iter) {
-        if (wp == iter->wp) {
-            return iter->sh;
+        if (wp == iter->wp_) {
+            return iter->sh_;
         }
     }
 
@@ -400,9 +405,9 @@ bool Box_impl::shrunk(const Widget_impl * wp) const {
 
 void Box_impl::shrink(Widget_impl * wp) {
     for (auto iter = holders_.begin(); iter != holders_.end(); ++iter) {
-        if (wp == iter->wp) {
-            if (!iter->sh) {
-                iter->sh = true;
+        if (wp == iter->wp_) {
+            if (!iter->sh_) {
+                iter->sh_ = true;
                 update_requisition();
                 queue_arrange();
             }
@@ -414,9 +419,9 @@ void Box_impl::shrink(Widget_impl * wp) {
 
 void Box_impl::expand(Widget_impl * wp) {
     for (auto iter = holders_.begin(); iter != holders_.end(); ++iter) {
-        if (wp == iter->wp) {
-            if (iter->sh) {
-                iter->sh = false;
+        if (wp == iter->wp_) {
+            if (iter->sh_) {
+                iter->sh_ = false;
                 update_requisition();
                 queue_arrange();
             }
@@ -430,8 +435,8 @@ void Box_impl::shrink_all() {
     bool changed = false;
 
     for (auto iter = holders_.begin(); iter != holders_.end(); ++iter) {
-        if (!iter->sh) {
-            iter->sh = true;
+        if (!iter->sh_) {
+            iter->sh_ = true;
             changed = true;
         }
     }
@@ -446,8 +451,8 @@ void Box_impl::expand_all() {
     bool changed = false;
 
     for (auto iter = holders_.begin(); iter != holders_.end(); ++iter) {
-        if (iter->sh) {
-            iter->sh = false;
+        if (iter->sh_) {
+            iter->sh_ = false;
             changed = true;
         }
     }
@@ -465,7 +470,7 @@ bool Box_impl::horizontal() const {
 void Box_impl::set_orientation(Orientation orient) {
     if (orient_ != orient) {
         orient_ = orient;
-        signal_orientation_changed_();
+        if (signal_orientation_changed_) { (*signal_orientation_changed_)(); }
         if (!empty()) { update_requisition(); queue_arrange(); }
     }
 }
@@ -483,11 +488,11 @@ bool Box_impl::on_take_focus() {
     }
 
     if (OR_EAST == orient_ || OR_SOUTH == orient_) {
-        auto i = std::find_if(holders_.begin(), holders_.end(), [](Holder & hol) { return hol.wp->take_focus(); } );
+        auto i = std::find_if(holders_.begin(), holders_.end(), [](Holder & hol) { return hol.wp_->take_focus(); } );
         return i != holders_.end() ? true : grab_focus();
     }
 
-    auto i = std::find_if(holders_.rbegin(), holders_.rend(), [](Holder & hol) { return hol.wp->take_focus(); } );
+    auto i = std::find_if(holders_.rbegin(), holders_.rend(), [](Holder & hol) { return hol.wp_->take_focus(); } );
     return i != holders_.rend() ? true : grab_focus();
 }
 
@@ -503,10 +508,10 @@ void Box_impl::focus_previous() {
 
 bool Box_impl::on_forward() {
     auto wi = focused_child_;
-    auto i = std::find_if(holders_.begin(), holders_.end(), [wi](const Holder & hol) { return hol.wp == wi; } );
+    auto i = std::find_if(holders_.begin(), holders_.end(), [wi](const Holder & hol) { return hol.wp_ == wi; } );
 
     if (i != holders_.end()) {
-        auto j = std::find_if(++i, holders_.end(), [](Holder & hol) { return hol.wp->take_focus(); } );
+        auto j = std::find_if(++i, holders_.end(), [](Holder & hol) { return hol.wp_->take_focus(); } );
         return j != holders_.end();
     }
 
@@ -515,14 +520,19 @@ bool Box_impl::on_forward() {
 
 bool Box_impl::on_reverse() {
     auto wi = focused_child_;
-    auto i = std::find_if(holders_.rbegin(), holders_.rend(), [wi](const Holder & hol) { return hol.wp == wi; } );
+    auto i = std::find_if(holders_.rbegin(), holders_.rend(), [wi](const Holder & hol) { return hol.wp_ == wi; } );
 
     if (i != holders_.rend()) {
-        auto j = std::find_if(++i, holders_.rend(), [](Holder & hol) { return hol.wp->take_focus(); } );
+        auto j = std::find_if(++i, holders_.rend(), [](Holder & hol) { return hol.wp_->take_focus(); } );
         return j != holders_.rend();
     }
 
     return false;
+}
+
+signal<void()> & Box_impl::signal_orientation_changed() {
+    if (!signal_orientation_changed_) { signal_orientation_changed_ = new signal<void()>; }
+    return *signal_orientation_changed_;
 }
 
 } // namespace tau

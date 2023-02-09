@@ -1346,7 +1346,13 @@ public:
     void quit_dialog();
 
     /// Test if widget has parent container.
+    /// @overload has_parent() const
     bool has_parent() const;
+
+    /// Test if widget is ancestor of specified container.
+    /// @since 0.4.0
+    /// @overload has_parent(const Widget & w) const
+    bool has_parent(const Widget & w) const;
 
     /// Test if widget inserted into window.
     bool has_window() const;
