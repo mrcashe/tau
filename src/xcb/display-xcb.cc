@@ -634,6 +634,7 @@ void Display_xcb::open(const ustring & args) {
     clipboard_atom_ = atom("CLIPBOARD");
     abcd_atom_ = atom("_ABCD");
 
+    xcb_events_.reserve(128);
     loop()->signal_quit().connect(fun(this, &Display_xcb::on_loop_quit));
     xcb_event_ = loop()->create_event();
     xcb_event_->signal_ready().connect(fun(this, &Display_xcb::on_xcb_event));
@@ -968,7 +969,7 @@ void Display_xcb::xcb_thread() {
 
         {
             std::lock_guard<std::mutex> lk(xcb_mx_);
-            xcb_events_.push_back(event);
+            xcb_events_.insert(xcb_events_.begin(), event);
         }
 
         xcb_event_->emit();
@@ -985,8 +986,8 @@ void Display_xcb::on_xcb_event() {
             std::lock_guard<std::mutex> lk(xcb_mx_);
 
             if (!xcb_events_.empty()) {
-                event = xcb_events_.front();
-                xcb_events_.pop_front();
+                event = xcb_events_.back();
+                xcb_events_.pop_back();
             }
         }
 

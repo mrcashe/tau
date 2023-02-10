@@ -43,7 +43,7 @@ List_impl::List_impl():
     Table_impl(),
     table_(std::make_shared<Table_impl>())
 {
-    table_->style().redirect("whitespace/background", "background");
+    table_->style().redirect(STYLE_WHITESPACE_BACKGROUND, STYLE_BACKGROUND);
     table_->signal_mouse_down().connect(fun(this, &List_impl::on_table_mouse_down));
     table_->signal_mouse_double_click().connect(fun(this, &List_impl::on_table_mouse_double_click));
     table_->signal_size_changed().connect(fun(this, &List_impl::scroll_to_selection));
@@ -701,7 +701,6 @@ bool List_impl::on_table_mouse_down(int mbt, int mm, const Point & pt) {
 
     if (MBT_LEFT == mbt) {
         if (!focused()) { res = scroller_->take_focus(); }
-
         int cy = table_->row_at_y(pt.y());
 
         if (cy > INT_MIN) {

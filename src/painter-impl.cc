@@ -35,8 +35,8 @@
 
 namespace {
 
-const double PI = 3.14159265358979323846;
-const double tolerance_ = 1e-5;
+constexpr double PI = 3.14159265358979323846;
+constexpr double tolerance_ = 1e-5;
 
 int64_t ifloor(int64_t x) {
     return x & -65536;
@@ -83,7 +83,7 @@ int smuldiv_no_round(int64_t a, int64_t b, int64_t c) {
 // Borrowed from Cairo Graphics project, see cairo-arc.c.
 double arc_max_angle_for_tolerance_normalized(double tolerance) {
     // Use table lookup to reduce search time in most cases.
-    static const struct { double angle, error; } table[] = {
+    static constexpr struct { double angle, error; } table[] = {
         { PI/1.0,   0.0185185185185185036127   },
         { PI/2.0,   0.000272567143730179811158 },
         { PI/3.0,   2.38647043651461047433e-05 },
@@ -140,7 +140,9 @@ Painter_impl::Painter_impl():
 {
     stack_.emplace_back();
     wstack_.emplace_back();
-    prims_.reserve(128);
+    stack_.reserve(8);
+    wstack_.reserve(8);
+    prims_.reserve(64);
 }
 
 void Painter_impl::wreset() {
@@ -1191,24 +1193,26 @@ void Painter_impl::sort_raster_profiles(Raster & ras, std::vector<int> & v) {
 
 // private
 void Painter_impl::raster_sweep(Raster & ras, bool horz) {
-    std::vector<int> wt, dl, dr;
+    std::vector<int> wt(ras.pros.size()), dl, dr;
+    constexpr double mul = 1.0/65536;
 
     // first, compute min and max Y
     int ymax = INT_MIN;
     int ymin = INT_MAX;
+    unsigned n = 0;
 
-    for (unsigned n = 0; n < ras.pros.size(); ++n) {
-        Raster_profile & p = ras.pros[n];
+    for (auto & p: ras.pros) {
         int bottom = p.start;
         int top = p.start+p.height-1;
         ymin = std::min(ymin, bottom);
         ymax = std::max(ymax, top);
         p.x = 0;
-        wt.push_back(n);
+        wt[n] = n;
+        n++;
     }
 
     // compute the distance of each profile from ymin
-    for (Raster_profile & p: ras.pros) {
+    for (auto & p: ras.pros) {
         p.count = p.start-ymin;
     }
 
@@ -1216,11 +1220,11 @@ void Painter_impl::raster_sweep(Raster & ras, bool horz) {
     int y = ymin, y_height = 0;
 
     for (auto iter: ras.turns) {
-        int y_change = iter.second;
+        int y_change = iter.first;
 
         if (y_change != ymin) {
             for (int n: std::vector<int>(wt)) {
-                Raster_profile & p = ras.pros[n];
+                auto & p = ras.pros[n];
                 p.count -= y_height;
 
                 if (0 == p.count) {
@@ -1237,23 +1241,21 @@ void Painter_impl::raster_sweep(Raster & ras, bool horz) {
             y_height = y_change-y;
 
             while (y < y_change) {
-                //std::cout << "y= " << y << " y_change= " << y_change << " turns= " << ras.turns.size() << "\n";
                 auto li = dl.begin(), ri = dr.begin();
 
                 for (; li != dl.end() && ri != dr.end(); ++li, ++ri) {
-                    Raster_profile & left = ras.pros[*li];
-                    Raster_profile & right = ras.pros[*ri];
+                    auto & left = ras.pros[*li];
+                    auto & right = ras.pros[*ri];
                     int x1 = 32768+std::min(left.x, right.x);
                     int x2 = 32768+std::max(left.x, right.x);
                     int e1 = itrunc(x1), e2 = itrunc(x2);
-                    double mul = 1.0/65536;
 
                     if (horz) {
                         if (e1 < e2) {
                             double bri = double(65536-ifrac(x1))*mul;
                             if (bri >= ras.bri_thres) { raster_fill_rectangle(ras, y, e1, y, e1, ras.color.darken(1.0-bri)); }
-                            //bri = double(ifrac(x2))*mul;
-                            //if (bri >= ras.bri_thres) { raster_fill_rectangle(ras, y, e2, y, e2, ras.color.darken(1.0-bri)); }
+                            bri = double(ifrac(x2))*mul;
+                            if (bri >= ras.bri_thres) { raster_fill_rectangle(ras, y, e2, y, e2, ras.color.darken(1.0-bri)); }
                         }
 
                         else {
@@ -1313,7 +1315,6 @@ void Painter_impl::raster_add_contour(Raster & ras, const Contour & ctr, bool ho
             Point64 end = fixed(cv.end(), horz);
 
             if (3 == cv.order()) {
-                //std::cout << "curve start=" << ctr.start().x() << ":" << ctr.start().y() << " end= " << cv.end().x() << ":" << cv.end().y() << "\n";
                 Point64 cp1 = fixed(cv.cp1(), horz), cp2 = fixed(cv.cp2(), horz);
                 raster_cubic_to(ras, cp1.x, cp1.y, cp2.x, cp2.y, end.x, end.y);
             }
@@ -1349,7 +1350,6 @@ void Painter_impl::raster_pass(Raster & ras, const Contour * ctrs, std::size_t n
         if (p.ascend) {
             bottom = p.start;
             top = p.start+p.height-1;
-            //std::cout << "ascend, bottom= " << bottom << ", top= " << top << "\n";
         }
 
         else {
@@ -1357,11 +1357,10 @@ void Painter_impl::raster_pass(Raster & ras, const Contour * ctrs, std::size_t n
             top = p.start;
             p.start = bottom;
             p.ix += p.height-1;
-            //std::cout << "descend, bottom= " << bottom << ", top= " << top << "\n";
         }
 
-        ras.turns[bottom] = bottom;
-        ras.turns[top+1] = top+1;
+        ras.turns[bottom] = 0;
+        ras.turns[top+1] = 0;
     }
 
     raster_sweep(ras, horz);

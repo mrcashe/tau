@@ -100,15 +100,7 @@ Action & Scroller::pan_left_action() {
     return SCROLLER_IMPL->pan_left_action();
 }
 
-const Action & Scroller::pan_left_action() const {
-    return SCROLLER_IMPL->pan_left_action();
-}
-
 Action & Scroller::pan_right_action() {
-    return SCROLLER_IMPL->pan_right_action();
-}
-
-const Action & Scroller::pan_right_action() const {
     return SCROLLER_IMPL->pan_right_action();
 }
 
@@ -116,15 +108,7 @@ Action & Scroller::pan_up_action() {
     return SCROLLER_IMPL->pan_up_action();
 }
 
-const Action & Scroller::pan_up_action() const {
-    return SCROLLER_IMPL->pan_up_action();
-}
-
 Action & Scroller::pan_down_action() {
-    return SCROLLER_IMPL->pan_down_action();
-}
-
-const Action & Scroller::pan_down_action() const {
     return SCROLLER_IMPL->pan_down_action();
 }
 
@@ -132,15 +116,7 @@ Action & Scroller::page_up_action() {
     return SCROLLER_IMPL->page_up_action();
 }
 
-const Action & Scroller::page_up_action() const {
-    return SCROLLER_IMPL->page_up_action();
-}
-
 Action & Scroller::page_down_action() {
-    return SCROLLER_IMPL->page_down_action();
-}
-
-const Action & Scroller::page_down_action() const {
     return SCROLLER_IMPL->page_down_action();
 }
 
@@ -148,15 +124,7 @@ Action & Scroller::home_action() {
     return SCROLLER_IMPL->home_action();
 }
 
-const Action & Scroller::home_action() const {
-    return SCROLLER_IMPL->home_action();
-}
-
 Action & Scroller::end_action() {
-    return SCROLLER_IMPL->end_action();
-}
-
-const Action & Scroller::end_action() const {
     return SCROLLER_IMPL->end_action();
 }
 

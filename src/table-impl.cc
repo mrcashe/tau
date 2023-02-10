@@ -39,7 +39,35 @@ namespace tau {
 Table_impl::Table_impl():
     Container_impl()
 {
+    init();
+}
+
+Table_impl::Table_impl(unsigned xspacing, unsigned yspacing):
+    Container_impl(),
+    xspacing_(xspacing),
+    yspacing_(yspacing)
+{
+    init();
+}
+
+Table_impl::Table_impl(unsigned spacing):
+    Container_impl(),
+    xspacing_(spacing),
+    yspacing_(spacing)
+{
+    init();
+}
+
+Table_impl::~Table_impl() {
+    signal_destroy_();
+    if (signal_column_bounds_changed_) { delete signal_column_bounds_changed_; }
+    if (signal_row_bounds_changed_) { delete signal_row_bounds_changed_; }
+    if (signal_selection_changed_) { delete signal_selection_changed_; }
+}
+
+void Table_impl::init() {
     signal_arrange_.connect(fun(this, &Table_impl::arrange));
+    signal_size_changed_.connect(fun(this, &Table_impl::update_requisition));
     signal_size_changed_.connect(fun(this, &Table_impl::arrange));
     signal_visible_.connect(fun(this, &Table_impl::arrange));
     signal_display_.connect(fun(this, &Table_impl::recalc));
@@ -49,11 +77,6 @@ Table_impl::Table_impl():
     signal_child_hints_.connect(fun(this, &Table_impl::on_child_requisition));
     signal_child_show_.connect(fun(this, &Table_impl::on_child_show));
     signal_child_hide_.connect(fun(this, &Table_impl::on_child_hide));
-}
-
-Table_impl::~Table_impl() {
-    signal_destroy_();
-    clear();
 }
 
 void Table_impl::put(Widget_ptr wp, int x, int y, unsigned xspan, unsigned yspan, bool xsh, bool ysh) {
@@ -70,7 +93,6 @@ void Table_impl::put(Widget_ptr wp, int x, int y, unsigned xspan, unsigned yspan
         hol.xsh_ = 1 == hol.xmax_-hol.xmin_ && xsh;
         hol.ysh_ = 1 == hol.ymax_-hol.ymin_ && ysh;
         dist_holder(hol);
-        rearrange1();
     }
 }
 
@@ -82,7 +104,6 @@ void Table_impl::remove(Widget_impl * wp) {
             wipe_holder(i->second);
             unparent_child(wp);
             holders_.erase(i);
-            rearrange1();
         }
     }
 }
@@ -95,7 +116,6 @@ void Table_impl::clear() {
     unparent_all();
     holders_.clear();
     nvcol_ = nvrow_ = nucol_ = nurow_ = nshcol_ = nshrow_ = xspc_ = yspc_ = 0;
-    require_size(0);
 
     if (!cols_.empty()) {
         int xx = cols_.begin()->first, xm = cols_.rbegin()->first;
@@ -115,6 +135,7 @@ void Table_impl::clear() {
         }
     }
 
+    rearrange1();
     invalidate();
 }
 
@@ -297,7 +318,7 @@ void Table_impl::rearrange2() {
     queue_arrange();
 }
 
-bool Table_impl::update_requisition() {
+void Table_impl::update_requisition() {
     rucol_ = rshcol_ = rurow_ = rshrow_ = 0;
     unsigned rx = 0, ry = 0, px;
 
@@ -305,12 +326,14 @@ bool Table_impl::update_requisition() {
         if (p.second.visible_) {
             if (p.second.usize_) {
                 px = p.second.usize_;
+                px = std::max(px, p.second.umin_);
                 if (p.second.umax_) { px = std::min(px, p.second.umax_); }
                 rucol_ += px;
             }
 
             else {
                 px = std::max(p.second.rmin_, p.second.rmax_);
+                px = std::max(px, p.second.umin_);
                 if (p.second.umax_) { px = std::min(px, p.second.umax_); }
                 if (p.second.shrank_) { rshcol_ += px; }
             }
@@ -323,12 +346,14 @@ bool Table_impl::update_requisition() {
         if (p.second.visible_) {
             if (p.second.usize_) {
                 px = p.second.usize_;
+                px = std::max(px, p.second.umin_);
                 if (p.second.umax_) { px = std::min(px, p.second.umax_); }
                 rurow_ += px;
             }
 
             else {
                 px = std::max(p.second.rmin_, p.second.rmax_);
+                px = std::max(px, p.second.umin_);
                 if (p.second.umax_) { px = std::min(px, p.second.umax_); }
                 if (p.second.shrank_) { rshrow_ += px; }
             }
@@ -337,26 +362,32 @@ bool Table_impl::update_requisition() {
         }
     }
 
-    return require_size(xspc_+rx, yspc_+ry);
+    unsigned avail = size().width();
+    unsigned req = xspc_+rucol_+rshcol_;
+    avail = avail > req ? avail-req : 0;
+    unsigned nfree = nvcol_-nucol_-nshcol_;
+    unsigned nextra = nfree ? nfree : nshcol_;
+    xextra_ = nextra ? avail/nextra : 0;
+    xrem_ = nextra ? avail%nextra : 0;
+
+    avail = size().height();
+    req = yspc_+rurow_+rshrow_;
+    avail = avail > req ? avail-req : 0;
+    nfree = nvrow_-nurow_-nshrow_;
+    nextra = nfree ? nfree : nshrow_;
+    yextra_ = nextra ? avail/nextra : 0;
+    yrem_ = nextra ? avail%nextra : 0;
+
+    require_size(xspc_+rx, yspc_+ry);
 }
 
 void Table_impl::alloc_cols() {
-    unsigned user = rucol_;
-    unsigned sh = rshcol_;
-    unsigned req = xspc_+rucol_+rshcol_;
-    unsigned nfree = nvcol_-nucol_-nshcol_;
-    unsigned nextra = nfree ? nfree : nshcol_;
-    unsigned avail = size().width();
-    avail = avail > req ? avail-req : 0;
-    unsigned extra = nextra ? avail/nextra : 0;
-    unsigned rem = nextra ? avail%nextra : 0;
+    unsigned rem = xrem_;
     int x = 0;
     auto ce = cols_.end();
 
     for (auto i(cols_.begin()); i != ce; ++i) {
         if (i->second.visible_) {
-            int ox = i->second.x_;
-            unsigned ow = i->second.w_;
             x += i->second.left_;
             i->second.x_ = x;
             unsigned px;
@@ -365,24 +396,23 @@ void Table_impl::alloc_cols() {
                 px = i->second.usize_;
                 px = std::max(px, i->second.umin_);
                 if (i->second.umax_) { px = std::min(px, i->second.umax_); }
-                user = user > px ? user-px : 0;
             }
 
             else if (i->second.shrank_) {
                 px = std::max(i->second.rmin_, i->second.rmax_);
+                unsigned nfree = nvcol_-nucol_-nshcol_;
 
-                if (!nfree && !user && (i->second.fill_ || (i->second.align_set_ && ALIGN_FILL == i->second.xalign_) || ALIGN_FILL == xalign_)) {
-                    px += extra;
+                if (!nfree && !rucol_ && (i->second.fill_ || (i->second.align_set_ && ALIGN_FILL == i->second.xalign_) || ALIGN_FILL == xalign_)) {
+                    px += xextra_;
                     if (rem) { ++px, --rem; }
                 }
 
                 px = std::max(px, i->second.umin_);
                 if (i->second.umax_) { px = std::min(px, i->second.umax_); }
-                sh = sh > px ? sh-px : 0;
             }
 
             else {
-                px = std::max(extra, i->second.rmin_);
+                px = std::max(xextra_, i->second.rmin_);
                 if (rem) { ++px, --rem; }
                 if (!px) { px = i->second.rmin_ ? i->second.rmin_ : i->second.rmax_; }
                 px = std::max(px, i->second.umin_);
@@ -392,29 +422,23 @@ void Table_impl::alloc_cols() {
             x += px;
             i->second.w_ = x-i->second.x_;
             x += i->second.right_+xspacing_;
-            if (ox != i->second.x_ || ow != i->second.w_) { signal_column_bounds_changed_(i->first); }
+
+            if (i->second.lx_ != i->second.x_ || i->second.lw_  != i->second.w_) {
+                i->second.lx_ = i->second.x_;
+                i->second.lw_ = i->second.w_;
+                if (!shut_ && signal_column_bounds_changed_) { (*signal_column_bounds_changed_)(i->first); }
+            }
         }
     }
 }
 
 void Table_impl::alloc_rows() {
+    unsigned rem = yrem_;
     int y = 0;
-    unsigned user = rurow_;
-    unsigned sh = rshrow_;
-    unsigned avail = size().height();
-    unsigned req = yspc_+user+sh;
-    avail = avail > req ? avail-req : 0;
-    unsigned nfree = nvrow_-nurow_-nshrow_;
-    unsigned nextra = nfree ? nfree : nshrow_;
-    unsigned extra = nextra ? avail/nextra : 0;
-    unsigned rem = nextra ? avail%nextra : 0;
-
     auto re = rows_.end();
 
     for (auto i(rows_.begin()); i != re; ++i) {
         if (i->second.visible_) {
-            int oy = i->second.y_;
-            unsigned oh = i->second.h_;
             y += i->second.top_;
             i->second.y_ = y;
             unsigned px;
@@ -423,24 +447,23 @@ void Table_impl::alloc_rows() {
                 px = i->second.usize_;
                 px = std::max(px, i->second.umin_);
                 if (i->second.umax_) { px = std::min(px, i->second.umax_); }
-                user = user > px ? user-px : 0;
             }
 
             else if (i->second.shrank_) {
                 px = std::max(i->second.rmin_, i->second.rmax_);
+                unsigned nfree = nvrow_-nurow_-nshrow_;
 
-                if (!nfree && !user && (i->second.fill_ || (i->second.align_set_ && ALIGN_FILL == i->second.yalign_) || ALIGN_FILL == yalign_)) {
-                    px += extra;
+                if (!nfree && !rurow_ && (i->second.fill_ || (i->second.align_set_ && ALIGN_FILL == i->second.yalign_) || ALIGN_FILL == yalign_)) {
+                    px += yextra_;
                     if (rem) { ++px, --rem; }
                 }
 
                 px = std::max(px, i->second.umin_);
                 if (i->second.umax_) { px = std::min(px, i->second.umax_); }
-                sh = sh > px ? sh-px : 0;
             }
 
             else {
-                px = std::max(extra, i->second.rmin_);
+                px = std::max(yextra_, i->second.rmin_);
                 if (rem) { ++px, --rem; }
                 if (!px) { px = i->second.rmin_ ? i->second.rmin_ : i->second.rmax_; }
                 px = std::max(px, i->second.umin_);
@@ -450,7 +473,12 @@ void Table_impl::alloc_rows() {
             y += px;
             i->second.h_ = y-i->second.y_;
             y += i->second.bottom_+yspacing_;
-            if (oy != i->second.y_ || oh != i->second.h_) { signal_row_bounds_changed_(i->first); }
+
+            if (i->second.ly_ != i->second.y_ || i->second.lh_ != i->second.h_) {
+                i->second.ly_ = i->second.y_;
+                i->second.lh_ = i->second.h_;
+                if (!shut_ && signal_row_bounds_changed_) { (*signal_row_bounds_changed_)(i->first); }
+            }
         }
     }
 }
@@ -747,6 +775,10 @@ std::vector<Widget_impl *> Table_impl::children_within_range(int xmin, int ymin,
     return v;
 }
 
+std::vector<Widget_impl *> Table_impl::children_within_range(const Span & rng) {
+    return children_within_range(rng.xmin, rng.ymin, rng.xmax, rng.ymax);
+}
+
 Table::Span Table_impl::span() const {
     Table::Span rng;
 
@@ -979,8 +1011,13 @@ bool Table_impl::erasable(const Col & col) const {
 
 void Table_impl::erase(Col_iter & i) {
     if (i != cols_.end()) {
-        if (i->second.visible_ && nvcol_) { --nvcol_; }
-        i->second.ref_ = i->second.visible_ = i->second.visible_ = i->second.shrank_ = i->second.fill_ = 0;
+        if (i->second.visible_) {
+            i->second.visible_ = 0;
+            if (i->second.w_) { i->second.w_ = 0; if (!shut_ && signal_column_bounds_changed_) (*signal_column_bounds_changed_)(i->first); }
+            if (nvcol_) { --nvcol_; }
+        }
+
+        i->second.x_ = i->second.lx_ = i->second.w_ = i->second.lw_ = i->second.ref_ = i->second.shrank_ = i->second.fill_ = 0;
         if (erasable(i->second)) { cols_.erase(i); }
     }
 }
@@ -996,8 +1033,13 @@ bool Table_impl::erasable(const Row & row) const {
 
 void Table_impl::erase(Row_iter & i) {
     if (i != rows_.end()) {
-        if (i->second.visible_ && nvrow_) { --nvrow_; }
-        i->second.ref_ = i->second.visible_ = i->second.visible_ = i->second.shrank_ = i->second.fill_ = 0;
+        if (i->second.visible_) {
+            i->second.visible_ = 0;
+            if (i->second.h_) { i->second.h_ = 0; if (!shut_ && signal_row_bounds_changed_) (*signal_row_bounds_changed_)(i->first); }
+            if (nvrow_) { --nvrow_; }
+        }
+
+        i->second.y_ = i->second.ly_ = i->second.h_ = i->second.lh_ = i->second.ref_ = i->second.shrank_ = i->second.fill_ = 0;
         if (erasable(i->second)) { rows_.erase(i); }
     }
 }
@@ -1114,6 +1156,8 @@ void Table_impl::dist_holder(Holder & hol) {
             if (!hol.wp_->hidden()) { change_visibility(row, true, hol.ysh_); }
         }
     }
+
+    rearrange1();
 }
 
 void Table_impl::wipe_holder(Holder & hol) {
@@ -1128,87 +1172,9 @@ void Table_impl::wipe_holder(Holder & hol) {
         if (!hol.wp_->hidden()) { change_visibility(i->second, false, hol.ysh_); }
         unref(i);
     }
-}
 
-bool Table_impl::on_backpaint(Painter pr, const Rect & inval) {
-    Color c = style().color("select/background");
-
-    for (Table::Span & m: marks_) {
-        Rect rsel = range_bounds(m);
-        Rect r = rsel & inval;
-
-        if (r) {
-            pr.move_to(r.left(), r.top());
-            pr.line_to(r.right()+1, r.top());
-            pr.line_to(r.right()+1, r.bottom()+1);
-            pr.line_to(r.left(), r.bottom()+1);
-            pr.line_to(r.left(), r.top());
-            pr.set_brush(c.darken(0.1));
-            pr.fill();
-        }
-    }
-
-    if (sel_.xmax > sel_.xmin && sel_.ymax > sel_.ymin) {
-        Rect rsel = range_bounds(sel_);
-        Rect r = rsel & inval;
-
-        if (r) {
-            pr.move_to(r.left(), r.top());
-            pr.line_to(r.right()+1, r.top());
-            pr.line_to(r.right()+1, r.bottom()+1);
-            pr.line_to(r.left(), r.bottom()+1);
-            pr.line_to(r.left(), r.top());
-            pr.set_brush(c);
-            pr.fill();
-        }
-    }
-
-    return false;
-}
-
-Rect Table_impl::range_bounds(const Table::Span & rng) const {
-    Rect bounds;
-    int xmin = INT_MAX, ymin = INT_MAX, xmax = INT_MIN, ymax = INT_MIN;
-
-    if (rng.xmax > rng.xmin) {
-        for (auto & p: cols_) {
-            if (p.first >= rng.xmin && p.first < rng.xmax) {
-                xmin = std::min(xmin, p.second.x_-int(p.second.left_));
-                xmax = std::max(xmax, p.second.x_+int(p.second.w_+p.second.right_));
-            }
-        }
-    }
-
-    if (rng.ymax > rng.ymin) {
-        for (auto & p: rows_) {
-            if (p.first >= rng.ymin && p.first < rng.ymax) {
-                ymin = std::min(ymin, p.second.y_-int(p.second.top_));
-                ymax = std::max(ymax, p.second.y_+int(p.second.h_+p.second.bottom_));
-            }
-        }
-    }
-
-    if (xmax > xmin && ymax > ymin) { bounds.set(xmin, ymin, Size(xmax-xmin, ymax-ymin)); }
-    return bounds;
-}
-
-Table::Span Table_impl::span(const Widget_impl * wp) const {
-    Table::Span rng;
-    auto i = holders_.find(const_cast<Widget_impl *>(wp));
-
-    if (holders_.end() != i) {
-        rng.xmin = i->second.xmin_;
-        rng.ymin = i->second.ymin_;
-        rng.xmax = i->second.xmax_;
-        rng.ymax = i->second.ymax_;
-    }
-
-    return rng;
-}
-
-void Table_impl::respan(Widget_impl * wp, int x, int y, unsigned xspan, unsigned yspan) {
-    auto i = holders_.find(wp);
-    if (i != holders_.end()) { respan(wp, x, y, xspan, yspan, i->second.xsh_, i->second.ysh_); }
+    update_child_bounds(hol.wp_, INT_MIN, INT_MIN, 0, 0);
+    rearrange1();
 }
 
 void Table_impl::respan(Widget_impl * wp, int x, int y, unsigned xspan, unsigned yspan, bool xsh, bool ysh) {
@@ -1227,9 +1193,67 @@ void Table_impl::respan(Widget_impl * wp, int x, int y, unsigned xspan, unsigned
             i->second.xsh_ = xsh;
             i->second.ysh_ = ysh;
             dist_holder(i->second);
-            rearrange1();
         }
     }
+}
+
+void Table_impl::respan(Widget_impl * wp, int x, int y, unsigned xspan, unsigned yspan) {
+    auto i = holders_.find(wp);
+    if (i != holders_.end()) { respan(wp, x, y, xspan, yspan, i->second.xsh_, i->second.ysh_); }
+}
+
+Rect Table_impl::range_bounds(const Span & rng) const {
+    Rect bounds;
+    int xmin = INT_MAX, ymin = INT_MAX, xmax = INT_MIN, ymax = INT_MIN;
+
+    if (rng.xmax > rng.xmin) {
+        auto i = std::find_if(cols_.begin(), cols_.end(), [&rng](auto & p) { return p.second.visible_ && p.first >= rng.xmin; } );
+
+        if (i != cols_.end()) {
+            xmin = i->second.x_-i->second.left_;
+
+            do {
+                if (i->second.visible_) {
+                    xmax = i->second.x_+i->second.w_+i->second.right_;
+                }
+            } while (++i != cols_.end() && i->first < rng.xmax);
+
+            if (i != cols_.end()) { xmax += xspacing_; }
+        }
+    }
+
+    if (rng.ymax > rng.ymin) {
+        auto i = std::find_if(rows_.begin(), rows_.end(), [&rng](auto & p) { return p.second.visible_ && p.first >= rng.ymin; } );
+
+        if (i != rows_.end()) {
+            ymin = i->second.y_-i->second.top_;
+
+            do {
+                if (i->second.visible_) {
+                    ymax = i->second.y_+i->second.h_+i->second.bottom_;
+                }
+            } while (++i != rows_.end() && i->first < rng.ymax);
+
+            if (i != rows_.end()) { ymax += yspacing_; }
+        }
+    }
+
+    if (xmax > xmin && ymax > ymin) { bounds.set(xmin, ymin, xmax, ymax); }
+    return bounds;
+}
+
+Table::Span Table_impl::span(const Widget_impl * wp) const {
+    Table::Span rng;
+    auto i = holders_.find(const_cast<Widget_impl *>(wp));
+
+    if (holders_.end() != i) {
+        rng.xmin = i->second.xmin_;
+        rng.ymin = i->second.ymin_;
+        rng.xmax = i->second.xmax_;
+        rng.ymax = i->second.ymax_;
+    }
+
+    return rng;
 }
 
 int Table_impl::column_at_x(int x) const {
@@ -1724,13 +1748,8 @@ void Table_impl::select(int xmin, int ymin, unsigned xspan, unsigned yspan) {
             sel_.ymax = ymax;
             invalidate(range_bounds(sel_));
             Color c = style().color(STYLE_SELECT_BACKGROUND);
-
-            for (auto wp: children_within_range(xmin, ymin, xmax, ymax)) {
-                wp->signal_select()();
-                wp->style().color(STYLE_BACKGROUND) = c;
-            }
-
-            signal_selection_changed_();
+            for (auto wp: fchildren(sel_)) { wp->signal_select()(); wp->style().color(STYLE_BACKGROUND) = c; }
+            if (!shut_ && signal_selection_changed_) { (*signal_selection_changed_)(); }
         }
     }
 }
@@ -1748,13 +1767,8 @@ void Table_impl::select_row(int y) {
 void Table_impl::unselect() {
     if (sel_.xmax > sel_.xmin && sel_.ymax > sel_.ymin) {
         invalidate(range_bounds(sel_));
-
-        for (auto wp: children_within_range(sel_.xmin, sel_.ymin, sel_.xmax, sel_.ymax)) {
-            wp->style().unset("background");
-            wp->signal_unselect()();
-        }
-
-        signal_selection_changed_();
+        for (auto wp: fchildren(sel_)) { wp->style().unset(STYLE_BACKGROUND); wp->signal_unselect()(); }
+        if (!shut_ && signal_selection_changed_) { (*signal_selection_changed_)(); }
     }
 
     sel_.xmin = sel_.ymin = INT_MAX;
@@ -1767,11 +1781,33 @@ Table::Span Table_impl::selection() const {
     return rng;
 }
 
+bool Table_impl::on_backpaint(Painter pr, const Rect & inval) {
+    Rect r;
+
+    for (auto & m: marks_) {
+        r = range_bounds(m);
+        if (r) { pr.rectangle(r.left(), r.top(), r.right(), r.bottom()); }
+    }
+
+    Color c = style().color(STYLE_SELECT_BACKGROUND);
+    pr.set_brush(c.darken(0.1));
+    pr.fill();
+    r = range_bounds(sel_);
+
+    if (r) {
+        pr.rectangle(r.left(), r.top(), r.right(), r.bottom());
+        pr.set_brush(c);
+        pr.fill();
+    }
+
+    return false;
+}
+
 void Table_impl::mark(int xmin, int ymin, unsigned width, unsigned height) {
     if (rows_.empty() || cols_.empty() || 0 == width || 0 == height) { return; }
     int xmax = xmin+width, ymax = ymin+height;
 
-    Table::Span rng = span();
+    Span rng = span();
     if (xmax <= rng.xmin || xmin >= rng.xmax || ymax <= rng.ymin || ymin >= rng.ymax) { return; }
 
     if (xmin < rng.xmin) { xmin = rng.xmin; }
@@ -1780,90 +1816,75 @@ void Table_impl::mark(int xmin, int ymin, unsigned width, unsigned height) {
     if (ymax > rng.ymax) { ymax = rng.ymax; }
     if (xmax <= xmin || ymax <= ymin) { return; }
 
-    for (auto & m: marks_) {
-        if (m.xmin == xmin && m.xmax == xmax && m.ymin == ymin && m.ymax == ymax) {
-            return;
-        }
+    Span m { xmin, ymin, xmax, ymax };
+    auto i = std::find(marks_.begin(), marks_.end(), m);
+
+    if (i == marks_.end()) {
+        marks_.emplace_front(m);
+        Color c = style().color(STYLE_SELECT_BACKGROUND);
+        c.darker(0.1);
+        invalidate(range_bounds(m));
+        for (auto wp: fchildren(m)) { wp->signal_select()(); wp->style().color(STYLE_BACKGROUND) = c; }
+        if (!shut_ && signal_selection_changed_) { (*signal_selection_changed_)(); }
     }
-
-    Table::Span m;
-    m.xmin = xmin;
-    m.ymin = ymin;
-    m.xmax = xmax;
-    m.ymax = ymax;
-    marks_.push_back(m);
-
-    Color c = style().color("select/background");
-    c.darker(0.1);
-    invalidate(range_bounds(m));
-
-    for (auto wp: children_within_range(xmin, ymin, xmax, ymax)) {
-        wp->signal_select()();
-        wp->style().color("background") = c;
-    }
-
-    signal_selection_changed_();
 }
 
 void Table_impl::mark_column(int x) {
-    Table::Span rng = span();
+    Span rng = span();
     if (rng.xmax > rng.xmin && rng.ymax > rng.ymin) { mark(x, rng.ymin, 1, rng.ymax-rng.ymin); }
 }
 
 void Table_impl::mark_row(int y) {
-    Table::Span rng = span();
+    Span rng = span();
     if (rng.xmax > rng.xmin && rng.ymax > rng.ymin) { mark(rng.xmin, y, rng.xmax-rng.xmin, 1); }
 }
 
+std::forward_list<Widget_impl *> Table_impl::fchildren(const Span & rng) {
+    std::forward_list<Widget_impl *> v;
+
+    for (auto i = holders_.begin(); i != holders_.end(); ++i) {
+        Holder & hol = i->second;
+        if (hol.xmax_ > rng.xmin && hol.xmin_ < rng.xmax && hol.ymax_ > rng.ymin && hol.ymin_ < rng.ymax) { v.push_front(hol.wp_); }
+    }
+
+    return v;
+}
+
+void Table_impl::unmark_all() {
+    std::forward_list<Widget_impl *> v;
+    Rect r;
+    for (auto & m: marks_) { v.merge(fchildren(m)); r |= range_bounds(m); }
+    if (r) { invalidate(r); }
+    for (auto wp: v) { wp->style().unset(STYLE_BACKGROUND); wp->signal_unselect()(); }
+    if (!marks_.empty() && !shut_ && signal_selection_changed_) { (*signal_selection_changed_)(); }
+    marks_.clear();
+}
+
 void Table_impl::unmark(int xmin, int ymin, int xmax, int ymax) {
-    for (auto iter = marks_.begin(); iter != marks_.end(); ++iter) {
-        Table::Span & m = *iter;
+    Span m { xmin, ymin, xmax, ymax };
+    auto i = std::find(marks_.begin(), marks_.end(), m);
 
-        if (m.xmin == xmin && m.ymin == ymin && m.xmax == xmax && m.ymax == ymax) {
-            invalidate(range_bounds(m));
-
-            for (auto wp: children_within_range(xmin, ymin, xmax, ymax)) {
-                wp->style().unset("background");
-                wp->signal_unselect()();
-            }
-
-            marks_.erase(iter);
-            signal_selection_changed_();
-            return;
-        }
+    if (i != marks_.end()) {
+        invalidate(range_bounds(m));
+        for (auto wp: fchildren(m)) { wp->style().unset(STYLE_BACKGROUND); wp->signal_unselect()(); }
+        marks_.remove(m);
+        if (!shut_ && signal_selection_changed_) { (*signal_selection_changed_)(); }
     }
 }
 
 void Table_impl::unmark_column(int x) {
-    Table::Span rng = span();
+    Span rng = span();
     if (rng.xmax > rng.xmin && rng.ymax > rng.ymin) { unmark(x, rng.ymin, x+1, rng.ymax); }
 }
 
 void Table_impl::unmark_row(int y) {
-    Table::Span rng = span();
+    Span rng = span();
     if (rng.xmax > rng.xmin && rng.ymax > rng.ymin) { unmark(rng.xmin, y, rng.xmax, y+1); }
-}
-
-void Table_impl::unmark_all() {
-    bool changed = false;
-
-    for (auto & m: marks_) {
-        changed = true;
-        invalidate(range_bounds(m));
-
-        for (auto wp: children_within_range(m.xmin, m.ymin, m.xmax, m.ymax)) {
-            wp->style().unset(STYLE_BACKGROUND);
-            wp->signal_unselect()();
-        }
-    }
-
-    if (changed) { signal_selection_changed_(); }
-    marks_.clear();
 }
 
 std::vector<Table::Span> Table_impl::marks() const {
     std::vector<Table::Span> v;
-    for (auto & rng: marks_) { v.push_back(rng); }
+    for (auto & m: marks_) { v.emplace_back(m); }
     return v;
 }
 
@@ -1877,6 +1898,21 @@ bool Table_impl::on_take_focus() {
     }
 
     return grab_focus();
+}
+
+signal<void(int)> & Table_impl::signal_column_bounds_changed() {
+    if (!signal_column_bounds_changed_) { signal_column_bounds_changed_ = new signal<void(int)>; }
+    return *signal_column_bounds_changed_;
+}
+
+signal<void(int)> & Table_impl::signal_row_bounds_changed() {
+    if (!signal_row_bounds_changed_) { signal_row_bounds_changed_ = new signal<void(int)>; }
+    return *signal_row_bounds_changed_;
+}
+
+signal<void()> & Table_impl::signal_selection_changed() {
+    if (!signal_selection_changed_) { signal_selection_changed_ = new signal<void()>; }
+    return *signal_selection_changed_;
 }
 
 } // namespace tau

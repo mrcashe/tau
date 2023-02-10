@@ -124,15 +124,7 @@ Action & Fileman::apply_action() {
     return FILEMAN_IMPL->apply_action();
 }
 
-const Action & Fileman::apply_action() const {
-    return FILEMAN_IMPL->apply_action();
-}
-
 Action & Fileman::cancel_action() {
-    return FILEMAN_IMPL->cancel_action();
-}
-
-const Action & Fileman::cancel_action() const {
     return FILEMAN_IMPL->cancel_action();
 }
 

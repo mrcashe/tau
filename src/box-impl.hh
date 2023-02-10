@@ -84,9 +84,7 @@ public:
     Orientation orientation() const { return orient_; }
 
     Action & focus_next_action() { return next_action_; }
-    const Action & focus_next_action() const { return next_action_; }
     Action & focus_previous_action() { return prev_action_; }
-    const Action & focus_previous_action() const { return prev_action_; }
 
     signal<void()> & signal_orientation_changed();
 

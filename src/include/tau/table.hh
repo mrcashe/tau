@@ -62,9 +62,15 @@ public:
 
         /// Maximal row index outside of specified range.
         int     ymax = INT_MIN;
+
+        bool operator==(const Span & other) { return xmin == other.xmin && xmax == other.xmax && ymin == other.ymin && ymax == other.ymax; }
     };
 
+    /// @name Constructors and operators
+    /// @{
+
     /// Default constructor.
+    /// @overload Table()
     Table();
 
     /// Copy constructor.
@@ -101,6 +107,17 @@ public:
     /// implementation pointer class.
     Table & operator=(Widget_ptr wp);
 
+    /// Constructor with spacings.
+    /// @since 0.4.0
+    /// @overload Table(unsigned xspacing, unsigned yspacing)
+    Table(unsigned xspacing, unsigned yspacing);
+
+    /// Constructor with spacing.
+    /// @since 0.4.0
+    /// @overload Table(unsigned spacing)
+    Table(unsigned spacing);
+
+    /// @{
     /// Get table span in cells.
     /// On empty table both xmin and ymin are equals to @b INT_MAX and
     /// both xmax and ymax are equals to @b INT_MIN.

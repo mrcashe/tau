@@ -154,7 +154,7 @@ private:
     using Depth_formats = std::map<unsigned, xcb_render_pictformat_t>;
     using Winmap = std::map<xcb_window_t, Winface_xcb_ptr>;
     using Solid_fills = std::map<uint32_t, uint32_t>;
-    using Xcb_events = std::list<xcb_generic_event_t *>;
+    using Xcb_events = std::vector<xcb_generic_event_t *>;
 
     xcb_connection_t *  cx_ = nullptr;
     xcb_screen_t *      scr_ = nullptr;

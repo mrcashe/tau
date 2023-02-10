@@ -80,11 +80,18 @@ namespace tau {
 
 @section new_table_methods_040 New Table methods
 
+- Table::Table(unsigned xspacing, unsigned yspacing)
+- Table::Table(unsigned spacing)
 - Table::set_spacing(unsigned spacing)
 
 @section new_roller_methods_040 New Roller methods
 
 - Roller::roll_to(Widget & w)
+
+@section new_action_methods_040 New Action and Toggle_action methods
+
+- Action::connected()
+- Toggle_action::connected()
 
 @section new_style_methods_040 New Style methods
 

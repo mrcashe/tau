@@ -159,10 +159,6 @@ Action & Entry::cancel_action() {
     return ENTRY_IMPL->cancel_action();
 }
 
-const Action & Entry::cancel_action() const {
-    return ENTRY_IMPL->cancel_action();
-}
-
 signal<void(const ustring &)> & Entry::signal_changed() {
     return ENTRY_IMPL->signal_changed();
 }

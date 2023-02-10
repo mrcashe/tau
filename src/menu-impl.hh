@@ -221,10 +221,6 @@ public:
         return action_;
     }
 
-    const Action & action() const {
-        return action_;
-    }
-
     Text_ptr accel_label() {
         return accel_label_;
     }
@@ -276,10 +272,6 @@ public:
     }
 
     Toggle_action & action() {
-        return action_;
-    }
-
-    const Toggle_action & action() const {
         return action_;
     }
 

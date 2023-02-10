@@ -176,14 +176,8 @@ public:
     /// Get focus_next action.
     Action & focus_next_action();
 
-    /// Get focus_next action.
-    const Action & focus_next_action() const;
-
     /// Get focus_previous action.
     Action & focus_previous_action();
-
-    /// Get focus_previous action.
-    const Action & focus_previous_action() const;
 
     /// Signal orientation changed.
     signal<void()> & signal_orientation_changed();

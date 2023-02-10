@@ -171,29 +171,36 @@ void Winface_xcb::grab_mouse() {
     }
 }
 
-void Winface_xcb::invalidate(const Rect & inval) {
-    Rect entire(self_->size()), r(inval ? inval & entire : entire);
-
+void Winface_xcb::invalidate(const Rect & r) {
     if (r) {
-        if (!inval_) { inval_ = r; }
-        else { inval_ |= r; }
+        for (Rect & inval: invals_) {
+            if (!inval) { inval = r; goto start; }
+            if (inval & r) { inval |= r; goto start; }
+        }
+
+        invals_.front() |= r;
+    start:
         paint_timer_.start(33);
     }
 }
 
 void Winface_xcb::update() {
     paint_timer_.stop();
-    Rect inval(inval_);
-    inval_.reset();
 
-    if (inval && self_->visible()) {
+    if (self_->visible()) {
         if (!pr_) { pr_ = std::make_shared<Painter_xcb>(this); }
         pr_->capture(self_);
-        pr_->pclip(inval);
         Painter pr(self_->wrap_painter(pr_));
-        self_->handle_backpaint(pr, inval);
-        self_->handle_paint(pr, inval);
+
+        for (Rect inval: invals_) {
+            if (!inval) { break; }
+            pr_->pclip(inval);
+            self_->handle_backpaint(pr, inval);
+            self_->handle_paint(pr, inval);
+        }
+
         pr_->wreset();
+        invals_.fill(Rect());
     }
 }
 

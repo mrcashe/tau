@@ -110,7 +110,7 @@ bool Separator_impl::on_paint(Painter pr, const Rect & inval) {
 
     else if (SEPARATOR_HANDLE == separator_style_) {
         if (sz.width() > sz.height()) {
-            int xmax = sz.width(), ymin = 0, ymax = sz.height(), step = std::max(4, std::min(12, xmax/16));
+            int xmax = sz.width(), ymin = 0, ymax = sz.height()-1, step = std::max(3, std::min(9, xmax/16));
             pr.move_to(0, ymin);
 
             for (int x = 0; x < xmax;) {
@@ -122,7 +122,7 @@ bool Separator_impl::on_paint(Painter pr, const Rect & inval) {
         }
 
         else {
-            int ymax = sz.height(), xmin = 0, xmax = sz.width()-1, step = std::max(4, std::min(12, ymax/16));
+            int ymax = sz.height(), xmin = 0, xmax = sz.width()-1, step = std::max(3, std::min(9, ymax/16));
             pr.move_to(xmin, 0);
 
             for (int y = 0; y < ymax;) {

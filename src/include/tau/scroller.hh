@@ -139,64 +139,32 @@ public:
     /// @sa step()
     Action & pan_left_action();
 
-    /// Get pan_left Action.
-    /// @sa set_step()
-    /// @sa step()
-    const Action & pan_left_action() const;
-
     /// Get pan_right Action.
     /// @sa set_step()
     /// @sa step()
     Action & pan_right_action();
-
-    /// Get pan_right Action.
-    /// @sa set_step()
-    /// @sa step()
-    const Action & pan_right_action() const;
 
     /// Get pan_up Action.
     /// @sa set_step()
     /// @sa step()
     Action & pan_up_action();
 
-    /// Get pan_up Action.
-    /// @sa set_step()
-    /// @sa step()
-    const Action & pan_up_action() const;
-
     /// Get pan_down Action.
     /// @sa set_step()
     /// @sa step()
     Action & pan_down_action();
 
-    /// Get pan_down Action.
-    /// @sa set_step()
-    /// @sa step()
-    const Action & pan_down_action() const;
-
     /// Get page_up Action.
     Action & page_up_action();
-
-    /// Get page_up Action.
-    const Action & page_up_action() const;
 
     /// Get page_down Action.
     Action & page_down_action();
 
-    /// Get page_down Action.
-    const Action & page_down_action() const;
-
     /// Get home Action.
     Action & home_action();
 
-    /// Get home Action.
-    const Action & home_action() const;
-
     /// Get end Action.
     Action & end_action();
-
-    /// Get end Action.
-    const Action & end_action() const;
 
     /// Signal emitted when child offset changed.
     /// Slot prototype:

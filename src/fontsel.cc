@@ -77,15 +77,7 @@ Action & Fontsel::apply_action() {
     return FONTSEL_IMPL->apply_action();
 }
 
-const Action & Fontsel::apply_action() const {
-    return FONTSEL_IMPL->apply_action();
-}
-
 Action & Fontsel::cancel_action() {
-    return FONTSEL_IMPL->cancel_action();
-}
-
-const Action & Fontsel::cancel_action() const {
     return FONTSEL_IMPL->cancel_action();
 }
 
@@ -93,15 +85,7 @@ Action & Fontsel::focus_next_action() {
     return FONTSEL_IMPL->focus_next_action();
 }
 
-const Action & Fontsel::focus_next_action() const {
-    return FONTSEL_IMPL->focus_next_action();
-}
-
 Action & Fontsel::focus_previous_action() {
-    return FONTSEL_IMPL->focus_previous_action();
-}
-
-const Action & Fontsel::focus_previous_action() const {
     return FONTSEL_IMPL->focus_previous_action();
 }
 

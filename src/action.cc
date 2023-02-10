@@ -32,41 +32,93 @@
 
 namespace tau {
 
+struct Master_action::Data {
+    ustring             label_;
+    ustring             icon_name_;
+    ustring             tooltip_;
+    bool                visible_ : 1;
+    bool                enabled_ : 1;
+    std::vector<Accel>  accels_;
+
+    signal<void()>      signal_disable_;
+    signal<void()>      signal_enable_;
+    signal<void()>      signal_show_;
+    signal<void()>      signal_hide_;
+
+    signal<void(const Accel &)>     signal_accel_added_;
+    signal<void(const Accel &)>     signal_accel_removed_;
+    signal<void(const ustring &)>   signal_label_changed_;
+    signal<void(const ustring &)>   signal_icon_changed_;
+    signal<void(const ustring &)>   signal_tooltip_changed_;
+
+    Data(): visible_(true), enabled_(true) {}
+    Data(const Data & other) = default;
+    Data(Data && other) = default;
+    Data & operator=(const Data & other) = default;
+    Data & operator=(Data && other) = default;
+};
+
 Master_action::Master_action():
-    trackable()
+    trackable(),
+    data(new Data)
 {
 }
 
-Master_action::~Master_action() {}
-
 Master_action::Master_action(const ustring & accels):
-    trackable()
+    trackable(),
+    data(new Data)
 {
     add_accels(accels);
 }
 
+Master_action::Master_action(const Master_action & other):
+    trackable(),
+    data(new Data(*other.data))
+{
+}
+
+Master_action::Master_action(Master_action && other):
+    trackable(),
+    data(new Data(std::move(*other.data)))
+{
+}
+
+Master_action & Master_action::operator=(const Master_action & other) {
+    if (this != &other) { *data = *other.data; }
+    return *this;
+}
+
+Master_action & Master_action::operator=(Master_action && other) {
+    *data = std::move(*other.data);
+    return *this;
+}
+
 Master_action::Master_action(char32_t kc, int km):
-    trackable()
+    trackable(),
+    data(new Data)
 {
     add_accel(kc, km);
 }
 
 Master_action::Master_action(const ustring & accels, const ustring & label):
-    trackable()
+    trackable(),
+    data(new Data)
 {
     add_accels(accels);
     set_label(label);
 }
 
 Master_action::Master_action(char32_t kc, int km, const ustring & label):
-    trackable()
+    trackable(),
+    data(new Data)
 {
     add_accel(kc, km);
     set_label(label);
 }
 
 Master_action::Master_action(const ustring & accels, const ustring & label, const ustring & icon_name):
-    trackable()
+    trackable(),
+    data(new Data)
 {
     add_accels(accels);
     set_label(label);
@@ -74,7 +126,8 @@ Master_action::Master_action(const ustring & accels, const ustring & label, cons
 }
 
 Master_action::Master_action(char32_t kc, int km, const ustring & label, const ustring & icon_name):
-    trackable()
+    trackable(),
+    data(new Data)
 {
     add_accel(kc, km);
     set_label(label);
@@ -82,7 +135,8 @@ Master_action::Master_action(char32_t kc, int km, const ustring & label, const u
 }
 
 Master_action::Master_action(const ustring & accels, const ustring & label, const ustring & icon_name, const ustring & tooltip):
-    trackable()
+    trackable(),
+    data(new Data)
 {
     add_accels(accels);
     set_label(label);
@@ -91,7 +145,8 @@ Master_action::Master_action(const ustring & accels, const ustring & label, cons
 }
 
 Master_action::Master_action(char32_t kc, int km, const ustring & label, const ustring & icon_name, const ustring & tooltip):
-    trackable()
+    trackable(),
+    data(new Data)
 {
     add_accel(kc, km);
     set_label(label);
@@ -99,89 +154,93 @@ Master_action::Master_action(char32_t kc, int km, const ustring & label, const u
     set_tooltip(tooltip);
 }
 
+Master_action::~Master_action() {
+    delete data;
+}
+
 void Master_action::set_label(const ustring & label) {
-    if (label_ != label) {
-        label_ = label;
-        signal_label_changed_(label_);
+    if (data->label_ != label) {
+        data->label_ = label;
+        data->signal_label_changed_(data->label_);
     }
 }
 
 ustring Master_action::label() const {
-    return label_;
+    return data->label_;
 }
 
 void Master_action::enable() {
-    if (!enabled_) {
-        enabled_ = true;
-        signal_enable_();
+    if (!data->enabled_) {
+        data->enabled_ = true;
+        data->signal_enable_();
     }
 }
 
 void Master_action::disable() {
-    if (enabled_) {
-        enabled_ = false;
-        signal_disable_();
+    if (data->enabled_) {
+        data->enabled_ = false;
+        data->signal_disable_();
     }
 }
 
 bool Master_action::enabled() const {
-    return enabled_;
+    return data->enabled_;
 }
 
 void Master_action::show() {
-    if (!visible_) {
-        visible_ = true;
-        signal_show_();
+    if (!data->visible_) {
+        data->visible_ = true;
+        data->signal_show_();
     }
 }
 
 void Master_action::hide() {
-    if (visible_) {
-        visible_ = false;
-        signal_hide_();
+    if (data->visible_) {
+        data->visible_ = false;
+        data->signal_hide_();
     }
 }
 
 bool Master_action::visible() const {
-    return visible_;
+    return data->visible_;
 }
 
 void Master_action::set_icon_name(const ustring & icon_name) {
-    if (icon_name_ != icon_name) {
-        icon_name_ = icon_name;
-        signal_icon_changed_(icon_name_);
+    if (data->icon_name_ != icon_name) {
+        data->icon_name_ = icon_name;
+        data->signal_icon_changed_(data->icon_name_);
     }
 }
 
 ustring Master_action::icon_name() const {
-    return icon_name_;
+    return data->icon_name_;
 }
 
 void Master_action::set_tooltip(const ustring & tooltip) {
-    if (tooltip_ != tooltip) {
-        tooltip_ = tooltip;
-        signal_tooltip_changed_(tooltip_);
+    if (data->tooltip_ != tooltip) {
+        data->tooltip_ = tooltip;
+        data->signal_tooltip_changed_(data->tooltip_);
     }
 }
 
 void Master_action::unset_tooltip() {
-    if (!tooltip_.empty()) {
-        tooltip_.clear();
-        signal_tooltip_changed_(tooltip_);
+    if (!data->tooltip_.empty()) {
+        data->tooltip_.clear();
+        data->signal_tooltip_changed_(data->tooltip_);
     }
 }
 
 ustring Master_action::tooltip() const {
-    return tooltip_;
+    return data->tooltip_;
 }
 
 void Master_action::add_accel(char32_t kc, int km) {
     Accel accel(kc, km);
-    auto i = std::find(accels_.begin(), accels_.end(), accel);
+    auto i = std::find(data->accels_.begin(), data->accels_.end(), accel);
 
-    if (i == accels_.end()) {
-        accels_.emplace_back(accel);
-        signal_accel_added_(accels_.back());
+    if (i == data->accels_.end()) {
+        data->accels_.emplace_back(accel);
+        data->signal_accel_added_(data->accels_.back());
     }
 }
 
@@ -195,11 +254,11 @@ void Master_action::add_accels(const ustring & key_specs) {
 
 void Master_action::remove_accel(char32_t kc, int km) {
     Accel accel(kc, km);
-    auto i = std::find(accels_.begin(), accels_.end(), accel);
+    auto i = std::find(data->accels_.begin(), data->accels_.end(), accel);
 
-    if (i != accels_.end()) {
-        signal_accel_removed_(*i);
-        accels_.erase(i);
+    if (i != data->accels_.end()) {
+        data->signal_accel_removed_(*i);
+        data->accels_.erase(i);
     }
 }
 
@@ -212,86 +271,221 @@ void Master_action::remove_accels(const ustring & key_specs) {
 }
 
 void Master_action::clear_accels() {
-    for (auto & accel: accels_) { signal_accel_removed_(accel); }
-    accels_.clear();
+    for (auto & accel: data->accels_) { data->signal_accel_removed_(accel); }
+    data->accels_.clear();
 }
 
 std::vector<Accel> Master_action::accels() const {
-    return accels_;
+    return data->accels_;
 }
 
 signal<void()> & Master_action::signal_disable() {
-    return signal_disable_;
+    return data->signal_disable_;
 }
 
 signal<void()> & Master_action::signal_enable() {
-    return signal_enable_;
+    return data->signal_enable_;
 }
 
 signal<void()> & Master_action::signal_hide() {
-    return signal_hide_;
+    return data->signal_hide_;
 }
 
 signal<void()> & Master_action::signal_show() {
-    return signal_show_;
+    return data->signal_show_;
 }
 
 signal<void(const Accel & accel)> & Master_action::signal_accel_added() {
-    return signal_accel_added_;
+    return data->signal_accel_added_;
 }
 
 signal<void(const Accel & accel)> & Master_action::signal_accel_removed() {
-    return signal_accel_removed_;
+    return data->signal_accel_removed_;
 }
 
 signal<void(const ustring &)> & Master_action::signal_label_changed() {
-    return signal_label_changed_;
+    return data->signal_label_changed_;
 }
 
 signal<void(const ustring &)> & Master_action::signal_icon_changed() {
-    return signal_icon_changed_;
+    return data->signal_icon_changed_;
 }
 
 signal<void(const ustring &)> & Master_action::signal_tooltip_changed() {
-    return signal_tooltip_changed_;
+    return data->signal_tooltip_changed_;
 }
 
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
 
+struct Action_base::Data {
+    bool                    disabled_ : 1;
+    bool                    frozen_ : 1;
+    bool                    hidden_ : 1;
+    bool                    disappeared_ : 1;
+    ustring                 label_;
+    ustring                 icon_name_;
+    ustring                 tooltip_;
+    std::vector<Accel>      accels_;
+
+    signal<void()> *        signal_disable_ = nullptr;
+    signal<void()> *        signal_enable_ = nullptr;
+    signal<void()> *        signal_show_ = nullptr;
+    signal<void()> *        signal_hide_ = nullptr;
+    signal<void(Accel &)> * signal_accel_added_ = nullptr;
+    signal<void(Accel &)> * signal_accel_removed_ = nullptr;
+    signal<void(const ustring &)> * signal_label_changed_ = nullptr;
+    signal<void(const ustring &)> * signal_icon_changed_ = nullptr;
+    signal<void(const ustring &)> * signal_tooltip_changed_ = nullptr;
+    signal<void()>          signal_destroy_;
+
+    connection              accel_added_cx_ { true };
+    connection              accel_removed_cx_ { true };
+    connection              enable_cx_ { true };
+    connection              disable_cx_ { true };
+    connection              show_cx_ { true };
+    connection              hide_cx_ { true };
+    connection              label_changed_cx_ { true };
+    connection              icon_changed_cx_ { true };
+    connection              tooltip_changed_cx_ { true };
+
+    Data(): disabled_(false), frozen_(false), hidden_(false), disappeared_(false) {}
+    Data(const Data & other) = default;
+    Data(Data && other) = default;
+    Data & operator=(const Data & other) = default;
+    Data & operator=(Data && other) = default;
+
+   ~Data() {
+       if (signal_disable_) { delete signal_disable_; }
+       if (signal_enable_) { delete signal_enable_; }
+       if (signal_show_) { delete signal_show_; }
+       if (signal_hide_) { delete signal_hide_; }
+       if (signal_accel_added_) { delete signal_accel_added_; }
+       if (signal_accel_removed_) { delete signal_accel_removed_; }
+       if (signal_label_changed_) { delete signal_label_changed_; }
+       if (signal_icon_changed_) { delete signal_icon_changed_; }
+       if (signal_tooltip_changed_) { delete signal_tooltip_changed_; }
+   }
+
+    bool connected() const {
+        return  (signal_disable_ && !signal_disable_->empty()) ||
+                (signal_enable_ && !signal_enable_->empty()) ||
+                (signal_show_ && !signal_show_->empty()) ||
+                (signal_hide_ && !signal_hide_->empty()) ||
+                (signal_accel_added_ && !signal_accel_added_->empty()) ||
+                (signal_accel_removed_ && !signal_accel_removed_->empty()) ||
+                (signal_label_changed_ && !signal_label_changed_->empty()) ||
+                (signal_icon_changed_ && !signal_icon_changed_->empty()) ||
+                (signal_tooltip_changed_ && !signal_tooltip_changed_->empty());
+    }
+
+    signal<void()> & signal_disable() {
+        if (!signal_disable_) { signal_disable_ = new signal<void()>; }
+        return *signal_disable_;
+    }
+
+    signal<void()> & signal_enable() {
+        if (!signal_enable_) { signal_enable_ = new signal<void()>; }
+        return *signal_enable_;
+    }
+
+    signal<void()> & signal_show() {
+        if (!signal_show_) { signal_show_ = new signal<void()>; }
+        return *signal_show_;
+    }
+
+    signal<void()> & signal_hide() {
+        if (!signal_hide_) { signal_hide_ = new signal<void()>; }
+        return *signal_hide_;
+    }
+
+    signal<void(Accel &)> & signal_accel_added() {
+        if (!signal_accel_added_) { signal_accel_added_ = new signal<void(Accel &)>; }
+        return *signal_accel_added_;
+    }
+
+    signal<void(Accel &)> & signal_accel_removed() {
+        if (!signal_accel_removed_) { signal_accel_removed_ = new signal<void(Accel &)>; }
+        return *signal_accel_removed_;
+    }
+
+    signal<void(const ustring &)> & signal_label_changed() {
+        if (!signal_label_changed_) { signal_label_changed_ = new signal<void(const ustring &)>; }
+        return *signal_label_changed_;
+    }
+
+    signal<void(const ustring &)> & signal_icon_changed() {
+        if (!signal_icon_changed_) { signal_icon_changed_ = new signal<void(const ustring &)>; }
+        return *signal_icon_changed_;
+    }
+
+    signal<void(const ustring &)> & signal_tooltip_changed() {
+        if (!signal_tooltip_changed_) { signal_tooltip_changed_ = new signal<void(const ustring &)>; }
+        return *signal_tooltip_changed_;
+    }
+};
+
 Action_base::Action_base():
-    trackable()
+    trackable(),
+    data(new Data)
 {
 }
 
 Action_base::Action_base(const ustring & accels):
-    trackable()
+    trackable(),
+    data(new Data)
 {
     add_accels(accels);
 }
 
+Action_base::Action_base(const Action_base & other):
+    trackable(),
+    data(new Data(*other.data))
+{
+}
+
+Action_base::Action_base(Action_base && other):
+    trackable(),
+    data(new Data(std::move(*other.data)))
+{
+}
+
+Action_base & Action_base::operator=(const Action_base & other) {
+    if (this != &other) { *data = *other.data; }
+    return *this;
+}
+
+Action_base & Action_base::operator=(Action_base && other) {
+    if (this != &other) { *data = std::move(*other.data); }
+    return *this;
+}
+
 Action_base::Action_base(char32_t kc, int km):
-    trackable()
+    trackable(),
+    data(new Data)
 {
     add_accel(kc, km);
 }
 
 Action_base::Action_base(const ustring & accels, const ustring & label):
-    trackable()
+    trackable(),
+    data(new Data)
 {
     add_accels(accels);
     set_label(label);
 }
 
 Action_base::Action_base(char32_t kc, int km, const ustring & label):
-    trackable()
+    trackable(),
+    data(new Data)
 {
     add_accel(kc, km);
     set_label(label);
 }
 
 Action_base::Action_base(const ustring & accels, const ustring & label, const ustring & icon_name):
-    trackable()
+    trackable(),
+    data(new Data)
 {
     add_accels(accels);
     set_label(label);
@@ -299,7 +493,8 @@ Action_base::Action_base(const ustring & accels, const ustring & label, const us
 }
 
 Action_base::Action_base(char32_t kc, int km, const ustring & label, const ustring & icon_name):
-    trackable()
+    trackable(),
+    data(new Data)
 {
     add_accel(kc, km);
     set_label(label);
@@ -307,7 +502,8 @@ Action_base::Action_base(char32_t kc, int km, const ustring & label, const ustri
 }
 
 Action_base::Action_base(const ustring & accels, const ustring & label, const ustring & icon_name, const ustring & tooltip):
-    trackable()
+    trackable(),
+    data(new Data)
 {
     add_accels(accels);
     set_label(label);
@@ -316,7 +512,8 @@ Action_base::Action_base(const ustring & accels, const ustring & label, const us
 }
 
 Action_base::Action_base(char32_t kc, int km, const ustring & label, const ustring & icon_name, const ustring & tooltip):
-    trackable()
+    trackable(),
+    data(new Data)
 {
     add_accel(kc, km);
     set_label(label);
@@ -325,132 +522,134 @@ Action_base::Action_base(char32_t kc, int km, const ustring & label, const ustri
 }
 
 Action_base::Action_base(Master_action & master_action):
-    trackable()
+    trackable(),
+    data(new Data)
 {
     set_master_action(master_action);
 }
 
 Action_base::~Action_base() {
+    data->signal_destroy_();
     show();
     appear();
     enable();
     thaw();
-    signal_destroy_();
+    delete data;
 }
 
 void Action_base::set_label(const ustring & label) {
-    if (label_ != label) {
-        label_ = label;
-        signal_label_changed_(label_);
+    if (data->label_ != label) {
+        data->label_ = label;
+        if (data->signal_label_changed_) { (*data->signal_label_changed_)(data->label_); }
     }
 }
 
 ustring Action_base::label() const {
-    return label_;
+    return data->label_;
 }
 
 void Action_base::enable() {
-    if (disabled_) {
-        disabled_ = false;
-        if (!frozen_) { on_enable(); signal_enable_(); }
+    if (data->disabled_) {
+        data->disabled_ = false;
+        if (!data->frozen_) { on_enable(); if (data->signal_enable_) (*data->signal_enable_)(); }
     }
 }
 
 void Action_base::thaw() {
-    if (frozen_) {
-        frozen_ = false;
-        if (!disabled_) { on_enable(); signal_enable_(); }
+    if (data->frozen_) {
+        data->frozen_ = false;
+        if (!data->disabled_) { on_enable(); if (data->signal_enable_) (*data->signal_enable_)(); }
     }
 }
 
 void Action_base::disable() {
-    if (!disabled_) {
-        disabled_ = true;
-        if (!frozen_) { on_disable(); signal_disable_(); }
+    if (!data->disabled_) {
+        data->disabled_ = true;
+        if (!data->frozen_) { on_disable(); if (data->signal_disable_) (*data->signal_disable_)(); }
     }
 }
 
 void Action_base::freeze() {
-    if (!frozen_) {
-        frozen_ = true;
-        if (!disabled_) { on_disable(); signal_disable_(); }
+    if (!data->frozen_) {
+        data->frozen_ = true;
+        if (!data->disabled_) { on_disable(); if (data->signal_disable_) (*data->signal_disable_)(); }
     }
 }
 
 bool Action_base::enabled() const {
-    return !disabled_ && !frozen_;
+    return !data->disabled_ && !data->frozen_;
 }
 
 void Action_base::show() {
-    if (hidden_) {
-        hidden_ = false;
-        if (!disappeared_) { signal_show_(); }
+    if (data->hidden_) {
+        data->hidden_ = false;
+        if (!data->disappeared_ && data->signal_show_) { (*data->signal_show_)(); }
     }
 }
 
 void Action_base::appear() {
-    if (disappeared_) {
-        disappeared_ = false;
-        if (!hidden_) { signal_show_(); }
+    if (data->disappeared_) {
+        data->disappeared_ = false;
+        if (!data->hidden_ && data->signal_show_) { (*data->signal_show_)(); }
     }
 }
 
 void Action_base::hide() {
-    if (!hidden_) {
-        hidden_ = true;
-        if (!disappeared_) { signal_hide_(); }
+    if (!data->hidden_) {
+        data->hidden_ = true;
+        if (!data->disappeared_ && data->signal_hide_) { (*data->signal_hide_)(); }
     }
 }
 
 void Action_base::disappear() {
-    if (!disappeared_) {
-        disappeared_ = true;
-        if (!hidden_) { signal_hide_(); }
+    if (!data->disappeared_) {
+        data->disappeared_ = true;
+        if (!data->hidden_ && data->signal_hide_) { (*data->signal_hide_)(); }
     }
 }
 
 bool Action_base::visible() const {
-    return !hidden_ && !disappeared_;
+    return !data->hidden_ && !data->disappeared_;
 }
 
 void Action_base::set_icon_name(const ustring & icon_name) {
-    if (icon_name_ != icon_name) {
-        icon_name_ = icon_name;
-        signal_icon_changed_(icon_name_);
+    if (data->icon_name_ != icon_name) {
+        data->icon_name_ = icon_name;
+        if (data->signal_icon_changed_) { (*data->signal_icon_changed_)(data->icon_name_); }
     }
 }
 
 ustring Action_base::icon_name() const {
-    return icon_name_;
+    return data->icon_name_;
 }
 
 void Action_base::set_tooltip(const ustring & tooltip) {
-    if (tooltip_ != tooltip) {
-        tooltip_ = tooltip;
-        signal_tooltip_changed_(tooltip_);
+    if (data->tooltip_ != tooltip) {
+        data->tooltip_ = tooltip;
+        if (data->signal_tooltip_changed_) { (*data->signal_tooltip_changed_)(data->tooltip_); }
     }
 }
 
 void Action_base::unset_tooltip() {
-    if (!tooltip_.empty()) {
-        tooltip_.clear();
-        signal_tooltip_changed_(tooltip_);
+    if (!data->tooltip_.empty()) {
+        data->tooltip_.clear();
+        if (data->signal_tooltip_changed_) { (*data->signal_tooltip_changed_)(data->tooltip_); }
     }
 }
 
 ustring Action_base::tooltip() const {
-    return tooltip_;
+    return data->tooltip_;
 }
 
 void Action_base::add_accel(char32_t kc, int km) {
     if (KC_NONE != kc) {
         Accel accel(kc, km);
-        auto i = std::find(accels_.begin(), accels_.end(), accel);
+        auto i = std::find(data->accels_.begin(), data->accels_.end(), accel);
 
-        if (i == accels_.end()) {
-            accels_.emplace_back(accel);
-            accels_.back().connect(fun(this, &Action_base::on_accel));
-            signal_accel_added_(accels_.back());
+        if (i == data->accels_.end()) {
+            data->accels_.emplace_back(accel);
+            data->accels_.back().connect(fun(this, &Action_base::on_accel));
+            if (data->signal_accel_added_) { (*data->signal_accel_added_)(data->accels_.back()); }
         }
     }
 }
@@ -468,11 +667,11 @@ void Action_base::add_accels(const ustring & key_specs) {
 
 void Action_base::remove_accel(char32_t kc, int km) {
     Accel accel(kc, km);
-    auto i = std::find(accels_.begin(), accels_.end(), accel);
+    auto i = std::find(data->accels_.begin(), data->accels_.end(), accel);
 
-    if (i != accels_.end()) {
-        signal_accel_removed_(*i);
-        accels_.erase(i);
+    if (i != data->accels_.end()) {
+        if (data->signal_accel_removed_) { (*data->signal_accel_removed_)(*i); }
+        data->accels_.erase(i);
     }
 }
 
@@ -485,28 +684,33 @@ void Action_base::remove_accels(const ustring & key_specs) {
 }
 
 void Action_base::clear_accels() {
-    for (auto & accel: accels_) { signal_accel_removed_(accel); }
-    accels_.clear();
+    if (data->signal_accel_removed_) {
+        for (auto & accel: data->accels_) {
+            (*data->signal_accel_removed_)(accel);
+        }
+    }
+
+    data->accels_.clear();
 }
 
 void Action_base::on_enable() {
-    for (auto & accel: accels_) { accel.enable(); }
+    for (auto & accel: data->accels_) { accel.enable(); }
 }
 
 void Action_base::on_disable() {
-    for (auto & accel: accels_) { accel.disable(); }
+    for (auto & accel: data->accels_) { accel.disable(); }
 }
 
 void Action_base::set_master_action(Master_action & master_action) {
-    accel_added_cx_ = master_action.signal_accel_added().connect(fun(this, &Action_base::on_accel_added));
-    accel_removed_cx_ = master_action.signal_accel_removed().connect(fun(this, &Action_base::on_accel_removed));
-    enable_cx_ = master_action.signal_enable().connect(fun(this, &Action_base::thaw));
-    disable_cx_ = master_action.signal_disable().connect(fun(this, &Action_base::freeze));
-    show_cx_ = master_action.signal_show().connect(fun(this, &Action_base::appear));
-    hide_cx_ = master_action.signal_hide().connect(fun(this, &Action_base::disappear));
-    label_changed_cx_ = master_action.signal_label_changed().connect(fun(this, &Action_base::set_label));
-    icon_changed_cx_ = master_action.signal_icon_changed().connect(fun(this, &Action_base::set_icon_name));
-    tooltip_changed_cx_ = master_action.signal_tooltip_changed().connect(fun(this, &Action_base::set_tooltip));
+    data->accel_added_cx_ = master_action.signal_accel_added().connect(fun(this, &Action_base::on_accel_added));
+    data->accel_removed_cx_ = master_action.signal_accel_removed().connect(fun(this, &Action_base::on_accel_removed));
+    data->enable_cx_ = master_action.signal_enable().connect(fun(this, &Action_base::thaw));
+    data->disable_cx_ = master_action.signal_disable().connect(fun(this, &Action_base::freeze));
+    data->show_cx_ = master_action.signal_show().connect(fun(this, &Action_base::appear));
+    data->hide_cx_ = master_action.signal_hide().connect(fun(this, &Action_base::disappear));
+    data->label_changed_cx_ = master_action.signal_label_changed().connect(fun(this, &Action_base::set_label));
+    data->icon_changed_cx_ = master_action.signal_icon_changed().connect(fun(this, &Action_base::set_icon_name));
+    data->tooltip_changed_cx_ = master_action.signal_tooltip_changed().connect(fun(this, &Action_base::set_tooltip));
 
     clear_accels();
 
@@ -546,7 +750,7 @@ void Action_base::on_accel_removed(const Accel & accel) {
 }
 
 Action_base * Action_base::lookup(char32_t kc, int km) {
-    for (auto & accel: accels_) {
+    for (auto & accel: data->accels_) {
         if (accel.equals(kc, km)) {
             return this;
         }
@@ -556,47 +760,47 @@ Action_base * Action_base::lookup(char32_t kc, int km) {
 }
 
 std::vector<Accel> & Action_base::accels() {
-    return accels_;
+    return data->accels_;
 }
 
 signal<void()> & Action_base::signal_disable() {
-    return signal_disable_;
+    return data->signal_disable();
 }
 
 signal<void()> & Action_base::signal_enable() {
-    return signal_enable_;
+    return data->signal_enable();
 }
 
 signal<void()> & Action_base::signal_hide() {
-    return signal_hide_;
+    return data->signal_hide();
 }
 
 signal<void()> & Action_base::signal_show() {
-    return signal_show_;
+    return data->signal_show();
 }
 
 signal<void(Accel &)> & Action_base::signal_accel_added() {
-    return signal_accel_added_;
+    return data->signal_accel_added();
 }
 
 signal<void(Accel &)> & Action_base::signal_accel_removed() {
-    return signal_accel_removed_;
+    return data->signal_accel_removed();
 }
 
 signal<void(const ustring &)> & Action_base::signal_label_changed() {
-    return signal_label_changed_;
+    return data->signal_label_changed();
 }
 
 signal<void(const ustring &)> & Action_base::signal_icon_changed() {
-    return signal_icon_changed_;
+    return data->signal_icon_changed();
 }
 
 signal<void(const ustring &)> & Action_base::signal_tooltip_changed() {
-    return signal_tooltip_changed_;
+    return data->signal_tooltip_changed();
 }
 
 signal<void()> & Action_base::signal_destroy() {
-    return signal_destroy_;
+    return data->signal_destroy_;
 }
 
 // ----------------------------------------------------------------------------
@@ -687,6 +891,10 @@ bool Action::on_accel() {
     }
 
     return false;
+}
+
+bool Action::connected() const {
+    return data->connected() || !signal_activate_.empty();
 }
 
 // ----------------------------------------------------------------------------
@@ -793,6 +1001,10 @@ bool Toggle_action::on_accel() {
     }
 
     return false;
+}
+
+bool Toggle_action::connected() const {
+    return data->connected() || !signal_toggle_.empty();
 }
 
 } // namespace tau

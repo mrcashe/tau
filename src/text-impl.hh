@@ -144,7 +144,6 @@ protected:
 
     void scroll_to_caret();
     void hint_x();
-    void init_actions();
     void refresh_caret();
 
     // Overriden by Edit_impl.
@@ -294,6 +293,7 @@ private:
 private:
 
     void init();
+    void init_actions();
     void draw_caret(Painter pr);
     void expose_caret();
     void wipe_caret();

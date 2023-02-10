@@ -70,7 +70,6 @@ public:
     Widget_ptr prepend(const ustring & text, unsigned margin_left=0, unsigned margin_right=0);
 
     Action & cancel_action() { return edit_->cancel_action(); }
-    const Action & cancel_action() const { return edit_->cancel_action(); }
 
     signal<void(const ustring &)> & signal_activate() { return signal_activate_; }
     signal<void(const ustring &)> & signal_changed() { return signal_changed_; }

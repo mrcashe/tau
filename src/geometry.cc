@@ -923,9 +923,8 @@ bool Rect::contains(const Rect & r) const {
 }
 
 void Rect::unite(const Rect & other) {
-    if (other) {
-        set(std::min(left(), other.left()), std::min(top(), other.top()), std::max(right(), other.right()), std::max(bottom(), other.bottom()));
-    }
+    if (empty()) { set(other); }
+    else if (other) { set(std::min(left(), other.left()), std::min(top(), other.top()), std::max(right(), other.right()), std::max(bottom(), other.bottom())); }
 }
 
 Rect Rect::united(const Rect & other) const {

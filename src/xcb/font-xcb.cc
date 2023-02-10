@@ -39,7 +39,7 @@ Font_xcb::Font_xcb(Font_face_ptr fface, const ustring & spec, double size_pt, Di
     cx_(dp->conn())
 {
     east_ = xcb_generate_id(cx_);
-    xcb_render_create_glyph_set(cx_, east_, dp_->pictformat(8));
+    xcb_render_create_glyph_set(cx_, east_, dp_->pictformat(format_));
 }
 
 Font_xcb::~Font_xcb() {
@@ -74,12 +74,12 @@ void Font_xcb::render_glyphs(const std::u32string & str, Point pt, uint8_t op, x
                 avail += *s;
 
                 if (Rect r = g->bounds()) {
-                    Pixmap_ptr pix = Pixmap_impl::create(8, r.size());
+                    Pixmap_ptr pix = Pixmap_impl::create(format_, r.size());
 
                     if (auto pr = pix->painter()) {
                         pr.move_to(-r.left(), std::ceil(g->max().y()));
                         pr.glyph(Glyph_impl::wrap(g));
-                        pr.set_brush(Color("White"));
+                        pr.set_brush(Color(COLOR_WHITE));
                         pr.fill();
 
                         ginfos_.emplace_back();

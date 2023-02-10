@@ -104,9 +104,16 @@ public:
     // Overriden by Container_impl.
     virtual bool handle_mouse_double_click(int mbt, int mm, const Point & pt);
 
+    // Overriden by Container_impl.
     virtual void handle_mouse_motion(int mm, const Point & pt);
+
+    // Overriden by Container_impl.
     virtual void handle_mouse_enter(const Point & pt);
+
+    // Overriden by Container_impl.
     virtual void handle_mouse_leave();
+
+    // Overriden by Container_impl.
     virtual bool handle_mouse_wheel(int delta, int mm, const Point & pt);
 
     // Overriden by Container_impl.
@@ -216,6 +223,42 @@ public:
 
     // Overriden by Container_impl.
     virtual Action_base * lookup_action(char32_t kc, int km);
+
+    // Overriden by Container_impl.
+    virtual signal<bool(int, int, Point)> & signal_mouse_down();
+
+    // Overriden by Container_impl.
+    virtual signal<bool(int, int, Point)> & signal_mouse_double_click();
+
+    // Overriden by Container_impl.
+    virtual signal<bool(int, int, Point)> & signal_mouse_up();
+
+    // Overriden by Container_impl.
+    virtual signal<void(int, Point)> & signal_mouse_motion();
+
+    // Overriden by Container_impl.
+    virtual signal<void(Point)> & signal_mouse_enter();
+
+    // Overriden by Container_impl.
+    virtual signal<void()> & signal_mouse_leave();
+
+    // Overriden by Container_impl.
+    virtual signal<bool(int, int, Point)> & signal_mouse_wheel();
+
+    // Overriden by Container_impl.
+    virtual signal<void()> & signal_parent();
+
+    // Overriden by Container_impl.
+    virtual signal<bool(char32_t, int)> & signal_accel();
+
+    // Overriden by Container_impl.
+    virtual signal<bool(char32_t, int)> & signal_key_down();
+
+    // Overriden by Container_impl.
+    virtual signal<bool(char32_t, int)> & signal_key_up();
+
+    // Overriden by Container_impl.
+    virtual signal<bool(const ustring &)> & signal_input();
 
     connection connect_accel(Accel & accel, bool prepend=false);
     void connect_action(Action_base & action, bool prepend=false);
@@ -337,20 +380,7 @@ public:
 
     signal<bool(Painter, Rect)> & signal_paint() { return signal_paint_; }
     signal<bool(Painter, Rect)> & signal_backpaint() { return signal_backpaint_; }
-    signal<bool(char32_t, int)> & signal_key_down();
-    signal<bool(char32_t, int)> & signal_key_up();
-    signal<bool(const ustring &)> & signal_input();
-    signal<bool(char32_t, int)> & signal_accel();
-    signal<bool(int, int, Point)> & signal_mouse_down();
-    signal<bool(int, int, Point)> & signal_mouse_double_click();
-    signal<bool(int, int, Point)> & signal_mouse_up();
-    signal<void(int, Point)> & signal_mouse_motion();
-    signal<void(Point)> & signal_mouse_enter();
-    signal<void()> & signal_mouse_leave();
-    signal<bool(int, int, Point)> & signal_mouse_wheel();
-    signal<void()> & signal_origin_changed() { return signal_origin_changed_; }
     signal<void()> & signal_size_changed() { return signal_size_changed_; }
-    signal<void()> & signal_scroll_changed();
     signal<void()> & signal_hints_changed() { return signal_hints_changed_; }
     signal<void()> & signal_requisition_changed() { return signal_requisition_changed_; }
     signal<void()> & signal_enable() { return signal_enable_; }
@@ -363,19 +393,20 @@ public:
     signal<void()> & signal_unselect() { return signal_unselect_; }
     signal<void()> & signal_show() { return signal_show_; }
     signal<void()> & signal_hide() { return signal_hide_; }
-    signal<void()> & signal_parent();
     signal<void()> & signal_display() { return signal_display_; }
     signal<void()> & signal_unparent() { return signal_unparent_; }
     signal<void()> & signal_destroy() { return signal_destroy_; }
     signal<bool()> & signal_take_focus() { return signal_take_focus_; }
+    signal<void()> & signal_origin_changed() { return signal_origin_changed_; }
+    signal<void()> & signal_scroll_changed();
 
 protected:
 
     Container_impl *    parent_ = nullptr;
     Scroller_impl *     scroller_ = nullptr;
     Cursor_ptr          cursor_;
-    bool                cursor_hidden_ = false;
-    bool                focus_allowed_ = false;
+    bool                cursor_hidden_ : 1;
+    bool                focus_allowed_ : 1;
     bool                shut_ = false;
     bool                hidden_ = false;
     Style               style_;
@@ -403,6 +434,19 @@ protected:
     signal<void()> signal_pdata_changed_;
     signal<void()> signal_run_;
 
+    signal<bool(int, int, Point)> * signal_mouse_down_ = nullptr;
+    signal<bool(int, int, Point)> * signal_mouse_double_click_ = nullptr;
+    signal<bool(int, int, Point)> * signal_mouse_up_ = nullptr;
+    signal<void(int, Point)> * signal_mouse_motion_ = nullptr;
+    signal<void(Point)> * signal_mouse_enter_ = nullptr;
+    signal<void()> * signal_mouse_leave_ = nullptr;
+    signal<bool(int, int, Point)> * signal_mouse_wheel_ = nullptr;
+    signal<void()> * signal_parent_ = nullptr;
+    signal<bool(char32_t, int)> * signal_accel_ = nullptr;
+    signal<bool(char32_t, int)> * signal_key_down_ = nullptr;
+    signal<bool(char32_t, int)> * signal_key_up_ = nullptr;
+    signal<bool(const ustring &)> * signal_input_ = nullptr;
+
 protected:
 
     void freeze();
@@ -412,8 +456,6 @@ protected:
 
 private:
 
-    bool        block_tooltip_ = false;
-    bool        tooltip_exposed_ = false;
     ustring     tooltip_text_;
     Widget_ptr  tooltip_widget_;
     unsigned    tooltip_delay_ = 611;
@@ -432,35 +474,26 @@ private:
     Size        max_size_hint_;
     Size        required_size_;
 
-    bool        focused_ = false;
-    bool        upshow_ = false;
-    bool        enabled_ = false;
-    bool        disappeared_ = false;
-    bool        disabled_ = false;
-    bool        frozen_ = false;
+    bool        block_tooltip_ : 1;
+    bool        tooltip_exposed_ : 1;
+    bool        focused_ : 1;
+    bool        upshow_ : 1;
+    bool        enabled_ : 1;
+    bool        disappeared_ : 1;
+    bool        disabled_ : 1;
+    bool        frozen_ : 1;
 
     unsigned    margin_left_hint_ = 0;
     unsigned    margin_right_hint_ = 0;
     unsigned    margin_top_hint_ = 0;
     unsigned    margin_bottom_hint_ = 0;
 
-    connection  pan_cx_;
+    connection  cx_pan1_ { true };
+    connection  cx_pan2_ { true };
+    connection  cx_cursor_theme_ { true };
 
-    connection  cursor_theme_cx_;
     signal<void()> * signal_scroll_changed_ = nullptr;
-    signal<bool(char32_t, int)> * signal_accel_ = nullptr;
     signal<Action_base *(char32_t, int)> * signal_lookup_action_ = nullptr;
-    signal<void()> * signal_parent_ = nullptr;
-    signal<bool(char32_t, int)> * signal_key_down_ = nullptr;
-    signal<bool(char32_t, int)> * signal_key_up_ = nullptr;
-    signal<bool(const ustring &)> * signal_input_ = nullptr;
-    signal<bool(int, int, Point)> * signal_mouse_down_ = nullptr;
-    signal<bool(int, int, Point)> * signal_mouse_double_click_ = nullptr;
-    signal<bool(int, int, Point)> * signal_mouse_up_ = nullptr;
-    signal<void(int, Point)> * signal_mouse_motion_ = nullptr;
-    signal<void(Point)> * signal_mouse_enter_ = nullptr;
-    signal<void()> * signal_mouse_leave_ = nullptr;
-    signal<bool(int, int, Point)> * signal_mouse_wheel_ = nullptr;
 
 private:
 

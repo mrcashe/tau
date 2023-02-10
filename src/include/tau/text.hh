@@ -264,164 +264,83 @@ public:
     /// Gets "Move Left" action.
     Action & move_left_action();
 
-    /// Gets "Move Left" action.
-    const Action & move_left_action() const;
-
     /// Gets "Select Left" action.
     Action & select_left_action();
-
-    /// Gets "Select Left" action.
-    const Action & select_left_action() const;
 
     /// Gets "Move Right" action.
     Action & move_right_action();
 
-    /// Gets "Move Right" action.
-    const Action & move_right_action() const;
-
     /// Gets "Select Right" action.
     Action & select_right_action();
-
-    /// Gets "Select Right" action.
-    const Action & select_right_action() const;
 
     /// Gets "Move Up" action.
     Action & move_up_action();
 
-    /// Gets "Move Up" action.
-    const Action & move_up_action() const;
-
     /// Gets "Select Up" action.
     Action & select_up_action();
-
-    /// Gets "Select Up" action.
-    const Action & select_up_action() const;
 
     /// Gets "Move Down" action.
     Action & move_down_action();
 
-    /// Gets "Move Down" action.
-    const Action & move_down_action() const;
-
     /// Gets "Select Down" action.
     Action & select_down_action();
-
-    /// Gets "Select Down" action.
-    const Action & select_down_action() const;
 
     /// Gets "Move Word Left" action.
     Action & move_word_left_action();
 
-    /// Gets "Move Word Left" action.
-    const Action & move_word_left_action() const;
-
     /// Gets "Select Word Left" action.
     Action & select_word_left_action();
-
-    /// Gets "Select Word Left" action.
-    const Action & select_word_left_action() const;
 
     /// Gets "Move Word Right" action.
     Action & move_word_right_action();
 
-    /// Gets "Move Word Right" action.
-    const Action & move_word_right_action() const;
-
     /// Gets "Select Word Right" action.
     Action & select_word_right_action();
-
-    /// Gets "Select Word Right" action.
-    const Action & select_word_right_action() const;
 
     /// Gets "Move Home" action.
     Action & move_home_action();
 
-    /// Gets "Move Home" action.
-    const Action & move_home_action() const;
-
     /// Gets "Select Home" action.
     Action & select_home_action();
-
-    /// Gets "Select Home" action.
-    const Action & select_home_action() const;
 
     /// Gets "Move To End of Line" action.
     Action & move_to_eol_action();
 
-    /// Gets "Move To End of Line" action.
-    const Action & move_to_eol_action() const;
-
     /// Gets "Select To End of Line" action.
     Action & select_to_eol_action();
-
-    /// Gets "Select To End of Line" action.
-    const Action & select_to_eol_action() const;
 
     /// Gets "Move To Start of File" action.
     Action & move_to_sof_action();
 
-    /// Gets "Move To Start of File" action.
-    const Action & move_to_sof_action() const;
-
     /// Gets "Select To Start of File" action.
     Action & select_to_sof_action();
-
-    /// Gets "Select To Start of File" action.
-    const Action & select_to_sof_action() const;
 
     /// Gets "Move To End of File" action.
     Action & move_to_eof_action();
 
-    /// Gets "Move To End of File" action.
-    const Action & move_to_eof_action() const;
-
     /// Gets "Select To End of File" action.
     Action & select_to_eof_action();
-
-    /// Gets "Select To End of File" action.
-    const Action & select_to_eof_action() const;
 
     /// Gets "Move Page Up" action.
     Action & move_page_up_action();
 
-    /// Gets "Move Page Up" action.
-    const Action & move_page_up_action() const;
-
     /// Gets "Move Page Down" action.
     Action & move_page_down_action();
-
-    /// Gets "Move Page Down" action.
-    const Action & move_page_down_action() const;
 
     /// Gets "Select Page Up" action.
     Action & select_page_up_action();
 
-    /// Gets "Select Page Up" action.
-    const Action & select_page_up_action() const;
-
     /// Gets "Select Page Down" action.
     Action & select_page_down_action();
-
-    /// Gets "Select Page Down" action.
-    const Action & select_page_down_action() const;
 
     /// Gets "Select All" action.
     Action & select_all_action();
 
-    /// Gets "Select All" action.
-    const Action & select_all_action() const;
-
     /// Gets "Copy" action.
     Action & copy_action();
 
-    /// Gets "Copy" action.
-    const Action & copy_action() const;
-
     /// Gets "Cancel" action.
     Action & cancel_action();
-
-    /// Gets "Cancel" action.
-    const Action & cancel_action() const;
 
     /// @}
     /// @name Access to established signals.

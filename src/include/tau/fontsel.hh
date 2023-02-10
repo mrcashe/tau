@@ -100,26 +100,14 @@ public:
     /// Get "Apply" action.
     Action & apply_action();
 
-    /// Get "Apply" action.
-    const Action & apply_action() const;
-
     /// Get "Cancel" action.
     Action & cancel_action();
-
-    /// Get "Cancel" action.
-    const Action & cancel_action() const;
 
     /// Get focus_next action.
     Action & focus_next_action();
 
-    /// Get focus_next action.
-    const Action & focus_next_action() const;
-
     /// Get focus_previous action.
     Action & focus_previous_action();
-
-    /// Get focus_previous action.
-    const Action & focus_previous_action() const;
 
     /// Get signal "selection changed".
     signal<void(const ustring &)> & signal_selection_changed();

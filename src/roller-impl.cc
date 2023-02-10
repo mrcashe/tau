@@ -112,12 +112,12 @@ void Roller_impl::roll_to(Widget_impl * wp) {
         Rect pva(wp->to_parent(scroller_.get()), wp->size());
 
         if (horizontal()) {
-            if (pva.right() > offset()+scroller_->size().width()) { roll_to(pva.right()-scroller_->size().width()); }
+            if (pva.right() > offset()+scroller_->size().iwidth()) { roll_to(pva.right()-scroller_->size().iwidth()); }
             else if (pva.left() < offset()) { roll_to(pva.left()); }
         }
 
         else {
-            if (pva.bottom() > offset()+scroller_->size().height()) { roll_to(pva.bottom()-scroller_->size().height()); }
+            if (pva.bottom() > offset()+scroller_->size().iheight()) { roll_to(pva.bottom()-scroller_->size().iheight()); }
             else if (pva.top() < offset()) { roll_to(pva.top()); }
         }
     }

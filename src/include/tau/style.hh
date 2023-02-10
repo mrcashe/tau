@@ -37,7 +37,7 @@ namespace tau {
 
 /// Basic style item.
 /// @ingroup style_group
-class Style_item: public trackable {
+class Style_item {
 public:
 
     /// @private

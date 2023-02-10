@@ -29,6 +29,7 @@
 
 #include <tau/table.hh>
 #include <container-impl.hh>
+#include <forward_list>
 #include <map>
 
 namespace tau {
@@ -39,6 +40,8 @@ public:
     using Span = Table::Span;
 
     Table_impl();
+    Table_impl(unsigned xspacing, unsigned yspacing);
+    Table_impl(unsigned spacing);
    ~Table_impl();
 
     void put(Widget_ptr wp, int x, int y, unsigned xspan=1, unsigned yspan=1, bool xsh=false, bool ysh=false);
@@ -52,6 +55,7 @@ public:
     void respan(Widget_impl * wp, int x, int y, unsigned xspan, unsigned yspan);
     void respan(Widget_impl * wp, int x, int y, unsigned xspan, unsigned yspan, bool xsh, bool ysh);
     std::vector<Widget_impl *> children_within_range(int xmin, int ymin, int xmax, int ymax);
+    std::vector<Widget_impl *> children_within_range(const Span & rng);
 
     void set_column_spacing(unsigned xspacing);
     void set_row_spacing(unsigned yspacing);
@@ -146,23 +150,9 @@ public:
     int column_at_x(int x) const;
     int row_at_y(int y) const;
 
-    signal<void(int)> & signal_column_bounds_changed() {
-        return signal_column_bounds_changed_;
-    }
-
-    signal<void(int)> & signal_row_bounds_changed() {
-        return signal_row_bounds_changed_;
-    }
-
-    signal<void()> & signal_selection_changed() {
-        return signal_selection_changed_;
-    }
-
-protected:
-
-    signal<void(int)>   signal_column_bounds_changed_;
-    signal<void(int)>   signal_row_bounds_changed_;
-    signal<void()>      signal_selection_changed_;
+    signal<void(int)> & signal_column_bounds_changed();
+    signal<void(int)> & signal_row_bounds_changed();
+    signal<void()> & signal_selection_changed();
 
 private:
 
@@ -185,7 +175,9 @@ private:
 
     struct Col {
         int             x_ = 0;             // Origin.
+        int             lx_ = 0;            // Last origin.
         unsigned        w_ = 0;             // Width.
+        unsigned        lw_ = 0;            // Last width.
         unsigned        left_ = 0;          // User specified left margin.
         unsigned        right_ = 0;         // User specified right margin.
         unsigned        usize_ = 0;         // User specified exact size.
@@ -203,7 +195,9 @@ private:
 
     struct Row {
         int             y_ = 0;             // Origin.
+        int             ly_ = 0;            // Last origin.
         unsigned        h_ = 0;             // Height.
+        unsigned        lh_ = 0;            // Last height.
         unsigned        top_ = 0;           // User specified top margin.
         unsigned        bottom_ = 0;        // User specified bottom margin.
         unsigned        usize_ = 0;         // User specified exact size.
@@ -226,11 +220,13 @@ private:
     using Col_citer = Cols::const_iterator;
     using Row_iter =  Rows::iterator;
     using Row_citer = Rows::const_iterator;
-    using Marks = std::list<Span>;          // List storing marks.
+    using Marks = std::forward_list<Span>;
 
     Holders             holders_;
     Cols                cols_;
     Rows                rows_;
+    Span                sel_;
+    Marks               marks_;
 
     unsigned            xspacing_ = 0;
     unsigned            yspacing_ = 0;
@@ -254,17 +250,23 @@ private:
     unsigned            rshcol_ = 0;        // Shrank columns requisition.
     unsigned            rurow_ = 0;         // Requisition of rows having width set by user.
     unsigned            rshrow_ = 0;        // Shrank rows requisition.
+    unsigned            xextra_ = 0;        // Extra space along X axis per free column.
+    unsigned            xrem_ = 0;          // Extra space remainder along X axis per free column.
+    unsigned            yextra_ = 0;        // Extra space along Y axis per free row.
+    unsigned            yrem_ = 0;          // Extra space remainder along Y axis per free row.
 
-    Span                sel_;
-    Marks               marks_;
+    signal<void(int)> * signal_column_bounds_changed_ = nullptr;
+    signal<void(int)> * signal_row_bounds_changed_ = nullptr;
+    signal<void()> *    signal_selection_changed_ = nullptr;
 
 private:
 
+    void init();
     void arrange();
     void recalc();
     void rearrange1();
     void rearrange2();
-    bool update_requisition();
+    void update_requisition();
     void alloc_child(Holder & hol);
     void alloc_cols();
     void alloc_rows();
@@ -288,6 +290,7 @@ private:
     bool set_column_spacing_i(unsigned xspacing);
     bool set_row_spacing_i(unsigned yspacing);
     Rect range_bounds(const Span & rng) const;
+    std::forward_list<Widget_impl *> fchildren(const Span & rng);
 
     bool on_backpaint(Painter pr, const Rect & inval);
     void on_child_requisition(Widget_impl * wi);

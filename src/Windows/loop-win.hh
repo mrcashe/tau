@@ -34,7 +34,7 @@
 
 namespace tau {
 
-class Poller {
+class Poller: public trackable {
 public:
 
     virtual ~Poller() {}

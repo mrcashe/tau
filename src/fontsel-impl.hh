@@ -46,13 +46,10 @@ public:
     ustring sample() const { return sample_; }
 
     Action & apply_action() { return apply_; }
-    const Action & apply_action() const { return apply_; }
     Action & cancel_action() { return cancel_; }
-    const Action & cancel_action() const { return cancel_; }
     Action & focus_next_action() { return next_; }
-    const Action & focus_next_action() const { return next_; }
     Action & focus_previous_action() { return prev_; }
-    const Action & focus_previous_action() const { return prev_; }
+
     signal<void(const ustring &)> & signal_selection_changed() { return signal_selection_changed_; }
     signal<void(const ustring &)> & signal_font_activated() { return signal_font_activated_; }
 

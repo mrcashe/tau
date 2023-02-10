@@ -41,9 +41,7 @@ public:
     Color color() { return color_; }
 
     Action & apply_action() { return apply_action_; }
-    const Action & apply_action() const { return apply_action_; }
     Action & cancel_action() { return cancel_action_; }
-    const Action & cancel_action() const { return cancel_action_; }
 
     signal<void(const Color &)> & signal_color_changed() { return signal_color_changed_; }
 

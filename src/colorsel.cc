@@ -64,16 +64,7 @@ Action & Colorsel::apply_action() {
     return COLORSEL_IMPL->apply_action();
 }
 
-const Action & Colorsel::apply_action() const {
-    return COLORSEL_IMPL->apply_action();
-}
-
 Action & Colorsel::cancel_action() {
-    return COLORSEL_IMPL->cancel_action();
-}
-
-/// Get "Cancel" action.
-const Action & Colorsel::cancel_action() const {
     return COLORSEL_IMPL->cancel_action();
 }
 

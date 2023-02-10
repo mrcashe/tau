@@ -67,9 +67,7 @@ public:
     void save_state(Key_file & kf, Key_section & sect);
 
     Action & apply_action() { return user_apply_action_; }
-    const Action & apply_action() const { return user_apply_action_; }
     Action & cancel_action() { return cancel_action_; }
-    const Action & cancel_action() const { return cancel_action_; }
 
 protected:
 

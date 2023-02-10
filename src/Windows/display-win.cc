@@ -825,7 +825,7 @@ bool Display_win::handle_mouse_double_click(HWND hwnd, int mbt, WPARAM wp, LPARA
         auto p = set_mouse_owner(wii, pt);
 
         if (p == wii) {
-            wii->handle_mouse_double_click()(mbt, mm_from_wp(wp) & ~(MM_LEFT|MM_MIDDLE|MM_RIGHT), pt);
+            wii->handle_mouse_double_click(mbt, mm_from_wp(wp) & ~(MM_LEFT|MM_MIDDLE|MM_RIGHT), pt);
             return true;
         }
     }

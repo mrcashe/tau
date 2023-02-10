@@ -92,14 +92,8 @@ public:
     /// Get "Apply" action.
     Action & apply_action();
 
-    /// Get "Apply" action.
-    const Action & apply_action() const;
-
     /// Get "Cancel" action.
     Action & cancel_action();
-
-    /// Get "Cancel" action.
-    const Action & cancel_action() const;
 
     /// Signal emitted when color changed.
     /// Slot prototype:

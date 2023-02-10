@@ -100,8 +100,7 @@ void Button_base_impl::init() {
     style_.get(STYLE_BACKGROUND).signal_changed().connect(fun(this, &Button_base_impl::redraw));
     style_.get(STYLE_FOREGROUND).signal_changed().connect(fun(this, &Button_base_impl::redraw));
 
-    table_ = std::make_shared<Table_impl>();
-    table_->set_spacing(5);
+    table_ = std::make_shared<Table_impl>(5);
     insert(table_);
 
     signal_mouse_enter().connect(fun(this, &Button_base_impl::on_mouse_enter));
@@ -147,16 +146,16 @@ void Button_base_impl::set_label(const ustring & s) {
         label_ = std::make_shared<Text_impl>(s);
         label_->hint_margin(1);
         table_->put(label_, 1, 0, 1, 1, false, true);
-        table_->align(label_.get(), ALIGN_FILL, ALIGN_CENTER);
+        table_->align(label_.get(), ALIGN_CENTER, ALIGN_FILL);
     }
 }
 
 void Button_base_impl::set_image(Widget_ptr wp) {
     table_->remove(image_.get());
     image_ = wp;
-    table_->put(image_, 0, 0, 1, 1, true, true);
     table_->set_column_margin(0, 1, 1);
-    table_->align(image_.get(), ALIGN_FILL, ALIGN_CENTER);
+    table_->put(image_, 0, 0, 1, 1, true, true);
+    table_->align(image_.get(), ALIGN_FILL, ALIGN_FILL);
 }
 
 void Button_base_impl::set_icon(const ustring & icon_name, int icon_size) {
@@ -176,10 +175,10 @@ void Button_base_impl::set_action_tooltip(Action_base & action) {
         auto box = std::make_shared<Box_impl>(OR_EAST, 8);
         if (!tooltip_.empty()) { box->append(std::make_shared<Text_impl>(tooltip_), true); }
         auto tp = std::make_shared<Text_impl>(accels.front().label());
-        tp->style().redirect("accel/foreground", "foreground");
+        tp->style().redirect(STYLE_ACCEL_FOREGROUND, STYLE_FOREGROUND);
         box->append(tp, true);
         box->hint_margin(2);
-        box->style().font("font").enlarge(-2);
+        box->style().font(STYLE_FONT).enlarge(-2);
         set_tooltip(box);
     }
 

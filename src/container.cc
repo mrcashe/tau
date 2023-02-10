@@ -66,19 +66,35 @@ void Container::unparent_child(Widget & w) {
 }
 
 bool Container::update_child_bounds(Widget & w, const Rect & bounds) {
-    return CONTAINER_IMPL->update_child_bounds(w.ptr().get(), bounds);
+    if (w.ptr()->parent() == impl.get()) {
+        return CONTAINER_IMPL->update_child_bounds(w.ptr().get(), bounds);
+    }
+
+    return false;
 }
 
 bool Container::update_child_bounds(Widget & w, const Point & origin, const Size & sz) {
-    return CONTAINER_IMPL->update_child_bounds(w.ptr().get(), origin, sz);
+    if (w.ptr()->parent() == impl.get()) {
+        return CONTAINER_IMPL->update_child_bounds(w.ptr().get(), origin, sz);
+    }
+
+    return false;
 }
 
 bool Container::update_child_bounds(Widget & w, int x, int y, const Size & sz) {
-    return CONTAINER_IMPL->update_child_bounds(w.ptr().get(), x, y, sz);
+    if (w.ptr()->parent() == impl.get()) {
+        return CONTAINER_IMPL->update_child_bounds(w.ptr().get(), x, y, sz);
+    }
+
+    return false;
 }
 
 bool Container::update_child_bounds(Widget & w, int x, int y, unsigned width, unsigned height) {
-    return CONTAINER_IMPL->update_child_bounds(w.ptr().get(), x, y, width, height);
+    if (w.ptr()->parent() == impl.get()) {
+        return CONTAINER_IMPL->update_child_bounds(w.ptr().get(), x, y, width, height);
+    }
+
+    return false;
 }
 
 signal<void()> & Container::signal_arrange() {

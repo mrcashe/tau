@@ -156,13 +156,7 @@ public:
     Action & apply_action();
 
     /// Get "Cancel" action.
-    const Action & apply_action() const;
-
-    /// Get "Cancel" action.
     Action & cancel_action();
-
-    /// Get "Cancel" action.
-    const Action & cancel_action() const;
 };
 
 } // namespace tau

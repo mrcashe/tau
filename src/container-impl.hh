@@ -143,6 +143,42 @@ public:
     // Overrides Widget_impl.
     Action_base * lookup_action(char32_t kc, int km) override;
 
+    // Overrides Widget_impl.
+    signal<bool(int, int, Point)> & signal_mouse_down() override;
+
+    // Overrides Widget_impl.
+    signal<bool(int, int, Point)> & signal_mouse_double_click() override;
+
+    // Overrides Widget_impl.
+    signal<bool(int, int, Point)> & signal_mouse_up() override;
+
+    // Overrides Widget_impl.
+    signal<void(int, Point)> & signal_mouse_motion() override;
+
+    // Overrides Widget_impl.
+    signal<void(Point)> & signal_mouse_enter() override;
+
+    // Overrides Widget_impl.
+    signal<void()> & signal_mouse_leave() override;
+
+    // Overrides Widget_impl.
+    signal<bool(int, int, Point)> & signal_mouse_wheel() override;
+
+    // Overrides Widget_impl.
+    signal<void()> & signal_parent() override;
+
+    // Overrides Widget_impl.
+    signal<bool(char32_t, int)> & signal_accel() override;
+
+    // Overrides Widget_impl.
+    signal<bool(char32_t, int)> & signal_key_down() override;
+
+    // Overrides Widget_impl.
+    signal<bool(char32_t, int)> & signal_key_up() override;
+
+    // Overrides Widget_impl.
+    signal<bool(const ustring &)> & signal_input() override;
+
     void queue_arrange();
     void sync_arrange();
     void ungrab_mouse_down();
@@ -227,9 +263,19 @@ private:
     void update_mouse_owner();
     void paint_children(Painter pr, const Rect & inval, bool backpaint);
 
+    bool on_mouse_down(int mbt, int mm, const Point & pt);
+    bool on_mouse_up(int mbt, int mm, const Point & pt);
+    bool on_mouse_double_click(int mbt, int mm, const Point & pt);
     void on_mouse_motion(int mm, const Point & pt);
-    bool on_mouse_wheel(int delta, int mm, const Point & pt);
     void on_mouse_enter(const Point & pt);
+    void on_mouse_leave();
+    bool on_mouse_wheel(int delta, int mm, const Point & pt);
+    void on_parent();
+    bool on_accel(char32_t kc, int km);
+    bool on_key_down(char32_t kc, int km);
+    bool on_key_up(char32_t kc, int km);
+    bool on_input(const ustring & s);
+
     void on_visible();
     void on_invisible();
     void on_enable();

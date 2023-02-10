@@ -38,6 +38,16 @@ Table::Table():
 {
 }
 
+Table::Table(unsigned xspacing, unsigned yspacing):
+    Container(std::make_shared<Table_impl>(xspacing, yspacing))
+{
+}
+
+Table::Table(unsigned spacing):
+    Container(std::make_shared<Table_impl>(spacing))
+{
+}
+
 Table::Table(Widget_ptr wp):
     Container(std::dynamic_pointer_cast<Table_impl>(wp))
 {

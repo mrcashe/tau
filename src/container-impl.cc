@@ -176,8 +176,7 @@ void Container_impl::on_child_hide(Widget_impl * wi) {
     signal_child_hide_(wi);
 }
 
-// Overrides Widget_impl.
-bool Container_impl::handle_accel(char32_t kc, int km) {
+bool Container_impl::on_accel(char32_t kc, int km) {
     if (enabled()) {
         if (modal_child_) {
             return modal_child_->handle_accel(kc, km);
@@ -189,14 +188,18 @@ bool Container_impl::handle_accel(char32_t kc, int km) {
             }
         }
 
-        return Widget_impl::handle_accel(kc, km);
+        return !signal_accel_ && Widget_impl::handle_accel(kc, km);
     }
 
     return false;
 }
 
 // Overrides Widget_impl.
-bool Container_impl::handle_input(const ustring & s) {
+bool Container_impl::handle_accel(char32_t kc, int km) {
+    return signal_accel_ ? Widget_impl::handle_accel(kc, km) : on_accel(kc, km);
+}
+
+bool Container_impl::on_input(const ustring & s) {
     if (enabled()) {
         if (modal_child_) {
             return modal_child_->handle_input(s);
@@ -208,14 +211,18 @@ bool Container_impl::handle_input(const ustring & s) {
             }
         }
 
-        return Widget_impl::handle_input(std::cref(s));
+        return !signal_input_ && Widget_impl::handle_input(std::cref(s));
     }
 
     return false;
 }
 
 // Overrides Widget_impl.
-bool Container_impl::handle_key_down(char32_t kc, int km) {
+bool Container_impl::handle_input(const ustring & s) {
+    return signal_input_ ? Widget_impl::handle_input(s) : on_input(s);
+}
+
+bool Container_impl::on_key_down(char32_t kc, int km) {
     if (enabled()) {
         if (modal_child_ && !modal_child_->hidden()) {
             return modal_child_->handle_key_down(kc, km);
@@ -227,14 +234,18 @@ bool Container_impl::handle_key_down(char32_t kc, int km) {
             }
         }
 
-        return Widget_impl::handle_key_down(kc, km);
+        return !signal_key_down_ && Widget_impl::handle_key_down(kc, km);
     }
 
     return false;
 }
 
 // Overrides Widget_impl.
-bool Container_impl::handle_key_up(char32_t kc, int km) {
+bool Container_impl::handle_key_down(char32_t kc, int km) {
+    return signal_key_down_ ? Widget_impl::handle_key_down(kc, km) : on_key_down(kc, km);
+}
+
+bool Container_impl::on_key_up(char32_t kc, int km) {
     if (enabled()) {
         if (modal_child_ && !modal_child_->hidden()) {
             return modal_child_->handle_key_up(kc, km);
@@ -253,6 +264,11 @@ bool Container_impl::handle_key_up(char32_t kc, int km) {
 }
 
 // Overrides Widget_impl.
+bool Container_impl::handle_key_up(char32_t kc, int km) {
+    return signal_key_up_ ? Widget_impl::handle_key_up(kc, km) : on_key_up(kc, km);
+}
+
+// Overrides Widget_impl.
 void Container_impl::handle_display() {
     Widget_impl::handle_display();
 
@@ -263,15 +279,20 @@ void Container_impl::handle_display() {
     }
 }
 
-// Overrides Widget_impl.
-void Container_impl::handle_parent() {
-    Widget_impl::handle_parent();
+void Container_impl::on_parent() {
+    if (!signal_parent_) { Widget_impl::handle_parent(); }
 
     if (!shut_) {
         for (auto wp: children_) {
             wp->handle_parent();
         }
     }
+}
+
+// Overrides Widget_impl.
+void Container_impl::handle_parent() {
+    if (signal_parent_) { Widget_impl::handle_parent(); }
+    else { on_parent(); }
 }
 
 // Overrides Widget_impl.
@@ -337,71 +358,102 @@ void Container_impl::update_mouse_owner() {
     }
 }
 
-// Overrides Widget_impl.
-bool Container_impl::handle_mouse_down(int mbt, int mm, const Point & pt) {
+bool Container_impl::on_mouse_down(int mbt, int mm, const Point & pt) {
     if (auto wt = mouse_target_update(pt)) {
         if (wt->handle_mouse_down(mbt, mm, pt+wt->scroll_position()-wt->origin())) {
             return true;
         }
     }
 
-    return Widget_impl::handle_mouse_down(mbt, mm, pt);
+    return !signal_mouse_down_ && Widget_impl::handle_mouse_down(mbt, mm, pt);
 }
 
-// Overrides Widget_impl.
-bool Container_impl::handle_mouse_up(int mbt, int mm, const Point & pt) {
+bool Container_impl::on_mouse_up(int mbt, int mm, const Point & pt) {
     if (auto wt = mouse_target_update(pt)) {
         if (wt->handle_mouse_up(mbt, mm, pt+wt->scroll_position()-wt->origin())) {
             return true;
         }
     }
 
-    return Widget_impl::handle_mouse_up(mbt, mm, pt);
+    return !signal_mouse_up_ && Widget_impl::handle_mouse_up(mbt, mm, pt);
 }
 
-// Overrides Widget_impl.
-bool Container_impl::handle_mouse_double_click(int mbt, int mm, const Point & pt) {
+bool Container_impl::on_mouse_double_click(int mbt, int mm, const Point & pt) {
     if (auto wt = mouse_target_update(pt)) {
         if (wt->handle_mouse_double_click(mbt, mm, pt+wt->scroll_position()-wt->origin())) {
             return true;
         }
     }
 
-    return Widget_impl::handle_mouse_double_click(mbt, mm, pt);
+    return !signal_mouse_double_click_ && Widget_impl::handle_mouse_double_click(mbt, mm, pt);
 }
 
-// Overrides Widget_impl.
-bool Container_impl::handle_mouse_wheel(int delta, int mm, const Point & pt) {
+bool Container_impl::on_mouse_wheel(int delta, int mm, const Point & pt) {
     if (auto wt = mouse_target_update(pt)) {
         if (wt->handle_mouse_wheel(delta, mm, pt+wt->scroll_position()-wt->origin())) {
             return true;
         }
     }
 
-    return Widget_impl::handle_mouse_wheel(delta, mm, pt);
+    return !signal_mouse_wheel_ && Widget_impl::handle_mouse_wheel(delta, mm, pt);
 }
 
-// Overrides Widget_impl.
-void Container_impl::handle_mouse_motion(int mm, const Point & pt) {
+void Container_impl::on_mouse_motion(int mm, const Point & pt) {
     if (auto wt = mouse_target_update(pt)) {
         wt->handle_mouse_motion(mm, pt+wt->scroll_position()-wt->origin());
     }
 
-    else {
+    else if (!signal_mouse_motion_) {
         Widget_impl::handle_mouse_motion(mm, pt);
     }
 }
 
+void Container_impl::on_mouse_enter(const Point & pt) {
+    if (!signal_mouse_enter_) { Widget_impl::handle_mouse_enter(pt); }
+    mouse_target_update(pt);
+}
+
+void Container_impl::on_mouse_leave() {
+    set_mouse_owner(nullptr);
+    if (!signal_mouse_leave_) { Widget_impl::handle_mouse_leave(); }
+}
+
+// Overrides Widget_impl.
+bool Container_impl::handle_mouse_down(int mbt, int mm, const Point & pt) {
+    return signal_mouse_down_ ? Widget_impl::handle_mouse_down(mbt, mm, pt) : on_mouse_down(mbt, mm, pt);
+}
+
+// Overrides Widget_impl.
+bool Container_impl::handle_mouse_up(int mbt, int mm, const Point & pt) {
+    return signal_mouse_up_ ? Widget_impl::handle_mouse_up(mbt, mm, pt) : on_mouse_up(mbt, mm, pt);
+}
+
+// Overrides Widget_impl.
+bool Container_impl::handle_mouse_double_click(int mbt, int mm, const Point & pt) {
+    return signal_mouse_double_click_ ? Widget_impl::handle_mouse_double_click(mbt, mm, pt) : on_mouse_double_click(mbt, mm, pt);
+}
+
+// Overrides Widget_impl.
+bool Container_impl::handle_mouse_wheel(int delta, int mm, const Point & pt) {
+    return signal_mouse_wheel_ ? Widget_impl::handle_mouse_wheel(delta, mm, pt) : on_mouse_wheel(delta, mm, pt);
+}
+
+// Overrides Widget_impl.
+void Container_impl::handle_mouse_motion(int mm, const Point & pt) {
+    if (signal_mouse_motion_) { Widget_impl::handle_mouse_motion(mm, pt); }
+    else { on_mouse_motion(mm, pt); }
+}
+
 // Overrides Widget_impl.
 void Container_impl::handle_mouse_enter(const Point & pt) {
-    Widget_impl::handle_mouse_enter(pt);
-    mouse_target_update(pt);
+    if (signal_mouse_enter_) { Widget_impl::handle_mouse_enter(pt); }
+    else { on_mouse_enter(pt); }
 }
 
 // Overrides Widget_impl.
 void Container_impl::handle_mouse_leave() {
-    set_mouse_owner(nullptr);
-    Widget_impl::handle_mouse_leave();
+    if (signal_mouse_leave_) { Widget_impl::handle_mouse_leave(); }
+    else { on_mouse_leave(); }
 }
 
 // Overriden by Window_impl.
@@ -798,6 +850,90 @@ Action_base * Container_impl::lookup_action(char32_t kc, int km) {
     }
 
     return Widget_impl::lookup_action(kc, km);
+}
+
+// Overrides Widget_impl.
+signal<bool(int, int, Point)> & Container_impl::signal_mouse_down() {
+    auto & sig = Widget_impl::signal_mouse_down();
+    sig.connect(fun(this, &Container_impl::on_mouse_down));
+    return sig;
+}
+
+// Overrides Widget_impl.
+signal<bool(int, int, Point)> & Container_impl::signal_mouse_double_click() {
+    auto & sig = Widget_impl::signal_mouse_double_click();
+    sig.connect(fun(this, &Container_impl::on_mouse_double_click));
+    return sig;
+}
+
+// Overrides Widget_impl.
+signal<bool(int, int, Point)> & Container_impl::signal_mouse_up() {
+    auto & sig = Widget_impl::signal_mouse_up();
+    sig.connect(fun(this, &Container_impl::on_mouse_up));
+    return sig;
+}
+
+// Overrides Widget_impl.
+signal<void(int, Point)> & Container_impl::signal_mouse_motion() {
+    auto & sig = Widget_impl::signal_mouse_motion();
+    sig.connect(fun(this, &Container_impl::on_mouse_motion));
+    return sig;
+}
+
+// Overrides Widget_impl.
+signal<void(Point)> & Container_impl::signal_mouse_enter() {
+    auto & sig = Widget_impl::signal_mouse_enter();
+    sig.connect(fun(this, &Container_impl::on_mouse_enter));
+    return sig;
+}
+
+// Overrides Widget_impl.
+signal<void()> & Container_impl::signal_mouse_leave() {
+    auto & sig = Widget_impl::signal_mouse_leave();
+    sig.connect(fun(this, &Container_impl::on_mouse_leave));
+    return sig;
+}
+
+// Overrides Widget_impl.
+signal<bool(int, int, Point)> & Container_impl::signal_mouse_wheel() {
+    auto & sig = Widget_impl::signal_mouse_wheel();
+    sig.connect(fun(this, &Container_impl::on_mouse_wheel));
+    return sig;
+}
+
+// Overrides Widget_impl.
+signal<void()> & Container_impl::signal_parent() {
+    auto & sig = Widget_impl::signal_parent();
+    sig.connect(fun(this, &Container_impl::on_parent));
+    return sig;
+}
+
+// Overrides Widget_impl.
+signal<bool(char32_t, int)> & Container_impl::signal_accel() {
+    auto & sig = Widget_impl::signal_accel();
+    sig.connect(fun(this, &Container_impl::on_accel));
+    return sig;
+}
+
+// Overrides Widget_impl.
+signal<bool(char32_t, int)> & Container_impl::signal_key_down() {
+    auto & sig = Widget_impl::signal_key_down();
+    sig.connect(fun(this, &Container_impl::on_key_down));
+    return sig;
+}
+
+// Overrides Widget_impl.
+signal<bool(char32_t, int)> & Container_impl::signal_key_up() {
+    auto & sig = Widget_impl::signal_key_up();
+    sig.connect(fun(this, &Container_impl::on_key_up));
+    return sig;
+}
+
+// Overrides Widget_impl.
+signal<bool(const ustring &)> & Container_impl::signal_input() {
+    auto & sig = Widget_impl::signal_input();
+    sig.connect(fun(this, &Container_impl::on_input));
+    return sig;
 }
 
 } // namespace tau

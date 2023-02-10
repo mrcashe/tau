@@ -232,8 +232,8 @@ protected:
 
 private:
 
-    using Stack = std::list<State>;
-    using Wstack = std::list<Wstate>;
+    using Stack = std::vector<State>;
+    using Wstack = std::vector<Wstate>;
     using Prims = std::vector<Prim *>;
 
     Stack       stack_;

@@ -35,7 +35,7 @@
 
 namespace tau {
 
-class Poller_base {
+class Poller_base: public trackable {
 public:
 
     virtual ~Poller_base() {}

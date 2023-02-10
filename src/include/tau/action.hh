@@ -55,10 +55,16 @@ public:
    ~Master_action();
 
     /// Copy constructor.
-    Master_action(const Master_action & other) = default;
+    Master_action(const Master_action & other);
 
     /// Copy operator.
-    Master_action & operator=(const Master_action & other) = default;
+    Master_action & operator=(const Master_action & other);
+
+    /// Move constructor.
+    Master_action(Master_action && other);
+
+    /// Move operator.
+    Master_action & operator=(Master_action && other);
 
     /// Constructor with accels.
     /// @param accels space separated list of accelerator specifications.
@@ -211,26 +217,8 @@ public:
 
 private:
 
-    using Accels = std::vector<Accel>;
-
-    ustring     label_;
-    ustring     icon_name_;
-    ustring     tooltip_;
-    bool        visible_ = true;
-    bool        enabled_ = true;
-    Accels      accels_;
-
-    signal<void()>  signal_disable_;
-    signal<void()>  signal_enable_;
-    signal<void()>  signal_show_;
-    signal<void()>  signal_hide_;
-
-    signal<void(const Accel &)> signal_accel_added_;
-    signal<void(const Accel &)> signal_accel_removed_;
-
-    signal<void(const ustring &)> signal_label_changed_;
-    signal<void(const ustring &)> signal_icon_changed_;
-    signal<void(const ustring &)> signal_tooltip_changed_;
+    struct  Data;
+    Data *  data = nullptr;
 };
 
 /// An action which can be activated in some way by keyboard accelerator,
@@ -261,10 +249,16 @@ public:
     Action_base();
 
     /// Copy constructor.
-    Action_base(const Action_base & other) = default;
+    Action_base(const Action_base & other);
 
     /// Copy operator.
-    Action_base & operator=(const Action_base & other) = default;
+    Action_base & operator=(const Action_base & other);
+
+    /// Move constructor.
+    Action_base(Action_base && other);
+
+    /// Move operator.
+    Action_base & operator=(Action_base && other);
 
     /// Constructor with accelerators.
     /// @param accels space separated list of accelerator specifications.
@@ -448,41 +442,12 @@ public:
 
 protected:
 
+    struct  Data;
+    Data *  data = nullptr;
+
+protected:
+
     virtual bool on_accel() = 0;
-
-private:
-
-    using Accels = std::vector<Accel>;
-
-    bool                  disabled_ = false;
-    bool                  frozen_ = false;
-    bool                  hidden_ = false;
-    bool                  disappeared_ = false;
-    ustring               label_;
-    ustring               icon_name_;
-    ustring               tooltip_;
-    Accels                accels_;
-
-    signal<void()>        signal_disable_;
-    signal<void()>        signal_enable_;
-    signal<void()>        signal_show_;
-    signal<void()>        signal_hide_;
-    signal<void(Accel &)> signal_accel_added_;
-    signal<void(Accel &)> signal_accel_removed_;
-    signal<void(const ustring &)> signal_label_changed_;
-    signal<void(const ustring &)> signal_icon_changed_;
-    signal<void(const ustring &)> signal_tooltip_changed_;
-    signal<void()>        signal_destroy_;
-
-    connection            accel_added_cx_ { true };
-    connection            accel_removed_cx_ { true };
-    connection            enable_cx_ { true };
-    connection            disable_cx_ { true };
-    connection            show_cx_ { true };
-    connection            hide_cx_ { true };
-    connection            label_changed_cx_ { true };
-    connection            icon_changed_cx_ { true };
-    connection            tooltip_changed_cx_ { true };
 
 private:
 
@@ -603,6 +568,10 @@ public:
     /// Connect slot.
     connection connect(slot<void()> slot_activate, bool prepend=false);
 
+    /// Test if connected.
+    /// @since 0.4.0
+    bool connected() const;
+
 protected:
 
     // Overrides pure Action_base.
@@ -712,6 +681,10 @@ public:
 
     /// Connect slot.
     connection connect(slot<void(bool)> slot_toggle, bool prepend=false);
+
+    /// Test if connected.
+    /// @since 0.4.0
+    bool connected() const;
 
 protected:
 
