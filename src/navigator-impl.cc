@@ -64,6 +64,7 @@ Navigator_impl::Navigator_impl(const ustring & uri):
     list_->signal_header_click().connect(fun(this, &Navigator_impl::on_list_header_click));
     list_->signal_header_width_changed().connect(fun(this, &Navigator_impl::on_list_header_width_changed));
     list_->signal_size_changed().connect(fun(this, &Navigator_impl::limit_name_column));
+    list_->cancel_action().disable();
     insert(list_);
 
     signal_display().connect(fun(this, &Navigator_impl::on_display));

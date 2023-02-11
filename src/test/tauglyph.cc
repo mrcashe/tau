@@ -42,14 +42,9 @@ class Main: public tau::Toplevel {
     char32_t            gchar_ = 32;
     tau::Matrix         mat_;
 
-    tau::Action         escape_action_ { "Escape", tau::fun(this, &Main::close) };
-    tau::Action         prev_action_ { "Left", tau::fun(this, &Main::on_glyph_prev) };
-    tau::Action         next_action_ { "Right", tau::fun(this, &Main::on_glyph_next) };
-    tau::Action         zin_;
-    tau::Action         zout_;
-    tau::Action         view_ctr_action_ { "F2", tau::fun(this, &Main::on_view_ctr) };
-    tau::Action         view_pix_action_ { "F3", tau::fun(this, &Main::on_view_pix) };
     tau::Widget         area_;
+    tau::List_text      families_;
+    tau::List_text      faces_;
     tau::Painter        painter_;
 
     tau::Text           font_label_;
@@ -64,8 +59,21 @@ class Main: public tau::Toplevel {
     tau::Text           gxadv_label_ { "0.00", tau::ALIGN_END };
     tau::Text           gyadv_label_ { "0.00", tau::ALIGN_END };
 
-    tau::Toggle         ctr_button_ { "View Contour" };
-    tau::Toggle         pix_button_ { "View Pixmap" };
+    tau::Action         escape_action_ { "Escape Cancel", tau::fun(this, &Main::close) };
+    tau::Action         prev_action_ { tau::KC_LEFT, tau::KM_NONE, tau::fun(this, &Main::on_glyph_prev) };
+    tau::Action         next_action_ { tau::KC_RIGHT, tau::KM_NONE, tau::fun(this, &Main::on_glyph_next) };
+    tau::Action         prev_family_action_ { tau::KC_UP, tau::KM_NONE, tau::fun(this, &Main::on_family_prev) };
+    tau::Action         next_family_action_ { tau::KC_DOWN, tau::KM_NONE, tau::fun(this, &Main::on_family_next) };
+    tau::Action         prev_face_action_ { tau::KC_UP, tau::KM_CONTROL, tau::fun(this, &Main::on_face_prev) };
+    tau::Action         next_face_action_ { tau::KC_DOWN, tau::KM_CONTROL, tau::fun(this, &Main::on_face_next) };
+    tau::Action         zin_ { "<Ctrl>+ <Ctrl>=", tau::fun(this, &Main::increase_font) };
+    tau::Action         zout_ { "<Ctrl>-", tau::fun(this, &Main::decrease_font) };;
+    tau::Toggle_action  view_ctr_action_ { "F2", "View Contour", tau::fun(this, &Main::on_view_ctr) };
+    tau::Toggle_action  view_pix_action_ { "F3", "View Pixmap", tau::fun(this, &Main::on_view_pix) };
+
+    tau::Toggle         ctr_button_ { view_ctr_action_ };
+    tau::Toggle         pix_button_ { view_pix_action_ };
+
     bool                ctr_visible_ = true;
     bool                pix_visible_ = true;
 
@@ -74,7 +82,7 @@ class Main: public tau::Toplevel {
     tau::Pixmap         gpix_;
 
     tau::Absolute       absolute_;
-    tau::ustring        test_text_ { "ABCDEFGHIJKLMNOPQRSTUVWXYZ" };
+    tau::ustring        test_text_ { " : -+178(}|[/>@$#&*AabCDeFgHijKLMNpQRSTUVWXyZ" };
 
     int                 ascent_ = 0;
     int                 descent_ = 0;
@@ -101,8 +109,8 @@ public:
         gchar_ = kf_.get_integer(kf_.section("main"), "gchar", 32);
         ctr_visible_ = kf_.get_boolean(kf_.section("view"), "contour", true);
         pix_visible_ = kf_.get_boolean(kf_.section("view"), "pixmap", true);
-        if (ctr_visible_) { ctr_button_.toggle(); }
-        if (pix_visible_) { pix_button_.toggle(); }
+        if (ctr_visible_) { view_ctr_action_.toggle(); }
+        if (pix_visible_) { view_pix_action_.toggle(); }
 
         kf_.set_boolean(kf_.section("view"), "contour", ctr_visible_);
         signal_position_changed().connect(tau::fun(this, &Main::on_geometry_changed));
@@ -111,15 +119,12 @@ public:
         connect_action(escape_action_);
         connect_action(prev_action_);
         connect_action(next_action_);
-
-        zin_.add_accels("<Ctrl>+ <Ctrl>=");
-        zin_.connect(tau::fun(this, &Main::increase_font));
+        connect_action(prev_family_action_);
+        connect_action(prev_face_action_);
+        connect_action(next_family_action_);
+        connect_action(next_face_action_);
         connect_action(zin_);
-
-        zout_.add_accels("<Ctrl>-");
-        zout_.connect(tau::fun(this, &Main::decrease_font));
         connect_action(zout_);
-
         connect_action(view_ctr_action_);
         connect_action(view_pix_action_);
 
@@ -130,8 +135,8 @@ public:
         area_.signal_parent().connect(tau::fun(this, &Main::fetch_area_painter));
 
         font_spec_ = kf_.get_string(kf.section("main"), "font");
-        if (!font_spec_.empty()) { area_.style().font("font").set(font_spec_); }
-        else { font_spec_ = style().font("font").spec(); }
+        if (!font_spec_.empty()) { area_.style().font(tau::STYLE_FONT).set(font_spec_); }
+        else { font_spec_ = style().font(tau::STYLE_FONT).spec(); }
 
         // Top box (vertical).
         tau::Box box0(tau::OR_DOWN);
@@ -142,26 +147,26 @@ public:
 
         {
             area_.hint_margin(2);
-            tau::Frame frame("Glyph View", tau::BORDER_GROOVE);
+            tau::Frame frame("Glyph View", tau::BORDER_GROOVE, 1, 5);
             frame.insert(area_);
-            frame.hint_margin(4, 2, 0, 0);
+            frame.hint_margin(4, 2, 0, 4);
             cbox.append(frame);
         }
 
         // Info box (vertical) inserted into central box.
-        tau::Box ibox(tau::OR_DOWN, 7);
-        ibox.set_align(tau::ALIGN_CENTER);
+        tau::Box ibox(tau::OR_DOWN, 4);
         ibox.hint_margin(0, 4, 0, 0);
         cbox.append(ibox, true);
 
         {   // Glyphinfo table being inserted into info frame.
-            tau::Table itable;
-            itable.set_column_spacing(2);
-            itable.set_row_spacing(2);
+            tau::Table itable(5, 2);
+            itable.style().font(tau::STYLE_FONT).set(tau::Font::mono());
+            itable.align_column(2, tau::ALIGN_END);
+            itable.set_column_margin(2, 8, 2);
             itable.hint_margin(2);
 
             {   // Info frame inserted into info box.
-                tau::Frame frame("Glyph Info", tau::BORDER_GROOVE);
+                tau::Frame frame("Glyph Info", tau::BORDER_GROOVE, 1, 5);
                 frame.insert(itable);
                 ibox.append(frame, true);
             }
@@ -169,38 +174,62 @@ public:
             {   // Glyph minimal labels.
                 tau::Text label("Minimal", tau::ALIGN_START, tau::ALIGN_CENTER);
                 itable.put(label, 0, 0, 1, 2, true);
-                tau::Text x("x:"); itable.put(x, 1, 0, 1, 1, true, true);
-                tau::Text y("y:"); itable.put(y, 1, 1, 1, 1, true, true);
-                itable.put(gxmin_label_, 2, 0, 1, 1);
-                itable.put(gymin_label_, 2, 1, 1, 1);
+                tau::Text x("x:", tau::ALIGN_END); itable.put(x, 1, 0, 1, 1);
+                tau::Text y("y:", tau::ALIGN_END); itable.put(y, 1, 1, 1, 1);
+                itable.put(gxmin_label_, 2, 0, 1, 1, true, true);
+                itable.put(gymin_label_, 2, 1, 1, 1, true, true);
             }
 
             {   // Glyph maximal labels.
                 tau::Text label("Maximal", tau::ALIGN_START, tau::ALIGN_CENTER);
                 itable.put(label, 0, 2, 1, 2, true);
-                tau::Text x("x:"); itable.put(x, 1, 2, 1, 1, true, true);
-                tau::Text y("y:"); itable.put(y, 1, 3, 1, 1, true, true);
-                itable.put(gxmax_label_, 2, 2, 1, 1);
-                itable.put(gymax_label_, 2, 3, 1, 1);
+                tau::Text x("x:", tau::ALIGN_END); itable.put(x, 1, 2, 1, 1);
+                tau::Text y("y:", tau::ALIGN_END); itable.put(y, 1, 3, 1, 1);
+                itable.put(gxmax_label_, 2, 2, 1, 1, true, true);
+                itable.put(gymax_label_, 2, 3, 1, 1, true, true);
             }
 
             {   // Glyph advance labels.
                 tau::Text label("Advance", tau::ALIGN_START, tau::ALIGN_CENTER);
                 itable.put(label, 0, 4, 1, 2, true);
-                tau::Text x("x:"); itable.put(x, 1, 4, 1, 1, true, true);
-                tau::Text y("y:"); itable.put(y, 1, 5, 1, 1, true, true);
-                itable.put(gxadv_label_, 2, 4, 1, 1);
-                itable.put(gyadv_label_, 2, 5, 1, 1);
+                tau::Text x("x:", tau::ALIGN_END); itable.put(x, 1, 4, 1, 1);
+                tau::Text y("y:", tau::ALIGN_END); itable.put(y, 1, 5, 1, 1);
+                itable.put(gxadv_label_, 2, 4, 1, 1, true, true);
+                itable.put(gyadv_label_, 2, 5, 1, 1, true, true);
             }
 
             {   // Glyph bearing labels.
                 tau::Text label("Bearing", tau::ALIGN_START, tau::ALIGN_CENTER);
                 itable.put(label, 0, 6, 1, 2, true);
-                tau::Text x("x:"); itable.put(x, 1, 6, 1, 1, true, true);
-                tau::Text y("y:"); itable.put(y, 1, 7, 1, 1, true, true);
-                itable.put(gxbear_label_, 2, 6, 1, 1);
-                itable.put(gybear_label_, 2, 7, 1, 1);
+                tau::Text x("x:", tau::ALIGN_END); itable.put(x, 1, 6, 1, 1);
+                tau::Text y("y:", tau::ALIGN_END); itable.put(y, 1, 7, 1, 1);
+                itable.put(gxbear_label_, 2, 6, 1, 1, true, true);
+                itable.put(gybear_label_, 2, 7, 1, 1, true, true);
             }
+        }
+
+        {   // Font families.
+            tau::Frame frame("Font Families", tau::BORDER_GROOVE, 1, 5);
+            ibox.append(frame, true);
+            families_.hint_max_size(220, 140);
+            families_.hint_margin(3);
+            frame.insert(families_);
+            auto v = tau::Font::list_families();
+            std::sort(v.begin(), v.end());
+            for (auto & s: v) { families_.append(s); }
+            families_.select(tau::font_family_from_spec(font_spec_), true);
+            families_.signal_text_selected().connect(tau::fun(this, &Main::on_family_selected));
+        }
+
+        {   // Font faces.
+            tau::Frame frame("Font Faces", tau::BORDER_GROOVE, 1, 5);
+            ibox.append(frame, true);
+            faces_.hint_min_size(0, 80);
+            faces_.hint_max_size(220, 120);
+            faces_.hint_margin(3);
+            frame.insert(faces_);
+            fill_faces();
+            faces_.signal_text_selected().connect(tau::fun(this, &Main::on_face_selected));
         }
 
         // View Contour button.
@@ -215,55 +244,60 @@ public:
 
         {   // Test text absolute container.
             tau::Box abox(tau::OR_RIGHT);
-            abox.style().get("background").set("Black");
+            abox.hint_margin(4);
+            abox.style().get(tau::STYLE_BACKGROUND).set("Black");
             abox.set_align(tau::ALIGN_CENTER);
-            absolute_.hint_min_size(tau::Size(0, 10));
+            absolute_.hint_min_size(10);
+            absolute_.hint_margin(5);
             abox.append(absolute_, true);
             box0.append(abox, true);
         }
 
         {   // Status bar frame.
-            tau::Frame frame(tau::BORDER_RIDGE);
-            frame.hint_margin(4, 4, 0, 0);
+            tau::Frame frame(tau::BORDER_RIDGE, 1, 5);
+            frame.hint_margin(4, 4, 0, 4);
+            frame.style().get(tau::STYLE_BACKGROUND).set("#404040");
+            frame.style().get(tau::STYLE_FOREGROUND).set("#17BBF0");
             box0.append(frame, true);
 
             // Status box (horizontal).
-            tau::Box status(tau::OR_RIGHT, 3);
-            status.style().font("font").enlarge(-2);
+            tau::Box status(tau::OR_EAST, 2);
             status.hint_margin(2);
             frame.insert(status);
-
-            {   // Font status item.
-                tau::Text txt("Font:");
-                status.append(txt, true);
-                tau::Frame frame(tau::BORDER_INSET);
-                frame.set_border(4, 2, 2, 2);
-                status.append(frame, true);
-                font_label_.hint_margin(4, 4, 0, 0);
-                font_label_.assign(font_spec_);
-                frame.insert(font_label_);
-            }
 
             {   // Character status item.
                 tau::Text txt("Character:");
                 status.append(txt, true);
-                tau::Frame frame(tau::BORDER_INSET);
-                frame.set_border(4, 2, 2, 2);
+                tau::Frame frame(tau::BORDER_SOLID, 1, 3);
                 status.append(frame, true);
-                char_label_.hint_margin(4, 4, 0, 0);
+                char_label_.hint_margin(2, 2, 0, 0);
+                char_label_.hint_min_size(32, 0);
+                char_label_.style().get(tau::STYLE_FOREGROUND).set("White");
                 char_label_.assign(tau::ustring(1, gchar_));
                 frame.insert(char_label_);
             }
 
             {   // Character code status item.
                 tau::Text txt("Char Code:");
+                txt.hint_margin_left(6);
                 status.append(txt, true);
-                tau::Frame frame(tau::BORDER_INSET);
-                frame.set_border(4, 2, 2, 2);
+                tau::Frame frame(tau::BORDER_SOLID, 1, 3);
                 status.append(frame, true);
-                code_label_.hint_margin(4, 4, 0, 0);
+                code_label_.hint_margin(2, 2, 0, 0);
+                code_label_.style().font(tau::STYLE_FONT).set(tau::Font::mono());
                 code_label_.assign(tau::key_code_to_string(gchar_));
                 frame.insert(code_label_);
+            }
+
+            {   // Font status item.
+                tau::Text txt("Font:");
+                txt.hint_margin_left(6);
+                status.append(txt, true);
+                tau::Frame frame(tau::BORDER_SOLID, 1, 3);
+                status.append(frame, true);
+                font_label_.hint_margin(2, 2, 0, 0);
+                font_label_.assign(font_spec_);
+                frame.insert(font_label_);
             }
         }
 
@@ -279,11 +313,11 @@ private:
         tau::Pixmap pix(32, r.size());
 
         if (auto pr = pix.painter()) {
-            pr.set_brush(tau::Color("Blue"));
+            pr.set_brush(tau::Color());
             pr.paint();
             pr.move_to(-r.left(), std::ceil(glyph.max().y()));
             pr.glyph(glyph);
-            pr.set_brush(tau::Color("Gold"));
+            pr.set_brush(tau::Color("White"));
             pr.fill();
         }
 
@@ -301,8 +335,7 @@ private:
 
         if (pt < 100.0) {
             pt += 1.0;
-            spec = tau::font_size_change(spec, pt);
-            font_spec_ = spec;
+            font_spec_ = tau::font_size_change(spec, pt);
             update_font();
         }
     }
@@ -313,8 +346,7 @@ private:
 
         if (pt >= 6.0) {
             pt -= 1.0;
-            spec = tau::font_size_change(spec, pt);
-            font_spec_ = spec;
+            font_spec_ = tau::font_size_change(spec, pt);
             update_font();
         }
     }
@@ -322,82 +354,101 @@ private:
     void update_test_text() {
         absolute_.clear();
 
-        int xx = 0;
-        unsigned hmax = 0;
-        std::vector<tau::Pixmap> pixx;
-        std::vector<tau::Point> pts;
+        if (auto pr = absolute_.painter()) {
+            int xx = 0;
+            std::vector<tau::Pixmap> pixx;
+            std::vector<tau::Point> pts;
+            tau::Font font = pr.select_font(font_spec_);
 
-        for (char32_t wc: test_text_) {
-            tau::Painter pr = absolute_.painter();
-
-            if (pr) {
-                tau::Font font = pr.select_font(font_spec_);
-
-                if (font) {
-                    if (tau::Glyph glyph = font.glyph(wc)) {
-                        tau::Pixmap pix = raster_glyph(glyph);
-                        pixx.push_back(pix);
-                        hmax = std::max(hmax, pix.size().height());
-                        int x = xx+std::floor(glyph.bearing().x());
-                        //int y = std::floor(glyph->max().y());
-                        pts.emplace_back(x, 0);
-                        tau::Vector adv = glyph.advance();
-                        int x_off = std::ceil(adv.x());
-                        xx += x_off;
-                    }
+            for (char32_t wc: test_text_) {
+                if (tau::Glyph glyph = font.glyph(wc)) {
+                    tau::Pixmap pix = raster_glyph(glyph);
+                    pixx.push_back(pix);
+                    int x = std::floor(glyph.bearing().x());
+                    int y = std::ceil(font.ascent())-std::ceil(glyph.max().y());
+                    pts.emplace_back(x+xx, y);
+                    tau::Vector adv = glyph.advance();
+                    int x_off = std::ceil(adv.x());
+                    xx += x_off+2;
                 }
             }
-        }
 
-        xx = 0;
-        absolute_.hint_size(tau::Size(0, std::max(10U, hmax)));
+            xx = 0;
+            absolute_.hint_size(0, std::max(10.0, std::ceil(font.ascent())+std::ceil(std::fabs(font.descent()))));
 
-        for (auto pix: pixx) {
-            tau::Image img(pix, false);
-            absolute_.put(img, pts[xx++]);
+            for (auto pix: pixx) {
+                tau::Image img(pix, false);
+                absolute_.put(img, pts[xx++]);
+            }
         }
+    }
+
+    void on_family_selected(int, const tau::ustring &) {
+        fill_faces();
+        font_spec_ = font_spec_build(families_.selection(), faces_.selection(), tau::font_size_from_spec(font_spec_));
+        update_font();
+    }
+
+    void on_face_selected(int, const tau::ustring &) {
+        font_spec_ = font_spec_build(families_.selection(), faces_.selection(), tau::font_size_from_spec(font_spec_));
+        update_font();
+    }
+
+    void fill_faces() {
+        auto sel = faces_.selection();
+        auto v = tau::Font::list_faces(tau::font_family_from_spec(font_spec_));
+        std::sort(v.begin(), v.end());
+        faces_.clear();
+        for (auto & s: v) { faces_.append(s); }
+        faces_.select(!sel.empty() ? sel : tau::font_face_from_spec(font_spec_));
     }
 
     void update_font() {
         font_label_.assign(font_spec_);
-        area_.style().font("font").set(font_spec_);
+        area_.style().font(tau::STYLE_FONT).set(font_spec_);
         kf_.set_string(kf_.section("main"), "font", font_spec_);
 
         if (auto pr = painter()) {
-            font_ = pr.select_font(font_spec_);
+            try {
+                font_ = pr.select_font(font_spec_);
 
-            if (font_) {
-                update_test_text();
-                ascent_  = std::ceil(font_.ascent());
-                descent_ = std::floor(font_.descent());
-                npy_ = ascent_-descent_;
-                glyph_ = pr.font().glyph(gchar_);
-                update_glyphinfo();
-                gpix_ = tau::Pixmap(32);
+                if (font_) {
+                    update_test_text();
+                    ascent_  = std::ceil(font_.ascent());
+                    descent_ = std::floor(font_.descent());
+                    npy_ = ascent_-descent_;
+                    glyph_ = pr.font().glyph(gchar_);
+                    update_glyphinfo();
+                    gpix_ = tau::Pixmap(32);
 
-                std::size_t width = area_.size().width();
-                std::size_t height = area_.size().height();
-                y0_ = npy_+descent_;
-                tau::Vector fmin = glyph_.min()-tau::Vector(1, 1);
-                tau::Vector fmax = glyph_.max()+tau::Vector(1, 1);
-                npx_ = std::max(1, int(std::ceil(fmax.x())-std::ceil(fmin.x())));
-                x0_ = -std::ceil(fmin.x());
-                scale_ = std::min(width/npx_, height/npy_);
+                    std::size_t width = area_.size().width();
+                    std::size_t height = area_.size().height();
+                    y0_ = npy_+descent_;
+                    tau::Vector fmin = glyph_.min()-tau::Vector(1, 1);
+                    tau::Vector fmax = glyph_.max()+tau::Vector(1, 1);
+                    npx_ = std::max(1, int(std::ceil(fmax.x())-std::ceil(fmin.x())));
+                    x0_ = -std::ceil(fmin.x());
+                    scale_ = std::min(width/npx_, height/npy_);
 
-                tau::Vector gmin = glyph_.min();
-                tau::Vector gmax = glyph_.max();
-                gxmin_ = x0_+std::floor(gmin.x());
-                gymin_ = y0_-std::floor(gmin.y());
-                gxmax_ = x0_+std::ceil(gmax.x());
-                gymax_ = y0_-std::ceil(gmax.y());
-                ox_ = 0.5*(width-(npx_*scale_));
-                oy_ = 0.5*(height-(npy_*scale_));
+                    tau::Vector gmin = glyph_.min();
+                    tau::Vector gmax = glyph_.max();
+                    gxmin_ = x0_+std::floor(gmin.x());
+                    gymin_ = y0_-std::floor(gmin.y());
+                    gxmax_ = x0_+std::ceil(gmax.x());
+                    gymax_ = y0_-std::ceil(gmax.y());
+                    ox_ = 0.5*(width-(npx_*scale_));
+                    oy_ = 0.5*(height-(npy_*scale_));
 
-                mat_ = tau::Matrix();
-                mat_.translate(ox_, oy_);
-                mat_.scale(scale_);
+                    mat_ = tau::Matrix();
+                    mat_.translate(ox_, oy_);
+                    mat_.scale(scale_);
 
-                redraw_area();
+                    redraw_area();
+                }
+            }
+
+            catch (tau::exception & x) {
+                std::cerr << "** " << __func__ << ": tau::exception thrown: " << x.what() << std::endl;
             }
         }
     }
@@ -417,17 +468,14 @@ private:
         char32_t gc = gchar_;
 
         if (0x11ffff != gc) {
-            if (0x007e == gc) {
-                gc = 0x00a0;
-            }
-
-            else {
-                ++gc;
-            }
+            if (0x007e == gc) { gc = 0x00a0; }
+            else { ++gc; }
 
             if (gc != gchar_) {
                 gchar_ = gc;
                 update_glyph();
+                test_text_.replace(0, 1, 1, gc);
+                update_test_text();
             }
         }
     }
@@ -436,27 +484,40 @@ private:
         char32_t gc = gchar_;
 
         if (0x0000 != gc) {
-            if (0x00a0 == gc) {
-                gc = 0x007e;
-            }
-
-            else {
-                --gc;
-            }
+            if (0x00a0 == gc) { gc = 0x007e; }
+            else { --gc; }
 
             if (gc != gchar_) {
                 gchar_ = gc;
                 update_glyph();
+                test_text_.replace(0, 1, 1, gc);
+                update_test_text();
             }
         }
+    }
+
+    void on_glyph_next() {
+        next_glyph();
     }
 
     void on_glyph_prev() {
         prev_glyph();
     }
 
-    void on_glyph_next() {
-        next_glyph();
+    void on_family_next() {
+        families_.select_next();
+    }
+
+    void on_family_prev() {
+        families_.select_previous();
+    }
+
+    void on_face_next() {
+        faces_.select_next();
+    }
+
+    void on_face_prev() {
+        faces_.select_previous();
     }
 
     void fetch_area_painter() {
@@ -626,33 +687,15 @@ private:
         return true;
     }
 
-    void on_view_ctr() {
-        if (ctr_visible_) {
-            ctr_visible_ = false;
-            if (ctr_button_.get()) { ctr_button_.toggle(); }
-        }
-
-        else {
-            ctr_visible_ = true;
-            if (!ctr_button_.get()) { ctr_button_.toggle(); }
-        }
-
-        kf_.set_boolean(kf_.section("view"), "contour", ctr_visible_);
+    void on_view_ctr(bool state) {
+        ctr_visible_ = state;
+        kf_.set_boolean(kf_.section("view"), "contour", state);
         redraw_area();
     }
 
-    void on_view_pix() {
-        if (pix_visible_) {
-            pix_visible_ = false;
-            if (pix_button_.get()) { pix_button_.toggle(); }
-        }
-
-        else {
-            pix_visible_ = true;
-            if (!pix_button_.get()) { pix_button_.toggle(); }
-        }
-
-        kf_.set_boolean(kf_.section("view"), "pixmap", pix_visible_);
+    void on_view_pix(bool state) {
+        pix_visible_ = state;
+        kf_.set_boolean(kf_.section("view"), "pixmap", state);
         redraw_area();
     }
 

@@ -34,6 +34,24 @@ namespace tau {
 
 extern Sysinfo sysinfo_;
 
+template <class T>
+struct v_allocator {
+    using value_type = T;
+
+    std::vector<T>  v_ { 1024 };
+    std::size_t     pos_ = 0;
+
+    v_allocator() noexcept {}
+    v_allocator(const v_allocator & other) noexcept {}
+    template <class U> v_allocator (const v_allocator<U> &) noexcept {}
+    void deallocate (T *, std::size_t) {}
+
+    T * allocate (std::size_t n) {
+        if (pos_ == v_.size()) { v_.resize(pos_+16); }
+        return v_.data()+pos_++;
+    }
+};
+
 }
 
 #endif // TAU_SYS_IMPL_HH

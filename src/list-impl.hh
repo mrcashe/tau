@@ -63,6 +63,8 @@ public:
     void remove(int br);
 
     int select_row(int br);
+    int select_next();
+    int select_previous();
     int select_front();
     int select_back();
     int selected_row() const;
@@ -117,6 +119,21 @@ public:
     virtual void clear() override;
 
     void align(Widget_ptr wp, Align xalign, Align yalign);
+
+    Action & cancel_action() { return cancel_action_; }
+    Action & enter_action() { return enter_action_; }
+    Action & up_action() { return up_action_; }
+    Action & down_action() { return down_action_; }
+    Action & page_up_action() { return page_up_action_; }
+    Action & page_down_action() { return page_down_action_; }
+    Action & home_action() { return home_action_; }
+    Action & end_action() { return end_action_; }
+    Action & select_up_action() { return select_up_action_; }
+    Action & select_down_action() { return select_down_action_; }
+    Action & select_page_up_action() { return select_page_up_action_; }
+    Action & select_page_down_action() { return select_page_down_action_; }
+    Action & select_home_action() { return select_home_action_; }
+    Action & select_end_action() { return select_end_action_; }
 
     signal<void(int)> & signal_row_selected() {
         return signal_row_selected_;
@@ -184,6 +201,7 @@ protected:
     int                 trunk_min_ = 0;
     int                 trunk_max_ = 0;
 
+    Action              cancel_action_ { "Escape Cancel", fun(this, &Widget_impl::drop_focus) };
     Action              enter_action_ { KC_ENTER, KM_NONE, fun(this, &List_impl::on_enter_key) };
     Action              up_action_ { KC_UP, KM_NONE, fun(this, &List_impl::on_prev_key) };
     Action              down_action_ { KC_DOWN, KM_NONE, fun(this, &List_impl::on_next_key) };
@@ -191,12 +209,12 @@ protected:
     Action              page_down_action_ { KC_PAGE_DOWN, KM_NONE, fun(this, &List_impl::on_page_down_key) };
     Action              home_action_ { KC_HOME, KM_NONE, fun(this, &List_impl::on_home_key) };
     Action              end_action_ { KC_END, KM_NONE, fun(this, &List_impl::on_end_key) };
-    Action              shift_up_action_ { KC_UP, KM_SHIFT, fun(this, &List_impl::on_shift_prev_key) };
-    Action              shift_down_action_ { KC_DOWN, KM_SHIFT, fun(this, &List_impl::on_shift_next_key) };
-    Action              shift_page_up_action_ { KC_PAGE_UP, KM_SHIFT, fun(this, &List_impl::on_shift_page_up_key) };
-    Action              shift_page_down_action_ { KC_PAGE_DOWN, KM_SHIFT, fun(this, &List_impl::on_shift_page_down_key) };
-    Action              shift_home_action_ { KC_HOME, KM_SHIFT, fun(this, &List_impl::on_shift_home_key) };
-    Action              shift_end_action_ { KC_END, KM_SHIFT, fun(this, &List_impl::on_shift_end_key) };
+    Action              select_up_action_ { KC_UP, KM_SHIFT, fun(this, &List_impl::on_shift_prev_key) };
+    Action              select_down_action_ { KC_DOWN, KM_SHIFT, fun(this, &List_impl::on_shift_next_key) };
+    Action              select_page_up_action_ { KC_PAGE_UP, KM_SHIFT, fun(this, &List_impl::on_shift_page_up_key) };
+    Action              select_page_down_action_ { KC_PAGE_DOWN, KM_SHIFT, fun(this, &List_impl::on_shift_page_down_key) };
+    Action              select_home_action_ { KC_HOME, KM_SHIFT, fun(this, &List_impl::on_shift_home_key) };
+    Action              select_end_action_ { KC_END, KM_SHIFT, fun(this, &List_impl::on_shift_end_key) };
 
     signal<void(int)>   signal_row_selected_;
     signal<void(int)>   signal_row_activated_;

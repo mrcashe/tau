@@ -106,7 +106,7 @@ public:
         gl->set_min(Vector(scale.x()*bbox_.left(), scale.y()*bbox_.top()));
         gl->set_max(Vector(scale.x()*bbox_.right(), scale.y()*bbox_.bottom()));
         gl->set_advance(Vector(scale.x()*adv_, 0.0));
-        gl->set_bearing(Vector(scale.x()*lsb_, std::round(gl->min().y())));
+        gl->set_bearing(Vector(scale.x()*lsb_, scale.y()*bbox_.top()));
 
         for (auto & mctr: contours_) {
             Contour ctr(mctr);

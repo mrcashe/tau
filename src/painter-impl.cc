@@ -38,6 +38,13 @@ namespace {
 constexpr double PI = 3.14159265358979323846;
 constexpr double tolerance_ = 1e-5;
 
+tau::Point64 fixed(const tau::Vector & vec, bool swap) {
+    tau::Point64 pt;
+    pt.x = swap ? 65536*vec.y() : 65536*vec.x(); pt.x -= 32768;
+    pt.y = swap ? 65536*vec.x() : 65536*vec.y(); pt.y -= 32768;
+    return pt;
+}
+
 int64_t ifloor(int64_t x) {
     return x & -65536;
 }
@@ -297,13 +304,13 @@ void Painter_impl::rectangle(const Vector & v1, const Vector & v2) {
 // public
 void Painter_impl::contour(const Contour & ctr) {
     flush_object();
-    prims_.push_back(new_prim_contour(&ctr, 1, 0.5));
+    prims_.push_back(new_prim_contour(&ctr, 1));
 }
 
 // public
 void Painter_impl::contour(Contour && ctr) {
     flush_object();
-    prims_.push_back(new_prim_contour(std::move(ctr), 0.5));
+    prims_.push_back(new_prim_contour(std::move(ctr)));
 }
 
 // public
@@ -527,7 +534,7 @@ void Painter_impl::fill_prim_arc(const Prim_arc & o) {
     if (o.pie) { ctr.line_to(o.center); ctr.line_to(ctr.start()); }
     ctr *= matrix();
     ctr.translate(-woffset());
-    raster_contours(&ctr, 1, state().brush->color, 0.5);
+    raster_contours(&ctr, 1, state().brush->color);
 }
 
 // protected
@@ -543,7 +550,7 @@ void Painter_impl::fill_prim_contour(const Prim_contour & o) {
         ctrs.back().translate(-woffset());
     }
 
-    raster_contours(ctrs.data(), ctrs.size(), state().brush->color, o.bri_thres);
+    raster_contours(ctrs.data(), ctrs.size(), state().brush->color);
 }
 
 // protected
@@ -600,14 +607,6 @@ void Painter_impl::fill_prim_rect(const Prim_rect * po, std::size_t no) {
 
         ++po;
     }
-}
-
-// protected
-Point64 Painter_impl::fixed(const Vector & vec, bool swap) {
-    Point64 pt;
-    pt.x = swap ? 65536*vec.y() : 65536*vec.x(); pt.x -= 32768;
-    pt.y = swap ? 65536*vec.x() : 65536*vec.y(); pt.y -= 32768;
-    return pt;
 }
 
 // protected
@@ -728,24 +727,21 @@ Painter_impl::Prim_text * Painter_impl::alloc_text() {
     return p;
 }
 
-Painter_impl::Prim_contour * Painter_impl::new_prim_contour(const Contour * pctr, std::size_t nctrs, double bri_thres) {
+Painter_impl::Prim_contour * Painter_impl::new_prim_contour(const Contour * pctr, std::size_t nctrs) {
     Prim_contour * p = alloc_contour();
     while (nctrs--) { p->ctrs.push_back(*pctr); pctr++; }
-    p->bri_thres = bri_thres;
     return p;
 }
 
-Painter_impl::Prim_contour * Painter_impl::new_prim_contour(Contour * pctr, std::size_t nctrs, double bri_thres) {
+Painter_impl::Prim_contour * Painter_impl::new_prim_contour(Contour * pctr, std::size_t nctrs) {
     Prim_contour * p = alloc_contour();
     while (nctrs--) { p->ctrs.emplace_back(std::move(*pctr)); pctr++; }
-    p->bri_thres = bri_thres;
     return p;
 }
 
-Painter_impl::Prim_contour * Painter_impl::new_prim_contour(Contour && ctr, double bri_thres) {
+Painter_impl::Prim_contour * Painter_impl::new_prim_contour(Contour && ctr) {
     Prim_contour * p = alloc_contour();
     p->ctrs.emplace_back(std::move(ctr));
-    p->bri_thres = bri_thres;
     return p;
 }
 
@@ -855,58 +851,51 @@ Painter_impl::Prim_pixmap * Painter_impl::new_prim_pixmap(const Vector & pos, Pi
 
 // private
 void Painter_impl::new_raster_profile(Raster & ras, int state, bool overshoot) {
-    ras.rstate = state;
-    ras.fresh = true;
-    ras.joint = false;
+    ras.rstate_ = state;
+    ras.fresh_ = true;
+    ras.joint_ = false;
+    ras.pros_.emplace_back();
+    auto & p = ras.pros_.back();
 
-    if (!ras.pros.empty()) { ras.pros.back().inext = ras.pros.size(); }
-    ras.pros.emplace_back();
-    Raster_profile & p = ras.pros.back();
-
-    p.start  = 0;
-    p.iself = ras.pros.size()-1;
-    p.inext = ras.pros.size()-1;
-    p.ix = ras.xs.size();
-    p.height = 0;
+    p.start_  = 0;
+    p.ix_ = ras.xs_.size();
+    p.height_ = 0;
 
     if (-1 == state) {
-        p.ascend = false;
-        p.overtop = overshoot;
-        p.overbot = false;
+        p.ascend_ = false;
+        p.overtop_ = overshoot;
+        p.overbot_ = false;
     }
 
     else {
-        p.ascend = true;
-        p.overbot = overshoot;
-        p.overtop = false;
+        p.ascend_ = true;
+        p.overbot_ = overshoot;
+        p.overtop_ = false;
     }
 }
 
 // private
 void Painter_impl::end_raster_profile(Raster & ras, bool overshoot) {
-    ras.joint = false;
+    ras.joint_ = false;
 
-    if (!ras.pros.empty()) {
-        auto & p = ras.pros.back();
-        p.height = ras.xs.size()-p.ix;
+    if (!ras.pros_.empty()) {
+        auto & p = ras.pros_.back();
+        p.height_ = ras.xs_.size()-p.ix_;
 
-        if (p.height > 0) {
-            if (p.ascend) {
-                p.overtop = overshoot;
-                p.overbot = false;
+        if (p.height_ > 0) {
+            if (p.ascend_) {
+                p.overtop_ = overshoot;
+                p.overbot_ = false;
             }
 
             else {
-                p.overbot = overshoot;
-                p.overtop = false;
+                p.overbot_ = overshoot;
+                p.overtop_ = false;
             }
-
-            p.inext = ras.pros.size();
         }
 
         else {
-            ras.pros.pop_back();
-            if (!ras.pros.empty()) { ras.pros.back().inext--; }
+            ras.pros_.pop_back();
         }
     }
 }
@@ -925,17 +914,17 @@ void Painter_impl::raster_line_up(Raster & ras, int64_t x1, int64_t y1, int64_t 
         }
 
         else {
-            if (ras.joint) {
-                ras.joint = false;
-                ras.xs.pop_back();
+            if (ras.joint_) {
+                ras.joint_ = false;
+                ras.xs_.pop_back();
             }
         }
 
-        ras.joint = 0 == f2;
+        ras.joint_ = 0 == f2;
 
-        if (ras.fresh) {
-            ras.pros.back().start = e1;
-            ras.fresh = false;
+        if (ras.fresh_) {
+            ras.pros_.back().start_ = e1;
+            ras.fresh_ = false;
         }
 
         int ix, rx;
@@ -955,7 +944,7 @@ void Painter_impl::raster_line_up(Raster & ras, int64_t x1, int64_t y1, int64_t 
         int64_t ax = -dy;
 
         for (int size = e2-e1+1; size > 0; --size) {
-            ras.xs.push_back(x1);
+            ras.xs_.push_back(x1);
             x1 += ix;
             dx += rx;
             if (ax >= 0) { ax -= dy; x1 += dx; }
@@ -965,115 +954,115 @@ void Painter_impl::raster_line_up(Raster & ras, int64_t x1, int64_t y1, int64_t 
 
 // private
 void Painter_impl::raster_line_to(Raster & ras, int64_t ex, int64_t ey) {
-    if (1 == ras.rstate) {
-        if (ey < ras.y) {
-            end_raster_profile(ras, is_top_overshoot(ras.y));
-            new_raster_profile(ras, -1, is_top_overshoot(ras.y));
+    if (1 == ras.rstate_) {
+        if (ey < ras.y_) {
+            end_raster_profile(ras, is_top_overshoot(ras.y_));
+            new_raster_profile(ras, -1, is_top_overshoot(ras.y_));
         }
     }
 
-    else if (-1 == ras.rstate) {
-        if (ey > ras.y) {
-            end_raster_profile(ras, is_bottom_overshoot(ras.y));
-            new_raster_profile(ras, 1, is_bottom_overshoot(ras.y));
+    else if (-1 == ras.rstate_) {
+        if (ey > ras.y_) {
+            end_raster_profile(ras, is_bottom_overshoot(ras.y_));
+            new_raster_profile(ras, 1, is_bottom_overshoot(ras.y_));
         }
     }
 
     else {
-        if (ey > ras.y) {
-            new_raster_profile(ras, 1, is_bottom_overshoot(ras.y));
+        if (ey > ras.y_) {
+            new_raster_profile(ras, 1, is_bottom_overshoot(ras.y_));
         }
 
-        else if (ey < ras.y) {
-            new_raster_profile(ras, -1, is_top_overshoot(ras.y));
+        else if (ey < ras.y_) {
+            new_raster_profile(ras, -1, is_top_overshoot(ras.y_));
         }
     }
 
-    if (1 == ras.rstate) {
-        raster_line_up(ras, ras.x, ras.y, ex, ey);
+    if (1 == ras.rstate_) {
+        raster_line_up(ras, ras.x_, ras.y_, ex, ey);
     }
 
     else {
-        bool fresh = ras.fresh;
-        raster_line_up(ras, ras.x, -ras.y, ex, -ey);
-        if (fresh && !ras.fresh) { ras.pros.back().start = -ras.pros.back().start; }
+        bool fresh = ras.fresh_;
+        raster_line_up(ras, ras.x_, -ras.y_, ex, -ey);
+        if (fresh && !ras.fresh_) { ras.pros_.back().start_ = -ras.pros_.back().start_; }
     }
 
-    ras.x = ex;
-    ras.y = ey;
+    ras.x_ = ex;
+    ras.y_ = ey;
 }
 
 // private
 void Painter_impl::raster_bezier_up(Raster & ras, int order) {
-    int64_t y1 = ras.arc[order].y;
-    int64_t y2 = ras.arc[0].y;
+    int64_t y1 = ras.arc_[order].y;
+    int64_t y2 = ras.arc_[0].y;
     int e2 = ifloor(y2);
     int e  = iceil(y1);
 
     if (0 == ifrac(y1)) {
-        if (ras.joint) ras.xs.pop_back(), ras.joint = false;
-        ras.xs.push_back(ras.arc[order].x);
+        if (ras.joint_) ras.xs_.pop_back(), ras.joint_ = false;
+        ras.xs_.push_back(ras.arc_[order].x);
         e += 65536;
     }
 
-    if (ras.fresh) {
-        ras.pros.back().start = itrunc(e);
-        ras.fresh = false;
+    if (ras.fresh_) {
+        ras.pros_.back().start_ = itrunc(e);
+        ras.fresh_ = false;
     }
 
     if (e <= e2) {
         int ai = 0;
 
         while (e <= e2) {
-            ras.joint = false;
-            y2 = ras.arc[ai+0].y;
+            ras.joint_ = false;
+            y2 = ras.arc_[ai+0].y;
 
             if (e < y2) {
-                y1 = ras.arc[ai+order].y;
+                y1 = ras.arc_[ai+order].y;
 
                 if (y2-y1 > 255) {
-                    if (std::size_t(ai+order+4) > ras.arc.size()) {
-                        ras.arc.resize(ai+order+4);
+                    if (std::size_t(ai+order+4) > ras.arc_.size()) {
+                        ras.arc_.resize(ai+order+4);
                     }
 
                     if (3 == order) {
                         int64_t a, b, c, d;
 
-                        ras.arc[ai+6].x = ras.arc[ai+3].x;
-                        c = ras.arc[ai+1].x;
-                        d = ras.arc[ai+2].x;
-                        ras.arc[ai+1].x = a = (ras.arc[ai+0].x+c+1) >> 1;
-                        ras.arc[ai+5].x = b = (ras.arc[ai+3].x+d+1) >> 1;
+                        ras.arc_[ai+6].x = ras.arc_[ai+3].x;
+                        c = ras.arc_[ai+1].x;
+                        d = ras.arc_[ai+2].x;
+                        ras.arc_[ai+1].x = a = (ras.arc_[ai+0].x+c+1) >> 1;
+                        ras.arc_[ai+5].x = b = (ras.arc_[ai+3].x+d+1) >> 1;
                         c = (c+d+1) >> 1;
-                        ras.arc[ai+2].x = a = (a+c+1) >> 1;
-                        ras.arc[ai+4].x = b = (b+c+1) >> 1;
-                        ras.arc[ai+3].x = (a+b+1) >> 1;
+                        ras.arc_[ai+2].x = a = (a+c+1) >> 1;
+                        ras.arc_[ai+4].x = b = (b+c+1) >> 1;
+                        ras.arc_[ai+3].x = (a+b+1) >> 1;
 
-                        ras.arc[ai+6].y = ras.arc[ai+3].y;
-                        c = ras.arc[ai+1].y;
-                        d = ras.arc[ai+2].y;
-                        ras.arc[ai+1].y = a = (ras.arc[ai+0].y+c+1) >> 1;
-                        ras.arc[ai+5].y = b = (ras.arc[ai+3].y+d+1) >> 1;
+                        ras.arc_[ai+6].y = ras.arc_[ai+3].y;
+                        c = ras.arc_[ai+1].y;
+                        d = ras.arc_[ai+2].y;
+                        ras.arc_[ai+1].y = a = (ras.arc_[ai+0].y+c+1) >> 1;
+                        ras.arc_[ai+5].y = b = (ras.arc_[ai+3].y+d+1) >> 1;
                         c = (c+d+1) >> 1;
-                        ras.arc[ai+2].y = a = (a+c+1) >> 1;
-                        ras.arc[ai+4].y = b = (b+c+1) >> 1;
-                        ras.arc[ai+3].y = (a+b+1) >> 1;
+                        ras.arc_[ai+2].y = a = (a+c+1) >> 1;
+                        ras.arc_[ai+4].y = b = (b+c+1) >> 1;
+                        ras.arc_[ai+3].y = (a+b+1) >> 1;
                     }
 
                     else {
                         int64_t a, b;
 
-                        ras.arc[ai+4].x = ras.arc[ai+2].x;
-                        b = ras.arc[ai+1].x;
-                        a = ras.arc[ai+3].x = (ras.arc[ai+2].x+b)/2;
-                        b = ras.arc[ai+1].x = (ras.arc[ai+0].x+b)/2;
-                        ras.arc[ai+2].x = (a+b)/2;
+                        ras.arc_[ai+4].x = ras.arc_[ai+2].x;
+                        b = ras.arc_[ai+1].x;
+                        a = ras.arc_[ai+3].x = (ras.arc_[ai+2].x+b)/2;
+                        b = ras.arc_[ai+1].x = (ras.arc_[ai+0].x+b)/2;
+                        ras.arc_[ai+2].x = (a+b)/2;
 
-                        ras.arc[ai+4].y = ras.arc[ai+2].y;
-                        b = ras.arc[ai+1].y;
-                        a = ras.arc[ai+3].y = (ras.arc[ai+2].y+b)/2;
-                        b = ras.arc[ai+1].y = (ras.arc[ai+0].y+b)/2;
-                        ras.arc[ai+2].y = (a+b)/2;
+                        ras.arc_[ai+4].y = ras.arc_[ai+2].y;
+                        b = ras.arc_[ai+1].y;
+                        a = ras.arc_[ai+3].y = (ras.arc_[ai+2].y+b)/2;
+                        b = ras.arc_[ai+1].y = (ras.arc_[ai+0].y+b)/2;
+                        ras.arc_[ai+2].y = (a+b)/2;
                     }
 
                     ai += order;
@@ -1081,14 +1070,14 @@ void Painter_impl::raster_bezier_up(Raster & ras, int order) {
                 }
 
                 if (y1 != y2) {
-                    ras.xs.push_back(ras.arc[ai+order].x+(ras.arc[ai+0].x-ras.arc[ai+order].x)*(e-y1)/(y2-y1));
+                    ras.xs_.push_back(ras.arc_[ai+order].x+(ras.arc_[ai+0].x-ras.arc_[ai+order].x)*(e-y1)/(y2-y1));
                     e += 65536;
                 }
             }
 
             else if (e == y2) {
-                ras.joint = true;
-                ras.xs.push_back(ras.arc[ai+0].x);
+                ras.joint_ = true;
+                ras.xs_.push_back(ras.arc_[ai+0].x);
                 e += 65536;
             }
 
@@ -1100,138 +1089,131 @@ void Painter_impl::raster_bezier_up(Raster & ras, int order) {
 
 // private
 void Painter_impl::raster_conic_to(Raster & ras, int64_t cx, int64_t cy, int64_t ex, int64_t ey) {
-    if (ras.y != ey) {
-        int st = ras.y < ey ? 1 : -1;
+    if (ras.y_ != ey) {
+        int st = ras.y_ < ey ? 1 : -1;
 
-        if (ras.rstate != st) {
-            bool o = st == 1 ? is_bottom_overshoot(ras.y) : is_top_overshoot(ras.y);
-            if (0 != ras.rstate) { end_raster_profile(ras, o); }
+        if (ras.rstate_ != st) {
+            bool o = st == 1 ? is_bottom_overshoot(ras.y_) : is_top_overshoot(ras.y_);
+            if (0 != ras.rstate_) { end_raster_profile(ras, o); }
             new_raster_profile(ras, st, o);
         }
 
         if (1 == st) {
-            ras.arc[0].x = ex;
-            ras.arc[0].y = ey;
-            ras.arc[1].x = cx;
-            ras.arc[1].y = cy;
-            ras.arc[2].x = ras.x;
-            ras.arc[2].y = ras.y;
+            ras.arc_[0].x = ex;
+            ras.arc_[0].y = ey;
+            ras.arc_[1].x = cx;
+            ras.arc_[1].y = cy;
+            ras.arc_[2].x = ras.x_;
+            ras.arc_[2].y = ras.y_;
             raster_bezier_up(ras, 2);
         }
 
         else {
-            ras.arc[0].x = ex;
-            ras.arc[0].y = -ey;
-            ras.arc[1].x = cx;
-            ras.arc[1].y = -cy;
-            ras.arc[2].x = ras.x;
-            ras.arc[2].y = -ras.y;
-            bool fresh = ras.fresh;
+            ras.arc_[0].x = ex;
+            ras.arc_[0].y = -ey;
+            ras.arc_[1].x = cx;
+            ras.arc_[1].y = -cy;
+            ras.arc_[2].x = ras.x_;
+            ras.arc_[2].y = -ras.y_;
+            bool fresh = ras.fresh_;
             raster_bezier_up(ras, 2);
-            if (fresh && !ras.fresh) { ras.pros.back().start = -ras.pros.back().start; }
+            if (fresh && !ras.fresh_) { ras.pros_.back().start_ = -ras.pros_.back().start_; }
         }
     }
 
-    ras.x = ex;
-    ras.y = ey;
+    ras.x_ = ex;
+    ras.y_ = ey;
 }
 
 // private
 void Painter_impl::raster_cubic_to(Raster & ras, int64_t cx1, int64_t cy1, int64_t cx2, int64_t cy2, int64_t ex, int64_t ey) {
-    if (ras.y != ey) {
-        int state_bez = ras.y <= ey ? 1 : -1;
+    if (ras.y_ != ey) {
+        int state_bez = ras.y_ <= ey ? 1 : -1;
 
-        if (ras.rstate != state_bez) {
-            bool o = state_bez == 1 ? is_bottom_overshoot(ras.y) : is_top_overshoot(ras.y);
-            if (ras.rstate != 0) { end_raster_profile(ras, o); }
+        if (ras.rstate_ != state_bez) {
+            bool o = state_bez == 1 ? is_bottom_overshoot(ras.y_) : is_top_overshoot(ras.y_);
+            if (ras.rstate_ != 0) { end_raster_profile(ras, o); }
             new_raster_profile(ras, state_bez, o);
         }
 
         if (state_bez == 1) {
-            ras.arc[0].x = ex;
-            ras.arc[0].y = ey;
-            ras.arc[1].x = cx2;
-            ras.arc[1].y = cy2;
-            ras.arc[2].x = cx1;
-            ras.arc[2].y = cy1;
-            ras.arc[3].x = ras.x;
-            ras.arc[3].y = ras.y;
+            ras.arc_[0].x = ex;
+            ras.arc_[0].y = ey;
+            ras.arc_[1].x = cx2;
+            ras.arc_[1].y = cy2;
+            ras.arc_[2].x = cx1;
+            ras.arc_[2].y = cy1;
+            ras.arc_[3].x = ras.x_;
+            ras.arc_[3].y = ras.y_;
             raster_bezier_up(ras, 3);
         }
 
         else {
-            ras.arc[0].x = ex;
-            ras.arc[0].y = -ey;
-            ras.arc[1].x = cx2;
-            ras.arc[1].y = -cy2;
-            ras.arc[2].x = cx1;
-            ras.arc[2].y = -cy1;
-            ras.arc[3].x = ras.x;
-            ras.arc[3].y = -ras.y;
-            bool fresh = ras.fresh;
+            ras.arc_[0].x = ex;
+            ras.arc_[0].y = -ey;
+            ras.arc_[1].x = cx2;
+            ras.arc_[1].y = -cy2;
+            ras.arc_[2].x = cx1;
+            ras.arc_[2].y = -cy1;
+            ras.arc_[3].x = ras.x_;
+            ras.arc_[3].y = -ras.y_;
+            bool fresh = ras.fresh_;
             raster_bezier_up(ras, 3);
-            if (fresh && !ras.fresh) { ras.pros.back().start = -ras.pros.back().start; }
+            if (fresh && !ras.fresh_) { ras.pros_.back().start_ = -ras.pros_.back().start_; }
         }
     }
 
-    ras.x = ex;
-    ras.y = ey;
+    ras.x_ = ex;
+    ras.y_ = ey;
 }
 
 // private
-void Painter_impl::sort_raster_profiles(Raster & ras, std::vector<int> & v) {
-    for (int n: v) {
-        Raster_profile & p = ras.pros[n];
-        p.x = ras.xs[p.ix];
-        if (p.ascend) { p.ix++; }
-        else  { p.ix--; }
-        p.height--;
+void Painter_impl::sort_raster_profiles(Raster & ras, RP_list & v) {
+    for (auto prof: v) {
+        prof->height_--;
+        prof->x_ = ras.xs_[prof->ix_];
+        if (prof->ascend_) { prof->ix_++; }
+        else  { prof->ix_--; }
     }
 
-    std::sort(v.begin(), v.end(), [ras](int i, int j) { return ras.pros[i].x < ras.pros[j].x; });
+    v.sort([ras](Raster_profile * i, Raster_profile * j) { return i->x_ > j->x_; });
 }
 
 // private
-void Painter_impl::raster_sweep(Raster & ras, bool horz) {
-    std::vector<int> wt(ras.pros.size()), dl, dr;
+void Painter_impl::raster_sweep(Raster & ras, bool vert) {
     constexpr double mul = 1.0/65536;
+    double fade;
+    v_allocator<Raster_profile *> alloc;
+    RP_list dl(alloc), dr(alloc);
 
     // first, compute min and max Y
-    int ymax = INT_MIN;
-    int ymin = INT_MAX;
-    unsigned n = 0;
+    int ymin = INT_MAX, ymax = INT_MIN;
 
-    for (auto & p: ras.pros) {
-        int bottom = p.start;
-        int top = p.start+p.height-1;
+    for (auto & p: ras.pros_) {
+        int bottom = p.start_;
+        int top = p.start_+p.height_-1;
         ymin = std::min(ymin, bottom);
         ymax = std::max(ymax, top);
-        p.x = 0;
-        wt[n] = n;
-        n++;
+        p.x_ = 0;
     }
 
     // compute the distance of each profile from ymin
-    for (auto & p: ras.pros) {
-        p.count = p.start-ymin;
-    }
+    for (auto & p: ras.pros_) { p.count_ = p.start_-ymin; }
 
     // let's go
     int y = ymin, y_height = 0;
 
-    for (auto iter: ras.turns) {
-        int y_change = iter.first;
+    ras.turns_.sort();
+    ras.turns_.unique();
 
+    for (int y_change: ras.turns_) {
         if (y_change != ymin) {
-            for (int n: std::vector<int>(wt)) {
-                auto & p = ras.pros[n];
-                p.count -= y_height;
+            for (auto & prof: ras.pros_) {
+                prof.count_ -= y_height;
 
-                if (0 == p.count) {
-                    auto j = std::find(wt.begin(), wt.end(), n);
-                    if (j != wt.end()) { wt.erase(j); }
-                    if (p.ascend) { dl.push_back(p.iself); }
-                    else { dr.push_back(p.iself); }
+                if (0 == prof.count_) {
+                    if (prof.ascend_) { dl.push_front(&prof); }
+                    else { dr.push_front(&prof); }
                 }
             }
 
@@ -1244,38 +1226,39 @@ void Painter_impl::raster_sweep(Raster & ras, bool horz) {
                 auto li = dl.begin(), ri = dr.begin();
 
                 for (; li != dl.end() && ri != dr.end(); ++li, ++ri) {
-                    auto & left = ras.pros[*li];
-                    auto & right = ras.pros[*ri];
-                    int x1 = 32768+std::min(left.x, right.x);
-                    int x2 = 32768+std::max(left.x, right.x);
-                    int e1 = itrunc(x1), e2 = itrunc(x2);
+                    auto left = *li;
+                    auto right = *ri;
+                    int x1 = 32768+std::min(left->x_, right->x_);
+                    int x2 = 32768+std::max(left->x_, right->x_);
+                    int e1 = itrunc(x1), e2 = itrunc(x2), d = e2-e1;
 
-                    if (horz) {
-                        if (e1 < e2) {
-                            double bri = double(65536-ifrac(x1))*mul;
-                            if (bri >= ras.bri_thres) { raster_fill_rectangle(ras, y, e1, y, e1, ras.color.darken(1.0-bri)); }
-                            bri = double(ifrac(x2))*mul;
-                            if (bri >= ras.bri_thres) { raster_fill_rectangle(ras, y, e2, y, e2, ras.color.darken(1.0-bri)); }
+                    if (vert) {
+                        if (0 == d) {
+                            fade = mul*(ifrac(x1-x2));
+                            raster_fill_rectangle(ras, y, e1, y, e1, ras.color_.darken(fade));
                         }
 
                         else {
-                            double bri = double(ifrac(x2-x1))*mul;
-                            if (bri >= ras.bri_thres) { raster_fill_rectangle(ras, y, e1, y, e1, ras.color.darken(1.0-bri)); }
+                            if (d > 1) { raster_fill_rectangle(ras, y, e1+1, y, e2-1, ras.color_); }
+                            fade = mul*(ifrac(x1));
+                            raster_fill_rectangle(ras, y, e1, y, e1, ras.color_.darken(fade));
+                            fade = mul*(65536-ifrac(x2));
+                            raster_fill_rectangle(ras, y, e2, y, e2, ras.color_.darken(fade));
                         }
                     }
 
                     else {
-                        if (e1 < e2) {
-                            double bri = double(65536-ifrac(x1))*mul;
-                            if (bri >= ras.bri_thres) { raster_fill_rectangle(ras, e1, y, e1, y, ras.color.darken(1.0-bri)); }
-                            bri = double(ifrac(x2))*mul;
-                            if (bri >= ras.bri_thres) { raster_fill_rectangle(ras, e2, y, e2, y, ras.color.darken(1.0-bri)); }
-                            if (e2-e1 > 1) { raster_fill_rectangle(ras, e1+1, y, e2-1, y, ras.color); }
+                        if (0 == d) {
+                            fade = mul*(ifrac(x1-x2));
+                            raster_fill_rectangle(ras, e1, y, e1, y, ras.color_.darken(fade));
                         }
 
                         else {
-                            double bri = double(ifrac(x2-x1))*mul;
-                            if (bri >= ras.bri_thres) { raster_fill_rectangle(ras, e1, y, e1, y, ras.color.darken(1.0-bri)); }
+                            if (d > 1) { raster_fill_rectangle(ras, e1+1, y, e2-1, y, ras.color_); }
+                            fade = mul*(ifrac(x1));
+                            raster_fill_rectangle(ras, e1, y, e1, y, ras.color_.darken(fade));
+                            fade = mul*(65536-ifrac(x2));
+                            raster_fill_rectangle(ras, e2, y, e2, y, ras.color_.darken(fade));
                         }
                     }
                 }
@@ -1286,17 +1269,10 @@ void Painter_impl::raster_sweep(Raster & ras, bool horz) {
                 }
             }
 
-            for (int n: std::vector<int>(dl)) {
-                if (0 == ras.pros[n].height) {
-                    auto j = std::find(dl.begin(), dl.end(), n);
-                    if (j != dl.end()) dl.erase(j);
-                }
-            }
-
-            for (int n: std::vector<int>(dr)) {
-                if (0 == ras.pros[n].height) {
-                    auto j = std::find(dr.begin(), dr.end(), n);
-                    if (j != dr.end()) dr.erase(j);
+            for (auto & prof: ras.pros_) {
+                if (0 == prof.height_) {
+                    dl.remove(&prof);
+                    dr.remove(&prof);
                 }
             }
         }
@@ -1304,23 +1280,22 @@ void Painter_impl::raster_sweep(Raster & ras, bool horz) {
 }
 
 // private
-void Painter_impl::raster_add_contour(Raster & ras, const Contour & ctr, bool horz) {
+void Painter_impl::raster_add_contour(Raster & ras, const Contour & ctr, bool vert) {
     if (!ctr.empty()) {
-        ras.rstate = 0;
-        std::size_t ifirst = ras.pros.size();
-        Point64 start = fixed(ctr.start(), horz);
-        ras.x = start.x, ras.y = start.y;
+        ras.rstate_ = 0;
+        Point64 start = fixed(ctr.start(), vert);
+        ras.x_ = start.x, ras.y_ = start.y;
 
         for (const Curve & cv : ctr) {
-            Point64 end = fixed(cv.end(), horz);
+            Point64 end = fixed(cv.end(), vert);
 
             if (3 == cv.order()) {
-                Point64 cp1 = fixed(cv.cp1(), horz), cp2 = fixed(cv.cp2(), horz);
+                Point64 cp1 = fixed(cv.cp1(), vert), cp2 = fixed(cv.cp2(), vert);
                 raster_cubic_to(ras, cp1.x, cp1.y, cp2.x, cp2.y, end.x, end.y);
             }
 
             else if (2 == cv.order()) {
-                Point64 cp = fixed(cv.cp1(), horz);
+                Point64 cp = fixed(cv.cp1(), vert);
                 raster_conic_to(ras, cp.x, cp.y, end.x, end.y);
             }
 
@@ -1331,44 +1306,43 @@ void Painter_impl::raster_add_contour(Raster & ras, const Contour & ctr, bool ho
 
         raster_line_to(ras, start.x, start.y);
 
-        if (!ras.pros.empty()) {
-            bool o = ras.pros.back().ascend ? is_top_overshoot(ras.y) : is_bottom_overshoot(ras.y);
+        if (!ras.pros_.empty()) {
+            bool o = ras.pros_.back().ascend_ ? is_top_overshoot(ras.y_) : is_bottom_overshoot(ras.y_);
             end_raster_profile(ras, o);
-            if (ifirst < ras.pros.size()) { ras.pros.back().inext = ifirst; }
         }
     }
 }
 
 // private
-void Painter_impl::raster_pass(Raster & ras, const Contour * ctrs, std::size_t nctrs, bool horz) {
-    while (nctrs--) { raster_add_contour(ras, *ctrs++, horz); }
+void Painter_impl::raster_pass(Raster & ras, const Contour * ctrs, std::size_t nctrs, bool vert) {
+    while (nctrs--) { raster_add_contour(ras, *ctrs++, vert); }
 
     // finalize.
-    for (Raster_profile & p: ras.pros) {
+    for (Raster_profile & p: ras.pros_) {
         int bottom, top;
 
-        if (p.ascend) {
-            bottom = p.start;
-            top = p.start+p.height-1;
+        if (p.ascend_) {
+            bottom = p.start_;
+            top = p.start_+p.height_-1;
         }
 
         else {
-            bottom = p.start-p.height+1;
-            top = p.start;
-            p.start = bottom;
-            p.ix += p.height-1;
+            bottom = p.start_-p.height_+1;
+            top = p.start_;
+            p.start_ = bottom;
+            p.ix_ += p.height_-1;
         }
 
-        ras.turns[bottom] = 0;
-        ras.turns[top+1] = 0;
+        ras.turns_.push_front(bottom);
+        ras.turns_.push_front(top+1);
     }
 
-    raster_sweep(ras, horz);
-    ras.pros.clear();
-    ras.turns.clear();
-    ras.xs.clear();
-    ras.joint = false;
-    ras.fresh = false;
+    raster_sweep(ras, vert);
+    ras.pros_.clear();
+    ras.turns_.clear();
+    ras.xs_.clear();
+    ras.joint_ = false;
+    ras.fresh_ = false;
 }
 
 // private
@@ -1379,10 +1353,10 @@ void Painter_impl::raster_fill_rectangle(Raster & ras, int x1, int y1, int x2, i
 }
 
 // private
-void Painter_impl::raster_contours(const Contour * ctrs, std::size_t nctrs, const Color & color, double bri_thres) {
+void Painter_impl::raster_contours(const Contour * ctrs, std::size_t nctrs, const Color & color) {
     Raster ras;
-    ras.color = color;
-    ras.bri_thres = bri_thres;
+    ras.pros_.reserve(64);
+    ras.color_ = color;
     raster_pass(ras, ctrs, nctrs, false);
     raster_pass(ras, ctrs, nctrs, true);
 }

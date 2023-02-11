@@ -80,12 +80,20 @@ int List_text::append(const ustring & str) {
     return LIST_TEXT_IMPL->append(str);
 }
 
-void List_text::select(int row) {
-    LIST_TEXT_IMPL->select(row);
+int List_text::select(int row) {
+    return LIST_TEXT_IMPL->select(row);
 }
 
-void List_text::select(const ustring & str, bool similar) {
-    LIST_TEXT_IMPL->select(str, similar);
+int List_text::select(const ustring & str, bool similar) {
+    return LIST_TEXT_IMPL->select(str, similar);
+}
+
+int List_text::select_next() {
+    return LIST_TEXT_IMPL->select_next();
+}
+
+int List_text::select_previous() {
+    return LIST_TEXT_IMPL->select_previous();
 }
 
 int List_text::select_front() {
@@ -250,6 +258,62 @@ int List_text::find(const ustring & str) const {
 
 bool List_text::contains(const ustring & str) const {
     return LIST_TEXT_IMPL->contains(str);
+}
+
+Action & List_text::cancel_action() {
+    return LIST_TEXT_IMPL->cancel_action();
+}
+
+Action & List_text::enter_action() {
+    return LIST_TEXT_IMPL->enter_action();
+}
+
+Action & List_text::up_action() {
+    return LIST_TEXT_IMPL->up_action();
+}
+
+Action & List_text::down_action() {
+    return LIST_TEXT_IMPL->down_action();
+}
+
+Action & List_text::page_up_action() {
+    return LIST_TEXT_IMPL->page_up_action();
+}
+
+Action & List_text::page_down_action() {
+    return LIST_TEXT_IMPL->page_down_action();
+}
+
+Action & List_text::home_action() {
+    return LIST_TEXT_IMPL->home_action();
+}
+
+Action & List_text::end_action() {
+    return LIST_TEXT_IMPL->end_action();
+}
+
+Action & List_text::select_up_action() {
+    return LIST_TEXT_IMPL->select_up_action();
+}
+
+Action & List_text::select_down_action() {
+    return LIST_TEXT_IMPL->select_down_action();
+}
+
+Action & List_text::select_page_up_action() {
+    return LIST_TEXT_IMPL->select_page_up_action();
+}
+
+Action & List_text::select_page_down_action() {
+    return LIST_TEXT_IMPL->select_page_down_action();
+}
+
+Action & List_text::select_home_action() {
+    return LIST_TEXT_IMPL->select_home_action();
+}
+
+Action & List_text::select_end_action() {
+    return LIST_TEXT_IMPL->select_end_action();
 }
 
 signal<void(int, const ustring &)> & List_text::signal_text_selected() {

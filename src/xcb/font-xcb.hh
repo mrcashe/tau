@@ -48,7 +48,7 @@ private:
     xcb_render_glyphset_t   east_ = XCB_NONE;
     std::u32string          east_chars_;
     std::vector<uint8_t>    bits_;
-    const uint8_t           format_ = 32;
+    const uint8_t           format_ = 8;
     std::vector<xcb_render_glyphinfo_t> ginfos_;
 };
 

@@ -104,26 +104,26 @@ int List_text_impl::insert_after(const ustring & str, const ustring & other) {
     return insert(str, ++row);
 }
 
-void List_text_impl::select(int row) {
-    select_row(row);
+int List_text_impl::select(int row) {
+    return select_row(row);
 }
 
-void List_text_impl::select(const ustring & str, bool similar) {
+int List_text_impl::select(const ustring & str, bool similar) {
     for (const Holder & hol: holders_) {
         if (similar) {
             if (str_similar(hol.str, str)) {
-                select(hol.row);
-                break;
+                return select(hol.row);
             }
         }
 
         else {
             if (hol.str == str) {
-                select(hol.row);
-                break;
+                return select(hol.row);
             }
         }
     }
+
+    return INT_MIN;
 }
 
 ustring List_text_impl::at(int row) const {

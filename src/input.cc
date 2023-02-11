@@ -607,16 +607,11 @@ const char * KC_SHIFT_LOCK_NAME                     = "ShiftLock";
 // ----------------------------------------------------------------------------
 
 ustring key_code_to_string(char32_t kc) {
+    static const char * u = "U+", * x = "0x";
     std::string kn = keyname_from_keycode(kc);
 
     if (kn.empty()) {
-        if (kc <= 0x10ffff) {
-            kn = str_format("U+", std::setw(6), std::setfill('0'), std::hex, kc);
-        }
-
-        else {
-            kn = str_format("0x", std::setw(8), std::setfill('0'), std::hex, kc);
-        }
+        kn = str_format((kc <= 0x10ffff ? u : x), std::setw(4), std::setfill('0'), std::hex, kc);
     }
 
     return kn;

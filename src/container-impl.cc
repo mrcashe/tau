@@ -704,13 +704,6 @@ void Container_impl::show_cursor_up() {
     }
 }
 
-void Container_impl::sync_arrange() {
-    if (!shut_ && visible()) {
-        if (arrange_) { arrange_ = false; signal_arrange_(); }
-        if (!arrange_) { for (auto ci: containers_) { ci->sync_arrange(); } }
-    }
-}
-
 // Overriden by Window_impl.
 void Container_impl::queue_arrange_up() {
     if (parent_) { parent_->queue_arrange_up(); }
@@ -720,6 +713,13 @@ void Container_impl::queue_arrange() {
     if (!shut_) {
         arrange_ = true;
         queue_arrange_up();
+    }
+}
+
+void Container_impl::sync_arrange() {
+    if (!shut_ && visible()) {
+        if (arrange_) { arrange_ = false; signal_arrange_(); }
+        if (!arrange_) { for (auto ci: containers_) { ci->sync_arrange(); } }
     }
 }
 

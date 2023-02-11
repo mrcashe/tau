@@ -573,13 +573,13 @@ void Color::calc_hsv() {
 }
 
 void Color::lighter(double factor) {
-    double v = std::max(1.0/255, value());
+    double v = std::max(1.0/255, value_);
     v *= 1.0+std::max(0.0, factor);
     set_hsv(hue_, sat_, v);
 }
 
 void Color::darker(double factor) {
-    double v = value();
+    double v = value_;
     v *= 1.0-std::max(0.0, std::min(1.0, factor));
     set_hsv(hue_, sat_, v);
 }

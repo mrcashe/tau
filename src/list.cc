@@ -128,6 +128,14 @@ int List::select_row(int br) {
     return LIST_IMPL->select_row(br);
 }
 
+int List::select_next() {
+    return LIST_IMPL->select_next();
+}
+
+int List::select_previous() {
+    return LIST_IMPL->select_previous();
+}
+
 int List::select_front() {
     return LIST_IMPL->select_front();
 }
@@ -140,8 +148,8 @@ int List::selected_row() const {
     return LIST_IMPL->selected_row();
 }
 
-void List::remove(int br) {
-    LIST_IMPL->remove(br);
+void List::remove(int row) {
+    LIST_IMPL->remove(row);
 }
 
 bool List::empty() const {
@@ -274,6 +282,62 @@ void List::set_column_margin(int x, unsigned left, unsigned right) {
 
 void List::get_column_margin(int x, unsigned & left, unsigned & right) const {
     LIST_IMPL->get_column_margin(x, left, right);
+}
+
+Action & List::cancel_action() {
+    return LIST_IMPL->cancel_action();
+}
+
+Action & List::enter_action() {
+    return LIST_IMPL->enter_action();
+}
+
+Action & List::up_action() {
+    return LIST_IMPL->up_action();
+}
+
+Action & List::down_action() {
+    return LIST_IMPL->down_action();
+}
+
+Action & List::page_up_action() {
+    return LIST_IMPL->page_up_action();
+}
+
+Action & List::page_down_action() {
+    return LIST_IMPL->page_down_action();
+}
+
+Action & List::home_action() {
+    return LIST_IMPL->home_action();
+}
+
+Action & List::end_action() {
+    return LIST_IMPL->end_action();
+}
+
+Action & List::select_up_action() {
+    return LIST_IMPL->select_up_action();
+}
+
+Action & List::select_down_action() {
+    return LIST_IMPL->select_down_action();
+}
+
+Action & List::select_page_up_action() {
+    return LIST_IMPL->select_page_up_action();
+}
+
+Action & List::select_page_down_action() {
+    return LIST_IMPL->select_page_down_action();
+}
+
+Action & List::select_home_action() {
+    return LIST_IMPL->select_home_action();
+}
+
+Action & List::select_end_action() {
+    return LIST_IMPL->select_end_action();
 }
 
 signal<void(int)> & List::signal_row_selected() {

@@ -30,6 +30,11 @@ namespace tau {
 
 @page whats_new Whats New in 0.4.0
 
+@section broken_list_methods_040 Broken List_text methods
+
+- void List_text::select(int row) -> returned value changed to int.
+- void List_text::select(const ustring & str, bool similar) -> returned value changed to int.
+
 @section new_widget_assignments_040 New Widget assignment operators
 
 - Absolute::operator=(Widget_ptr wp)
@@ -83,6 +88,42 @@ namespace tau {
 - Table::Table(unsigned xspacing, unsigned yspacing)
 - Table::Table(unsigned spacing)
 - Table::set_spacing(unsigned spacing)
+
+@section new_list_methods_040 New List & List_text methods
+
+- List::select_next()
+- List::select_previous()
+- List::cancel_action()
+- List::enter_action()
+- List::up_action()
+- List::down_action()
+- List::page_up_action()
+- List::page_down_action()
+- List::home_action()
+- List::end_action()
+- List::select_up_action()
+- List::select_down_action()
+- List::select_page_up_action()
+- List::select_page_down_action()
+- List::select_home_action()
+- List::select_end_action()
+
+- List_text::select_next()
+- List_text::select_previous()
+- List_text::cancel_action()
+- List_text::enter_action()
+- List_text::up_action()
+- List_text::down_action()
+- List_text::page_up_action()
+- List_text::page_down_action()
+- List_text::home_action()
+- List_text::end_action()
+- List_text::select_up_action()
+- List_text::select_down_action()
+- List_text::select_page_up_action()
+- List_text::select_page_down_action()
+- List_text::select_home_action()
+- List_text::select_end_action()
 
 @section new_roller_methods_040 New Roller methods
 

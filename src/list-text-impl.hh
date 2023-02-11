@@ -45,8 +45,8 @@ public:
 
     void remove_text(const ustring & str);
 
-    void select(int row);
-    void select(const ustring & str, bool similar=false);
+    int  select(int row);
+    int  select(const ustring & str, bool similar=false);
 
     void set_text_align(Align align);
 

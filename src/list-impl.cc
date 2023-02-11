@@ -68,6 +68,7 @@ List_impl::List_impl():
     vslider_ = std::make_shared<Slider_impl>(scroller_, OR_DOWN, true);
     put(vslider_, 1, 1, 1, 1, true, false);
 
+    table_->connect_action(cancel_action_);
     table_->connect_action(enter_action_);
     table_->connect_action(up_action_);
     table_->connect_action(down_action_);
@@ -75,19 +76,19 @@ List_impl::List_impl():
     table_->connect_action(page_down_action_);
     table_->connect_action(home_action_);
     table_->connect_action(end_action_);
-    table_->connect_action(shift_up_action_);
-    table_->connect_action(shift_down_action_);
-    table_->connect_action(shift_page_up_action_);
-    table_->connect_action(shift_page_down_action_);
-    table_->connect_action(shift_home_action_);
-    table_->connect_action(shift_end_action_);
+    table_->connect_action(select_up_action_);
+    table_->connect_action(select_down_action_);
+    table_->connect_action(select_page_up_action_);
+    table_->connect_action(select_page_down_action_);
+    table_->connect_action(select_home_action_);
+    table_->connect_action(select_end_action_);
 
-    shift_up_action_.disable();
-    shift_down_action_.disable();
-    shift_page_up_action_.disable();
-    shift_page_down_action_.disable();
-    shift_home_action_.disable();
-    shift_end_action_.disable();
+    select_up_action_.disable();
+    select_down_action_.disable();
+    select_page_up_action_.disable();
+    select_page_down_action_.disable();
+    select_home_action_.disable();
+    select_end_action_.disable();
 
     signal_visible_.connect(fun(this, &List_impl::scroll_to_selection));
     signal_focus_in_.connect(fun(this, &List_impl::on_focus_in), true);
@@ -582,8 +583,37 @@ int List_impl::prev_row() {
     return INT_MIN;
 }
 
+void List_impl::on_prev_key() {
+    table_->unmark_all();
+    select_row(prev_row());
+}
+
+void List_impl::on_next_key() {
+    table_->unmark_all();
+    select_row(next_row());
+}
+
+int List_impl::select_next() {
+    if (!selectables_.empty()) {
+        table_->unmark_all();
+        return select_row(next_row());
+    }
+
+    return INT_MIN;
+}
+
+int List_impl::select_previous() {
+    if (!selectables_.empty()) {
+        table_->unmark_all();
+        return select_row(prev_row());
+    }
+
+    return INT_MIN;
+}
+
 int List_impl::select_front() {
     if (!selectables_.empty()) {
+        table_->unmark_all();
         return select_row(selectables_.begin()->first);
     }
 
@@ -592,6 +622,7 @@ int List_impl::select_front() {
 
 int List_impl::select_back() {
     if (!selectables_.empty()) {
+        table_->unmark_all();
         return select_row(selectables_.rbegin()->first);
     }
 
@@ -662,22 +693,22 @@ void List_impl::clear() {
 
 void List_impl::allow_multiple_select() {
     multiple_select_allowed_ = true;
-    shift_up_action_.enable();
-    shift_down_action_.enable();
-    shift_page_up_action_.enable();
-    shift_page_down_action_.enable();
-    shift_home_action_.enable();
-    shift_end_action_.enable();
+    select_up_action_.enable();
+    select_down_action_.enable();
+    select_page_up_action_.enable();
+    select_page_down_action_.enable();
+    select_home_action_.enable();
+    select_end_action_.enable();
 }
 
 void List_impl::disallow_multiple_select() {
     multiple_select_allowed_ = false;
-    shift_up_action_.disable();
-    shift_down_action_.disable();
-    shift_page_up_action_.disable();
-    shift_page_down_action_.disable();
-    shift_home_action_.disable();
-    shift_end_action_.disable();
+    select_up_action_.disable();
+    select_down_action_.disable();
+    select_page_up_action_.disable();
+    select_page_down_action_.disable();
+    select_home_action_.disable();
+    select_end_action_.disable();
 }
 
 void List_impl::align(Widget_ptr wp, Align xalign, Align yalign) {
@@ -742,16 +773,6 @@ bool List_impl::on_header_mouse_down(int mbt, int mm, const Point & pt, int colu
     }
 
     return false;
-}
-
-void List_impl::on_prev_key() {
-    table_->unmark_all();
-    select_row(prev_row());
-}
-
-void List_impl::on_next_key() {
-    table_->unmark_all();
-    select_row(next_row());
 }
 
 void List_impl::on_shift_prev_key() {

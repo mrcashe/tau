@@ -33,8 +33,9 @@
 #include <tau/matrix.hh>
 #include <tau/pen.hh>
 #include <tau/signal.hh>
+#include <sys-impl.hh>
 #include <array>
-#include <map>
+#include <forward_list>
 #include <vector>
 
 namespace tau {
@@ -138,35 +139,33 @@ public:
 protected:
 
     struct Raster_profile {
-        int64_t         x;          // current coordinate during sweep
-        bool            ascend;
-        bool            overtop;
-        bool            overbot;
-        int             iself;
-        int             inext;
-        int             height;     // profile's height in scanlines
-        int             start;      // profile's starting scanline
-        std::size_t     count;      // number of lines to step before this profile becomes drawable
-        std::size_t     ix;
+        int64_t         x_;         // current coordinate during sweep
+        bool            ascend_;
+        bool            overtop_;
+        bool            overbot_;
+        int             height_;    // profile's height in scanlines
+        int             start_;     // profile's starting scanline
+        std::size_t     count_;     // number of lines to step before this profile becomes drawable
+        std::size_t     ix_;
     };
 
-    using Turns = std::map<int64_t, int64_t>;
+    using Turns = std::forward_list<int, v_allocator<int>>;
     using Raster_profiles = std::vector<Raster_profile>;
     using Arcs = std::vector<Point64>;
     using Points = std::vector<int64_t>;
+    using RP_list = std::forward_list<Raster_profile *, v_allocator<Raster_profile *>>;
 
     struct Raster {
-        int64_t         x;
-        int64_t         y;
-        Color           color;
-        bool            fresh = false;
-        bool            joint = false;
-        int             rstate = 0;
-        Turns           turns;
-        Arcs            arc { 32 };
-        Points          xs;
-        Raster_profiles pros;
-        double          bri_thres = 0.0;
+        int64_t         x_;
+        int64_t         y_;
+        Color           color_;
+        bool            fresh_ = false;
+        bool            joint_ = false;
+        int             rstate_ = 0;
+        Turns           turns_;
+        Arcs            arc_ { 32 };
+        Points          xs_;
+        Raster_profiles pros_;
     };
 
     struct Prim {
@@ -179,8 +178,6 @@ protected:
 
     struct Prim_contour: Prim {
         std::vector<Contour> ctrs;
-        double bri_thres = 0.0;
-
         void free() override { ctrs.clear(); }
     };
 
@@ -241,17 +238,17 @@ private:
     Prims       prims_;
     Prim *      last_ = nullptr;
 
-    std::array<Prim_contour, 32> contours_;
-    std::array<Prim_arc,     64> arcs_;
+    std::array<Prim_contour, 64> contours_;
+    std::array<Prim_arc,     16> arcs_;
     std::array<Prim_rect,    64> rects_;
-    std::array<Prim_text,    64> texts_;
-    std::array<Prim_pixmap,  32> pixmaps_;
+    std::array<Prim_text,    32> texts_;
+    std::array<Prim_pixmap,   8> pixmaps_;
 
 protected:
 
-    Prim_contour * new_prim_contour(const Contour * pctr, std::size_t nctrs, double bri_thres=0.0);
-    Prim_contour * new_prim_contour(Contour * pctr, std::size_t nctrs, double bri_thres=0.0);
-    Prim_contour * new_prim_contour(Contour && ctr, double bri_thres=0.0);
+    Prim_contour * new_prim_contour(const Contour * pctr, std::size_t nctrs);
+    Prim_contour * new_prim_contour(Contour * pctr, std::size_t nctrs);
+    Prim_contour * new_prim_contour(Contour && ctr);
     Prim_arc * new_prim_arc(const Vector & center, double radius, double angle1, double angle2, bool pie);
     Prim_rect * new_prim_rect(const Vector & v1, const Vector & v2);
     Prim_text * new_prim_text(const Vector & pos, const ustring & str, const Color & color);
@@ -302,7 +299,6 @@ protected:
     Rect is_rect(const Point * pts, std::size_t npts);
     void arc_segment(Contour & ctr, double xc, double yc, double radius, double angle1, double angle2);
     Contour contour_from_arc(const Vector & center, double radius, double angle1, double angle2);
-    Point64 fixed(const Vector & vec, bool swap);
 
     void stroke_contour(const Contour & ctr);
     void stroke_conic(const Vector & start, const Vector & cp, const Vector & end);
@@ -318,12 +314,12 @@ private:
     void raster_bezier_up(Raster & ras, int order);
     void raster_conic_to(Raster & ras, int64_t cx, int64_t cy, int64_t ex, int64_t ey);
     void raster_cubic_to(Raster & ras, int64_t cx1, int64_t cy1, int64_t cx2, int64_t cy2, int64_t ex, int64_t ey);
-    void sort_raster_profiles(Raster & ras, std::vector<int> & v);
+    void sort_raster_profiles(Raster & ras, RP_list & v);
     void raster_sweep(Raster & ras, bool horz);
     void raster_add_contour(Raster & ras, const Contour & ctr, bool horz);
     void raster_pass(Raster & ras, const Contour * ctrs, std::size_t nctrs, bool horz);
     void raster_fill_rectangle(Raster & ras, int x1, int y1, int x2, int y2, const Color & c);
-    void raster_contours(const Contour * ctrs, std::size_t nctrs, const Color & color, double bri_thres);
+    void raster_contours(const Contour * ctrs, std::size_t nctrs, const Color & color);
     // ----- Raster stuff -----
 
     void flush_object();

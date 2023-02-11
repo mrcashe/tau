@@ -187,9 +187,31 @@ public:
     /// @throw graphics_error (bad row).
     int append(int row, Widget & w, Align align);
 
+    /// Remove specified row.
+    void remove(int br);
+
+    /// Remove all.
+    void clear();
+
+    /// Test if empty.
+    bool empty() const;
+
+    /// @name Selection
+    /// @{
+
     /// Select specified row.
     /// @return INT_MIN if no selection available or row index.
     int select_row(int row);
+
+    /// Select next row.
+    /// @since 0.4.0
+    /// @return INT_MIN if no selection available or row index.
+    int select_next();
+
+    /// Select previous row.
+    /// @since 0.4.0
+    /// @return INT_MIN if no selection available or row index.
+    int select_previous();
 
     /// Select first row.
     /// @return INT_MIN if no selection available or row index.
@@ -203,17 +225,8 @@ public:
     /// @return INT_MIN if no selection available or row index.
     int selected_row() const;
 
-    /// Remove specified row.
-    void remove(int br);
-
-    /// Remove all.
-    void clear();
-
     /// Clear selection.
     void unselect();
-
-    /// Test if empty.
-    bool empty() const;
 
     /// Allow multiple select.
     /// Disallowed by default.
@@ -227,6 +240,7 @@ public:
     /// Disallowed by default.
     bool multiple_select_allowed() const;
 
+    /// @}
     /// Show all headers.
     void show_headers();
 
@@ -348,6 +362,62 @@ public:
     /// @param left where to store left margin width in pixels.
     /// @param right where to store right margin width in pixels.
     void get_column_margin(int x, unsigned & left, unsigned & right) const;
+
+    /// Get "Cancel" action.
+    /// @since 0.4.0
+    Action & cancel_action();
+
+    /// Get "Enter" action.
+    /// @since 0.4.0
+    Action & enter_action();
+
+    /// Get "Up" action.
+    /// @since 0.4.0
+    Action & up_action();
+
+    /// Get "Down" action.
+    /// @since 0.4.0
+    Action & down_action();
+
+    /// Get "Page Up" action.
+    /// @since 0.4.0
+    Action & page_up_action();
+
+    /// Get "Page Down" action.
+    /// @since 0.4.0
+    Action & page_down_action();
+
+    /// Get "Home" action.
+    /// @since 0.4.0
+    Action & home_action();
+
+    /// Get "End" action.
+    /// @since 0.4.0
+    Action & end_action();
+
+    /// Get "Select Up" action.
+    /// @since 0.4.0
+    Action & select_up_action();
+
+    /// Get "Select Down" action.
+    /// @since 0.4.0
+    Action & select_down_action();
+
+    /// Get "Select Page Up" action.
+    /// @since 0.4.0
+    Action & select_page_up_action();
+
+    /// Get "Select Page Down" action.
+    /// @since 0.4.0
+    Action & select_page_down_action();
+
+    /// Get "Select Home" action.
+    /// @since 0.4.0
+    Action & select_home_action();
+
+    /// Get "Select End" action.
+    /// @since 0.4.0
+    Action & select_end_action();
 
     /// Signal emitted when some row selected.
     /// Slot prototype:

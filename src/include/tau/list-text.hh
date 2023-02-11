@@ -99,13 +99,31 @@ public:
     /// Append text.
     int append(const ustring & str);
 
+    /// @name Selection
+    /// @{
+
     /// Select specified row.
-    void select(int row);
+    /// @param row row number
+    /// @overload select(int row)
+    /// @return INT_MIN if no selection available or row index.
+    int select(int row);
 
     /// Select specified text.
     /// @param str text to be selected.
     /// @param similar if @b true, use str_similar() to compare, else compare byte-to-byte.
-    void select(const ustring & str, bool similar=false);
+    /// @overload select(const ustring & str, bool similar)
+    /// @return INT_MIN if no selection available or row index.
+    int select(const ustring & str, bool similar=false);
+
+    /// Select next row.
+    /// @since 0.4.0
+    /// @return INT_MIN if no selection available or row index.
+    int select_next();
+
+    /// Select previous row.
+    /// @since 0.4.0
+    /// @return INT_MIN if no selection available or row index.
+    int select_previous();
 
     /// Select top row.
     int select_front();
@@ -113,10 +131,26 @@ public:
     /// Select bottom row.
     int select_back();
 
+    /// Clear selection.
+    void unselect();
+
     /// Get selected text.
     /// @return text at current row or empty string if there are no selection.
     ustring selection() const;
 
+    /// Allow multiple select.
+    /// Disallowed by default.
+    void allow_multiple_select();
+
+    /// Disallow multiple select.
+    /// Disallowed by default.
+    void disallow_multiple_select();
+
+    /// Test if multiple select allowed.
+    /// Disallowed by default.
+    bool multiple_select_allowed() const;
+
+    /// @}
     /// Find first row where specified text is.
     /// @return INT_MIN if not found or row number.
     int find(const ustring & str) const;
@@ -135,27 +169,12 @@ public:
     /// Remove rows having specified text.
     void remove_text(const ustring & str);
 
-    /// Clear selection.
-    void unselect();
-
     /// Test if empty.
     /// @return true if no branches made.
     bool empty() const;
 
     /// Remove all rows.
     void clear();
-
-    /// Allow multiple select.
-    /// Disallowed by default.
-    void allow_multiple_select();
-
-    /// Disallow multiple select.
-    /// Disallowed by default.
-    void disallow_multiple_select();
-
-    /// Test if multiple select allowed.
-    /// Disallowed by default.
-    bool multiple_select_allowed() const;
 
     /// Show all headers.
     void show_headers();
@@ -276,6 +295,62 @@ public:
     /// @param left where to store left margin width in pixels.
     /// @param right where to store right margin width in pixels.
     void get_column_margin(int x, unsigned & left, unsigned & right) const;
+
+    /// Get "Cancel" action.
+    /// @since 0.4.0
+    Action & cancel_action();
+
+    /// Get "Enter" action.
+    /// @since 0.4.0
+    Action & enter_action();
+
+    /// Get "Up" action.
+    /// @since 0.4.0
+    Action & up_action();
+
+    /// Get "Down" action.
+    /// @since 0.4.0
+    Action & down_action();
+
+    /// Get "Page Up" action.
+    /// @since 0.4.0
+    Action & page_up_action();
+
+    /// Get "Page Down" action.
+    /// @since 0.4.0
+    Action & page_down_action();
+
+    /// Get "Home" action.
+    /// @since 0.4.0
+    Action & home_action();
+
+    /// Get "End" action.
+    /// @since 0.4.0
+    Action & end_action();
+
+    /// Get "Select Up" action.
+    /// @since 0.4.0
+    Action & select_up_action();
+
+    /// Get "Select Down" action.
+    /// @since 0.4.0
+    Action & select_down_action();
+
+    /// Get "Select Page Up" action.
+    /// @since 0.4.0
+    Action & select_page_up_action();
+
+    /// Get "Select Page Down" action.
+    /// @since 0.4.0
+    Action & select_page_down_action();
+
+    /// Get "Select Home" action.
+    /// @since 0.4.0
+    Action & select_home_action();
+
+    /// Get "Select End" action.
+    /// @since 0.4.0
+    Action & select_end_action();
 
     /// Signal emitted when text selected.
     /// Slot prototype:

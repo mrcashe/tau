@@ -83,6 +83,7 @@ Frame_impl::Frame_impl(const ustring & label, Align align, Border_style bs, unsi
 
 void Frame_impl::init() {
     signal_arrange_.connect(fun(this, &Frame_impl::arrange));
+    signal_size_changed_.connect(fun(this, &Frame_impl::update_requisition));
     signal_size_changed_.connect(fun(this, &Frame_impl::arrange));
     signal_visible_.connect(fun(this, &Frame_impl::arrange));
     signal_display_.connect(fun(this, &Frame_impl::update_requisition));
@@ -100,8 +101,7 @@ void Frame_impl::init_border_style(Border_style bs, unsigned width, int radius) 
 void Frame_impl::insert(Widget_ptr wp) {
     clear();
     make_child(wp);
-    wp->update_origin(INT_MIN, INT_MIN);
-    wp->update_size(0, 0);
+    update_child_bounds(wp.get(), INT_MIN, INT_MIN, Size());
     child_req_cx_ = wp->signal_requisition_changed().connect(fun(this, &Frame_impl::update_requisition));
     child_hints_cx_ = wp->signal_hints_changed().connect(fun(this, &Frame_impl::update_requisition));
     child_show_cx_ = wp->signal_show().connect(fun(this, &Frame_impl::on_child_show));
@@ -121,8 +121,6 @@ void Frame_impl::clear() {
         child_focus_cx_.drop();
         cp_ = nullptr;
         unparent_child(wp);
-        wp->update_origin(INT_MIN, INT_MIN);
-        wp->update_size(0, 0);
         update_requisition();
         invalidate();
     }
@@ -131,9 +129,7 @@ void Frame_impl::clear() {
 void Frame_impl::set_label(Widget_ptr wp) {
     unset_label();
     make_child(wp);
-    wp->update_origin(INT_MIN, INT_MIN);
-    wp->update_size(0, 0);
-    wp->disallow_focus();
+    update_child_bounds(wp.get(), INT_MIN, INT_MIN, Size());
     label_ = wp.get();
     label_req_cx_ = wp->signal_requisition_changed().connect(fun(this, &Frame_impl::update_requisition));
     label_hints_cx_ = wp->signal_hints_changed().connect(fun(this, &Frame_impl::update_requisition));
@@ -152,8 +148,6 @@ void Frame_impl::unset_label() {
         label_show_cx_.drop();
         label_ = nullptr;
         unparent_child(wp);
-        wp->update_origin(INT_MIN, INT_MIN);
-        wp->update_size(0, 0);
         update_requisition();
         queue_arrange();
     }
@@ -183,7 +177,6 @@ Size Frame_impl::child_requisition(Widget_impl * wp) {
 
 void Frame_impl::update_requisition() {
     Size rs;
-
     unsigned r = eradius();
     unsigned left = std::max(left_, r);
     unsigned right = std::max(right_, r);
@@ -198,7 +191,7 @@ void Frame_impl::update_requisition() {
     }
 
     rs.increase(left+right, top+bottom);
-    rs += child_requisition(cp_);
+    rs.increase(child_requisition(cp_));
     require_size(rs);
 }
 
@@ -299,10 +292,7 @@ void Frame_impl::arrange() {
                 lb_.set(origin, size);
                 origin += label_->margin_origin();
                 size.decrease(label_->margin_hint());
-                bool changed = false;
-                if (label_->update_origin(origin)) { changed = true; }
-                if (label_->update_size(size)) { changed = true; }
-                if (changed) { invalidate(was|lb_); }
+                if (update_child_bounds(label_, origin, size)) { invalidate(was|lb_); }
             }
         }
     }
@@ -311,17 +301,13 @@ void Frame_impl::arrange() {
         Rect was(cp_->origin(), cp_->size());
         corigin += cp_->margin_origin();
         csize.decrease(cp_->margin_hint());
-        bool changed = false;
-        if (cp_->update_origin(corigin)) { changed = true; }
-        if (cp_->update_size(csize)) { changed = true; }
-        if (changed) { invalidate(was|Rect(corigin, csize)); }
+        if (update_child_bounds(cp_, corigin, csize)) { invalidate(was|Rect(corigin, csize)); }
     }
 }
 
 void Frame_impl::on_label_hide() {
     lb_.reset();
-    label_->update_origin(INT_MIN, INT_MIN);
-    label_->update_size(0, 0);
+    update_child_bounds(label_, INT_MIN, INT_MIN, Size());
     update_requisition();
     queue_arrange();
 }
@@ -332,8 +318,7 @@ void Frame_impl::on_label_show() {
 }
 
 void Frame_impl::on_child_hide() {
-    cp_->update_origin(INT_MIN, INT_MIN);
-    cp_->update_size(0, 0);
+    update_child_bounds(cp_, INT_MIN, INT_MIN, Size());
     update_requisition();
     queue_arrange();
 }
@@ -354,9 +339,8 @@ void Frame_impl::paint_border(Painter pr) {
     Size ws = size();
     if (!ws) { return; }
 
-    static const double DARKEN = 0.15, LITEN = 0.1;
+    static constexpr double DARKEN = 0.15, LITEN = 0.1;
     const unsigned r0 = eradius();
-
     Color c, c2;
 
     if (0 != border_left_) {
@@ -638,7 +622,7 @@ void Frame_impl::paint_border(Painter pr) {
 }
 
 void Frame_impl::paint_background(Painter pr, const Rect & inval) {
-    Color bg; if (parent_) { bg = parent_->style().color("background"); }
+    Color bg; if (parent_) { bg = parent_->style().color(STYLE_BACKGROUND); }
     unsigned r0 = mradius();
 
     // Erase corners.
@@ -649,7 +633,7 @@ void Frame_impl::paint_background(Painter pr, const Rect & inval) {
     pr.set_brush(bg);
     pr.fill();
 
-    Color fg = style().color("background");
+    Color fg = style().color(STYLE_BACKGROUND);
     pr.arc(r0, r0, r0, PI, PI/2, true);
     pr.arc(size().width()-r0, r0, r0, 0, PI/2, true);
     pr.arc(size().width()-r0, size().height()-r0, r0, 0, -PI/2, true);
@@ -662,7 +646,7 @@ void Frame_impl::paint_background(Painter pr, const Rect & inval) {
 }
 
 bool Frame_impl::on_backpaint(Painter pr, const Rect & inval) {
-    if (mradius() && style().get("background").is_set()) {
+    if (mradius() && style().get(STYLE_BACKGROUND).is_set()) {
         paint_background(pr, inval);
         return true;
     }
