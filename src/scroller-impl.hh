@@ -53,8 +53,8 @@ public:
     Action & pan_right_action() { return pan_right_action_; }
     Action & pan_up_action() { return pan_up_action_; }
     Action & pan_down_action() { return pan_down_action_; }
-    Action & page_up_action() { return page_up_action_; }
-    Action & page_down_action() { return page_down_action_; }
+    Action & previous_page_action() { return previous_page_action_; }
+    Action & next_page_action() { return next_page_action_; }
     Action & home_action() { return home_action_; }
     Action & end_action() { return end_action_; }
 
@@ -79,8 +79,8 @@ private:
     Action      pan_right_action_  { "<Ctrl><Alt>Right", fun(this, &Scroller_impl::pan_right) };
     Action      pan_up_action_     { "<Ctrl>Up",         fun(this, &Scroller_impl::pan_up)    };
     Action      pan_down_action_   { "<Ctrl>Down",       fun(this, &Scroller_impl::pan_down)  };
-    Action      page_up_action_    { "PageUp",           fun(this, &Scroller_impl::page_up)   };
-    Action      page_down_action_  { "PageDown",         fun(this, &Scroller_impl::page_down) };
+    Action      previous_page_action_    { "PageUp",           fun(this, &Scroller_impl::page_up)   };
+    Action      next_page_action_  { "PageDown",         fun(this, &Scroller_impl::page_down) };
     Action      home_action_       { KC_HOME, KM_NONE,   fun(this, &Scroller_impl::home)      };
     Action      end_action_        { KC_END,  KM_NONE,   fun(this, &Scroller_impl::end)       };
 

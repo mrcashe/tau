@@ -124,8 +124,8 @@ int List::append(int branch, Widget & w, Align align) {
     return LIST_IMPL->append(branch, w.ptr(), align);
 }
 
-int List::select_row(int br) {
-    return LIST_IMPL->select_row(br);
+int List::select(int br) {
+    return LIST_IMPL->select(br);
 }
 
 int List::select_next() {
@@ -292,20 +292,20 @@ Action & List::enter_action() {
     return LIST_IMPL->enter_action();
 }
 
-Action & List::up_action() {
-    return LIST_IMPL->up_action();
+Action & List::previous_action() {
+    return LIST_IMPL->previous_action();
 }
 
-Action & List::down_action() {
-    return LIST_IMPL->down_action();
+Action & List::next_action() {
+    return LIST_IMPL->next_action();
 }
 
-Action & List::page_up_action() {
-    return LIST_IMPL->page_up_action();
+Action & List::previous_page_action() {
+    return LIST_IMPL->previous_page_action();
 }
 
-Action & List::page_down_action() {
-    return LIST_IMPL->page_down_action();
+Action & List::next_page_action() {
+    return LIST_IMPL->next_page_action();
 }
 
 Action & List::home_action() {
@@ -316,20 +316,20 @@ Action & List::end_action() {
     return LIST_IMPL->end_action();
 }
 
-Action & List::select_up_action() {
-    return LIST_IMPL->select_up_action();
+Action & List::select_previous_action() {
+    return LIST_IMPL->select_previous_action();
 }
 
-Action & List::select_down_action() {
-    return LIST_IMPL->select_down_action();
+Action & List::select_next_action() {
+    return LIST_IMPL->select_next_action();
 }
 
-Action & List::select_page_up_action() {
-    return LIST_IMPL->select_page_up_action();
+Action & List::select_previous_page_action() {
+    return LIST_IMPL->select_previous_page_action();
 }
 
-Action & List::select_page_down_action() {
-    return LIST_IMPL->select_page_down_action();
+Action & List::select_next_page_action() {
+    return LIST_IMPL->select_next_page_action();
 }
 
 Action & List::select_home_action() {

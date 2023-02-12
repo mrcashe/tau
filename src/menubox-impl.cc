@@ -44,8 +44,8 @@ Menubox_impl::Menubox_impl():
     table_->signal_mouse_motion().connect(fun(this, &Menubox_impl::on_table_mouse_motion));
     insert(table_);
 
-    connect_action(up_action_);
-    connect_action(down_action_);
+    connect_action(previous_action_);
+    connect_action(next_action_);
     connect_action(left_action_);
     connect_action(right_action_);
 }

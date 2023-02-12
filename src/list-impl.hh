@@ -53,16 +53,16 @@ public:
     int  append(Widget_ptr wp, bool shrink=false);
     int  append(Widget_ptr wp, Align align);
 
-    int  prepend(int branch, Widget_ptr wp, bool shrink=false);
-    int  prepend(int branch, Widget_ptr wp, Align align);
-    int  insert(int branch, Widget_ptr wp, int position, bool shrink=false);
-    int  insert(int branch, Widget_ptr wp, int position, Align align);
-    int  append(int branch, Widget_ptr wp, bool shrink=false);
-    int  append(int branch, Widget_ptr wp, Align align);
+    int  prepend(int row, Widget_ptr wp, bool shrink=false);
+    int  prepend(int row, Widget_ptr wp, Align align);
+    int  insert(int row, Widget_ptr wp, int position, bool shrink=false);
+    int  insert(int row, Widget_ptr wp, int position, Align align);
+    int  append(int row, Widget_ptr wp, bool shrink=false);
+    int  append(int row, Widget_ptr wp, Align align);
 
-    void remove(int br);
+    void remove(int row);
 
-    int select_row(int br);
+    int select(int row);
     int select_next();
     int select_previous();
     int select_front();
@@ -122,16 +122,16 @@ public:
 
     Action & cancel_action() { return cancel_action_; }
     Action & enter_action() { return enter_action_; }
-    Action & up_action() { return up_action_; }
-    Action & down_action() { return down_action_; }
-    Action & page_up_action() { return page_up_action_; }
-    Action & page_down_action() { return page_down_action_; }
+    Action & previous_action() { return previous_action_; }
+    Action & next_action() { return next_action_; }
+    Action & previous_page_action() { return previous_page_action_; }
+    Action & next_page_action() { return next_page_action_; }
     Action & home_action() { return home_action_; }
     Action & end_action() { return end_action_; }
-    Action & select_up_action() { return select_up_action_; }
-    Action & select_down_action() { return select_down_action_; }
-    Action & select_page_up_action() { return select_page_up_action_; }
-    Action & select_page_down_action() { return select_page_down_action_; }
+    Action & select_previous_action() { return select_previous_action_; }
+    Action & select_next_action() { return select_next_action_; }
+    Action & select_previous_page_action() { return select_previous_page_action_; }
+    Action & select_next_page_action() { return select_next_page_action_; }
     Action & select_home_action() { return select_home_action_; }
     Action & select_end_action() { return select_end_action_; }
 
@@ -166,8 +166,8 @@ public:
 protected:
 
     struct Selectable {
-        int             min;
-        int             max;
+        int             min_ = 0;
+        int             max_ = 0;
     };
 
     // .first is for row index & table index.
@@ -202,19 +202,19 @@ protected:
     int                 trunk_max_ = 0;
 
     Action              cancel_action_ { "Escape Cancel", fun(this, &Widget_impl::drop_focus) };
-    Action              enter_action_ { KC_ENTER, KM_NONE, fun(this, &List_impl::on_enter_key) };
-    Action              up_action_ { KC_UP, KM_NONE, fun(this, &List_impl::on_prev_key) };
-    Action              down_action_ { KC_DOWN, KM_NONE, fun(this, &List_impl::on_next_key) };
-    Action              page_up_action_ { KC_PAGE_UP, KM_NONE, fun(this, &List_impl::on_page_up_key) };
-    Action              page_down_action_ { KC_PAGE_DOWN, KM_NONE, fun(this, &List_impl::on_page_down_key) };
-    Action              home_action_ { KC_HOME, KM_NONE, fun(this, &List_impl::on_home_key) };
-    Action              end_action_ { KC_END, KM_NONE, fun(this, &List_impl::on_end_key) };
-    Action              select_up_action_ { KC_UP, KM_SHIFT, fun(this, &List_impl::on_shift_prev_key) };
-    Action              select_down_action_ { KC_DOWN, KM_SHIFT, fun(this, &List_impl::on_shift_next_key) };
-    Action              select_page_up_action_ { KC_PAGE_UP, KM_SHIFT, fun(this, &List_impl::on_shift_page_up_key) };
-    Action              select_page_down_action_ { KC_PAGE_DOWN, KM_SHIFT, fun(this, &List_impl::on_shift_page_down_key) };
-    Action              select_home_action_ { KC_HOME, KM_SHIFT, fun(this, &List_impl::on_shift_home_key) };
-    Action              select_end_action_ { KC_END, KM_SHIFT, fun(this, &List_impl::on_shift_end_key) };
+    Action              enter_action_ { KC_ENTER, KM_NONE, fun(this, &List_impl::on_enter) };
+    Action              previous_action_ { KC_UP, KM_NONE, fun(this, &List_impl::on_prev) };
+    Action              next_action_ { KC_DOWN, KM_NONE, fun(this, &List_impl::on_next) };
+    Action              previous_page_action_ { KC_PAGE_UP, KM_NONE, fun(this, &List_impl::on_page_up) };
+    Action              next_page_action_ { KC_PAGE_DOWN, KM_NONE, fun(this, &List_impl::on_page_down) };
+    Action              home_action_ { KC_HOME, KM_NONE, fun(this, &List_impl::on_home) };
+    Action              end_action_ { KC_END, KM_NONE, fun(this, &List_impl::on_end) };
+    Action              select_previous_action_ { KC_UP, KM_SHIFT, fun(this, &List_impl::on_select_prev) };
+    Action              select_next_action_ { KC_DOWN, KM_SHIFT, fun(this, &List_impl::on_select_next) };
+    Action              select_previous_page_action_ { KC_PAGE_UP, KM_SHIFT, fun(this, &List_impl::on_select_page_up) };
+    Action              select_next_page_action_ { KC_PAGE_DOWN, KM_SHIFT, fun(this, &List_impl::on_select_page_down) };
+    Action              select_home_action_ { KC_HOME, KM_SHIFT, fun(this, &List_impl::on_select_home) };
+    Action              select_end_action_ { KC_END, KM_SHIFT, fun(this, &List_impl::on_select_end) };
 
     signal<void(int)>   signal_row_selected_;
     signal<void(int)>   signal_row_activated_;
@@ -224,7 +224,10 @@ protected:
     signal<void(int)>   signal_header_click_;
     signal<void(int)>   signal_header_width_changed_;
 
-protected:
+private:
+
+    int  select_emit(int row);
+    void unselect_emit();
 
     int  prepend_row(Widget_ptr wp, Align align, bool shrink);
     int  insert_row(Widget_ptr wp, int position, Align align, bool shrink);
@@ -238,10 +241,8 @@ protected:
     int  prepend(int branch, Widget_ptr wp, Align align, bool shrink);
     int  append(int branch, Widget_ptr wp, Align align, bool shrink);
 
-    bool row_marked(int br);
+    bool row_marked(int row);
     void update_selection();
-    void page_down();
-    void page_up();
     void activate_current();
     void arrange_headers();
     void sync_scrollers_offset();
@@ -258,22 +259,22 @@ protected:
     bool on_sep_mouse_down(int mbt, int mm, const Point & pt, Header & hdr);
     bool on_sep_mouse_up(int mbt, int mm, const Point & pt, Header & hdr);
     void on_sep_mouse_motion(int mm, const Point & pt, Header & hdr);
-    void on_enter_key();
-    void on_next_key();
-    void on_prev_key();
-    void on_page_up_key();
-    void on_page_down_key();
-    void on_home_key();
-    void on_end_key();
-    void on_shift_next_key();
-    void on_shift_prev_key();
-    void on_shift_page_up_key();
-    void on_shift_page_down_key();
-    void on_shift_home_key();
-    void on_shift_end_key();
+    void on_row_bounds_changed(int row);
     void on_focus_in();
 
-    void on_row_bounds_changed(int br);
+    void on_enter();
+    void on_next();
+    void on_prev();
+    void on_page_up();
+    void on_page_down();
+    void on_home();
+    void on_end();
+    void on_select_next();
+    void on_select_prev();
+    void on_select_page_up();
+    void on_select_page_down();
+    void on_select_home();
+    void on_select_end();
 };
 
 } // namespace tau

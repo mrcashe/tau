@@ -277,13 +277,13 @@ public:
     Action & move_up_action();
 
     /// Gets "Select Up" action.
-    Action & select_up_action();
+    Action & select_previous_action();
 
     /// Gets "Move Down" action.
     Action & move_down_action();
 
     /// Gets "Select Down" action.
-    Action & select_down_action();
+    Action & select_next_action();
 
     /// Gets "Move Word Left" action.
     Action & move_word_left_action();
@@ -322,16 +322,16 @@ public:
     Action & select_to_eof_action();
 
     /// Gets "Move Page Up" action.
-    Action & move_page_up_action();
+    Action & move_previous_page_action();
 
     /// Gets "Move Page Down" action.
-    Action & move_page_down_action();
+    Action & move_next_page_action();
 
-    /// Gets "Select Page Up" action.
-    Action & select_page_up_action();
+    /// Gets "Select Previous Page" action.
+    Action & select_previous_page_action();
 
-    /// Gets "Select Page Down" action.
-    Action & select_page_down_action();
+    /// Gets "Select Next Page" action.
+    Action & select_next_page_action();
 
     /// Gets "Select All" action.
     Action & select_all_action();

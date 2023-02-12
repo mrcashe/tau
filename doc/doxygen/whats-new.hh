@@ -30,10 +30,26 @@ namespace tau {
 
 @page whats_new Whats New in 0.4.0
 
-@section broken_list_methods_040 Broken List_text methods
+@section broken_text_methods_040 Broken Text methods
 
+- Text::page_up_action() -> renamed to Text::previous_page_action()
+- Text::page_down_action() -> renamed to Text::next_page_action()
+- Text::select_up_action() -> renamed to Text::select_previous_action()
+- Text::select_down_action() -> renamed to Text::select_next_action()
+- Text::select_next_page_action() -> renamed to Text::select_next_page_action()
+- Text::select_next_page_action() -> renamed to Text::select_next_page_action()
+- Text::select_previous_page_action() -> renamed to Text::select_previous_page_action()
+
+@section broken_list_methods_040 Broken List and List_text methods
+
+- int List::select_row(int row) -> renamed to int List::select(int row).
 - void List_text::select(int row) -> returned value changed to int.
 - void List_text::select(const ustring & str, bool similar) -> returned value changed to int.
+
+@section broken_list_methods_040 Broken Scroller methods
+
+- Scroller::page_down_action() -> renamed to Scroller::next_page_action()
+- Scroller::page_up_action() -> renamed to Scroller::previous_page_action()
 
 @section new_widget_assignments_040 New Widget assignment operators
 
@@ -88,6 +104,8 @@ namespace tau {
 - Table::Table(unsigned xspacing, unsigned yspacing)
 - Table::Table(unsigned spacing)
 - Table::set_spacing(unsigned spacing)
+- Table::has_selection()
+- Table::has_marks()
 
 @section new_list_methods_040 New List & List_text methods
 
@@ -95,16 +113,16 @@ namespace tau {
 - List::select_previous()
 - List::cancel_action()
 - List::enter_action()
-- List::up_action()
-- List::down_action()
-- List::page_up_action()
-- List::page_down_action()
+- List::previous_action()
+- List::next_action()
+- List::previous_page_action()
+- List::next_page_action()
 - List::home_action()
 - List::end_action()
-- List::select_up_action()
-- List::select_down_action()
-- List::select_page_up_action()
-- List::select_page_down_action()
+- List::select_previous_action()
+- List::select_next_action()
+- List::select_previous_page_action()
+- List::select_next_page_action()
 - List::select_home_action()
 - List::select_end_action()
 
@@ -112,16 +130,16 @@ namespace tau {
 - List_text::select_previous()
 - List_text::cancel_action()
 - List_text::enter_action()
-- List_text::up_action()
-- List_text::down_action()
-- List_text::page_up_action()
-- List_text::page_down_action()
+- List_text::previous_action()
+- List_text::next_action()
+- List_text::previous_page_action()
+- List_text::next_page_action()
 - List_text::home_action()
 - List_text::end_action()
-- List_text::select_up_action()
-- List_text::select_down_action()
-- List_text::select_page_up_action()
-- List_text::select_page_down_action()
+- List_text::select_previous_action()
+- List_text::select_next_action()
+- List_text::select_previous_page_action()
+- List_text::select_next_page_action()
 - List_text::select_home_action()
 - List_text::select_end_action()
 

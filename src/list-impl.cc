@@ -70,23 +70,23 @@ List_impl::List_impl():
 
     table_->connect_action(cancel_action_);
     table_->connect_action(enter_action_);
-    table_->connect_action(up_action_);
-    table_->connect_action(down_action_);
-    table_->connect_action(page_up_action_);
-    table_->connect_action(page_down_action_);
+    table_->connect_action(previous_action_);
+    table_->connect_action(next_action_);
+    table_->connect_action(previous_page_action_);
+    table_->connect_action(next_page_action_);
     table_->connect_action(home_action_);
     table_->connect_action(end_action_);
-    table_->connect_action(select_up_action_);
-    table_->connect_action(select_down_action_);
-    table_->connect_action(select_page_up_action_);
-    table_->connect_action(select_page_down_action_);
+    table_->connect_action(select_previous_action_);
+    table_->connect_action(select_next_action_);
+    table_->connect_action(select_previous_page_action_);
+    table_->connect_action(select_next_page_action_);
     table_->connect_action(select_home_action_);
     table_->connect_action(select_end_action_);
 
-    select_up_action_.disable();
-    select_down_action_.disable();
-    select_page_up_action_.disable();
-    select_page_down_action_.disable();
+    select_previous_action_.disable();
+    select_next_action_.disable();
+    select_previous_page_action_.disable();
+    select_next_page_action_.disable();
     select_home_action_.disable();
     select_end_action_.disable();
 
@@ -95,15 +95,15 @@ List_impl::List_impl():
 }
 
 int List_impl::prepend_row(Widget_ptr wp, Align align, bool shrink) {
-    --trunk_min_;
-    table_->put(wp, 0, trunk_min_, 1, 1, shrink, true);
+    int row = --trunk_min_;
+    table_->put(wp, 0, row, 1, 1, shrink, true);
     table_->set_column_margin(0, 2, 2);
-    table_->set_row_margin(trunk_min_, 1, 1);
+    table_->set_row_margin(row, 1, 1);
     table_->align(wp.get(), align, ALIGN_CENTER);
-    selectables_[trunk_min_] = Selectable { 0, 0 };
-    if (INT_MIN == selected_row() && focused()) { select_row(trunk_min_); }
+    selectables_.emplace(row, Selectable());
+    if (INT_MIN == selected_row() && focused()) { select_emit(row); }
     adjust();
-    return trunk_min_;
+    return row;
 }
 
 int List_impl::prepend_row(Widget_ptr wp, bool shrink) {
@@ -114,28 +114,22 @@ int List_impl::prepend_row(Widget_ptr wp, Align align) {
     return prepend_row(wp, align, true);
 }
 
-int List_impl::insert_row(Widget_ptr wp, int position, Align align, bool shrink) {
-    if (position >= trunk_max_) {
-        return append_row(wp, align, shrink);
-    }
+int List_impl::insert_row(Widget_ptr wp, int row, Align align, bool shrink) {
+    if (row >= trunk_max_) { return append_row(wp, align, shrink); }
+    if (row < trunk_min_) { return prepend_row(wp, align, shrink); }
 
-    if (position < trunk_min_) {
-        return prepend_row(wp, align, shrink);
-    }
-
-    table_->insert_rows(position, 1);
-    table_->put(wp, 0, position, 1, 1, shrink, true);
+    table_->insert_rows(row);
+    table_->put(wp, 0, row, 1, 1, shrink, true);
     table_->set_column_margin(0, 2, 2);
-    table_->set_row_margin(position, 1, 1);
+    table_->set_row_margin(row, 1, 1);
     table_->align(wp.get(), align, ALIGN_CENTER);
-
     ++trunk_max_;
 
     if (!selectables_.empty()) {
         int first = selectables_.begin()->first, last = selectables_.rbegin()->first;
 
-        if (position >= first && position <= last) {
-            for (int y = last; y >= position; --y) {
+        if (row >= first && row <= last) {
+            for (int y = last; y >= row; --y) {
                 auto iter = selectables_.find(y);
 
                 if (iter != selectables_.end()) {
@@ -148,28 +142,28 @@ int List_impl::insert_row(Widget_ptr wp, int position, Align align, bool shrink)
         }
     }
 
-    selectables_[position] = Selectable { 0, 0 };
-    if (INT_MIN == selected_row() && focused()) { select_row(position); }
+    selectables_.emplace(row, Selectable());
+    if (INT_MIN == selected_row() && focused()) { select_emit(row); }
     adjust();
-    return position;
+    return row;
 }
 
-int List_impl::insert_row(Widget_ptr wp, int position, bool shrink) {
-    return insert_row(wp, position, ALIGN_START, shrink);
+int List_impl::insert_row(Widget_ptr wp, int row, bool shrink) {
+    return insert_row(wp, row, ALIGN_START, shrink);
 }
 
-int List_impl::insert_row(Widget_ptr wp, int position, Align align) {
-    return insert_row(wp, position, align, true);
+int List_impl::insert_row(Widget_ptr wp, int row, Align align) {
+    return insert_row(wp, row, align, true);
 }
 
 int List_impl::append_row(Widget_ptr wp, Align align, bool shrink) {
-    table_->put(wp, 0, trunk_max_, 1, 1, shrink, true);
-    table_->set_column_margin(0, 2, 2);
-    table_->set_row_margin(trunk_max_, 1, 1);
-    table_->align(wp.get(), align, ALIGN_CENTER);
     int row = trunk_max_++;
-    selectables_[row] = Selectable { 0, 0 };
-    if (INT_MIN == selected_row() && focused()) { select_row(row); }
+    table_->put(wp, 0, row, 1, 1, shrink, true);
+    table_->set_column_margin(0, 2, 2);
+    table_->set_row_margin(row, 1, 1);
+    table_->align(wp.get(), align, ALIGN_CENTER);
+    selectables_.emplace(row, Selectable());
+    if (INT_MIN == selected_row() && focused()) { select_emit(row); }
     adjust();
     return row;
 }
@@ -183,16 +177,16 @@ int List_impl::append_row(Widget_ptr wp, Align align) {
 }
 
 int List_impl::prepend(Widget_ptr wp, Align align, bool shrink) {
-    Table::Span rng = table_->span();
-    --trunk_min_;
+    auto rng = table_->span();
+    int row = --trunk_min_;
     int xx = rng.xmax > rng.xmin ? rng.xmin : 0;
-    table_->put(wp, xx, trunk_min_, rng.xmax > rng.xmin ? rng.xmax-rng.xmin : 1, 1, shrink, true);
+    table_->put(wp, xx, row, rng.xmax > rng.xmin ? rng.xmax-rng.xmin : 1, 1, shrink, true);
     table_->set_column_margin(xx, 2, 2);
-    table_->set_row_margin(trunk_min_, 1, 1);
+    table_->set_row_margin(row, 1, 1);
     table_->align(wp.get(), align, ALIGN_CENTER);
-    frees_.push_back(trunk_min_);
+    frees_.push_back(row);
     adjust();
-    return trunk_min_;
+    return row;
 }
 
 int List_impl::prepend(Widget_ptr wp, bool shrink) {
@@ -204,19 +198,13 @@ int List_impl::prepend(Widget_ptr wp, Align align) {
 }
 
 int List_impl::insert(Widget_ptr wp, int position, Align align, bool shrink) {
-    if (position >= trunk_max_) {
-        return append(wp, align, shrink);
-    }
-
-    if (position < trunk_min_) {
-        return prepend(wp, align, shrink);
-    }
-
-    Table::Span trng = table_->span();
-    auto wps = table_->children_within_range(trng.xmin, position, trng.xmax, trng.ymax);
+    if (position >= trunk_max_) { return append(wp, align, shrink); }
+    if (position < trunk_min_) { return prepend(wp, align, shrink); }
+    auto trng = table_->span();
+    auto wps = table_->children_within_range(trng);
 
     for (auto w: wps) {
-        Table::Span rng = table_->span(w);
+        auto rng = table_->span(w);
         table_->respan(w, rng.xmin, rng.ymin+1, rng.xmax-rng.xmin, rng.ymax-rng.ymin);
     }
 
@@ -240,15 +228,16 @@ int List_impl::insert(Widget_ptr wp, int position, Align align) {
 }
 
 int List_impl::append(Widget_ptr wp, Align align, bool shrink) {
-    Table::Span rng = table_->span();
+    auto rng = table_->span();
     int xx = rng.xmax > rng.xmin ? rng.xmin : 0;
-    table_->put(wp, xx, trunk_max_, rng.xmax > rng.xmin ? rng.xmax-rng.xmin : 1, 1, shrink, true);
+    int row = trunk_max_++;
+    table_->put(wp, xx, row, rng.xmax > rng.xmin ? rng.xmax-rng.xmin : 1, 1, shrink, true);
     table_->set_column_margin(xx, 2, 2);
-    table_->set_row_margin(trunk_max_, 1, 1);
+    table_->set_row_margin(row, 1, 1);
     table_->align(wp.get(), align, ALIGN_CENTER);
-    frees_.push_back(trunk_max_);
+    frees_.push_back(row);
     adjust();
-    return trunk_max_++;
+    return row;
 }
 
 int List_impl::append(Widget_ptr wp, bool shrink) {
@@ -260,21 +249,17 @@ int List_impl::append(Widget_ptr wp, Align align) {
 }
 
 int List_impl::prepend(int row, Widget_ptr wp, Align align, bool shrink) {
-    try {
-        auto & sel = selectables_.at(row);
-        int tpos = --sel.min;
-        table_->put(wp, tpos, row, 1, 1, shrink, true);
-        table_->set_column_margin(tpos, 2, 2);
-        table_->set_row_margin(row, 1, 1);
-        table_->align(wp.get(), align, ALIGN_CENTER);
-        adjust();
-        update_selection();
-        return tpos;
-    }
+    auto i = selectables_.find(row);
+    if (i == selectables_.end()) { throw user_error(str_format("List_impl: bad row ", row)); }
 
-    catch (std::out_of_range & ) {
-        throw graphics_error(str_format("List_impl: bad row ", row));
-    }
+    int tpos = --i->second.min_;
+    table_->put(wp, tpos, row, 1, 1, shrink, true);
+    table_->set_column_margin(tpos, 2, 2);
+    table_->set_row_margin(row, 1, 1);
+    table_->align(wp.get(), align, ALIGN_CENTER);
+    adjust();
+    update_selection();
+    return tpos;
 }
 
 int List_impl::prepend(int row, Widget_ptr wp, bool shrink) {
@@ -285,33 +270,28 @@ int List_impl::prepend(int row, Widget_ptr wp, Align align) {
     return prepend(row, wp, align, true);
 }
 
-int List_impl::insert(int row, Widget_ptr wp, int index, Align align, bool shrink) {
-    try {
-        Selectable & br = selectables_.at(row);
+int List_impl::insert(int row, Widget_ptr wp, int xx, Align align, bool shrink) {
+    auto i = selectables_.find(row);
+    if (i == selectables_.end()) { throw user_error(str_format("List_impl: bad row ", row)); }
 
-        if (index < 0) {
-            br.min = index;
-            table_->put(wp, index, row, 1, 1, shrink, true);
-            table_->set_column_margin(index, 2, 2);
-            table_->set_row_margin(row, 1, 1);
-        }
-
-        else {
-            br.max = 1+index;
-            table_->put(wp, 1+index, row, 1, 1, shrink, true);
-            table_->set_column_margin(1+index, 2, 2);
-            table_->set_row_margin(row, 1, 1);
-        }
-
-        table_->align(wp.get(), align, ALIGN_CENTER);
-        adjust();
-        update_selection();
-        return index;
+    if (xx < 0) {
+        i->second.min_ = xx;
+        table_->put(wp, xx, row, 1, 1, shrink, true);
+        table_->set_column_margin(xx, 2, 2);
+        table_->set_row_margin(row, 1, 1);
     }
 
-    catch (std::out_of_range & ) {
-        throw graphics_error(str_format("List_impl: bad row ", row));
+    else {
+        i->second.max_ = xx;
+        table_->put(wp, 1+xx, row, 1, 1, shrink, true);
+        table_->set_column_margin(1+xx, 2, 2);
+        table_->set_row_margin(row, 1, 1);
     }
+
+    table_->align(wp.get(), align, ALIGN_CENTER);
+    adjust();
+    update_selection();
+    return xx;
 }
 
 int List_impl::insert(int row, Widget_ptr wp, int index, bool shrink) {
@@ -323,21 +303,17 @@ int List_impl::insert(int row, Widget_ptr wp, int index, Align align) {
 }
 
 int List_impl::append(int row, Widget_ptr wp, Align align, bool shrink) {
-    try {
-        Selectable & br = selectables_.at(row);
-        int index = ++br.max;
-        table_->put(wp, br.max, row, 1, 1, shrink, true);
-        table_->set_column_margin(br.max, 2, 2);
-        table_->set_row_margin(row, 1, 1);
-        table_->align(wp.get(), align, ALIGN_CENTER);
-        adjust();
-        update_selection();
-        return index;
-    }
+    auto i = selectables_.find(row);
+    if (i == selectables_.end()) { throw user_error(str_format("List_impl: bad row ", row)); }
 
-    catch (std::out_of_range & ) {
-        throw graphics_error(str_format("List_impl: bad row ", row));
-    }
+    int xx = ++i->second.max_;
+    table_->put(wp, xx, row, 1, 1, shrink, true);
+    table_->set_column_margin(xx, 2, 2);
+    table_->set_row_margin(row, 1, 1);
+    table_->align(wp.get(), align, ALIGN_CENTER);
+    adjust();
+    update_selection();
+    return xx;
 }
 
 int List_impl::append(int row, Widget_ptr wp, bool shrink) {
@@ -379,163 +355,8 @@ void List_impl::remove(int yy) {
     adjust();
 }
 
-int  List_impl::page_down_row() {
-    if (selectables_.empty()) { return INT_MIN; }
-
-    Table::Span rng = table_->span();
-    Table::Span sel = table_->selection();
-
-    if (sel.xmax > sel.xmin && sel.ymax > sel.ymin) {
-        if (Rect rsel = table_->bounds(sel.xmin, sel.ymin, sel.xmax-sel.xmin, sel.ymax-sel.ymin)) {
-            Rect va = table_->visible_area();
-            Size lsize = scroller_->logical_size(), max = lsize-scroller_->size();
-
-            if (max.height()) {
-                if (selectables_.rbegin()->first != sel.ymin) {
-                    int yt = rsel.top()+va.height()-rsel.height()-rsel.height();
-                    auto iter = std::find_if(selectables_.begin(), selectables_.end(),
-                                             [sel](const std::pair<const int, Selectable> & p) { return p.first == sel.ymin; });
-
-                    Rect rbr;
-
-                    for (; iter != selectables_.end(); ++iter) {
-                        rbr = table_->bounds(rng.xmin, iter->first, rng.xmax-rng.xmin, 1);
-                        if (rbr.top() >= yt) break;
-                    }
-
-                    if (iter != selectables_.end()) {
-                        return iter->first;
-                    }
-                }
-            }
-        }
-    }
-
-    return selectables_.rbegin()->first;
-}
-
-void List_impl::page_down() {
-    if (selectables_.empty()) { return; }
-
-    Table::Span rng = table_->span();
-    Table::Span sel = table_->selection();
-
-    if (sel.xmax > sel.xmin && sel.ymax > sel.ymin) {
-        if (Rect rsel = table_->bounds(sel.xmin, sel.ymin, sel.xmax-sel.xmin, sel.ymax-sel.ymin)) {
-            Rect va = table_->visible_area();
-            Size lsize = scroller_->logical_size(), max = lsize-scroller_->size();
-
-            if (max.height()) {
-                if (selectables_.rbegin()->first != sel.ymin) {
-                    int yt = rsel.top()+va.height()-rsel.height()-rsel.height();
-                    auto iter = std::find_if(selectables_.begin(), selectables_.end(),
-                                                [sel](const std::pair<const int, Selectable> & p) { return p.first == sel.ymin; });
-
-                    Rect rbr;
-                    for (; iter != selectables_.end(); ++iter) {
-                        rbr = table_->bounds(rng.xmin, iter->first, rng.xmax-rng.xmin, 1);
-                        if (rbr.top() >= yt) break;
-                    }
-
-                    if (iter != selectables_.end()) {
-                        int y;
-
-                        if (rsel.bottom() >= va.bottom()) { y = rbr.bottom()-va.height(); }
-                        else if (rsel.top() < va.top()) { y = rbr.top(); }
-                        else { y = rbr.top()-rsel.top()+va.top(); }
-
-                        table_->scroll_to_y(y);
-                        table_->select_row(iter->first);
-                        signal_row_selected_(iter->first);
-                        return;
-                    }
-                }
-            }
-        }
-    }
-
-    select_back();
-}
-
-int  List_impl::page_up_row() {
-    if (selectables_.empty()) { return INT_MIN; }
-
-    Table::Span rng = table_->span();
-    Table::Span sel = table_->selection();
-
-    if (sel.xmax > sel.xmin && sel.ymax > sel.ymin) {
-        if (Rect rsel = table_->bounds(sel.xmin, sel.ymin, sel.xmax-sel.xmin, sel.ymax-sel.ymin)) {
-            Rect va = table_->visible_area();
-            Size lsize = scroller_->logical_size(), max = lsize-scroller_->size();
-
-            if (max.height()) {
-                if (selectables_.begin()->first != sel.ymin) {
-                    int yt = rsel.top()-va.height()+rsel.height()+rsel.height();
-                    auto iter = std::find_if(selectables_.rbegin(), selectables_.rend(),
-                                                [sel](const std::pair<const int, Selectable> & p) { return p.first == sel.ymin; });
-
-                    Rect rbr;
-                    for (; iter != selectables_.rend(); ++iter) {
-                        rbr = table_->bounds(rng.xmin, iter->first, rng.xmax-rng.xmin, 1);
-                        if (rbr.top() <= yt) break;
-                    }
-
-                    if (iter != selectables_.rend()) {
-                        return iter->first;
-                    }
-                }
-            }
-        }
-    }
-
-    return selectables_.begin()->first;
-}
-
-void List_impl::page_up() {
-    if (selectables_.empty()) { return; }
-
-    Table::Span rng = table_->span();
-    Table::Span sel = table_->selection();
-
-    if (sel.xmax > sel.xmin && sel.ymax > sel.ymin) {
-        if (Rect rsel = table_->bounds(sel.xmin, sel.ymin, sel.xmax-sel.xmin, sel.ymax-sel.ymin)) {
-            Rect va = table_->visible_area();
-            Size lsize = scroller_->logical_size(), max = lsize-scroller_->size();
-
-            if (max.height()) {
-                if (selectables_.begin()->first != sel.ymin) {
-                    int yt = rsel.top()-va.height()+rsel.height()+rsel.height();
-                    auto iter = std::find_if(selectables_.rbegin(), selectables_.rend(),
-                                                [sel](const std::pair<const int, Selectable> & p) { return p.first == sel.ymin; });
-
-                    Rect rbr;
-                    for (; iter != selectables_.rend(); ++iter) {
-                        rbr = table_->bounds(rng.xmin, iter->first, rng.xmax-rng.xmin, 1);
-                        if (rbr.top() <= yt) break;
-                    }
-
-                    if (iter != selectables_.rend()) {
-                        int y;
-
-                        if (rsel.bottom() >= va.bottom()) { y = rbr.bottom()-va.height(); }
-                        else if (rsel.top() < va.top()) { y = rbr.top(); }
-                        else { y = rbr.top()-rsel.top()+va.top(); }
-
-                        table_->scroll_to_y(y);
-                        table_->select_row(iter->first);
-                        signal_row_selected_(iter->first);
-                        return;
-                    }
-                }
-            }
-        }
-    }
-
-    select_front();
-}
-
 int List_impl::next_row() {
-    Table::Span sel = table_->selection();
+    auto sel = table_->selection();
 
     if (sel.xmax > sel.xmin && sel.ymax > sel.ymin) {
         if (selectables_.size() > 1) {
@@ -559,12 +380,11 @@ int List_impl::next_row() {
 }
 
 int List_impl::prev_row() {
-    Table::Span sel = table_->selection();
+    auto sel = table_->selection();
 
     if (sel.xmax > sel.xmin && sel.ymax > sel.ymin) {
         if (selectables_.size() > 1) {
-            auto iter = std::find_if(selectables_.rbegin(), selectables_.rend(),
-                                     [sel](const std::pair<const int, Selectable> & p) { return p.first == sel.ymin; });
+            auto iter = std::find_if(selectables_.rbegin(), selectables_.rend(), [sel](auto & p) { return p.first == sel.ymin; });
 
             if (selectables_.rend() != iter) {
                 if (++iter != selectables_.rend()) {
@@ -583,20 +403,10 @@ int List_impl::prev_row() {
     return INT_MIN;
 }
 
-void List_impl::on_prev_key() {
-    table_->unmark_all();
-    select_row(prev_row());
-}
-
-void List_impl::on_next_key() {
-    table_->unmark_all();
-    select_row(next_row());
-}
-
 int List_impl::select_next() {
     if (!selectables_.empty()) {
         table_->unmark_all();
-        return select_row(next_row());
+        return select(next_row());
     }
 
     return INT_MIN;
@@ -605,7 +415,7 @@ int List_impl::select_next() {
 int List_impl::select_previous() {
     if (!selectables_.empty()) {
         table_->unmark_all();
-        return select_row(prev_row());
+        return select(prev_row());
     }
 
     return INT_MIN;
@@ -614,7 +424,7 @@ int List_impl::select_previous() {
 int List_impl::select_front() {
     if (!selectables_.empty()) {
         table_->unmark_all();
-        return select_row(selectables_.begin()->first);
+        return select(selectables_.begin()->first);
     }
 
     return INT_MIN;
@@ -623,19 +433,18 @@ int List_impl::select_front() {
 int List_impl::select_back() {
     if (!selectables_.empty()) {
         table_->unmark_all();
-        return select_row(selectables_.rbegin()->first);
+        return select(selectables_.rbegin()->first);
     }
 
     return INT_MIN;
 }
 
-int List_impl::select_row(int row) {
+int List_impl::select(int row) {
     if (selectables_.end() != selectables_.find(row)) {
-        Table::Span sel = table_->selection();
+        auto sel = table_->selection();
         if (sel.ymax > sel.ymin && row == sel.ymin) { return row; }
         table_->unmark_row(row);
         table_->select_row(row);
-        signal_row_selected_(row);
         scroll_to_selection();
         return row;
     }
@@ -643,9 +452,21 @@ int List_impl::select_row(int row) {
     return INT_MIN;
 }
 
+int List_impl::select_emit(int row) {
+    int res = select(row);
+    if (INT_MIN != res) { signal_row_selected_(res); }
+    return res;
+}
+
 void List_impl::unselect() {
     table_->unmark_all();
     table_->unselect();
+}
+
+void List_impl::unselect_emit() {
+    if (table_->has_selection() || table_->has_marks()) {
+        unselect();
+    }
 }
 
 void List_impl::scroll_to_selection() {
@@ -654,13 +475,8 @@ void List_impl::scroll_to_selection() {
 
     if (sel.ymax > sel.ymin) {
         if (Rect r = table_->bounds(sel.xmin, sel.ymin, sel.xmax-sel.xmin, sel.ymax-sel.ymin)) {
-            if (r.bottom() > va.bottom()) {
-                table_->scroll_to_y(1+r.bottom()-va.height());
-            }
-
-            else if (r.top() < va.top()) {
-                table_->scroll_to_y(r.top());
-            }
+            if (r.bottom() > va.bottom()) { table_->scroll_to_y(1+r.bottom()-va.height()); }
+            else if (r.top() < va.top()) { table_->scroll_to_y(r.top()); }
         }
     }
 }
@@ -686,6 +502,7 @@ bool List_impl::empty() const {
 // Overrides Table_impl.
 // Overriden by List_text_impl.
 void List_impl::clear() {
+    unselect();
     table_->clear();
     trunk_min_ = trunk_max_ = 0;
     selectables_.clear();
@@ -693,20 +510,20 @@ void List_impl::clear() {
 
 void List_impl::allow_multiple_select() {
     multiple_select_allowed_ = true;
-    select_up_action_.enable();
-    select_down_action_.enable();
-    select_page_up_action_.enable();
-    select_page_down_action_.enable();
+    select_previous_action_.enable();
+    select_next_action_.enable();
+    select_previous_page_action_.enable();
+    select_next_page_action_.enable();
     select_home_action_.enable();
     select_end_action_.enable();
 }
 
 void List_impl::disallow_multiple_select() {
     multiple_select_allowed_ = false;
-    select_up_action_.disable();
-    select_down_action_.disable();
-    select_page_up_action_.disable();
-    select_page_down_action_.disable();
+    select_previous_action_.disable();
+    select_next_action_.disable();
+    select_previous_page_action_.disable();
+    select_next_page_action_.disable();
     select_home_action_.disable();
     select_end_action_.disable();
 }
@@ -716,9 +533,7 @@ void List_impl::align(Widget_ptr wp, Align xalign, Align yalign) {
 }
 
 bool List_impl::row_marked(int row) {
-    std::vector<Table::Span> v = table_->marks();
-
-    for (Table::Span & rng: v) {
+    for (auto & rng: table_->marks()) {
         if (rng.ymin == row) {
             return true;
         }
@@ -727,187 +542,7 @@ bool List_impl::row_marked(int row) {
     return false;
 }
 
-bool List_impl::on_table_mouse_down(int mbt, int mm, const Point & pt) {
-    bool res = false;
-
-    if (MBT_LEFT == mbt) {
-        if (!focused()) { res = scroller_->take_focus(); }
-        int cy = table_->row_at_y(pt.y());
-
-        if (cy > INT_MIN) {
-            if (MM_CONTROL & mm && multiple_select_allowed()) {
-                if (row_marked(cy)) {
-                    table_->unmark_row(cy);
-                }
-
-                else {
-                    if (!signal_mark_validate_(cy)) {
-                        table_->mark_row(cy);
-                    }
-                }
-            }
-
-            else {
-                table_->unmark_all();
-                select_row(cy);
-            }
-        }
-    }
-
-    return res;
-}
-
-bool List_impl::on_table_mouse_double_click(int mbt, int mm, const Point & pt) {
-    if (MBT_LEFT == mbt) {
-        activate_current();
-        return true;
-    }
-
-    return false;
-}
-
-bool List_impl::on_header_mouse_down(int mbt, int mm, const Point & pt, int column) {
-    if (MBT_LEFT == mbt) {
-        signal_header_click_(column);
-        return true;
-    }
-
-    return false;
-}
-
-void List_impl::on_shift_prev_key() {
-    int sel = selected_row(), prev = prev_row();
-    bool marked = row_marked(prev);
-    select_row(prev);
-
-    if (INT_MIN != sel && INT_MIN != prev && sel != prev && !marked) {
-        if (!signal_mark_validate_(sel)) {
-            table_->mark_row(sel);
-        }
-    }
-}
-
-void List_impl::on_shift_next_key() {
-    int sel = selected_row(), next = next_row();
-    bool marked = row_marked(next);
-    select_row(next);
-
-    if (INT_MIN != sel && INT_MIN != next && sel != next && !marked) {
-        if (!signal_mark_validate_(sel)) {
-            table_->mark_row(sel);
-        }
-    }
-}
-
-void List_impl::on_home_key() {
-    table_->unmark_all();
-    select_front();
-}
-
-void List_impl::on_end_key() {
-    table_->unmark_all();
-    select_back();
-}
-
-void List_impl::on_page_down_key() {
-    table_->unmark_all();
-    page_down();
-}
-
-void List_impl::on_page_up_key() {
-    table_->unmark_all();
-    page_up();
-}
-
-void List_impl::on_shift_page_up_key() {
-    int sel = selected_row(), next = page_up_row();
-    select_row(next);
-
-    if (INT_MIN != sel && INT_MIN != next && next < sel) {
-        for (int y = sel; y > next; --y) {
-            if (row_marked(y)) {
-                table_->unmark_row(y);
-            }
-
-            else {
-                if (!signal_mark_validate_(y)) {
-                    table_->mark_row(y);
-                }
-            }
-        }
-    }
-}
-
-void List_impl::on_shift_page_down_key() {
-    int sel = selected_row(), next = page_down_row();
-    select_row(next);
-
-    if (INT_MIN != sel && INT_MIN != next && next > sel) {
-        for (int y = sel; y < next; ++y) {
-            if (row_marked(y)) {
-                table_->unmark_row(y);
-            }
-
-            else {
-                if (!signal_mark_validate_(y)) {
-                    table_->mark_row(y);
-                }
-            }
-        }
-    }
-}
-
-void List_impl::on_shift_home_key() {
-    if (!selectables_.empty()) {
-        int sel = selected_row();
-
-        if (INT_MIN != sel) {
-            int first = selectables_.begin()->first;
-            select_row(first);
-
-            if (first < sel) {
-                for (int y = sel; y > first; --y) {
-                    if (row_marked(y)) {
-                        table_->unmark_row(y);
-                    }
-
-                    else {
-                        if (!signal_mark_validate_(y)) {
-                            table_->mark_row(y);
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-void List_impl::on_shift_end_key() {
-    if (!selectables_.empty()) {
-        int sel = selected_row();
-
-        if (INT_MIN != sel) {
-            int last = selectables_.rbegin()->first;
-            select_row(last);
-
-            if (last > sel) {
-                for (int y = sel; y < last; ++y) {
-                    if (row_marked(y)) {
-                        table_->unmark_row(y);
-                    }
-
-                    else {
-                        if (!signal_mark_validate_(y)) {
-                            table_->mark_row(y);
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-void List_impl::on_enter_key() {
+void List_impl::on_enter() {
     activate_current();
 }
 
@@ -1005,37 +640,18 @@ void List_impl::hide_sort_marker() {
     }
 }
 
-bool List_impl::on_sep_mouse_down(int mbt, int mm, const Point & pt, Header & hdr) {
-    if (MBT_LEFT == mbt) {
-        int x1, x2;
-        table_->get_column_bounds(hdr.column, x1, x2);
-        hdr.cw = x2-x1;
-        hdr.lx = hdr.sep->to_parent(this, pt).x();
-        hdr.fix = true;
-        hdr.sep->grab_mouse();
-        return true;
-    }
-
-    return false;
+void List_impl::sync_scrollers_offset() {
+    Point ofs = scroller_->pan();
+    hdr_scroller_->pan_to(ofs.x(), 0);
 }
 
-bool List_impl::on_sep_mouse_up(int mbt, int mm, const Point & pt, Header & hdr) {
-    if (MBT_LEFT == mbt) {
-        hdr.sep->ungrab_mouse();
-        hdr.fix = false;
-        return true;
-    }
+void List_impl::adjust() {
+    Table::Span rng = table_->span();
 
-    return false;
-}
-
-void List_impl::on_sep_mouse_motion(int mm, const Point & pt, Header & hdr) {
-    if (hdr.fix) {
-        int dx = hdr.sep->to_parent(this, pt).x()-hdr.lx, w = hdr.cw+dx, wmin = hdr.box->required_size().width();
-
-        if (w >= wmin) {
-            table_->set_column_width(hdr.column, w);
-            signal_header_width_changed_(hdr.column);
+    if (rng.xmax > rng.xmin) {
+        for (int y: frees_) {
+            auto v = table_->children_within_range(rng.xmin, y, rng.xmax, y+1);
+            if (1 == v.size()) { table_->respan(v[0], rng.xmin, y, rng.xmax-rng.xmin, 1); }
         }
     }
 }
@@ -1140,28 +756,301 @@ void List_impl::get_column_margin(int x, unsigned & left, unsigned & right) cons
     table_->get_column_margin(x, left, right);
 }
 
-void List_impl::on_row_bounds_changed(int br) {
-    arrange_headers();
+bool List_impl::on_sep_mouse_down(int mbt, int mm, const Point & pt, Header & hdr) {
+    if (MBT_LEFT == mbt) {
+        int x1, x2;
+        table_->get_column_bounds(hdr.column, x1, x2);
+        hdr.cw = x2-x1;
+        hdr.lx = hdr.sep->to_parent(this, pt).x();
+        hdr.fix = true;
+        hdr.sep->grab_mouse();
+        return true;
+    }
+
+    return false;
 }
 
-void List_impl::sync_scrollers_offset() {
-    Point ofs = scroller_->pan();
-    hdr_scroller_->pan_to(ofs.x(), 0);
+bool List_impl::on_sep_mouse_up(int mbt, int mm, const Point & pt, Header & hdr) {
+    if (MBT_LEFT == mbt) {
+        hdr.sep->ungrab_mouse();
+        hdr.fix = false;
+        return true;
+    }
+
+    return false;
 }
 
-void List_impl::adjust() {
-    Table::Span rng = table_->span();
+void List_impl::on_sep_mouse_motion(int mm, const Point & pt, Header & hdr) {
+    if (hdr.fix) {
+        int dx = hdr.sep->to_parent(this, pt).x()-hdr.lx, w = hdr.cw+dx, wmin = hdr.box->required_size().width();
 
-    if (rng.xmax > rng.xmin) {
-        for (int y: frees_) {
-            auto v = table_->children_within_range(rng.xmin, y, rng.xmax, y+1);
-            if (1 == v.size()) { table_->respan(v[0], rng.xmin, y, rng.xmax-rng.xmin, 1); }
+        if (w >= wmin) {
+            table_->set_column_width(hdr.column, w);
+            signal_header_width_changed_(hdr.column);
         }
     }
 }
 
+void List_impl::on_row_bounds_changed(int) {
+    arrange_headers();
+}
+
 void List_impl::on_focus_in() {
-    if (INT_MIN == selected_row()) { select_row(trunk_min_); }
+    if (INT_MIN == selected_row()) { select_emit(trunk_min_); }
+}
+
+bool List_impl::on_table_mouse_down(int mbt, int mm, const Point & pt) {
+    bool res = false;
+
+    if (MBT_LEFT == mbt) {
+        if (!focused()) { res = scroller_->take_focus(); }
+        int cy = table_->row_at_y(pt.y());
+
+        if (cy > INT_MIN) {
+            if (MM_CONTROL & mm && multiple_select_allowed()) {
+                if (row_marked(cy)) {
+                    table_->unmark_row(cy);
+                }
+
+                else {
+                    if (!signal_mark_validate_(cy)) {
+                        table_->mark_row(cy);
+                    }
+                }
+            }
+
+            else {
+                table_->unmark_all();
+                select_emit(cy);
+            }
+        }
+    }
+
+    return res;
+}
+
+bool List_impl::on_table_mouse_double_click(int mbt, int mm, const Point & pt) {
+    if (MBT_LEFT == mbt) {
+        activate_current();
+        return true;
+    }
+
+    return false;
+}
+
+bool List_impl::on_header_mouse_down(int mbt, int mm, const Point & pt, int column) {
+    if (MBT_LEFT == mbt) {
+        signal_header_click_(column);
+        return true;
+    }
+
+    return false;
+}
+
+int List_impl::page_down_row() {
+    if (selectables_.empty()) { return INT_MIN; }
+    auto rng = table_->span(), sel = table_->selection();
+
+    if (sel.xmax > sel.xmin && sel.ymax > sel.ymin) {
+        if (Rect rsel = table_->bounds(sel.xmin, sel.ymin, sel.xmax-sel.xmin, sel.ymax-sel.ymin)) {
+            Rect va = table_->visible_area();
+            Size lsize = scroller_->logical_size(), max = lsize-scroller_->size();
+
+            if (max.height()) {
+                if (selectables_.rbegin()->first != sel.ymin) {
+                    int yt = rsel.top()+va.height()-rsel.height()-rsel.height();
+                    auto iter = std::find_if(selectables_.begin(), selectables_.end(), [sel](auto & p) { return p.first == sel.ymin; });
+
+                    Rect r;
+
+                    for (; iter != selectables_.end(); ++iter) {
+                        r = table_->bounds(rng.xmin, iter->first, rng.xmax-rng.xmin, 1);
+                        if (r.top() >= yt) break;
+                    }
+
+                    if (iter != selectables_.end()) {
+                        return iter->first;
+                    }
+                }
+            }
+        }
+    }
+
+    return selectables_.rbegin()->first;
+}
+
+void List_impl::on_page_down() {
+    unselect_emit();
+    select_emit(page_down_row());
+}
+
+void List_impl::on_select_page_down() {
+    int sel = selected_row(), next = page_down_row();
+    select_emit(next);
+
+    if (INT_MIN != sel && INT_MIN != next && next > sel) {
+        for (int y = sel; y < next; ++y) {
+            if (row_marked(y)) {
+                table_->unmark_row(y);
+            }
+
+            else {
+                if (!signal_mark_validate_(y)) {
+                    table_->mark_row(y);
+                }
+            }
+        }
+    }
+}
+
+int List_impl::page_up_row() {
+    if (selectables_.empty()) { return INT_MIN; }
+    auto rng = table_->span(), sel = table_->selection();
+
+    if (sel.xmax > sel.xmin && sel.ymax > sel.ymin) {
+        if (Rect rsel = table_->bounds(sel.xmin, sel.ymin, sel.xmax-sel.xmin, sel.ymax-sel.ymin)) {
+            Rect va = table_->visible_area();
+            Size lsize = scroller_->logical_size(), max = lsize-scroller_->size();
+
+            if (max.height()) {
+                if (selectables_.begin()->first != sel.ymin) {
+                    int yt = rsel.top()-va.height()+rsel.height()+rsel.height();
+                    auto iter = std::find_if(selectables_.begin(), selectables_.end(), [sel](auto & p) { return p.first == sel.ymin; });
+
+                    Rect r;
+
+                    for (; iter != selectables_.end(); ++iter) {
+                        r = table_->bounds(rng.xmin, iter->first, rng.xmax-rng.xmin, 1);
+                        if (r.top() <= yt) break;
+                    }
+
+                    if (iter != selectables_.end()) {
+                        return iter->first;
+                    }
+                }
+            }
+        }
+    }
+
+    return selectables_.begin()->first;
+}
+
+void List_impl::on_page_up() {
+    unselect_emit();
+    select_emit(page_up_row());
+}
+
+void List_impl::on_select_page_up() {
+    int sel = selected_row(), next = page_up_row();
+    select_emit(next);
+
+    if (INT_MIN != sel && INT_MIN != next && next < sel) {
+        for (int y = sel; y > next; --y) {
+            if (row_marked(y)) {
+                table_->unmark_row(y);
+            }
+
+            else {
+                if (!signal_mark_validate_(y)) {
+                    table_->mark_row(y);
+                }
+            }
+        }
+    }
+}
+
+void List_impl::on_prev() {
+    table_->unmark_all();
+    select_emit(prev_row());
+}
+
+void List_impl::on_next() {
+    table_->unmark_all();
+    select_emit(next_row());
+}
+
+void List_impl::on_select_prev() {
+    int sel = selected_row(), prev = prev_row();
+    bool marked = row_marked(prev);
+    select_emit(prev);
+
+    if (INT_MIN != sel && INT_MIN != prev && sel != prev && !marked) {
+        if (!signal_mark_validate_(sel)) {
+            table_->mark_row(sel);
+        }
+    }
+}
+
+void List_impl::on_select_next() {
+    int sel = selected_row(), next = next_row();
+    bool marked = row_marked(next);
+    select_emit(next);
+
+    if (INT_MIN != sel && INT_MIN != next && sel != next && !marked) {
+        if (!signal_mark_validate_(sel)) {
+            table_->mark_row(sel);
+        }
+    }
+}
+
+void List_impl::on_home() {
+    table_->unmark_all();
+    select_front();
+}
+
+void List_impl::on_end() {
+    table_->unmark_all();
+    select_back();
+}
+
+void List_impl::on_select_home() {
+    if (!selectables_.empty()) {
+        int sel = selected_row();
+
+        if (INT_MIN != sel) {
+            int first = selectables_.begin()->first;
+            select_emit(first);
+
+            if (first < sel) {
+                for (int y = sel; y > first; --y) {
+                    if (row_marked(y)) {
+                        table_->unmark_row(y);
+                    }
+
+                    else {
+                        if (!signal_mark_validate_(y)) {
+                            table_->mark_row(y);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void List_impl::on_select_end() {
+    if (!selectables_.empty()) {
+        int sel = selected_row();
+
+        if (INT_MIN != sel) {
+            int last = selectables_.rbegin()->first;
+            select_emit(last);
+
+            if (last > sel) {
+                for (int y = sel; y < last; ++y) {
+                    if (row_marked(y)) {
+                        table_->unmark_row(y);
+                    }
+
+                    else {
+                        if (!signal_mark_validate_(y)) {
+                            table_->mark_row(y);
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 } // namespace tau

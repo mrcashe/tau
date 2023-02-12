@@ -112,12 +112,12 @@ Action & Scroller::pan_down_action() {
     return SCROLLER_IMPL->pan_down_action();
 }
 
-Action & Scroller::page_up_action() {
-    return SCROLLER_IMPL->page_up_action();
+Action & Scroller::previous_page_action() {
+    return SCROLLER_IMPL->previous_page_action();
 }
 
-Action & Scroller::page_down_action() {
-    return SCROLLER_IMPL->page_down_action();
+Action & Scroller::next_page_action() {
+    return SCROLLER_IMPL->next_page_action();
 }
 
 Action & Scroller::home_action() {

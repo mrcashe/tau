@@ -72,8 +72,8 @@ void Entry_impl::init(Align text_align) {
     scroller_->pan_right_action().disable();
     scroller_->pan_up_action().disable();
     scroller_->pan_down_action().disable();
-    scroller_->page_up_action().disable();
-    scroller_->page_down_action().disable();
+    scroller_->previous_page_action().disable();
+    scroller_->next_page_action().disable();
     scroller_->home_action().disable();
     scroller_->end_action().disable();
 
@@ -82,8 +82,8 @@ void Entry_impl::init(Align text_align) {
     scroller_->insert(edit_);
     edit_->enter_action().disable();
     edit_->tab_action().disable();
-    edit_->move_page_down_action().disable();
-    edit_->move_page_up_action().disable();
+    edit_->move_next_page_action().disable();
+    edit_->move_previous_page_action().disable();
     edit_->move_down_action().disable();
     edit_->move_up_action().disable();
     changed_cx_ = buffer_.signal_changed().connect(fun(this, &Entry_impl::on_buffer_changed));

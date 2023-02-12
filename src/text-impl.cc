@@ -1556,9 +1556,9 @@ void Text_impl::init_actions() {
         actions_->move_right_action_.connect(fun(this, &Text_impl::move_right));
         actions_->select_right_action_.connect(fun(this, &Text_impl::select_right));
         actions_->move_up_action_.connect(fun(this, &Text_impl::move_up));
-        actions_->select_up_action_.connect(fun(this, &Text_impl::select_up));
+        actions_->select_previous_action_.connect(fun(this, &Text_impl::select_up));
         actions_->move_down_action_.connect(fun(this, &Text_impl::move_down));
-        actions_->select_down_action_.connect(fun(this, &Text_impl::select_down));
+        actions_->select_next_action_.connect(fun(this, &Text_impl::select_down));
         actions_->move_word_left_action_.connect(fun(this, &Text_impl::move_word_left));
         actions_->select_word_left_action_.connect(fun(this, &Text_impl::select_word_left));
         actions_->move_word_right_action_.connect(fun(this, &Text_impl::move_word_right));
@@ -1571,10 +1571,10 @@ void Text_impl::init_actions() {
         actions_->select_to_sof_action_.connect(fun(this, &Text_impl::select_to_sof));
         actions_->move_to_eof_action_.connect(fun(this, &Text_impl::move_to_eof));
         actions_->select_to_eof_action_.connect(fun(this, &Text_impl::select_to_eof));
-        actions_->move_page_up_action_.connect(fun(this, &Text_impl::move_page_up));
-        actions_->select_page_up_action_.connect(fun(this, &Text_impl::select_page_up));
-        actions_->move_page_down_action_.connect(fun(this, &Text_impl::move_page_down));
-        actions_->select_page_down_action_.connect(fun(this, &Text_impl::select_page_down));
+        actions_->move_previous_page_action_.connect(fun(this, &Text_impl::move_page_up));
+        actions_->select_previous_page_action_.connect(fun(this, &Text_impl::select_page_up));
+        actions_->move_next_page_action_.connect(fun(this, &Text_impl::move_page_down));
+        actions_->select_next_page_action_.connect(fun(this, &Text_impl::select_page_down));
         actions_->select_all_action_.connect(fun(this, &Text_impl::select_all));
         actions_->copy_action_.connect(fun(this, &Text_impl::copy));
         actions_->cancel_action_.connect(fun(this, &Widget_impl::drop_focus));
@@ -1584,9 +1584,9 @@ void Text_impl::init_actions() {
         connect_action(actions_->move_right_action_);
         connect_action(actions_->select_right_action_);
         connect_action(actions_->move_up_action_);
-        connect_action(actions_->select_up_action_);
+        connect_action(actions_->select_previous_action_);
         connect_action(actions_->move_down_action_);
-        connect_action(actions_->select_down_action_);
+        connect_action(actions_->select_next_action_);
         connect_action(actions_->move_word_left_action_);
         connect_action(actions_->select_word_left_action_);
         connect_action(actions_->move_word_right_action_);
@@ -1599,10 +1599,10 @@ void Text_impl::init_actions() {
         connect_action(actions_->select_to_sof_action_);
         connect_action(actions_->move_to_eof_action_);
         connect_action(actions_->select_to_eof_action_);
-        connect_action(actions_->move_page_up_action_);
-        connect_action(actions_->select_page_up_action_);
-        connect_action(actions_->move_page_down_action_);
-        connect_action(actions_->select_page_down_action_);
+        connect_action(actions_->move_previous_page_action_);
+        connect_action(actions_->select_previous_page_action_);
+        connect_action(actions_->move_next_page_action_);
+        connect_action(actions_->select_next_page_action_);
         connect_action(actions_->select_all_action_);
         connect_action(actions_->copy_action_);
         connect_action(actions_->cancel_action_);
@@ -1634,9 +1634,9 @@ Action & Text_impl::move_up_action() {
     return actions_->move_up_action_;
 }
 
-Action & Text_impl::select_up_action() {
+Action & Text_impl::select_previous_action() {
     init_actions();
-    return actions_->select_up_action_;
+    return actions_->select_previous_action_;
 }
 
 Action & Text_impl::move_down_action() {
@@ -1644,9 +1644,9 @@ Action & Text_impl::move_down_action() {
     return actions_->move_down_action_;
 }
 
-Action & Text_impl::select_down_action() {
+Action & Text_impl::select_next_action() {
     init_actions();
-    return actions_->select_down_action_;
+    return actions_->select_next_action_;
 }
 
 Action & Text_impl::move_word_left_action() {
@@ -1709,24 +1709,24 @@ Action & Text_impl::select_to_eof_action() {
     return actions_->select_to_eof_action_;
 }
 
-Action & Text_impl::move_page_up_action() {
+Action & Text_impl::move_previous_page_action() {
     init_actions();
-    return actions_->move_page_up_action_;
+    return actions_->move_previous_page_action_;
 }
 
-Action & Text_impl::move_page_down_action() {
+Action & Text_impl::move_next_page_action() {
     init_actions();
-    return actions_->move_page_down_action_;
+    return actions_->move_next_page_action_;
 }
 
-Action & Text_impl::select_page_up_action() {
+Action & Text_impl::select_previous_page_action() {
     init_actions();
-    return actions_->select_page_up_action_;
+    return actions_->select_previous_page_action_;
 }
 
-Action & Text_impl::select_page_down_action() {
+Action & Text_impl::select_next_page_action() {
     init_actions();
-    return actions_->select_page_down_action_;
+    return actions_->select_next_page_action_;
 }
 
 Action & Text_impl::select_all_action() {

@@ -104,10 +104,6 @@ int List_text_impl::insert_after(const ustring & str, const ustring & other) {
     return insert(str, ++row);
 }
 
-int List_text_impl::select(int row) {
-    return select_row(row);
-}
-
 int List_text_impl::select(const ustring & str, bool similar) {
     for (const Holder & hol: holders_) {
         if (similar) {

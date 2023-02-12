@@ -96,15 +96,15 @@ void Counter_impl::init(double value, double max_value, double min_value) {
     up_action_.connect(fun(this, &Counter_impl::increase));
     down_action_.connect(fun(entry_, &Entry_impl::unselect));
     down_action_.connect(fun(this, &Counter_impl::decrease));
-    page_up_action_.connect(fun(entry_, &Entry_impl::unselect));
-    page_up_action_.connect(fun(this, &Counter_impl::increase_page));
-    page_down_action_.connect(fun(entry_, &Entry_impl::unselect));
-    page_down_action_.connect(fun(this, &Counter_impl::decrease_page));
+    previous_page_action_.connect(fun(entry_, &Entry_impl::unselect));
+    previous_page_action_.connect(fun(this, &Counter_impl::increase_page));
+    next_page_action_.connect(fun(entry_, &Entry_impl::unselect));
+    next_page_action_.connect(fun(this, &Counter_impl::decrease_page));
 
     connect_action(up_action_);
     connect_action(down_action_);
-    connect_action(page_up_action_);
-    connect_action(page_down_action_);
+    connect_action(previous_page_action_);
+    connect_action(next_page_action_);
 
     signal_focus_in_.connect(fun(this, &Counter_impl::on_focus_in));
     signal_focus_out_.connect(fun(this, &Counter_impl::on_focus_out));
@@ -132,9 +132,9 @@ void Counter_impl::allow_edit() {
         entry_->allow_edit();
         down_->enable();
         up_->enable();
-        page_up_action_.enable();
+        previous_page_action_.enable();
         up_action_.enable();
-        page_down_action_.enable();
+        next_page_action_.enable();
         down_action_.enable();
     }
 }
@@ -147,9 +147,9 @@ void Counter_impl::disallow_edit() {
         entry_->disallow_edit();
         down_->disable();
         up_->disable();
-        page_up_action_.disable();
+        previous_page_action_.disable();
         up_action_.disable();
-        page_down_action_.disable();
+        next_page_action_.disable();
         down_action_.disable();
     }
 }

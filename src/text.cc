@@ -232,16 +232,16 @@ Action & Text::move_up_action() {
     return TEXT_IMPL->move_up_action();
 }
 
-Action & Text::select_up_action() {
-    return TEXT_IMPL->select_up_action();
+Action & Text::select_previous_action() {
+    return TEXT_IMPL->select_previous_action();
 }
 
 Action & Text::move_down_action() {
     return TEXT_IMPL->move_down_action();
 }
 
-Action & Text::select_down_action() {
-    return TEXT_IMPL->select_down_action();
+Action & Text::select_next_action() {
+    return TEXT_IMPL->select_next_action();
 }
 
 Action & Text::move_word_left_action() {
@@ -292,20 +292,20 @@ Action & Text::select_to_eof_action() {
     return TEXT_IMPL->select_to_eof_action();
 }
 
-Action & Text::move_page_up_action() {
-    return TEXT_IMPL->move_page_up_action();
+Action & Text::move_previous_page_action() {
+    return TEXT_IMPL->move_previous_page_action();
 }
 
-Action & Text::move_page_down_action() {
-    return TEXT_IMPL->move_page_down_action();
+Action & Text::move_next_page_action() {
+    return TEXT_IMPL->move_next_page_action();
 }
 
-Action & Text::select_page_up_action() {
-    return TEXT_IMPL->select_page_up_action();
+Action & Text::select_previous_page_action() {
+    return TEXT_IMPL->select_previous_page_action();
 }
 
-Action & Text::select_page_down_action() {
-    return TEXT_IMPL->select_page_down_action();
+Action & Text::select_next_page_action() {
+    return TEXT_IMPL->select_next_page_action();
 }
 
 Action & Text::select_all_action() {

@@ -1775,12 +1775,6 @@ void Table_impl::unselect() {
     sel_.xmax = sel_.ymax = INT_MIN;
 }
 
-Table::Span Table_impl::selection() const {
-    Table::Span rng;
-    if (sel_.xmax > sel_.xmin && sel_.ymax > sel_.ymin) { rng = sel_; }
-    return rng;
-}
-
 bool Table_impl::on_backpaint(Painter pr, const Rect & inval) {
     Rect r;
 

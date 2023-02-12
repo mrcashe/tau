@@ -42,10 +42,9 @@ public:
     int  insert_before(const ustring & str, const ustring & other);
     int  insert_after(const ustring & str, const ustring & other);
     int  append(const ustring & str);
-
     void remove_text(const ustring & str);
 
-    int  select(int row);
+    int  select(int row) { return List_impl::select(row); }
     int  select(const ustring & str, bool similar=false);
 
     void set_text_align(Align align);

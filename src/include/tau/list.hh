@@ -154,41 +154,41 @@ public:
     /// Prepend widget into specified row.
     /// @throw user_error if w already inserted into another container.
     /// @throw internal_error if w has pure implementation pointer.
-    /// @throw graphics_error (bad row).
+    /// @throw user_error (bad row).
     int prepend(int row, Widget & w, bool shrink=false);
 
     /// Prepend widget into specified row.
     /// @throw user_error if w already inserted into another container.
     /// @throw internal_error if w has pure implementation pointer.
-    /// @throw graphics_error (bad row).
+    /// @throw user_error (bad row).
     int prepend(int row, Widget & w, Align align);
 
     /// Insert widget into specified row and specified position.
     /// @throw user_error if w already inserted into another container.
     /// @throw internal_error if w has pure implementation pointer.
-    /// @throw graphics_error (bad row).
+    /// @throw user_error (bad row).
     int insert(int row, Widget & w, int position, bool shrink=false);
 
     /// Insert widget into specified row and specified position.
     /// @throw user_error if w already inserted into another container.
     /// @throw internal_error if w has pure implementation pointer.
-    /// @throw graphics_error (bad row).
+    /// @throw user_error (bad row).
     int insert(int row, Widget & w, int position, Align align);
 
     /// Append widget into specified row.
     /// @throw user_error if w already inserted into another container.
     /// @throw internal_error if w has pure implementation pointer.
-    /// @throw graphics_error (bad row).
+    /// @throw user_error (bad row).
     int append(int row, Widget & w, bool shrink=false);
 
     /// Append widget into specified row.
     /// @throw user_error if w already inserted into another container.
     /// @throw internal_error if w has pure implementation pointer.
-    /// @throw graphics_error (bad row).
+    /// @throw user_error (bad row).
     int append(int row, Widget & w, Align align);
 
     /// Remove specified row.
-    void remove(int br);
+    void remove(int row);
 
     /// Remove all.
     void clear();
@@ -201,7 +201,7 @@ public:
 
     /// Select specified row.
     /// @return INT_MIN if no selection available or row index.
-    int select_row(int row);
+    int select(int row);
 
     /// Select next row.
     /// @since 0.4.0
@@ -373,19 +373,19 @@ public:
 
     /// Get "Up" action.
     /// @since 0.4.0
-    Action & up_action();
+    Action & previous_action();
 
     /// Get "Down" action.
     /// @since 0.4.0
-    Action & down_action();
+    Action & next_action();
 
     /// Get "Page Up" action.
     /// @since 0.4.0
-    Action & page_up_action();
+    Action & previous_page_action();
 
     /// Get "Page Down" action.
     /// @since 0.4.0
-    Action & page_down_action();
+    Action & next_page_action();
 
     /// Get "Home" action.
     /// @since 0.4.0
@@ -397,19 +397,19 @@ public:
 
     /// Get "Select Up" action.
     /// @since 0.4.0
-    Action & select_up_action();
+    Action & select_previous_action();
 
     /// Get "Select Down" action.
     /// @since 0.4.0
-    Action & select_down_action();
+    Action & select_next_action();
 
     /// Get "Select Page Up" action.
     /// @since 0.4.0
-    Action & select_page_up_action();
+    Action & select_previous_page_action();
 
     /// Get "Select Page Down" action.
     /// @since 0.4.0
-    Action & select_page_down_action();
+    Action & select_next_page_action();
 
     /// Get "Select Home" action.
     /// @since 0.4.0

@@ -268,20 +268,20 @@ Action & List_text::enter_action() {
     return LIST_TEXT_IMPL->enter_action();
 }
 
-Action & List_text::up_action() {
-    return LIST_TEXT_IMPL->up_action();
+Action & List_text::previous_action() {
+    return LIST_TEXT_IMPL->previous_action();
 }
 
-Action & List_text::down_action() {
-    return LIST_TEXT_IMPL->down_action();
+Action & List_text::next_action() {
+    return LIST_TEXT_IMPL->next_action();
 }
 
-Action & List_text::page_up_action() {
-    return LIST_TEXT_IMPL->page_up_action();
+Action & List_text::previous_page_action() {
+    return LIST_TEXT_IMPL->previous_page_action();
 }
 
-Action & List_text::page_down_action() {
-    return LIST_TEXT_IMPL->page_down_action();
+Action & List_text::next_page_action() {
+    return LIST_TEXT_IMPL->next_page_action();
 }
 
 Action & List_text::home_action() {
@@ -292,20 +292,20 @@ Action & List_text::end_action() {
     return LIST_TEXT_IMPL->end_action();
 }
 
-Action & List_text::select_up_action() {
-    return LIST_TEXT_IMPL->select_up_action();
+Action & List_text::select_previous_action() {
+    return LIST_TEXT_IMPL->select_previous_action();
 }
 
-Action & List_text::select_down_action() {
-    return LIST_TEXT_IMPL->select_down_action();
+Action & List_text::select_next_action() {
+    return LIST_TEXT_IMPL->select_next_action();
 }
 
-Action & List_text::select_page_up_action() {
-    return LIST_TEXT_IMPL->select_page_up_action();
+Action & List_text::select_previous_page_action() {
+    return LIST_TEXT_IMPL->select_previous_page_action();
 }
 
-Action & List_text::select_page_down_action() {
-    return LIST_TEXT_IMPL->select_page_down_action();
+Action & List_text::select_next_page_action() {
+    return LIST_TEXT_IMPL->select_next_page_action();
 }
 
 Action & List_text::select_home_action() {

@@ -155,10 +155,10 @@ public:
     Action & pan_down_action();
 
     /// Get page_up Action.
-    Action & page_up_action();
+    Action & previous_page_action();
 
     /// Get page_down Action.
-    Action & page_down_action();
+    Action & next_page_action();
 
     /// Get home Action.
     Action & home_action();

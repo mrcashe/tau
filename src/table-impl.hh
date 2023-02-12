@@ -100,11 +100,11 @@ public:
     void get_align(const Widget_impl * wp, Align & xalign, Align & yalign) const;
     void unalign(Widget_impl * wp);
 
-    void insert_columns(int x, unsigned n_columns);
-    void insert_rows(int y, unsigned n_rows);
+    void insert_columns(int x, unsigned n_columns=1);
+    void insert_rows(int y, unsigned n_rows=1);
 
-    void remove_columns(int x, unsigned n_columns);
-    void remove_rows(int y, unsigned n_rows);
+    void remove_columns(int x, unsigned n_columns=1);
+    void remove_rows(int y, unsigned n_rows=1);
 
     void set_column_width(int column, unsigned width);
     unsigned column_width(int column) const;
@@ -135,16 +135,18 @@ public:
     void select(int x, int y, unsigned xspan=1, unsigned yspan=1);
     void select_column(int nth_col);
     void select_row(int nth_row);
-    Span selection() const;
+    Span selection() const { return sel_; }
+    bool has_selection() const { return sel_.xmax > sel_.xmin && sel_.ymax >= sel_.ymin; }
     void unselect();
 
-    void mark(int x, int y, unsigned width, unsigned height);
+    void mark(int x, int y, unsigned xspan, unsigned yspan);
     void mark_column(int x);
     void mark_row(int y);
     void unmark(int xmin, int ymin, int xmax, int ymax);
     void unmark_column(int x);
     void unmark_row(int y);
     void unmark_all();
+    bool has_marks() const { return !marks_.empty(); }
     std::vector<Span> marks() const;
 
     int column_at_x(int x) const;

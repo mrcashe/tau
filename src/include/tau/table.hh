@@ -222,20 +222,20 @@ public:
     /// Insert columns.
     /// @param x the column index.
     /// @param n_columns column count to insert.
-    void insert_columns(int x, unsigned n_columns);
+    void insert_columns(int x, unsigned n_columns=1);
 
     /// Insert rows.
     /// @param y the row index.
     /// @param n_rows row count to insert.
-    void insert_rows(int y, unsigned n_rows);
+    void insert_rows(int y, unsigned n_rows=1);
 
     /// Remove columns.
     /// The remaining columns are shifted to the left.
-    void remove_columns(int x, unsigned n_columns);
+    void remove_columns(int x, unsigned n_columns=1);
 
     /// Remove rows.
     /// The remaining rows are shifted to the top.
-    void remove_rows(int y, unsigned n_rows);
+    void remove_rows(int y, unsigned n_rows=1);
 
     /// Set overall column align.
     void align_columns(Align xalign);
@@ -294,6 +294,9 @@ public:
     /// @param w the widget.
     void unalign(Widget & w);
 
+    /// @name Selection
+    /// @{
+
     /// Select range.
     /// @param x the X coordinate in cells of top left selection corner.
     /// @param y the Y coordinate in cells of top left selection corner.
@@ -313,6 +316,10 @@ public:
 
     /// Remove current selection.
     void unselect();
+
+    /// Test if have selection.
+    /// @since 0.4.0
+    bool has_selection() const;
 
     /// Get current selection coordinates.
     ///
@@ -359,9 +366,14 @@ public:
     /// Unmark all.
     void unmark_all();
 
+    /// Test if have marks.
+    /// @since 0.4.0
+    bool has_marks() const;
+
     /// Get marks.
     std::vector<Span> marks() const;
 
+    /// @}
     /// Set column margins.
     /// @param x the column coordinate in cells.
     /// @param left the left margin in pixels.

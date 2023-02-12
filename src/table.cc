@@ -210,6 +210,10 @@ void Table::unselect() {
     TABLE_IMPL->unselect();
 }
 
+bool Table::has_selection() const {
+    return TABLE_IMPL->has_selection();
+}
+
 Table::Span Table::selection() const {
     return TABLE_IMPL->selection();
 }
@@ -240,6 +244,10 @@ void Table::unmark_row(int y) {
 
 void Table::unmark_all() {
     TABLE_IMPL->unmark_all();
+}
+
+bool Table::has_marks() const {
+    return TABLE_IMPL->has_marks();
 }
 
 std::vector<Table::Span> Table::marks() const {

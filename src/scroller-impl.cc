@@ -59,8 +59,8 @@ Scroller_impl::Scroller_impl():
     connect_action(pan_right_action_);
     connect_action(pan_up_action_);
     connect_action(pan_down_action_);
-    connect_action(page_up_action_);
-    connect_action(page_down_action_);
+    connect_action(previous_page_action_);
+    connect_action(next_page_action_);
     connect_action(home_action_);
     connect_action(end_action_);
 }

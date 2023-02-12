@@ -384,8 +384,8 @@ private:
     }
 
     void on_family_selected(int, const tau::ustring &) {
-        fill_faces();
         font_spec_ = font_spec_build(families_.selection(), faces_.selection(), tau::font_size_from_spec(font_spec_));
+        fill_faces();
         update_font();
     }
 
@@ -400,7 +400,7 @@ private:
         std::sort(v.begin(), v.end());
         faces_.clear();
         for (auto & s: v) { faces_.append(s); }
-        faces_.select(!sel.empty() ? sel : tau::font_face_from_spec(font_spec_));
+        if (INT_MIN == faces_.select(!sel.empty() ? sel : tau::font_face_from_spec(font_spec_))) { faces_.select_front(); }
     }
 
     void update_font() {
@@ -505,19 +505,19 @@ private:
     }
 
     void on_family_next() {
-        families_.select_next();
+        families_.next_action().exec();
     }
 
     void on_family_prev() {
-        families_.select_previous();
+        families_.previous_action().exec();
     }
 
     void on_face_next() {
-        faces_.select_next();
+        faces_.next_action().exec();
     }
 
     void on_face_prev() {
-        faces_.select_previous();
+        faces_.previous_action().exec();
     }
 
     void fetch_area_painter() {

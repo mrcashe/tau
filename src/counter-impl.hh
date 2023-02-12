@@ -165,8 +165,8 @@ private:
 
     Action              up_action_ { KC_UP, KM_NONE };
     Action              down_action_ { KC_DOWN, KM_NONE };
-    Action              page_up_action_ { KC_PAGE_UP, KM_NONE };
-    Action              page_down_action_ { KC_PAGE_DOWN, KM_NONE };
+    Action              previous_page_action_ { KC_PAGE_UP, KM_NONE };
+    Action              next_page_action_ { KC_PAGE_DOWN, KM_NONE };
 
     signal<void(double)> signal_value_changed_;
 

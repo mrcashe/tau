@@ -491,8 +491,8 @@ private:
 
     Table_ptr   table_;
     Gravity     gravity_ = GRAVITY_NONE;
-    Action      up_action_ { "Up", fun(this, &Menubox_impl::select_prev) };
-    Action      down_action_ { "Down", fun(this, &Menubox_impl::select_next) };
+    Action      previous_action_ { "Up", fun(this, &Menubox_impl::select_prev) };
+    Action      next_action_ { "Down", fun(this, &Menubox_impl::select_next) };
     Action      left_action_ { "Left", fun(this, &Menubox_impl::on_left) };
     Action      right_action_ { "Right", fun(this, &Menubox_impl::on_right) };
 

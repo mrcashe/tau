@@ -306,19 +306,19 @@ public:
 
     /// Get "Up" action.
     /// @since 0.4.0
-    Action & up_action();
+    Action & previous_action();
 
     /// Get "Down" action.
     /// @since 0.4.0
-    Action & down_action();
+    Action & next_action();
 
     /// Get "Page Up" action.
     /// @since 0.4.0
-    Action & page_up_action();
+    Action & previous_page_action();
 
     /// Get "Page Down" action.
     /// @since 0.4.0
-    Action & page_down_action();
+    Action & next_page_action();
 
     /// Get "Home" action.
     /// @since 0.4.0
@@ -330,19 +330,19 @@ public:
 
     /// Get "Select Up" action.
     /// @since 0.4.0
-    Action & select_up_action();
+    Action & select_previous_action();
 
     /// Get "Select Down" action.
     /// @since 0.4.0
-    Action & select_down_action();
+    Action & select_next_action();
 
     /// Get "Select Page Up" action.
     /// @since 0.4.0
-    Action & select_page_up_action();
+    Action & select_previous_page_action();
 
     /// Get "Select Page Down" action.
     /// @since 0.4.0
-    Action & select_page_down_action();
+    Action & select_next_page_action();
 
     /// Get "Select Home" action.
     /// @since 0.4.0
