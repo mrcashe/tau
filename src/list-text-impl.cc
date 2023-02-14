@@ -132,16 +132,18 @@ ustring List_text_impl::at(int row) const {
     return ustring();
 }
 
+ustring List_text_impl::selection() const {
+    int row = selected_row();
+    auto i = std::find_if(holders_.begin(), holders_.end(), [row](auto & hol) { return row == hol.row; } );
+    return i != holders_.end() ? i->str : ustring();
+}
+
 void List_text_impl::on_row_selected(int row) {
     auto i = std::find_if(holders_.begin(), holders_.end(), [row](auto & hol) { return row == hol.row; } );
 
     if (i != holders_.end()) {
         selrow_ = row;
-
-        if (!i->str.empty() && selection_ != i->str) {
-            selection_ = i->str;
-            signal_text_selected_(row, selection_);
-        }
+        if (!i->str.empty()) { signal_text_selected_(row, i->str); }
     }
 }
 
@@ -152,7 +154,7 @@ void List_text_impl::on_row_activated(int row) {
         selrow_ = row;
 
         if (!i->str.empty()) {
-            if (selection_ != i->str) { selection_ = i->str; signal_text_selected_(row, selection_); }
+            signal_text_selected_(row, i->str);
             signal_text_activated_(row, i->str);
         }
     }
@@ -163,7 +165,6 @@ void List_text_impl::on_row_removed(int row) {
 
     if (i != holders_.end()) {
         const ustring str = i->str;
-        if (str == selection_) { selection_.clear(); }
         if (row == selrow_) { selrow_ = INT_MIN; }
         holders_.erase(i);
         signal_text_removed_(row, str);
@@ -187,7 +188,6 @@ void List_text_impl::refresh_selection() {
         for (const Holder & hol: holders_) {
             if (hol.row == row) {
                 selrow_ = row;
-                selection_ = hol.str;
                 signal_text_selected_(row, hol.str);
                 break;
             }
@@ -215,7 +215,6 @@ void List_text_impl::clear() {
     List_impl::clear();
     for (const Holder & hol: holders_) { signal_text_removed_(hol.row, hol.str); }
     holders_.clear();
-    selection_.clear();
     selrow_ = INT_MIN;
 }
 

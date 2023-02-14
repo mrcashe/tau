@@ -32,13 +32,21 @@ namespace tau {
 
 @section broken_text_methods_040 Broken Text methods
 
+- Text::move_left_action() -> renamed to next_char_action()
+- Text::move_right_action() -> renamed to next_char_action()
+- Text::move_up_action() -> renamed to previous_line_action()
+- Text::move_down_action() -> renamed to next_line_action()
+- Text::select_left_action() -> renamed to select_previous_char_action()
+- Text::select_right_action() -> renamed to select_next_char_action()
+- Text::select_word_left_action() ->renamed to select_previous_word_action()
+- Text::move_word_right_action() -> renamed to next_word_action()
+- Text::select_word_right_action() -> renamed to select_next_word_action()
 - Text::page_up_action() -> renamed to Text::previous_page_action()
 - Text::page_down_action() -> renamed to Text::next_page_action()
-- Text::select_up_action() -> renamed to Text::select_previous_action()
-- Text::select_down_action() -> renamed to Text::select_next_action()
-- Text::select_next_page_action() -> renamed to Text::select_next_page_action()
-- Text::select_next_page_action() -> renamed to Text::select_next_page_action()
+- Text::select_up_action() -> renamed to Text::select_previous_line_action()
+- Text::select_down_action() -> renamed to Text::select_next_line_action()
 - Text::select_previous_page_action() -> renamed to Text::select_previous_page_action()
+- Text::select_next_page_action() -> renamed to Text::select_next_page_action()
 
 @section broken_list_methods_040 Broken List and List_text methods
 
@@ -111,6 +119,7 @@ namespace tau {
 
 - List::select_next()
 - List::select_previous()
+- List::remove(Widget & w)
 - List::cancel_action()
 - List::enter_action()
 - List::previous_action()
@@ -155,6 +164,7 @@ namespace tau {
 @section new_style_methods_040 New Style methods
 
 - Style::signal_changed()
+- Style::unredirect()
 
 @section new_keyfile_methods_040 New Key_file methods
 

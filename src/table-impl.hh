@@ -45,7 +45,10 @@ public:
    ~Table_impl();
 
     void put(Widget_ptr wp, int x, int y, unsigned xspan=1, unsigned yspan=1, bool xsh=false, bool ysh=false);
-    void remove(Widget_impl * wp);
+
+    /// Overriden by List_impl.
+    virtual void remove(Widget_impl * wp);
+
     void remove(int xmin, int ymin, int xmax, int ymax);
 
     // Overriden by List_impl.

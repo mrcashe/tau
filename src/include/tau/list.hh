@@ -188,7 +188,15 @@ public:
     int append(int row, Widget & w, Align align);
 
     /// Remove specified row.
+    /// @param row the row index.
+    /// @overload void remove(int row)
     void remove(int row);
+
+    /// Remove specified widget.
+    /// @param w the widget to be removed.
+    /// @since 0.4.0
+    /// @overload void remove(Widget & w)
+    void remove(Widget & w);
 
     /// Remove all.
     void clear();

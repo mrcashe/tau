@@ -140,6 +140,7 @@ public:
 
         // Top box (vertical).
         tau::Box box0(tau::OR_DOWN);
+        // insert(box0);
 
         // Central box (horizontal) including view area (left) and info pane (right).
         tau::Box cbox(tau::OR_RIGHT, 4);

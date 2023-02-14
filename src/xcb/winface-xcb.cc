@@ -188,7 +188,7 @@ void Winface_xcb::update() {
     paint_timer_.stop();
 
     if (self_->visible()) {
-        if (!pr_) { pr_ = std::make_shared<Painter_xcb>(this); }
+        if (!pr_) { pr_ = std::make_shared<Painter_xcb>(this); pr_->reserve_stack(16); }
         pr_->capture(self_);
         Painter pr(self_->wrap_painter(pr_));
 

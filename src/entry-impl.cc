@@ -82,10 +82,10 @@ void Entry_impl::init(Align text_align) {
     scroller_->insert(edit_);
     edit_->enter_action().disable();
     edit_->tab_action().disable();
-    edit_->move_next_page_action().disable();
-    edit_->move_previous_page_action().disable();
-    edit_->move_down_action().disable();
-    edit_->move_up_action().disable();
+    edit_->next_page_action().disable();
+    edit_->previous_page_action().disable();
+    edit_->next_line_action().disable();
+    edit_->previous_line_action().disable();
     changed_cx_ = buffer_.signal_changed().connect(fun(this, &Entry_impl::on_buffer_changed));
     edit_->signal_focus_out().connect(fun(edit_, &Edit_impl::unselect));
     edit_->cancel_action().connect(fun(this, &Widget_impl::drop_focus));

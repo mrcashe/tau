@@ -62,6 +62,7 @@ void Fontsel_impl::init() {
     families_ = std::make_shared<List_text_impl>();
     families_->signal_text_selected().connect(fun(this, &Fontsel_impl::on_family_selected));
     families_->signal_text_activated().connect(fun(this, &Fontsel_impl::on_family_activated));
+    families_->cancel_action().disable();
     frame->insert(families_);
     families_->hint_min_size(0, 192);
     put(frame, 0, 0, 3, 2);
@@ -70,6 +71,7 @@ void Fontsel_impl::init() {
     faces_ = std::make_shared<List_text_impl>();
     faces_->signal_text_selected().connect(fun(this, &Fontsel_impl::on_face_selected));
     faces_->signal_text_activated().connect(fun(this, &Fontsel_impl::on_face_activated));
+    faces_->cancel_action().disable();
     frame->insert(faces_);
     put(frame, 3, 0, 2, 1);
 
@@ -210,12 +212,11 @@ void Fontsel_impl::update_font() {
                 fontspec_->assign(spec_);
 
                 if (Painter pr = entry_->painter()) {
+                    entry_->style().font(STYLE_FONT) = spec_;
                     Font font = pr.select_font(spec_);
                     ustring psname = font.psname();
                     psname_->assign(psname.empty() ? "Not available" : psname);
                 }
-
-                entry_->style().font("font") = spec_;
             }
         }
     }
@@ -249,9 +250,10 @@ void Fontsel_impl::on_family_selected(int row, const ustring & str) {
     auto v = Font::list_faces(str);
     std::sort(v.begin(), v.end());
     for (auto & s: v) { faces_->append(s); }
-    if (str_similar(face, v)) { faces_->select(face, true); }
-    else if (str_similar(uface_, v)) { faces_->select(uface_, true); }
-    else { faces_->select_front(); }
+    if (str_similar(face, v)) { row = faces_->select(face, true); }
+    else if (str_similar(uface_, v)) { row = faces_->select(uface_, true); }
+    else { row = faces_->select_front(); }
+    on_face_selected(row, faces_->selection());
 }
 
 void Fontsel_impl::on_family_activated(int row, const ustring & str) {
@@ -284,15 +286,15 @@ void Fontsel_impl::update_tooltips() {
     table->hint_margin(4, 4, 2, 2);
     table->align_column(0, ALIGN_START);
     table->align_column(1, ALIGN_END);
-    ustring spc = font_size_change(style().font("font").spec(), 7);
+    ustring spc = font_size_change(style().font(STYLE_FONT).spec(), 7);
 
     auto tp = std::make_shared<Text_impl>("++size:", ALIGN_END);
     table->put(tp, 0, 0, 1, 1, false, true);
-    tp->style().font("font") = spc;
+    tp->style().font(STYLE_FONT) = spc;
 
     tp = std::make_shared<Text_impl>("--size:", ALIGN_END);
     table->put(tp, 0, 1, 1, 1, false, true);
-    tp->style().font("font") = spc;
+    tp->style().font(STYLE_FONT) = spc;
 
     ustring iaccels, oaccels;
 
@@ -309,11 +311,11 @@ void Fontsel_impl::update_tooltips() {
     spc = font_face_set(spc, "Bold");
     tp = std::make_shared<Text_impl>(iaccels, ALIGN_END);
     table->put(tp, 1, 0, 1, 1, true, true);
-    tp->style().font("font") = spc;
+    tp->style().font(STYLE_FONT) = spc;
 
     tp = std::make_shared<Text_impl>(oaccels, ALIGN_END);
     table->put(tp, 1, 1, 1, 1, true, true);
-    tp->style().font("font") = spc;
+    tp->style().font(STYLE_FONT) = spc;
 
     counter_->set_tooltip(table);
 }

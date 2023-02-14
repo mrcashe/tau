@@ -30,6 +30,7 @@
 #include <glyph-impl.hh>
 #include <posix/font-posix.hh>
 #include "display-xcb.hh"
+#include <set>
 
 namespace tau {
 
@@ -46,7 +47,7 @@ private:
     Display_xcb_ptr         dp_;
     xcb_connection_t *      cx_;
     xcb_render_glyphset_t   east_ = XCB_NONE;
-    std::u32string          east_chars_;
+    std::set<uint32_t>      chars_;
     std::vector<uint8_t>    bits_;
     const uint8_t           format_ = 8;
     std::vector<xcb_render_glyphinfo_t> ginfos_;

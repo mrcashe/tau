@@ -203,8 +203,16 @@ public:
     /// Redirect item.
     /// @param src item that will replace @a dest
     /// @param dest item that will be replaced
+    /// @sa unredirect()
     /// @sa @ref style_sect
     void redirect(const std::string & src, const std::string & dest);
+
+    /// Unredirect item.
+    /// @param dest item that will be replaced
+    /// @since 0.4.0
+    /// @sa redirect()
+    /// @sa @ref style_sect
+    void unredirect(const std::string & dest);
 
     /// Unset specified item.
     /// @sa @ref style_sect

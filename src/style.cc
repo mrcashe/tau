@@ -155,9 +155,6 @@ struct Style_impl {
     }
 
     void set_parent(Style_ptr parent) {
-        parent_ = parent;
-        parent->children_.push_back(this);
-
         for (auto & ip: items_) {
             if (!ip.from_) {
                 if (auto pi = parent->ifind(ip.name_)) {
@@ -167,6 +164,17 @@ struct Style_impl {
                 }
             }
         }
+
+        parent->children_.push_back(this);
+        parent_ = parent;
+    }
+
+    void npset(const std::string & name, const ustring & pvalue) {
+        if (auto ip = ifind(name)) {
+            if (!ip->from_) {
+                pset(*ip, pvalue);
+            }
+        }
     }
 
     void pset(Item & i, const ustring & pvalue) {
@@ -174,7 +182,8 @@ struct Style_impl {
         i.pvalue_ = pvalue;
 
         if (pvalue != val) {
-            for (auto sty: children_) { sty->npset(i.name_, iget(i)); }
+            auto s = iget(i);
+            for (auto sty: children_) { sty->npset(i.name_, s); }
             if (i.signal_changed_) { (*i.signal_changed_)(); }
         }
 
@@ -182,19 +191,61 @@ struct Style_impl {
         for (auto ip: i.predirs_) { pset(*ip, pvalue); }
     }
 
+    void redirect(const std::string & src, const std::string & dest, bool from_parent=false) {
+        auto i = ifind(src), j = ifind(dest);
+
+        if (i && j && i != j) {
+            cancel_redirect(*j);
+
+            if (!j->si_.is_set()) {
+                if (from_parent) { i->predirs_.push_back(j); }
+                else { i->redirs_.push_back(j); }
+                for (auto sty: children_) { sty->redirect(src, dest, true); }
+                j->from_ = i;
+                j->fmt_ = i->fmt_;
+                pset(*j, i->pvalue_);
+                iset(*j, i->value_);
+            }
+        }
+    }
+
+    void unredirect(const std::string & name) {
+        if (auto ip = ifind(name)) {
+            if (ip->from_) {
+                cancel_redirect(*ip);
+
+                if (auto pp = parent_.lock()) {
+                    if (auto pi = pp->ifind(ip->name_)) {
+                        pset(*ip, pp->iget(*pi));
+                    }
+                }
+
+                for (auto sty: children_) { sty->unredirect(name); }
+            }
+        }
+    }
+
+    void cancel_redirect(Item & i) {
+        if (i.from_) {
+            auto j = std::find(i.from_->redirs_.begin(), i.from_->redirs_.end(), &i);
+            if (j != i.from_->redirs_.end()) { i.from_->redirs_.erase(j); }
+            j = std::find(i.from_->predirs_.begin(), i.from_->predirs_.end(), &i);
+            if (j != i.from_->predirs_.end()) { i.from_->predirs_.erase(j); }
+            i.from_ = nullptr;
+        }
+    }
+
     void iset(Item & i, const ustring & val) {
         if (val.find(U'%') < val.size()) {
-            if (i.fmt_ != val) {
-                i.fmt_ = val;
-                for (auto sty: children_) { sty->npset(i.name_, iget(i)); }
-                if (i.signal_changed_) { (*i.signal_changed_)(); }
-            }
+            if (i.fmt_ != val) { i.fmt_ = val; goto notify; }
         }
 
         else {
             if (i.value_ != val) {
                 i.value_ = val;
-                for (auto sty: children_) { sty->npset(i.name_, iget(i)); }
+                notify:
+                auto s = iget(i);
+                for (auto sty: children_) { sty->npset(i.name_, s); }
                 if (i.signal_changed_) { (*i.signal_changed_)(); }
             }
         }
@@ -229,37 +280,10 @@ struct Style_impl {
         return res;
     }
 
-    void redirect(const std::string & src, const std::string & dest, bool from_parent=false) {
-        auto i = ifind(src), j = ifind(dest);
-
-        if (i && j && i != j && !j->si_.is_set()) {
-            if (from_parent) { i->predirs_.push_back(j); }
-            else { i->redirs_.push_back(j); }
-            j->from_ = i;
-            j->fmt_ = i->fmt_;
-            pset(*j, i->pvalue_);
-            iset(*j, i->value_);
-
-            for (auto sty: children_) { sty->redirect(src, dest, true); }
-        }
-    }
-
-    void unredirect(const std::string & name) {
-        if (auto ip = ifind(name)) {
-            if (ip->from_) {
-                auto i = std::find(ip->from_->redirs_.begin(), ip->from_->redirs_.end(), ip);
-                if (i != ip->from_->redirs_.end()) { ip->from_->redirs_.erase(i); }
-                i = std::find(ip->from_->predirs_.begin(), ip->from_->predirs_.end(), ip);
-                if (i != ip->from_->predirs_.end()) { ip->from_->predirs_.erase(i); }
-                ip->from_ = nullptr;
-            }
-        }
-    }
-
     void iunset(Item & i) {
         ustring val = i.value_;
         i.value_.clear();
-        unredirect(i.name_);
+        cancel_redirect(i);
 
         if (auto pp = parent_.lock()) {
             if (auto pi = pp->ifind(i.name_)) {
@@ -288,14 +312,6 @@ struct Style_impl {
         }
 
         return &items_.front().si_;
-    }
-
-    void npset(const std::string & name, const ustring & pvalue) {
-        if (auto ip = ifind(name)) {
-            if (!ip->from_) {
-                pset(*ip, pvalue);
-            }
-        }
     }
 
     void unset(const std::string & name) {
@@ -551,6 +567,10 @@ const Style_item & Style::get(const std::string & name) const {
 
 void Style::redirect(const std::string & src, const std::string & dest) {
     impl->redirect(src, dest);
+}
+
+void Style::unredirect(const std::string & dest) {
+    impl->unredirect(dest);
 }
 
 void Style::unset(const std::string & name) {

@@ -715,12 +715,13 @@ ustring::iterator ustring::erase(iterator pbegin, iterator pend) {
     return iterator(str_.erase(pbegin.base(), pend.base()));
 }
 
-int ustring::compare(const ustring & rhs) const {
-    return strcoll(str_.c_str(), rhs.str_.c_str());
+int ustring::compare(const char * rhs) const {
+    static const char * mt = "";
+    return strcoll(size_ ? str_.c_str() : mt, rhs ? rhs : mt);
 }
 
-int ustring::compare(const char * rhs) const {
-    return strcoll(str_.c_str(), rhs);
+int ustring::compare(const ustring & rhs) const {
+    return compare(rhs.str_.c_str());
 }
 
 int ustring::compare(size_type i, size_type n, const ustring & rhs) const {

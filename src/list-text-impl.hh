@@ -59,9 +59,7 @@ public:
         return align_;
     }
 
-    ustring selection() const {
-        return selection_;
-    }
+    ustring selection() const;
 
     int find(const ustring & str) const;
     bool contains(const ustring & str) const;
@@ -103,7 +101,6 @@ private:
     using Holders = std::vector<Holder>;
 
     Align               align_;
-    ustring             selection_;
     Holders             holders_;
     int                 selrow_ = INT_MIN;
 

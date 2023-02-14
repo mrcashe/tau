@@ -30,6 +30,7 @@
 #include <tau/action.hh>
 #include <tau/input.hh>
 #include <table-impl.hh>
+#include <set>
 
 namespace tau {
 
@@ -60,13 +61,16 @@ public:
     int  append(int row, Widget_ptr wp, bool shrink=false);
     int  append(int row, Widget_ptr wp, Align align);
 
+    // Overrides Table_impl.
+    void remove(Widget_impl * wp) override;
+
     void remove(int row);
 
     int select(int row);
     int select_next();
     int select_previous();
-    int select_front();
-    int select_back();
+    int select_front(bool emit=false);
+    int select_back(bool emit=false);
     int selected_row() const;
     void unselect();
 
@@ -186,7 +190,7 @@ protected:
     };
 
     using Headers = std::list<Header>;  // Table headers.
-    using Frees = std::list<int>;       // Freely allocated rows.
+    using Frees = std::set<Widget_impl *>;  // Freely allocated rows.
 
     bool                multiple_select_allowed_ = false;
     Scroller_ptr        scroller_;

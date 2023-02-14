@@ -170,7 +170,7 @@ private:
     xcb_sync_counter_t  sync_counter_ = XCB_NONE;
     xcb_sync_int64_t    sync_value_ { 0, 0 };
     Timer               paint_timer_ { fun(this, &Winface_xcb::update) };
-    std::array<Rect, 6> invals_;
+    std::array<Rect, 8> invals_;
     Painter_xcb_ptr     pr_;
     Point               upos_;  // User requested position.
     Size                usize_; // User requested size.

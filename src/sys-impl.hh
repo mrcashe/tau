@@ -38,16 +38,17 @@ template <class T>
 struct v_allocator {
     using value_type = T;
 
-    std::vector<T>  v_ { 1024 };
+    static constexpr std::size_t delta_ = 256;
+    std::vector<T>  v_;
     std::size_t     pos_ = 0;
 
-    v_allocator() noexcept {}
+    v_allocator(std::size_t size=0) noexcept { v_.resize(size ? size : delta_); }
     v_allocator(const v_allocator & other) noexcept {}
     template <class U> v_allocator (const v_allocator<U> &) noexcept {}
     void deallocate (T *, std::size_t) {}
 
     T * allocate (std::size_t n) {
-        if (pos_ == v_.size()) { v_.resize(pos_+16); }
+        if (pos_ == v_.size()) { v_.resize(pos_+delta_); }
         return v_.data()+pos_++;
     }
 };

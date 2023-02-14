@@ -707,7 +707,7 @@ LRESULT Display_win::handle(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         case WM_PAINT:
             if (auto wf = find(hwnd)) {
                 Window_impl * wii = wf->self();
-                if (!pr_) { pr_ = std::make_shared<Painter_win>(); }
+                if (!pr_) { pr_ = std::make_shared<Painter_win>(); pr_->reserve_stack(16); }
                 pr_->capture(wii);
                 PAINTSTRUCT ps;
                 pr_->begin_paint(wf.get(), &ps);

@@ -48,7 +48,6 @@ Font_xcb::~Font_xcb() {
 
 void Font_xcb::render_glyphs(const std::u32string & str, Point pt, uint8_t op, xcb_render_picture_t src, xcb_render_picture_t dst) {
     xcb_render_glyphset_t gs = east_;
-    std::u32string & avail = east_chars_;
 
     std::size_t n = 254*4;
     n = std::min(n, str.size());
@@ -70,8 +69,8 @@ void Font_xcb::render_glyphs(const std::u32string & str, Point pt, uint8_t op, x
             Vector adv = g->advance();
             pt.translate(std::ceil(adv.x()), std::ceil(adv.y()));
 
-            if (std::u32string::npos == avail.find_first_of(*s)) {
-                avail += *s;
+            if (0 == chars_.count(*s)) {
+                chars_.insert(*s);
 
                 if (Rect r = g->bounds()) {
                     Pixmap_ptr pix = Pixmap_impl::create(format_, r.size());

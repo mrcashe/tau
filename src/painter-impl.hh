@@ -60,6 +60,8 @@ public:
     void wpush();
     void wpop();
     void wreset();
+    void reserve_stack(std::size_t n);
+
     void push();
     void pop();
     void clear();

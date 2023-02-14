@@ -152,6 +152,10 @@ void List::remove(int row) {
     LIST_IMPL->remove(row);
 }
 
+void List::remove(Widget & w) {
+    LIST_IMPL->remove(w.ptr().get());
+}
+
 bool List::empty() const {
     return LIST_IMPL->empty();
 }

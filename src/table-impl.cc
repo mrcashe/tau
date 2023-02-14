@@ -96,6 +96,7 @@ void Table_impl::put(Widget_ptr wp, int x, int y, unsigned xspan, unsigned yspan
     }
 }
 
+/// Overriden by List_impl.
 void Table_impl::remove(Widget_impl * wp) {
     if (wp) {
         auto i = holders_.find(wp);
@@ -1747,27 +1748,26 @@ void Table_impl::select(int xmin, int ymin, unsigned xspan, unsigned yspan) {
             sel_.xmax = xmax;
             sel_.ymax = ymax;
             invalidate(range_bounds(sel_));
-            Color c = style().color(STYLE_SELECT_BACKGROUND);
-            for (auto wp: fchildren(sel_)) { wp->signal_select()(); wp->style().color(STYLE_BACKGROUND) = c; }
+            for (auto wp: fchildren(sel_)) { wp->signal_select()(); wp->style().redirect(STYLE_SELECT_BACKGROUND, STYLE_BACKGROUND); }
             if (!shut_ && signal_selection_changed_) { (*signal_selection_changed_)(); }
         }
     }
 }
 
 void Table_impl::select_column(int x) {
-    Table::Span rng = span();
+    Span rng = span();
     if (rng.xmax > rng.xmin && rng.ymax > rng.ymin) { select(x, rng.ymin, 1, rng.ymax-rng.ymin); }
 }
 
 void Table_impl::select_row(int y) {
-    Table::Span rng = span();
+    Span rng = span();
     if (rng.xmax > rng.xmin && rng.ymax > rng.ymin) { select(rng.xmin, y, rng.xmax-rng.xmin, 1); }
 }
 
 void Table_impl::unselect() {
     if (sel_.xmax > sel_.xmin && sel_.ymax > sel_.ymin) {
         invalidate(range_bounds(sel_));
-        for (auto wp: fchildren(sel_)) { wp->style().unset(STYLE_BACKGROUND); wp->signal_unselect()(); }
+        for (auto wp: fchildren(sel_)) { wp->style().unredirect(STYLE_BACKGROUND); wp->signal_unselect()(); }
         if (!shut_ && signal_selection_changed_) { (*signal_selection_changed_)(); }
     }
 
@@ -1844,16 +1844,6 @@ std::forward_list<Widget_impl *> Table_impl::fchildren(const Span & rng) {
     return v;
 }
 
-void Table_impl::unmark_all() {
-    std::forward_list<Widget_impl *> v;
-    Rect r;
-    for (auto & m: marks_) { v.merge(fchildren(m)); r |= range_bounds(m); }
-    if (r) { invalidate(r); }
-    for (auto wp: v) { wp->style().unset(STYLE_BACKGROUND); wp->signal_unselect()(); }
-    if (!marks_.empty() && !shut_ && signal_selection_changed_) { (*signal_selection_changed_)(); }
-    marks_.clear();
-}
-
 void Table_impl::unmark(int xmin, int ymin, int xmax, int ymax) {
     Span m { xmin, ymin, xmax, ymax };
     auto i = std::find(marks_.begin(), marks_.end(), m);
@@ -1864,6 +1854,16 @@ void Table_impl::unmark(int xmin, int ymin, int xmax, int ymax) {
         marks_.remove(m);
         if (!shut_ && signal_selection_changed_) { (*signal_selection_changed_)(); }
     }
+}
+
+void Table_impl::unmark_all() {
+    std::forward_list<Widget_impl *> v;
+    Rect r;
+    for (auto & m: marks_) { v.merge(fchildren(m)); r |= range_bounds(m); }
+    if (r) { invalidate(r); }
+    for (auto wp: v) { wp->style().unset(STYLE_BACKGROUND); wp->signal_unselect()(); }
+    if (!marks_.empty() && !shut_ && signal_selection_changed_) { (*signal_selection_changed_)(); }
+    marks_.clear();
 }
 
 void Table_impl::unmark_column(int x) {

@@ -100,17 +100,17 @@ public:
     bool caret_enabled() const { return caret_enabled_; }
 
     Action & move_left_action();
-    Action & select_left_action();
-    Action & move_right_action();
-    Action & select_right_action();
-    Action & move_up_action();
-    Action & select_previous_action();
-    Action & move_down_action();
-    Action & select_next_action();
-    Action & move_word_left_action();
-    Action & select_word_left_action();
-    Action & move_word_right_action();
-    Action & select_word_right_action();
+    Action & select_previous_char_action();
+    Action & next_char_action();
+    Action & select_next_char_action();
+    Action & previous_line_action();
+    Action & select_previous_line_action();
+    Action & next_line_action();
+    Action & select_next_line_action();
+    Action & previous_word_action();
+    Action & select_previous_word_action();
+    Action & next_word_action();
+    Action & select_next_word_action();
     Action & move_home_action();
     Action & select_home_action();
     Action & move_to_eol_action();
@@ -119,8 +119,8 @@ public:
     Action & select_to_sof_action();
     Action & move_to_eof_action();
     Action & select_to_eof_action();
-    Action & move_previous_page_action();
-    Action & move_next_page_action();
+    Action & previous_page_action();
+    Action & next_page_action();
     Action & select_previous_page_action();
     Action & select_next_page_action();
     Action & select_all_action();
@@ -188,17 +188,17 @@ private:
 
     struct Actions {
         Action          move_left_action_ { KC_LEFT, KM_NONE };
-        Action          select_left_action_ { KC_LEFT, KM_SHIFT };
-        Action          move_right_action_ { KC_RIGHT, KM_NONE };
-        Action          select_right_action_ { KC_RIGHT, KM_SHIFT };
-        Action          move_up_action_ { KC_UP, KM_NONE };
-        Action          select_previous_action_ { KC_UP, KM_SHIFT };
-        Action          move_down_action_ { KC_DOWN, KM_NONE };
-        Action          select_next_action_ { KC_DOWN, KM_SHIFT };
-        Action          move_word_left_action_ { KC_LEFT, KM_CONTROL };
-        Action          select_word_left_action_ { KC_LEFT, KM_CONTROL+KM_SHIFT };
-        Action          move_word_right_action_ { KC_RIGHT, KM_CONTROL };
-        Action          select_word_right_action_ { KC_RIGHT, KM_CONTROL+KM_SHIFT };
+        Action          select_previous_char_action_ { KC_LEFT, KM_SHIFT };
+        Action          next_char_action_ { KC_RIGHT, KM_NONE };
+        Action          select_next_char_action_ { KC_RIGHT, KM_SHIFT };
+        Action          previous_line_action_ { KC_UP, KM_NONE };
+        Action          select_previous_line_action_ { KC_UP, KM_SHIFT };
+        Action          next_line_action_ { KC_DOWN, KM_NONE };
+        Action          select_next_line_action_ { KC_DOWN, KM_SHIFT };
+        Action          previous_word_action_ { KC_LEFT, KM_CONTROL };
+        Action          select_previous_word_action_ { KC_LEFT, KM_CONTROL+KM_SHIFT };
+        Action          next_word_action_ { KC_RIGHT, KM_CONTROL };
+        Action          select_next_word_action_ { KC_RIGHT, KM_CONTROL+KM_SHIFT };
         Action          move_home_action_ { KC_HOME, KM_NONE };
         Action          select_home_action_ { KC_HOME, KM_SHIFT };
         Action          move_to_eol_action_ { KC_END, KM_NONE };
@@ -207,9 +207,9 @@ private:
         Action          select_to_sof_action_ { KC_HOME, KM_CONTROL+KM_SHIFT };
         Action          move_to_eof_action_ { KC_END, KM_CONTROL };
         Action          select_to_eof_action_ { KC_END, KM_CONTROL+KM_SHIFT };
-        Action          move_previous_page_action_ { KC_PAGE_UP, KM_NONE };
+        Action          previous_page_action_ { KC_PAGE_UP, KM_NONE };
         Action          select_previous_page_action_ { KC_PAGE_UP, KM_SHIFT };
-        Action          move_next_page_action_ { KC_PAGE_DOWN, KM_NONE };
+        Action          next_page_action_ { KC_PAGE_DOWN, KM_NONE };
         Action          select_next_page_action_ { KC_PAGE_DOWN, KM_SHIFT };
         Action          select_all_action_ { U'A', KM_CONTROL };
         Action          copy_action_ { ustring("<Ctrl>C <Ctrl>Insert") };

@@ -145,11 +145,15 @@ namespace tau {
 Painter_impl::Painter_impl():
     trackable()
 {
+    reserve_stack(1);
     stack_.emplace_back();
     wstack_.emplace_back();
-    stack_.reserve(8);
-    wstack_.reserve(8);
     prims_.reserve(64);
+}
+
+void Painter_impl::reserve_stack(std::size_t n) {
+    wstack_.reserve(n);
+    stack_.reserve(n+n);
 }
 
 void Painter_impl::wreset() {

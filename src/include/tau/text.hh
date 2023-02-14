@@ -265,37 +265,37 @@ public:
     Action & move_left_action();
 
     /// Gets "Select Left" action.
-    Action & select_left_action();
+    Action & select_previous_char_action();
 
     /// Gets "Move Right" action.
-    Action & move_right_action();
+    Action & next_char_action();
 
     /// Gets "Select Right" action.
-    Action & select_right_action();
+    Action & select_next_char_action();
 
     /// Gets "Move Up" action.
-    Action & move_up_action();
+    Action & previous_line_action();
 
     /// Gets "Select Up" action.
-    Action & select_previous_action();
+    Action & select_previous_line_action();
 
     /// Gets "Move Down" action.
-    Action & move_down_action();
+    Action & next_line_action();
 
     /// Gets "Select Down" action.
-    Action & select_next_action();
+    Action & select_next_line_action();
 
     /// Gets "Move Word Left" action.
-    Action & move_word_left_action();
+    Action & previous_word_action();
 
     /// Gets "Select Word Left" action.
-    Action & select_word_left_action();
+    Action & select_previous_word_action();
 
     /// Gets "Move Word Right" action.
-    Action & move_word_right_action();
+    Action & next_word_action();
 
     /// Gets "Select Word Right" action.
-    Action & select_word_right_action();
+    Action & select_next_word_action();
 
     /// Gets "Move Home" action.
     Action & move_home_action();
@@ -322,10 +322,10 @@ public:
     Action & select_to_eof_action();
 
     /// Gets "Move Page Up" action.
-    Action & move_previous_page_action();
+    Action & previous_page_action();
 
     /// Gets "Move Page Down" action.
-    Action & move_next_page_action();
+    Action & next_page_action();
 
     /// Gets "Select Previous Page" action.
     Action & select_previous_page_action();
