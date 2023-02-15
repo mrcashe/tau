@@ -30,6 +30,10 @@ namespace tau {
 
 @page whats_new Whats New in 0.4.0
 
+@section broken_text_methods_040 Broken Widget methods
+
+- Widget::exposed_area()
+
 @section broken_text_methods_040 Broken Text methods
 
 - Text::move_left_action() -> renamed to next_char_action()
@@ -106,6 +110,7 @@ namespace tau {
 @section new_widget_methods_040 New Widget methods
 
 - Widget::has_parent(const Widget & w) const
+- Widget::obscured_area()
 
 @section new_table_methods_040 New Table methods
 

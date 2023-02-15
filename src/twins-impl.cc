@@ -61,6 +61,7 @@ Twins_impl::Twins_impl(Orientation orient, double ratio):
 
 void Twins_impl::insert_first(Widget_ptr wp) {
     if (wp) {
+        chk_parent(wp);
         rm_first();
         make_child(wp);
         first_ = wp.get();
@@ -78,6 +79,7 @@ void Twins_impl::insert_first(Widget_ptr wp) {
 
 void Twins_impl::insert_second(Widget_ptr wp) {
     if (wp) {
+        chk_parent(wp);
         rm_second();
         make_child(wp);
         second_ = wp.get();

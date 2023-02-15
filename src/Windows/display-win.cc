@@ -712,7 +712,7 @@ LRESULT Display_win::handle(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 PAINTSTRUCT ps;
                 pr_->begin_paint(wf.get(), &ps);
                 Rect inval = from_winrect(ps.rcPaint);
-                pr_->pclip(inval);
+                pr_->set_obscured_area(inval);
                 Painter pr(wii->wrap_painter(pr_));
                 wii->handle_backpaint(pr, inval);
                 wii->handle_paint(pr, inval);

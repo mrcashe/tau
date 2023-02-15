@@ -92,6 +92,7 @@ private:
 
     void set_clip();
     void on_destroy();
+    void load_stroke_gc();
 
 private:
 

@@ -40,20 +40,23 @@ Absolute_impl::Absolute_impl():
 }
 
 void Absolute_impl::put(Widget_ptr wp, const Point & pos, const Size & size) {
-    make_child(wp);
-    wp->update_origin(INT_MIN, INT_MIN);
-    wp->update_size(0, 0);
-    Holder hol;
-    hol.wp = wp;
-    hol.pos = pos;
-    hol.size = size;
-    hol.hints_cx = wp->signal_hints_changed().connect(tau::bind(fun(this, &Absolute_impl::on_child_requisition), wp.get()));
-    hol.req_cx = wp->signal_requisition_changed().connect(tau::bind(fun(this, &Absolute_impl::on_child_requisition), wp.get()));
-    hol.show_cx = wp->signal_show().connect(tau::bind(fun(this, &Absolute_impl::on_child_show), wp.get()));
-    hol.hide_cx = wp->signal_hide().connect(tau::bind(fun(this, &Absolute_impl::on_child_hide), wp.get()));
-    holders_.push_back(hol);
-    update_requisition();
-    queue_arrange();
+    if (wp) {
+        chk_parent(wp);
+        make_child(wp);
+        wp->update_origin(INT_MIN, INT_MIN);
+        wp->update_size(0, 0);
+        Holder hol;
+        hol.wp = wp;
+        hol.pos = pos;
+        hol.size = size;
+        hol.hints_cx = wp->signal_hints_changed().connect(tau::bind(fun(this, &Absolute_impl::on_child_requisition), wp.get()));
+        hol.req_cx = wp->signal_requisition_changed().connect(tau::bind(fun(this, &Absolute_impl::on_child_requisition), wp.get()));
+        hol.show_cx = wp->signal_show().connect(tau::bind(fun(this, &Absolute_impl::on_child_show), wp.get()));
+        hol.hide_cx = wp->signal_hide().connect(tau::bind(fun(this, &Absolute_impl::on_child_hide), wp.get()));
+        holders_.push_back(hol);
+        update_requisition();
+        queue_arrange();
+    }
 }
 
 void Absolute_impl::rm_child(Holder & hol) {

@@ -55,8 +55,8 @@ public:
     Painter_impl & operator=(const Painter_impl & other) = delete;
 
     void capture(Widget_impl * wi);
-    void pclip(const Rect & sclip);
-    void poffset(const Point & pt) { wstate().woffset = pt; }
+    void set_obscured_area(const Rect & oa);
+    void poffset(const Point & pt) { wstate().woffset_ = pt; }
     void wpush();
     void wpop();
     void wreset();
@@ -71,8 +71,8 @@ public:
     void text(std::u32string && text, const Color & c);
     void glyph(Glyph_ptr glyph);
 
-    Font_ptr font() { return state().font; }
-    Matrix & matrix() { return state().mat; }
+    Font_ptr font() { return state().font_; }
+    Matrix & matrix() { return state().mat_; }
 
     // Overriden by Pixmap_painter.
     virtual void paint();
@@ -83,25 +83,25 @@ public:
     void stroke();
     void stroke_preserve();
 
-    void set_pen(Pen pen) { state().pen = pen.impl; }
-    Pen pen() const { return Pen(state().pen); }
+    void set_pen(Pen pen) { state().pen_ = pen.impl; }
+    Pen pen() const { return Pen(state().pen_); }
 
-    void  set_brush(Brush brush) { state().brush = brush.impl; }
-    Brush brush() const { return Brush(state().brush); }
+    void  set_brush(Brush brush) { state().brush_ = brush.impl; }
+    Brush brush() const { return Brush(state().brush_); }
 
     void pixmap(Pixmap_cptr pix, const Point pix_origin, const Size & pix_size, bool transparent);
     void pixmap(Pixmap_cptr pix, bool transparent);
 
-    void set_oper(Oper op) { state().op = op; }
-    Oper oper() const { return state().op; }
+    void set_oper(Oper op) { state().op_ = op; }
+    Oper oper() const { return state().op_; }
 
     void move_to(double x, double y) { move_to(Vector(x, y)); }
     void move_to(const Vector & vec);
     void move_rel(double x, double y) { move_rel(Vector(x, y)); }
     void move_rel(const Vector & vec);
 
-    const Vector & position() const { return state().pos; }
-    Vector & position() { return state().pos; }
+    const Vector & position() const { return state().pos_; }
+    Vector & position() { return state().pos_; }
 
     void rectangle(const Vector & v1, const Vector & v2);
     void rectangle(double x1, double y1, double x2, double y2) { rectangle(Vector(x1, y1), Vector(x2, y2)); }
@@ -214,19 +214,19 @@ protected:
     };
 
     struct State {
-        Vector          pos;
-        Matrix          mat;
-        Oper            op = OPER_COPY;
-        ustring         font_spec;
-        Font_ptr        font;
-        Brush_ptr       brush;
-        Pen_ptr         pen;
+        Vector          pos_;
+        Matrix          mat_;
+        Oper            op_ = OPER_COPY;
+        ustring         fontspec_;
+        Font_ptr        font_;
+        Brush_ptr       brush_;
+        Pen_ptr         pen_;
     };
 
     struct Wstate {
-        bool            visible = true;
-        Rect            wclip;
-        Point           woffset;
+        bool            visible_ = true;
+        Rect            obscured_;
+        Point           woffset_;
     };
 
 private:
@@ -295,8 +295,8 @@ protected:
     Wstate & wstate() { return wstack_.back(); }
     const Wstate & wstate() const { return wstack_.back(); }
 
-    const Point & woffset() const { return wstate().woffset; }
-    bool visible() const { return wstate().visible; }
+    const Point & woffset() const { return wstate().woffset_; }
+    bool visible() const { return wstate().visible_; }
 
     Rect is_rect(const Point * pts, std::size_t npts);
     void arc_segment(Contour & ctr, double xc, double yc, double radius, double angle1, double angle2);

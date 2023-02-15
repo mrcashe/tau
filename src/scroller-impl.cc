@@ -66,17 +66,20 @@ Scroller_impl::Scroller_impl():
 }
 
 void Scroller_impl::insert(Widget_ptr wp) {
-    clear();
-    make_child(wp);
-    wp->update_origin(INT_MIN, INT_MIN);
-    wp->update_size(0, 0);
-    cp_ = wp;
-    req_cx_ = cp_->signal_requisition_changed().connect(fun(this, &Scroller_impl::update_requisition));
-    hint_cx_ = cp_->signal_hints_changed().connect(fun(this, &Scroller_impl::update_requisition));
-    show_cx_ = cp_->signal_show().connect(fun(this, &Scroller_impl::on_child_show));
-    hide_cx_ = cp_->signal_hide().connect(fun(this, &Scroller_impl::on_child_hide));
-    update_requisition();
-    queue_arrange();
+    if (wp) {
+        chk_parent(wp);
+        clear();
+        make_child(wp);
+        wp->update_origin(INT_MIN, INT_MIN);
+        wp->update_size(0, 0);
+        cp_ = wp;
+        req_cx_ = cp_->signal_requisition_changed().connect(fun(this, &Scroller_impl::update_requisition));
+        hint_cx_ = cp_->signal_hints_changed().connect(fun(this, &Scroller_impl::update_requisition));
+        show_cx_ = cp_->signal_show().connect(fun(this, &Scroller_impl::on_child_show));
+        hide_cx_ = cp_->signal_hide().connect(fun(this, &Scroller_impl::on_child_hide));
+        update_requisition();
+        queue_arrange();
+    }
 }
 
 void Scroller_impl::clear() {

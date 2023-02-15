@@ -59,7 +59,7 @@ Painter_win::Painter_win(Winface_win * wf):
     dpi_ = wf->wdp()->dpi();
     SetBkMode(hdc_, TRANSPARENT);
     select_font_priv(Font::normal());
-    wstate().wclip.set(wf->self()->size());
+    wstate().obscured_.set(wf->self()->size());
     wf->self()->signal_destroy().connect(fun(this, &Painter_win::on_destroy));
     update_clip_priv();
 }
@@ -101,7 +101,7 @@ void Painter_win::begin_paint(Winface_win * wf, PAINTSTRUCT * pstruct) {
         pstruct_ = pstruct;
         hwnd_ = wf->handle();
         SetBkMode(hdc_, TRANSPARENT);
-        wstate().wclip.set(wf->self()->size());
+        wstate().obscured_.set(wf->self()->size());
     }
 }
 
@@ -118,9 +118,9 @@ void Painter_win::set_font(Font_ptr font) {
     if (hdc_ && font) {
         if (auto fms = std::dynamic_pointer_cast<Font_win>(font)) {
             if (HFONT hfont = fms->handle()) {
-                state().font_spec = font->spec();
+                state().fontspec_ = font->spec();
                 SelectFont(hdc_, hfont);
-                state().font = font;
+                state().font_ = font;
                 return;
             }
         }
@@ -130,15 +130,15 @@ void Painter_win::set_font(Font_ptr font) {
 }
 
 Font_ptr Painter_win::select_font_priv(const ustring & font_spec) {
-    if (font_spec != state().font_spec) {
+    if (font_spec != state().fontspec_) {
         auto wfp = std::make_shared<Font_win>(hdc_, dpi_, font_spec);
         signal_invalidate_.connect(fun(wfp, &Font_win::invalidate));
-        state().font_spec = font_spec;
-        state().font = wfp;
+        state().fontspec_ = font_spec;
+        state().font_ = wfp;
         SelectFont(hdc_, wfp->handle());
     }
 
-    return state().font;
+    return state().font_;
 }
 
 // Overrides pure Painter_impl.
@@ -228,16 +228,16 @@ void Painter_win::set_clip() {
 }
 
 void Painter_win::update_clip_priv() {
-    cr_ = to_winrect(wstate().wclip);
+    cr_ = to_winrect(wstate().obscured_);
     set_clip();
 }
 
 void Painter_win::stroke_polyline(const Point * pts, std::size_t npts) {
     if (!hdc_ || npts < 2) { return; }
-    double lw = state().pen->line_width;
-    HPEN pen = CreatePen(PS_SOLID, lw > 0.0 ? lw : 1, state().pen->color.bgr24());
+    double lw = state().pen_->line_width;
+    HPEN pen = CreatePen(PS_SOLID, lw > 0.0 ? lw : 1, state().pen_->color.bgr24());
     SelectObject(hdc_, pen);
-    SetROP2(hdc_, winrop(state().op));
+    SetROP2(hdc_, winrop(state().op_));
     POINT xp = to_winpoint(*pts++);
     --npts;
     MoveToEx(hdc_, xp.x, xp.y, NULL);
@@ -248,11 +248,11 @@ void Painter_win::stroke_polyline(const Point * pts, std::size_t npts) {
 void Painter_win::stroke_prim_arc(const Prim_arc & obj) {
     if (!hdc_) { return; }
 
-    if (state().mat.is_identity()) {
-        double lw = state().pen->line_width;
-        HPEN hpen = CreatePen(PS_SOLID, lw > 0.0 ? lw : 1, state().pen->color.bgr24());
+    if (state().mat_.is_identity()) {
+        double lw = state().pen_->line_width;
+        HPEN hpen = CreatePen(PS_SOLID, lw > 0.0 ? lw : 1, state().pen_->color.bgr24());
         SelectObject(hdc_, hpen);
-        SetROP2(hdc_, winrop(state().op));
+        SetROP2(hdc_, winrop(state().op_));
         Point c(obj.center.x(), obj.center.y());
         c -= woffset();
         double r = obj.radius, a1 = obj.angle1, a2 = obj.angle2;
@@ -317,11 +317,11 @@ void Painter_win::fill_prim_rect(const Prim_rect * po, std::size_t no) {
 
         if (pts[0].x() == pts[3].x() && pts[0].y() == pts[1].y()) {
             Rect r(pts[0], Size(pts[1].x()-pts[0].x(), pts[2].y()-pts[1].y()));
-            fill_rectangles(&r, 1, state().brush->color);
+            fill_rectangles(&r, 1, state().brush_->color);
         }
 
         else {
-            fill_polygon(pts, 5, state().brush->color);
+            fill_polygon(pts, 5, state().brush_->color);
         }
 
         ++po;
@@ -330,11 +330,10 @@ void Painter_win::fill_prim_rect(const Prim_rect * po, std::size_t no) {
 
 void Painter_win::stroke_rectangle(const Rect & r) {
     if (!hdc_) { return; }
-
-    double lw = state().pen->line_width;
-    HPEN hpen = CreatePen(PS_SOLID, lw > 0.0 ? lw : 1, state().pen->color.bgr24());
+    double lw = state().pen_->line_width;
+    HPEN hpen = CreatePen(PS_SOLID, lw > 0.0 ? lw : 1, state().pen_->color.bgr24());
     SelectObject(hdc_, hpen);
-    SetROP2(hdc_, winrop(state().op));
+    SetROP2(hdc_, winrop(state().op_));
     RECT wr = to_winrect(r);
     Rectangle(hdc_, wr.left, wr.top, wr.right, wr.bottom);
     DeleteObject(hpen);
@@ -342,14 +341,13 @@ void Painter_win::stroke_rectangle(const Rect & r) {
 
 void Painter_win::fill_rectangles(const Rect * rs, std::size_t nrs, const Color & c) {
     if (!hdc_) { return; }
-
     HBRUSH hbr = CreateSolidBrush(c.bgr24());
-    SetROP2(hdc_, winrop(state().op));
+    SetROP2(hdc_, winrop(state().op_));
 
     while (nrs--) {
         RECT rect = to_winrect(Rect(rs->origin(), rs->size()));
 
-        if (OPER_COPY == state().op) {
+        if (OPER_COPY == state().op_) {
             FillRect(hdc_, &rect, hbr);
         }
 
@@ -373,7 +371,7 @@ void Painter_win::fill_polygon(const Point * pts, std::size_t npts, const Color 
     HPEN hpen = (HPEN)GetStockObject(NULL_PEN);
     SelectObject(hdc_, hbrush);
     SelectObject(hdc_, hpen);
-    SetROP2(hdc_, winrop(state().op));
+    SetROP2(hdc_, winrop(state().op_));
     POINT xps[npts];
     for (std::size_t n = 0; n < npts; ++n) { xps[n] = to_winpoint(pts[n]); }
     Polygon(hdc_, xps, npts);
@@ -394,8 +392,8 @@ void Painter_win::fill_prim_contour(const Prim_contour & o) {
             Point pts[npts];
             pts[0] = matrix()*ctr.start(); pts[0] -= woffset();
             for (const Curve & cv: ctr) { pts[pos] = matrix()*cv.end(); pts[pos++] -= woffset(); }
-            if (const Rect r = is_rect(pts, npts)) { fill_rectangles(&r, 1, state().brush->color); }
-            else { fill_polygon(pts, npts, state().brush->color); }
+            if (const Rect r = is_rect(pts, npts)) { fill_rectangles(&r, 1, state().brush_->color); }
+            else { fill_polygon(pts, npts, state().brush_->color); }
             return;
         }
     }
@@ -420,7 +418,7 @@ void Painter_win::draw_pixmap(Pixmap_cptr pix, const Point & pix_origin, const S
                 }
 
                 else {
-                    BitBlt(hdc_, pt.x(), pt.y(), pix_size.width(), pix_size.height(), cdc, pix_origin.x(), pix_origin.y(), rop(state().op));
+                    BitBlt(hdc_, pt.x(), pt.y(), pix_size.width(), pix_size.height(), cdc, pix_origin.x(), pix_origin.y(), rop(state().op_));
                 }
             }
 
@@ -433,8 +431,8 @@ void Painter_win::draw_pixmap(Pixmap_cptr pix, const Point & pix_origin, const S
 
 void Painter_win::on_destroy() {
     signal_invalidate_();
-    state().font.reset();
-    state().font_spec.clear();
+    state().font_.reset();
+    state().fontspec_.clear();
     hdc_ = NULL;
     hwnd_ = NULL;
 }

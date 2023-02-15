@@ -90,8 +90,8 @@ void Widget::disappear() {
     impl->disappear();
 }
 
-Rect Widget::exposed_area() const {
-    return impl->exposed_area();
+Rect Widget::obscured_area() const {
+    return impl->obscured_area();
 }
 
 Point Widget::origin() const {

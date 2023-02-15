@@ -264,6 +264,7 @@ void Box_impl::rm_child(Holder & hol) {
 
 void Box_impl::append(Widget_ptr wp, bool shrink) {
     if (wp) {
+        chk_parent(wp);
         holders_.emplace_back();
         new_child(holders_.back(), wp, shrink);
     }
@@ -271,6 +272,7 @@ void Box_impl::append(Widget_ptr wp, bool shrink) {
 
 void Box_impl::prepend(Widget_ptr wp, bool shrink) {
     if (wp) {
+        chk_parent(wp);
         holders_.emplace_front();
         new_child(holders_.front(), wp, shrink);
     }
@@ -278,6 +280,7 @@ void Box_impl::prepend(Widget_ptr wp, bool shrink) {
 
 void Box_impl::insert_before(Widget_ptr wp, const Widget_impl * other, bool shrink) {
     if (wp) {
+        chk_parent(wp);
         auto i = holders_.begin();
 
         while (i != holders_.end()) {
@@ -291,6 +294,7 @@ void Box_impl::insert_before(Widget_ptr wp, const Widget_impl * other, bool shri
 
 void Box_impl::insert_after(Widget_ptr wp, const Widget_impl * other, bool shrink) {
     if (wp) {
+        chk_parent(wp);
         auto i = holders_.begin();
 
         while (i != holders_.end()) {

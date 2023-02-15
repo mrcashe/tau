@@ -703,8 +703,9 @@ public:
     /// rectangle size is equals to widget size.
     Rect visible_area() const;
 
-    /// Get part of the widget currently viewable by user.
-    Rect exposed_area() const;
+    /// Get part of the widget currently obscured by user.
+    /// @since 0.4.0
+    Rect obscured_area() const;
 
     /// Test if any part of the widget is currently obscured by user.
     bool obscured() const;

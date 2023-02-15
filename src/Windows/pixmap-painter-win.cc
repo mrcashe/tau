@@ -36,7 +36,7 @@ Pixmap_painter_win::Pixmap_painter_win(Pixmap_impl * pixmap):
 {
     if (pixmap) {
         pixmap->signal_destroy().connect(fun(this, &Pixmap_painter_win::on_pixmap_destroy));
-        wstate().wclip.set(pixmap->size());
+        wstate().obscured_.set(pixmap->size());
     }
 }
 

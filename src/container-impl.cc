@@ -31,7 +31,6 @@
 #include <loop-impl.hh>
 #include <painter-impl.hh>
 #include <window-impl.hh>
-
 #include <iostream>
 
 namespace tau {
@@ -54,9 +53,13 @@ Container_impl::~Container_impl() {
     unparent_all();
 }
 
-void Container_impl::make_child(Widget_ptr wp) {
+void Container_impl::chk_parent(Widget_ptr wp) {
     if (!wp) { throw internal_error("Container_impl::make_child(): got a pure widget pointer"); }
     if (wp->parent()) { throw user_error(str_format("Container_impl::make_child(): widget ", wp.get(), " already has parent")); }
+}
+
+void Container_impl::make_child(Widget_ptr wp) {
+    chk_parent(wp);
     children_.push_back(wp);
     if (auto * ci = dynamic_cast<Container_impl *>(wp.get())) { containers_.push_back(ci); }
     wp->set_parent(this);
@@ -121,7 +124,7 @@ void Container_impl::paint_children(Painter pr, const Rect & inval, bool backpai
         if (intersection) {
             pp->wpush();
             pp->poffset(wp->poffset());
-            pp->pclip(intersection.translated(wpos));
+            pp->set_obscured_area(intersection.translated(wpos));
             pp->push();
             pp->clear();
             Rect cinval(intersection.translated(sc-worg));

@@ -81,6 +81,7 @@ void Table_impl::init() {
 
 void Table_impl::put(Widget_ptr wp, int x, int y, unsigned xspan, unsigned yspan, bool xsh, bool ysh) {
     if (wp) {
+        chk_parent(wp);
         make_child(wp);
         update_child_bounds(wp.get(), INT_MIN, INT_MIN, Size());
         auto p = holders_.emplace(wp.get(), Holder());
@@ -116,7 +117,7 @@ void Table_impl::clear() {
     unselect();
     unparent_all();
     holders_.clear();
-    nvcol_ = nvrow_ = nucol_ = nurow_ = nshcol_ = nshrow_ = xspc_ = yspc_ = 0;
+    nvcol_ = nvrow_ = nucol_ = nurow_ = rucol_ = rurow_ = nshcol_ = nshrow_ = xspc_ = yspc_ = 0;
 
     if (!cols_.empty()) {
         int xx = cols_.begin()->first, xm = cols_.rbegin()->first;
@@ -194,20 +195,19 @@ void Table_impl::on_child_hide(Widget_impl * wi) {
 }
 
 void Table_impl::alloc_child(Holder & hol) {
-    hol.wmax_ = hol.hmax_ = hol.wmin_ = hol.hmin_ = 0;
-    if (hol.wp_->hidden()) { return; }
+    unsigned wmin = 0, wmax = 0, hmin = 0, hmax = 0;
 
-    Size req = hol.wp_->required_size(), min = hol.wp_->min_size_hint();
-    req.update(hol.wp_->size_hint(), true);
-    req.update_max(min);
-    req.update_min(hol.wp_->max_size_hint(), true);
-    req.increase(hol.wp_->margin_hint());
-
-    hol.wmin_ = min.width();
-    hol.hmin_ = min.height();
-
-    hol.wmax_ = req.width();
-    hol.hmax_ = req.height();
+    if (!hol.wp_->hidden()) {
+        Size req = hol.wp_->required_size(), min = hol.wp_->min_size_hint();
+        req.update(hol.wp_->size_hint(), true);
+        req.update_max(min);
+        req.update_min(hol.wp_->max_size_hint(), true);
+        req.increase(hol.wp_->margin_hint());
+        wmin = min.width();
+        wmax = req.width();
+        hmin = min.height();
+        hmax = req.height();
+    }
 
     // --------------------------------------------------------------------------------
     // X Axis.
@@ -218,8 +218,8 @@ void Table_impl::alloc_child(Holder & hol) {
     unsigned spc = 0;
 
     if (1 == nc) {
-        cb->second.rmax_ = std::max(cb->second.rmax_, hol.wmax_);
-        cb->second.rmin_ = std::max(cb->second.rmin_, hol.wmin_);
+        cb->second.rmax_ = std::max(cb->second.rmax_, wmax);
+        cb->second.rmin_ = std::max(cb->second.rmin_, wmin);
     }
 
     else {
@@ -229,14 +229,14 @@ void Table_impl::alloc_child(Holder & hol) {
             if (i->second.shrank_) { nc = std::max(1U, nc-1); }
         }
 
-        unsigned wmax = hol.wmax_ > spc ? hol.wmax_-spc : 0;  // maximal width.
-        unsigned wmin = hol.wmin_ > spc ? hol.wmin_-spc : 0;  // minimal width.
+        unsigned wwmax = wmax > spc ? wmax-spc : 0;  // maximal width.
+        unsigned wwmin = wmin > spc ? wmin-spc : 0;  // minimal width.
 
         // Calculate width per cell and remainder per cell.
-        unsigned wpc_max = wmax/nc;
-        unsigned rem_max = wmax%nc;
-        unsigned wpc_min = wmin/nc;
-        unsigned rem_min = wmin%nc;
+        unsigned wpc_max = wwmax/nc;
+        unsigned rem_max = wwmax%nc;
+        unsigned wpc_min = wwmin/nc;
+        unsigned rem_min = wwmin%nc;
 
         for (auto i(cb); i != ce && i->first < hol.xmax_; ++i) {
             if (!i->second.shrank_) {
@@ -258,8 +258,8 @@ void Table_impl::alloc_child(Holder & hol) {
     spc = 0;
 
     if (1 == nc) {
-        rb->second.rmax_ = std::max(rb->second.rmax_, hol.hmax_);
-        rb->second.rmin_ = std::max(rb->second.rmin_, hol.hmin_);
+        rb->second.rmax_ = std::max(rb->second.rmax_, hmax);
+        rb->second.rmin_ = std::max(rb->second.rmin_, hmin);
     }
 
     else {
@@ -269,14 +269,14 @@ void Table_impl::alloc_child(Holder & hol) {
             if (i->second.shrank_) { nc = std::max(1U, nc-1); }
         }
 
-        unsigned hmax = hol.hmax_ > spc ? hol.hmax_-spc : 0;
-        unsigned hmin = hol.hmin_ > spc ? hol.hmin_-spc : 0;
+        unsigned hhmax = hmax > spc ? hol.hmax_-spc : 0;
+        unsigned hhmin = hmin > spc ? hol.hmin_-spc : 0;
 
         // Calculate height per cell and remainder per cell.
-        unsigned hpc_max = hmax/nc;
-        unsigned rem_max = hmax%nc;
-        unsigned hpc_min = hmin/nc;
-        unsigned rem_min = hmin%nc;
+        unsigned hpc_max = hhmax/nc;
+        unsigned rem_max = hhmax%nc;
+        unsigned hpc_min = hhmin/nc;
+        unsigned rem_min = hhmin%nc;
 
         for (auto i(rb); i != re && i->first < hol.ymax_; ++i) {
             if (!i->second.shrank_) {
@@ -288,6 +288,11 @@ void Table_impl::alloc_child(Holder & hol) {
             }
         }
     }
+
+    hol.wmin_ = wmin;
+    hol.wmax_ = wmax;
+    hol.hmin_ = hmin;
+    hol.hmax_ = hmax;
 }
 
 void Table_impl::recalc() {
@@ -297,6 +302,26 @@ void Table_impl::recalc() {
     for (auto & p: holders_) {
         if (!p.second.wp_->hidden()) {
             alloc_child(p.second);
+        }
+    }
+
+    rshcol_ = rshrow_ = 0;
+
+    for (auto & p: cols_) {
+        if (p.second.visible_ && p.second.shrank_) {
+            unsigned px = std::max(p.second.rmin_, p.second.rmax_);
+            px = std::max(px, p.second.umin_);
+            if (p.second.umax_) { px = std::min(px, p.second.umax_); }
+            rshcol_ += px;
+        }
+    }
+
+    for (auto & p: rows_) {
+        if (p.second.visible_ && p.second.shrank_) {
+            unsigned px = std::max(p.second.rmin_, p.second.rmax_);
+            px = std::max(px, p.second.umin_);
+            if (p.second.umax_) { px = std::min(px, p.second.umax_); }
+            rshrow_ += px;
         }
     }
 
@@ -320,46 +345,30 @@ void Table_impl::rearrange2() {
 }
 
 void Table_impl::update_requisition() {
-    rucol_ = rshcol_ = rurow_ = rshrow_ = 0;
-    unsigned rx = 0, ry = 0, px;
+    rshcol_ = rshrow_ = 0;
 
     for (auto & p: cols_) {
         if (p.second.visible_) {
-            if (p.second.usize_) {
-                px = p.second.usize_;
-                px = std::max(px, p.second.umin_);
-                if (p.second.umax_) { px = std::min(px, p.second.umax_); }
-                rucol_ += px;
-            }
-
-            else {
+            if (0 == p.second.usize_) {
+                unsigned px = 0;
                 px = std::max(p.second.rmin_, p.second.rmax_);
                 px = std::max(px, p.second.umin_);
                 if (p.second.umax_) { px = std::min(px, p.second.umax_); }
                 if (p.second.shrank_) { rshcol_ += px; }
             }
-
-            rx += px;
         }
     }
 
+
     for (auto & p: rows_) {
         if (p.second.visible_) {
-            if (p.second.usize_) {
-                px = p.second.usize_;
-                px = std::max(px, p.second.umin_);
-                if (p.second.umax_) { px = std::min(px, p.second.umax_); }
-                rurow_ += px;
-            }
-
-            else {
+            if (0 == p.second.usize_) {
+                unsigned px = 0;
                 px = std::max(p.second.rmin_, p.second.rmax_);
                 px = std::max(px, p.second.umin_);
                 if (p.second.umax_) { px = std::min(px, p.second.umax_); }
                 if (p.second.shrank_) { rshrow_ += px; }
             }
-
-            ry += px;
         }
     }
 
@@ -379,7 +388,7 @@ void Table_impl::update_requisition() {
     yextra_ = nextra ? avail/nextra : 0;
     yrem_ = nextra ? avail%nextra : 0;
 
-    require_size(xspc_+rx, yspc_+ry);
+    require_size(xspc_+rucol_+rshcol_, yspc_+rurow_+rshrow_);
 }
 
 void Table_impl::alloc_cols() {
@@ -1083,6 +1092,19 @@ void Table_impl::change_visibility(Col & col, bool show, bool shrank) {
             if (++nvcol_ > 1) { xspc_ += xspacing_; }
             xspc_ += col.left_+col.right_;
             if (col.usize_) { ++nucol_; }
+
+            if (col.usize_) {
+                unsigned px = std::max(col.usize_, col.umin_);
+                if (col.umax_) { px = std::min(px, col.umax_); }
+                rucol_ += px;
+            }
+
+            else if (col.shrank_) {
+                unsigned px = std::max(col.rmin_, col.rmax_);
+                px = std::max(px, col.umin_);
+                if (col.umax_) { px = std::min(px, col.umax_); }
+                rshcol_ += px;
+            }
         }
     }
 
@@ -1096,6 +1118,19 @@ void Table_impl::change_visibility(Col & col, bool show, bool shrank) {
             unsigned d = col.left_+col.right_;
             xspc_ = xspc_ > d ? xspc_-d : 0;
             if (col.usize_ && nucol_) { ++nucol_; }
+
+            if (0 != col.usize_) {
+                unsigned px = std::max(col.usize_, col.umin_);
+                if (col.umax_) { px = std::min(px, col.umax_); }
+                rucol_ = rucol_ > px ? rucol_-px: 0;
+            }
+
+            else if (col.shrank_) {
+                unsigned px = std::max(col.rmin_, col.rmax_);
+                px = std::max(px, col.umin_);
+                if (col.umax_) { px = std::min(px, col.umax_); }
+                rshcol_ = rshcol_ > px ? rshcol_-px : 0;
+            }
         }
     }
 }
@@ -1110,6 +1145,19 @@ void Table_impl::change_visibility(Row & row, bool show, bool shrank) {
             if (++nvrow_ > 1) { yspc_ += yspacing_; }
             yspc_ += row.top_+row.bottom_;
             if (row.usize_) { ++nurow_; }
+
+            if (0 != row.usize_) {
+                unsigned ud = std::max(row.usize_, row.umin_);
+                if (row.umax_) { ud = std::min(ud, row.umax_); }
+                rurow_ += ud;
+            }
+
+            else if (row.shrank_) {
+                unsigned px = std::max(row.rmin_, row.rmax_);
+                px = std::max(px, row.umin_);
+                if (row.umax_) { px = std::min(px, row.umax_); }
+                rshrow_ += px;
+            }
         }
     }
 
@@ -1123,6 +1171,19 @@ void Table_impl::change_visibility(Row & row, bool show, bool shrank) {
             unsigned d = row.top_+row.bottom_;
             yspc_ = yspc_ > d ? yspc_-d : 0;
             if (row.usize_ && nurow_) { ++nurow_; }
+
+            if (0 != row.usize_) {
+                unsigned px = std::max(row.usize_, row.umin_);
+                if (row.umax_) { px = std::min(px, row.umax_); }
+                rurow_ = rurow_ > px ? rurow_-px: 0;
+            }
+
+            else if (row.shrank_) {
+                unsigned px = std::max(row.rmin_, row.rmax_);
+                px = std::max(px, row.umin_);
+                if (row.umax_) { px = std::min(px, row.umax_); }
+                rshrow_ = rshrow_ > px ? rshrow_-px : 0;
+            }
         }
     }
 }
@@ -1318,6 +1379,12 @@ void Table_impl::set_column_width(int xx, unsigned usize) {
             std::swap(i->second.usize_, usize);
 
             if (i->second.visible_) {
+                unsigned s1 = std::max(usize, i->second.umin_), s2 = std::max(i->second.usize_, i->second.umin_);
+                if (i->second.umax_) { s1 = std::min(s1, i->second.umax_); s2 = std::min(s2, i->second.umax_); }
+                int d = s2-s1;
+                unsigned ud = abs(d);
+                if (d > 0) { rucol_ += ud; }
+                else if (d < 0) { rucol_ = rucol_ > ud ? rucol_-ud : 0; }
                 if (0 != usize) { ++nucol_; }
                 else if (0 == i->second.usize_ && nucol_) { --nucol_; }
                 if (i->second.w_ != i->second.usize_) { rearrange2(); }
@@ -1344,6 +1411,12 @@ void Table_impl::set_row_height(int yy, unsigned usize) {
             std::swap(i->second.usize_, usize);
 
             if (i->second.visible_) {
+                unsigned s1 = std::max(usize, i->second.umin_), s2 = std::max(i->second.usize_, i->second.umin_);
+                if (i->second.umax_) { s1 = std::min(s1, i->second.umax_); s2 = std::min(s2, i->second.umax_); }
+                int d = s2-s1;
+                unsigned ud = abs(d);
+                if (d > 0) { rurow_ += ud; }
+                else if (d < 0) { rurow_ = rurow_ > ud ? rurow_-ud : 0; }
                 if (0 != usize) { ++nurow_; }
                 else if (0 == i->second.usize_ && nurow_) { --nurow_; }
                 if (i->second.h_ != i->second.usize_) { rearrange2(); }
@@ -1367,6 +1440,11 @@ void Table_impl::set_min_column_width(int xx, unsigned umin) {
 
     if (i != cols_.end()) {
         if (i->second.umin_ != umin) {
+            unsigned s1 = std::max(i->second.umin_, i->second.usize_), s2 = std::max(umin, i->second.usize_), ud;
+            if (i->second.umax_) { s1 = std::min(s1, i->second.umax_); s2 = std::min(s2, i->second.umax_); }
+            int d = s2-s1; ud = abs(d);
+            if (d > 0) { rucol_ += ud; }
+            else if (d < 0) { rucol_ = rucol_ > ud ? rucol_-ud : 0; }
             i->second.umin_ = umin;
             if (0 == umin || i->second.w_ < umin) { rearrange2(); }
         }
@@ -1388,6 +1466,11 @@ void Table_impl::set_min_row_height(int yy, unsigned umin) {
 
     if (i != rows_.end()) {
         if (i->second.umin_ != umin) {
+            unsigned s1 = std::max(i->second.umin_, i->second.usize_), s2 = std::max(umin, i->second.usize_), ud;
+            if (i->second.umax_) { s1 = std::min(s1, i->second.umax_); s2 = std::min(s2, i->second.umax_); }
+            int d = s2-s1; ud = abs(d);
+            if (d > 0) { rurow_ += ud; }
+            else if (d < 0) { rurow_ = rurow_ > ud ? rurow_-ud : 0; }
             i->second.umin_ = umin;
             if (0 == umin || i->second.h_ < umin) { rearrange2(); }
         }
@@ -1409,6 +1492,11 @@ void Table_impl::set_max_column_width(int xx, unsigned umax) {
 
     if (i != cols_.end()) {
         if (i->second.umax_ != umax) {
+            unsigned s1 = std::max(i->second.umin_, i->second.usize_), s2 = s1, ud;
+            if (i->second.umax_) { s1 = std::min(s1, i->second.umax_); s2 = std::min(s2, umax); }
+            int d = s2-s1; ud = abs(d);
+            if (d > 0) { rucol_ += ud; }
+            else if (d < 0) { rucol_ = rucol_ > ud ? rucol_-ud : 0; }
             i->second.umax_ = umax;
             if (0 == umax || i->second.w_ > umax) { rearrange2(); }
         }
@@ -1430,6 +1518,11 @@ void Table_impl::set_max_row_height(int yy, unsigned umax) {
 
     if (i != rows_.end()) {
         if (i->second.umax_ != umax) {
+            unsigned s1 = std::max(i->second.umin_, i->second.usize_), s2 = s1, ud;
+            if (i->second.umax_) { s1 = std::min(s1, i->second.umax_); s2 = std::min(s2, umax); }
+            int d = s2-s1; ud = abs(d);
+            if (d > 0) { rurow_ += ud; }
+            else if (d < 0) { rurow_ = rurow_ > ud ? rurow_-ud : 0; }
             i->second.umax_ = umax;
             if (0 == umax || i->second.h_ > umax) { rearrange2(); }
         }

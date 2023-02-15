@@ -194,7 +194,7 @@ void Winface_xcb::update() {
 
         for (Rect inval: invals_) {
             if (!inval) { break; }
-            pr_->pclip(inval);
+            pr_->set_obscured_area(inval);
             self_->handle_backpaint(pr, inval);
             self_->handle_paint(pr, inval);
         }

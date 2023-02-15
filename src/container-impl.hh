@@ -222,11 +222,9 @@ protected:
     signal<void(Widget_impl *)> signal_child_show_;
     signal<void(Widget_impl *)> signal_child_hide_;
 
-    // Overriden by Window_impl.
-    virtual void queue_arrange_up();
-
 protected:
 
+    void chk_parent(Widget_ptr wp);
     void make_child(Widget_ptr  wp);
     void unparent_child(Widget_impl * wi);
     void unparent_all();
@@ -236,6 +234,9 @@ protected:
     bool update_child_bounds(Widget_impl * wp, const Point & origin, const Size & sz);
     bool update_child_bounds(Widget_impl * wp, int x, int y, const Size & sz);
     bool update_child_bounds(Widget_impl * wp, int x, int y, unsigned w, unsigned h);
+
+    // Overriden by Window_impl.
+    virtual void queue_arrange_up();
 
     // Overrides Widget_impl.
     void resume_focus() override;

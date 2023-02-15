@@ -41,21 +41,24 @@ Card_impl::Card_impl():
 }
 
 void Card_impl::insert(Widget_ptr wp) {
-    bool first = holders_.empty();
-    wp->update_origin(INT_MIN, INT_MIN);
-    wp->update_size(0, 0);
-    wp->hide();
-    holders_.emplace_back();
-    Holder & hol = holders_.back();
-    hol.wp = wp.get();
-    hol.hints_cx = wp->signal_hints_changed().connect(fun(this, &Card_impl::update_requisition));
-    hol.req_cx = wp->signal_requisition_changed().connect(fun(this, &Card_impl::update_requisition));
-    hol.show_cx = wp->signal_show().connect(tau::bind(fun(this, &Card_impl::on_child_show), wp.get()));
-    hol.hide_cx = wp->signal_hide().connect(tau::bind(fun(this, &Card_impl::on_child_hide), wp.get()));
-    make_child(wp);
-    if (first) { wp->show(); wp->signal_select()(); }
-    update_requisition();
-    queue_arrange();
+    if (wp) {
+        chk_parent(wp);
+        bool first = holders_.empty();
+        wp->update_origin(INT_MIN, INT_MIN);
+        wp->update_size(0, 0);
+        wp->hide();
+        holders_.emplace_back();
+        Holder & hol = holders_.back();
+        hol.wp = wp.get();
+        hol.hints_cx = wp->signal_hints_changed().connect(fun(this, &Card_impl::update_requisition));
+        hol.req_cx = wp->signal_requisition_changed().connect(fun(this, &Card_impl::update_requisition));
+        hol.show_cx = wp->signal_show().connect(tau::bind(fun(this, &Card_impl::on_child_show), wp.get()));
+        hol.hide_cx = wp->signal_hide().connect(tau::bind(fun(this, &Card_impl::on_child_hide), wp.get()));
+        make_child(wp);
+        if (first) { wp->show(); wp->signal_select()(); }
+        update_requisition();
+        queue_arrange();
+    }
 }
 
 bool Card_impl::empty() const {

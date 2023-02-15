@@ -30,7 +30,6 @@
 #include <painter-impl.hh>
 #include <pixmap-impl.hh>
 #include <climits>
-
 #include <iostream>
 
 namespace {
@@ -166,15 +165,15 @@ void Painter_impl::wreset() {
 
 // public
 void Painter_impl::capture(Widget_impl * wi) {
-    wstate().visible = wi->obscured();
+    wstate().visible_ = wi->obscured();
     poffset(wi->poffset());
-    pclip(wi->pclip());
+    set_obscured_area(wstate().visible_ ? wi->obscured_area().translated(wi->worigin()) : Rect());
 }
 
 // public
-void Painter_impl::pclip(const Rect & r) {
-    if (wstate().wclip != r) {
-        wstate().wclip = r;
+void Painter_impl::set_obscured_area(const Rect & r) {
+    if (wstate().obscured_ != r) {
+        wstate().obscured_ = r;
         update_clip();
     }
 }
@@ -201,9 +200,9 @@ void Painter_impl::wpush() {
 // public
 void Painter_impl::wpop() {
     if (wstack_.size() > 1) {
-        Rect wc = wstate().wclip;
+        Rect wc = wstate().obscured_;
         wstack_.pop_back();
-        if (wc != wstate().wclip) { update_clip(); }
+        if (wc != wstate().obscured_) { update_clip(); }
     }
 }
 
@@ -321,7 +320,7 @@ void Painter_impl::contour(Contour && ctr) {
 // Overriden by Pixmap_painter.
 void Painter_impl::paint() {
     if (visible()) {
-        fill_rectangles(&wstate().wclip, 1, state().brush->color);
+        fill_rectangles(&wstate().obscured_, 1, state().brush_->color);
     }
 }
 
@@ -538,7 +537,7 @@ void Painter_impl::fill_prim_arc(const Prim_arc & o) {
     if (o.pie) { ctr.line_to(o.center); ctr.line_to(ctr.start()); }
     ctr *= matrix();
     ctr.translate(-woffset());
-    raster_contours(&ctr, 1, state().brush->color);
+    raster_contours(&ctr, 1, state().brush_->color);
 }
 
 // protected
@@ -554,7 +553,7 @@ void Painter_impl::fill_prim_contour(const Prim_contour & o) {
         ctrs.back().translate(-woffset());
     }
 
-    raster_contours(ctrs.data(), ctrs.size(), state().brush->color);
+    raster_contours(ctrs.data(), ctrs.size(), state().brush_->color);
 }
 
 // protected
@@ -602,7 +601,7 @@ void Painter_impl::fill_prim_rect(const Prim_rect * po, std::size_t no) {
 
         if (pts[0].x() == pts[3].x() && pts[0].y() == pts[1].y()) {
             Rect r(pts[0], Size(pts[1].x()-pts[0].x(), pts[2].y()-pts[1].y()));
-            fill_rectangles(&r, 1, state().brush->color);
+            fill_rectangles(&r, 1, state().brush_->color);
         }
 
         else {
@@ -1352,7 +1351,7 @@ void Painter_impl::raster_pass(Raster & ras, const Contour * ctrs, std::size_t n
 // private
 void Painter_impl::raster_fill_rectangle(Raster & ras, int x1, int y1, int x2, int y2, const Color & c) {
     Rect r(x1, y1, x2, y2);
-    r &= wstate().wclip;
+    r &= wstate().obscured_;
     if (r) { fill_rectangles(&r, 1, c); }
 }
 

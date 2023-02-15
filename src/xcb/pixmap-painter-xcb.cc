@@ -40,29 +40,29 @@ Pixmap_painter_xcb::Pixmap_painter_xcb(Pixmap_impl * pixmap):
 {
     if (pixmap) {
         pixmap->signal_destroy().connect(fun(this, &Pixmap_painter_xcb::on_pixmap_destroy));
-        wstate().wclip.set(pixmap->size());
+        wstate().obscured_.set(pixmap->size());
     }
 }
 
 // Overrides pure Painter_impl.
 void Pixmap_painter_xcb::set_font(Font_ptr font) {
     if (font) {
-        state().font = font;
-        state().font_spec = font->spec();
+        state().font_ = font;
+        state().fontspec_ = font->spec();
     }
 }
 
 // Overrides pure Painter_impl.
 Font_ptr Pixmap_painter_xcb::select_font(const ustring & font_spec) {
-    if (state().font_spec != font_spec) {
+    if (state().fontspec_ != font_spec) {
+        state().fontspec_ = font_spec;
         double font_size = font_size_from_spec(font_spec);
-        state().font_spec = font_spec;
         auto theme = Theme_posix::root_posix();
         Font_face_ptr ffp = theme->create_font_face(font_spec);
 
         if (!ffp) {
-            state().font_spec = Font::normal();
-            ffp = theme->create_font_face(state().font_spec);
+            state().fontspec_ = Font::normal();
+            ffp = theme->create_font_face(state().fontspec_);
         }
 
         if (!ffp) {
@@ -71,10 +71,10 @@ Font_ptr Pixmap_painter_xcb::select_font(const ustring & font_spec) {
 
         Vector dpi(72, 72);
         if (pixmap_) { dpi = pixmap_->ppi(); }
-        state().font = std::make_shared<Font_posix>(ffp, font_spec, font_size >= 1.0 ? font_size : 10.0, std::max(dpi.x(), dpi.y()));
+        state().font_ = std::make_shared<Font_posix>(ffp, font_spec, font_size >= 1.0 ? font_size : 10.0, std::max(dpi.x(), dpi.y()));
     }
 
-    return state().font;
+    return state().font_;
 }
 
 // Overrides pure Painter_impl.
@@ -119,7 +119,7 @@ Vector Pixmap_painter_xcb::text_size(const std::u32string & s) {
 void Pixmap_painter_xcb::paint() {
     if (pixmap_) {
         Rect r(0, 0, pixmap_->size());
-        fill_rectangles(&r, 1, state().brush->color);
+        fill_rectangles(&r, 1, state().brush_->color);
     }
 }
 

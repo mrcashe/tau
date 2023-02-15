@@ -99,17 +99,20 @@ void Frame_impl::init_border_style(Border_style bs, unsigned width, int radius) 
 }
 
 void Frame_impl::insert(Widget_ptr wp) {
-    clear();
-    make_child(wp);
-    update_child_bounds(wp.get(), INT_MIN, INT_MIN, Size());
-    child_req_cx_ = wp->signal_requisition_changed().connect(fun(this, &Frame_impl::update_requisition));
-    child_hints_cx_ = wp->signal_hints_changed().connect(fun(this, &Frame_impl::update_requisition));
-    child_show_cx_ = wp->signal_show().connect(fun(this, &Frame_impl::on_child_show));
-    child_hide_cx_ = wp->signal_hide().connect(fun(this, &Frame_impl::on_child_hide));
-    child_focus_cx_ = signal_take_focus().connect(fun(wp, &Widget_impl::take_focus));
-    cp_ = wp.get();
-    update_requisition();
-    queue_arrange();
+    if (wp) {
+        chk_parent(wp);
+        clear();
+        make_child(wp);
+        update_child_bounds(wp.get(), INT_MIN, INT_MIN, Size());
+        child_req_cx_ = wp->signal_requisition_changed().connect(fun(this, &Frame_impl::update_requisition));
+        child_hints_cx_ = wp->signal_hints_changed().connect(fun(this, &Frame_impl::update_requisition));
+        child_show_cx_ = wp->signal_show().connect(fun(this, &Frame_impl::on_child_show));
+        child_hide_cx_ = wp->signal_hide().connect(fun(this, &Frame_impl::on_child_hide));
+        child_focus_cx_ = signal_take_focus().connect(fun(wp, &Widget_impl::take_focus));
+        cp_ = wp.get();
+        update_requisition();
+        queue_arrange();
+    }
 }
 
 void Frame_impl::clear() {
@@ -127,16 +130,19 @@ void Frame_impl::clear() {
 }
 
 void Frame_impl::set_label(Widget_ptr wp) {
-    unset_label();
-    make_child(wp);
-    update_child_bounds(wp.get(), INT_MIN, INT_MIN, Size());
-    label_ = wp.get();
-    label_req_cx_ = wp->signal_requisition_changed().connect(fun(this, &Frame_impl::update_requisition));
-    label_hints_cx_ = wp->signal_hints_changed().connect(fun(this, &Frame_impl::update_requisition));
-    label_show_cx_ = wp->signal_show().connect(fun(this, &Frame_impl::on_label_show));
-    label_hide_cx_ = wp->signal_hide().connect(fun(this, &Frame_impl::on_label_hide));
-    update_requisition();
-    queue_arrange();
+    if (wp) {
+        chk_parent(wp);
+        unset_label();
+        make_child(wp);
+        update_child_bounds(wp.get(), INT_MIN, INT_MIN, Size());
+        label_ = wp.get();
+        label_req_cx_ = wp->signal_requisition_changed().connect(fun(this, &Frame_impl::update_requisition));
+        label_hints_cx_ = wp->signal_hints_changed().connect(fun(this, &Frame_impl::update_requisition));
+        label_show_cx_ = wp->signal_show().connect(fun(this, &Frame_impl::on_label_show));
+        label_hide_cx_ = wp->signal_hide().connect(fun(this, &Frame_impl::on_label_hide));
+        update_requisition();
+        queue_arrange();
+    }
 }
 
 void Frame_impl::unset_label() {

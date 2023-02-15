@@ -271,7 +271,7 @@ public:
     void  show();
     bool  hidden() const;
     bool  visible() const;
-    bool  obscured() const { return !pclip_.empty(); }
+    bool  obscured() const { return !obscured_area_.empty(); }
 
     bool  grab_modal();
     void  end_modal();
@@ -286,7 +286,6 @@ public:
     bool  ungrab_mouse();
     bool  enabled() const { return enabled_ && !disabled(); }
 
-    Rect  exposed_area() const;
     bool  has_parent() const;
     bool  has_parent(const Container_impl * ci) const;
     bool  scrollable() const;
@@ -347,7 +346,7 @@ public:
 
     Point  worigin() const { return worigin_; }
     Point  poffset() const { return poffset_; }
-    Rect   pclip() const { return pclip_; }
+    Rect   obscured_area() const { return obscured_area_; }
 
     bool   has_tooltip() const;
     void   hide_tooltip();
@@ -465,9 +464,9 @@ private:
     unsigned    cursor_size_ = 0;
 
     Point       origin_;
-    Point       worigin_ { INT_MIN, INT_MIN }; // Origin within Window.
-    Point       poffset_;       // Is for Painting Offset.
-    Rect        pclip_;         // Is for Painting Clip.
+    Point       worigin_ { INT_MIN, INT_MIN };  // Origin within Window.
+    Point       poffset_ { INT_MIN, INT_MIN };  // Is for Painting Offset.
+    Rect        obscured_area_;
     Size        size_;
     Size        size_hint_;
     Size        min_size_hint_;

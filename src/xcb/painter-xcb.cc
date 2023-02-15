@@ -48,7 +48,7 @@ Painter_xcb::Painter_xcb(Winface_xcb * wf):
     xpicture_(wf->xpicture()),
     gc_(cx_, wf->wid())
 {
-    wstate().wclip.set(wf->self()->size());
+    wstate().obscured_.set(wf->self()->size());
     wf->self()->signal_destroy().connect(fun(this, &Painter_xcb::on_destroy));
     select_font(Font::normal());
     update_clip();
@@ -59,7 +59,7 @@ void Painter_xcb::draw_pixmap(Pixmap_cptr pix, const Point & pix_origin, const S
     auto xpix = std::dynamic_pointer_cast<const Pixmap_xcb>(pix);
     if (!xpix || !xpix->size()) { return; }
     xpix->set_display(dp_);
-    xpix->draw(xid_, xpicture_, state().op, pix_origin, pix_size, pt, transparent);
+    xpix->draw(xid_, xpicture_, state().op_, pix_origin, pix_size, pt, transparent);
 }
 
 void Painter_xcb::set_clip() {
@@ -71,7 +71,7 @@ void Painter_xcb::set_clip() {
 }
 
 void Painter_xcb::update_clip() {
-    cr_ = to_xcb_rectangle(wstate().wclip);
+    cr_ = to_xcb_rectangle(wstate().obscured_);
     set_clip();
 }
 
@@ -81,7 +81,7 @@ void Painter_xcb::fill_polygon(const Point * pts, std::size_t npts, const Color 
     xcb_point_t xpts[npts];
     for (std::size_t n = 0; n < npts; ++n) { xpts[n] = to_xcb_point(pts[n]); }
     gc_.set_foreground(color);
-    gc_.set_func(gx_oper(state().op));
+    gc_.set_func(gx_oper(state().op_));
     gc_.flush();
     xcb_fill_poly(cx_, xid_, gc_.xid(), XCB_POLY_SHAPE_COMPLEX, XCB_COORD_MODE_ORIGIN, npts, xpts);
     xcb_flush(cx_);
@@ -98,8 +98,8 @@ void Painter_xcb::fill_prim_contour(const Prim_contour & o) {
             Point pts[npts];
             pts[0] = matrix()*ctr.start(); pts[0] -= woffset();
             for (const Curve & cv: ctr) { pts[pos] = matrix()*cv.end(); pts[pos++] -= woffset(); }
-            if (const Rect r = is_rect(pts, npts)) { fill_rectangles(&r, 1, state().brush->color); }
-            else { fill_polygon(pts, npts, state().brush->color); }
+            if (const Rect r = is_rect(pts, npts)) { fill_rectangles(&r, 1, state().brush_->color); }
+            else { fill_polygon(pts, npts, state().brush_->color); }
             return;
         }
     }
@@ -139,13 +139,7 @@ void Painter_xcb::stroke_prim_rect(const Prim_rect * po, std::size_t no) {
     }
 
     if (nrs) {
-        gc_.set_foreground(state().pen->color);
-        double lw = state().pen->line_width;
-        gc_.set_line_width(lw > 0.0 ? lw : 1);
-        gc_.set_line_style(xcb_line_style(state().pen->line_style));
-        gc_.set_cap_style(xcb_cap_style(state().pen->cap_style));
-        gc_.set_join_style(xcb_join_style(state().pen->join_style));
-        gc_.set_func(gx_oper(state().op));
+        load_stroke_gc();
         xcb_poly_rectangle(cx_, xid_, gc_.xid(), nrs, rs);
         xcb_flush(cx_);
     }
@@ -176,15 +170,15 @@ void Painter_xcb::fill_prim_rect(const Prim_rect * po, std::size_t no) {
         }
 
         else {
-            fill_polygon(pts, 5, state().brush->color);
+            fill_polygon(pts, 5, state().brush_->color);
         }
 
         ++po;
     }
 
     if (nrs) {
-        gc_.set_foreground(state().brush->color);
-        gc_.set_func(gx_oper(state().op));
+        gc_.set_foreground(state().brush_->color);
+        gc_.set_func(gx_oper(state().op_));
         gc_.flush();
         xcb_poly_fill_rectangle(cx_, xid_, gc_.xid(), nrs, rs);
         xcb_flush(cx_);
@@ -199,7 +193,7 @@ void Painter_xcb::fill_rectangles(const Rect * rs, std::size_t nrs, const Color 
     std::size_t n = nrs;
     for (xcb_rectangle_t * p = xr; n; n--) { *p++ = to_xcb_rectangle(*rs++); }
     gc_.set_foreground(c);
-    gc_.set_func(gx_oper(state().op));
+    gc_.set_func(gx_oper(state().op_));
     gc_.flush();
     xcb_poly_fill_rectangle(cx_, xid_, gc_.xid(), nrs, xr);
     xcb_flush(cx_);
@@ -208,12 +202,12 @@ void Painter_xcb::fill_rectangles(const Rect * rs, std::size_t nrs, const Color 
 // protected
 // Overrides Painter_impl.
 void Painter_xcb::stroke_prim_text(const Prim_text & o) {
-    if (XCB_NONE == xpicture_ || wstate().wclip.empty()) { return; }
-    auto fp = std::dynamic_pointer_cast<Font_xcb>(state().font);
+    if (XCB_NONE == xpicture_ || wstate().obscured_.empty()) { return; }
+    auto fp = std::dynamic_pointer_cast<Font_xcb>(state().font_);
     if (!fp) { return; }
     Point pt(matrix()*o.pos);
     xcb_render_picture_t src = dp_->solid_fill(o.color);
-    uint8_t op = xrender_oper(state().op);
+    uint8_t op = xrender_oper(state().op_);
     set_clip();
     fp->render_glyphs(o.str, pt-woffset(), op, src, xpicture_);
 }
@@ -221,14 +215,7 @@ void Painter_xcb::stroke_prim_text(const Prim_text & o) {
 void Painter_xcb::stroke_rectangle(const Rect & r) {
     if (XCB_NONE == xid_) { return; }
     xcb_rectangle_t xr = to_xcb_rectangle(r);
-    gc_.set_foreground(state().pen->color);
-    double lw = state().pen->line_width;
-    gc_.set_line_width(lw > 0.0 ? lw : 1);
-    gc_.set_line_style(xcb_line_style(state().pen->line_style));
-    gc_.set_cap_style(xcb_cap_style(state().pen->cap_style));
-    gc_.set_join_style(xcb_join_style(state().pen->join_style));
-    gc_.set_func(gx_oper(state().op));
-    gc_.flush();
+    load_stroke_gc();
     xcb_poly_rectangle(cx_, xid_, gc_.xid(), 1, &xr);
     xcb_flush(cx_);
 }
@@ -238,14 +225,7 @@ void Painter_xcb::stroke_polyline(const Point * pts, std::size_t npts) {
     std::size_t n = npts;
     xcb_point_t xpts[npts];
     for (xcb_point_t * p = xpts; n; n--) { *p++ = to_xcb_point(*pts++); }
-    gc_.set_foreground(state().pen->color);
-    double lw = state().pen->line_width;
-    gc_.set_line_width(lw > 0.0 ? lw : 1);
-    gc_.set_line_style(xcb_line_style(state().pen->line_style));
-    gc_.set_cap_style(xcb_cap_style(state().pen->cap_style));
-    gc_.set_join_style(xcb_join_style(state().pen->join_style));
-    gc_.set_func(gx_oper(state().op));
-    gc_.flush();
+    load_stroke_gc();
     xcb_poly_line(cx_, XCB_COORD_MODE_ORIGIN, xid_, gc_.xid(), npts, xpts);
     xcb_flush(cx_);
 }
@@ -261,15 +241,7 @@ void Painter_xcb::stroke_prim_arc(const Prim_arc & obj) {
         arc.height = 2*obj.radius;
         arc.angle1 = 3666.93*obj.angle1;
         arc.angle2 = 3666.93*(obj.angle2-obj.angle1);
-
-        gc_.set_foreground(state().pen->color);
-        double lw = state().pen->line_width;
-        gc_.set_line_width(lw > 0.0 ? lw : 1);
-        gc_.set_line_style(xcb_line_style(state().pen->line_style));
-        gc_.set_cap_style(xcb_cap_style(state().pen->cap_style));
-        gc_.set_join_style(xcb_join_style(state().pen->join_style));
-        gc_.set_func(gx_oper(state().op));
-        gc_.flush();
+        load_stroke_gc();
         xcb_poly_arc(cx_, xid_, gc_.xid(), 1, &arc);
         xcb_flush(cx_);
     }
@@ -279,6 +251,17 @@ void Painter_xcb::stroke_prim_arc(const Prim_arc & obj) {
     }
 }
 
+void Painter_xcb::load_stroke_gc() {
+    gc_.set_foreground(state().pen_->color);
+    double lw = state().pen_->line_width;
+    gc_.set_line_width(lw > 0.0 ? lw : 1);
+    gc_.set_line_style(xcb_line_style(state().pen_->line_style));
+    gc_.set_cap_style(xcb_cap_style(state().pen_->cap_style));
+    gc_.set_join_style(xcb_join_style(state().pen_->join_style));
+    gc_.set_func(gx_oper(state().op_));
+    gc_.flush();
+}
+
 void Painter_xcb::fill_prim_arc(const Prim_arc & obj) {
     Painter_impl::fill_prim_arc(obj);
 }
@@ -286,41 +269,41 @@ void Painter_xcb::fill_prim_arc(const Prim_arc & obj) {
 // Overrides pure Painter.
 void Painter_xcb::set_font(Font_ptr font) {
     if (font) {
-        state().font = font;
-        state().font_spec = font->spec();
+        state().font_ = font;
+        state().fontspec_ = font->spec();
     }
 }
 
 // Overrides pure Painter.
 Font_ptr Painter_xcb::select_font(const ustring & font_spec) {
-    if (state().font_spec != font_spec) {
+    if (state().fontspec_ != font_spec) {
         auto theme = Theme_posix::root_posix();
 
         if (Font_ptr font = theme->uncache_font(font_spec, dp_->dpi())) {
-            state().font = font;
-            state().font_spec = font_spec;
+            state().font_ = font;
+            state().fontspec_ = font_spec;
         }
 
         else {
             double font_size = font_size_from_spec(font_spec);
-            state().font_spec = font_spec;
+            state().fontspec_ = font_spec;
             Font_face_ptr ffp = theme->create_font_face(font_spec);
 
             if (!ffp) {
-                state().font_spec = Font::normal();
-                ffp = theme->create_font_face(state().font_spec);
+                state().fontspec_ = Font::normal();
+                ffp = theme->create_font_face(state().fontspec_);
             }
 
             if (!ffp) {
                 throw graphics_error(str_format("Painter_xcb: Unable to create font face ", font_spec));
             }
 
-            state().font = std::make_shared<Font_xcb>(ffp, font_spec, font_size >= 1.0 ? font_size : 10.0, dp_);
-            theme->cache_font(state().font, font_spec);
+            state().font_ = std::make_shared<Font_xcb>(ffp, font_spec, font_size >= 1.0 ? font_size : 10.0, dp_);
+            theme->cache_font(state().font_, font_spec);
         }
     }
 
-    return state().font;
+    return state().font_;
 }
 
 // Overrides pure Painter.

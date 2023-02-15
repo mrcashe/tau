@@ -221,28 +221,12 @@ bool Widget_impl::hidden() const {
     return hidden_ || disappeared_;
 }
 
-Rect Widget_impl::exposed_area() const {
-    if (auto wnd = window()) {
-        if (visible()) {
-            Point ofs(to_window());
-            Rect va(visible_area()), r(Rect(ofs, va.size()) & Rect(wnd->size()));
-            if (r) { return r.translated(scroll_position()-ofs); }
-        }
-    }
-
-    return Rect();
-}
-
 // Overriden by Window_impl.
 void Widget_impl::invalidate(const Rect & r) {
     if (!shut_ && parent_) {
         Rect inval(r ? r : visible_area());
-        inval &= exposed_area();
-
-        if (inval) {
-            inval.translate(origin()-scroll_position());
-            parent_->invalidate(inval);
-        }
+        inval.translate(origin()-scroll_position());
+        if (inval) { parent_->invalidate(inval); }
     }
 }
 
@@ -1193,20 +1177,16 @@ void Widget_impl::handle_visible(bool show) {
 // Overriden by Container_impl.
 void Widget_impl::update_pdata() {
     worigin_.set(INT_MIN, INT_MIN);
-    Point po = scroll_position()-origin();
+    Point po(INT_MIN, INT_MIN);
     Rect  cr;
 
     if (visible()) {
+        po = scroll_position()-origin_;
         cr.set(size_);
 
         if (!shut_ && parent_) {
             po += parent_->poffset();
-            Widget_impl * wi = this;
-
-            for (Container_impl * pp = parent_; cr && pp; wi = pp, pp = pp->parent()) {
-                cr.translate(wi->origin()-pp->scroll_position());
-                cr &= Rect(pp->size());
-            }
+            cr &= parent_->obscured_area().translated(parent_->scroll_position()-origin_);
         }
     }
 
@@ -1220,10 +1200,10 @@ void Widget_impl::update_pdata() {
         changed = true;
     }
 
-    if (pclip_ != cr) {
-        obscured_changed = cr.empty() || pclip_.empty();
-        pclip_ = cr;
+    if (obscured_area_ != cr) {
         changed = true;
+        obscured_changed = cr.empty() || obscured_area_.empty();
+        obscured_area_ = cr;
     }
 
     if (obscured_changed && parent_) {

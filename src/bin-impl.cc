@@ -39,18 +39,20 @@ Bin_impl::Bin_impl():
 }
 
 void Bin_impl::insert(Widget_ptr wp) {
-    clear();
-    wp->update_origin(INT_MIN, INT_MIN);
-    wp->update_size(0, 0);
-    make_child(wp);
-    cp_ = wp.get();
-    hints_cx_ = cp_->signal_hints_changed().connect(fun(this, &Bin_impl::update_requisition));
-    req_cx_ = cp_->signal_requisition_changed().connect(fun(this, &Bin_impl::update_requisition));
-    show_cx_ = cp_->signal_show().connect(fun(this, &Bin_impl::on_child_show));
-    hide_cx_ = cp_->signal_hide().connect(fun(this, &Bin_impl::on_child_hide));
-    focus_cx_ = signal_take_focus_.connect(fun(cp_, &Widget_impl::take_focus));
-    update_requisition();
-    arrange();
+    if (wp) {
+        chk_parent(wp);
+        update_child_bounds(wp.get(), INT_MIN, INT_MIN, Size());
+        clear();
+        make_child(wp);
+        cp_ = wp.get();
+        hints_cx_ = cp_->signal_hints_changed().connect(fun(this, &Bin_impl::update_requisition));
+        req_cx_ = cp_->signal_requisition_changed().connect(fun(this, &Bin_impl::update_requisition));
+        show_cx_ = cp_->signal_show().connect(fun(this, &Bin_impl::on_child_show));
+        hide_cx_ = cp_->signal_hide().connect(fun(this, &Bin_impl::on_child_hide));
+        focus_cx_ = signal_take_focus_.connect(fun(cp_, &Widget_impl::take_focus));
+        update_requisition();
+        arrange();
+    }
 }
 
 void Bin_impl::clear() {
