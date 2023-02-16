@@ -28,6 +28,7 @@
 #define TAU_XCB_FONT_HH
 
 #include <glyph-impl.hh>
+#include <sys-impl.hh>
 #include <posix/font-posix.hh>
 #include "display-xcb.hh"
 #include <set>
@@ -44,10 +45,12 @@ public:
 
 private:
 
+    using Chars = std::set<uint32_t, std::less<uint32_t>, v_allocator<uint32_t>>;
+
     Display_xcb_ptr         dp_;
     xcb_connection_t *      cx_;
     xcb_render_glyphset_t   east_ = XCB_NONE;
-    std::set<uint32_t>      chars_;
+    Chars                   chars_;
     std::vector<uint8_t>    bits_;
     const uint8_t           format_ = 8;
     std::vector<xcb_render_glyphinfo_t> ginfos_;

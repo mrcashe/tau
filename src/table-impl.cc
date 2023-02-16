@@ -67,8 +67,8 @@ Table_impl::~Table_impl() {
 
 void Table_impl::init() {
     signal_arrange_.connect(fun(this, &Table_impl::arrange));
-    signal_size_changed_.connect(fun(this, &Table_impl::update_requisition));
-    signal_size_changed_.connect(fun(this, &Table_impl::arrange));
+    signal_size_changed_.connect(fun(this, &Table_impl::arrange), true);
+    signal_size_changed_.connect(fun(this, &Table_impl::update_requisition), true);
     signal_visible_.connect(fun(this, &Table_impl::arrange));
     signal_display_.connect(fun(this, &Table_impl::recalc));
     signal_backpaint_.connect(fun(this, &Table_impl::on_backpaint));
@@ -117,7 +117,7 @@ void Table_impl::clear() {
     unselect();
     unparent_all();
     holders_.clear();
-    nvcol_ = nvrow_ = nucol_ = nurow_ = rucol_ = rurow_ = nshcol_ = nshrow_ = xspc_ = yspc_ = 0;
+    nvcol_ = nvrow_ = nucol_ = nurow_ = rucol_ = rurow_ = nshcol_ = nshrow_ = xspc_ = yspc_ = shxreq_ = shyreq_ = xreq_ = yreq_ = 0;
 
     if (!cols_.empty()) {
         int xx = cols_.begin()->first, xm = cols_.rbegin()->first;
@@ -175,8 +175,7 @@ void Table_impl::on_child_hide(Widget_impl * wi) {
         auto i = holders_.find(wi);
 
         if (i != holders_.end()) {
-            wi->update_origin(INT_MIN, INT_MIN);
-            wi->update_size(0, 0);
+            update_child_bounds(wi, INT_MIN, INT_MIN, Size());
             Holder & hol = i->second;
 
             for (int xx = hol.xmin_; xx < hol.xmax_; ++xx) {
@@ -194,15 +193,36 @@ void Table_impl::on_child_hide(Widget_impl * wi) {
     }
 }
 
+void Table_impl::arrange() {
+    alloc_cols();
+    alloc_rows();
+    place_widgets();
+}
+
+void Table_impl::rearrange1() {
+    recalc();
+    queue_arrange();
+}
+
+void Table_impl::rearrange2() {
+    update_requisition();
+    queue_arrange();
+}
+
+Size Table_impl::child_requisition(Widget_impl * wp) {
+    Size req = wp->required_size();
+    req.update(wp->size_hint(), true);
+    req.update_max(wp->min_size_hint());
+    req.update_min(wp->max_size_hint(), true);
+    req.increase(wp->margin_hint());
+    return req;
+}
+
 void Table_impl::alloc_child(Holder & hol) {
     unsigned wmin = 0, wmax = 0, hmin = 0, hmax = 0;
 
     if (!hol.wp_->hidden()) {
-        Size req = hol.wp_->required_size(), min = hol.wp_->min_size_hint();
-        req.update(hol.wp_->size_hint(), true);
-        req.update_max(min);
-        req.update_min(hol.wp_->max_size_hint(), true);
-        req.increase(hol.wp_->margin_hint());
+        Size req = child_requisition(hol.wp_), min = hol.wp_->min_size_hint();
         wmin = min.width();
         wmax = req.width();
         hmin = min.height();
@@ -295,85 +315,60 @@ void Table_impl::alloc_child(Holder & hol) {
     hol.hmax_ = hmax;
 }
 
+void Table_impl::recalc_cols(Col_iter b, Col_iter e) {
+    for (auto i(b); i != e; ++i) {
+        if (i->second.visible_) {
+            unsigned px = std::max(i->second.umin_, (i->second.usize_ ? i->second.usize_ : std::max(i->second.rmin_, i->second.rmax_)));
+            if (i->second.umax_) { px = std::min(px, i->second.umax_); }
+            int d = px-i->second.lr_; unsigned ud = abs(d);
+            i->second.lr_ = px;
+
+            if (d > 0) {
+                if (i->second.shrank_) { shxreq_ += ud; }
+                else { xreq_ += ud; }
+            }
+
+            else if (d < 0) {
+                if (i->second.shrank_) { shxreq_ = shxreq_ > ud ? shxreq_-ud : 0; }
+                else { xreq_ = xreq_ > ud ? xreq_-ud : 0; }
+            }
+        }
+    }
+}
+
+void Table_impl::recalc_rows(Row_iter b, Row_iter e) {
+    for (auto j(b); j != e; ++j) {
+        if (j->second.visible_) {
+            unsigned px = std::max(j->second.umin_, (j->second.usize_ ? j->second.usize_ : std::max(j->second.rmin_, j->second.rmax_)));
+            if (j->second.umax_) { px = std::min(px, j->second.umax_); }
+            int d = px-j->second.lr_; unsigned ud = abs(d);
+            j->second.lr_ = px;
+
+            if (d > 0) {
+                if (j->second.shrank_) { shyreq_ += ud; }
+                else { yreq_ += ud; }
+            }
+
+            else if (d < 0) {
+                if (j->second.shrank_) { shyreq_ = shyreq_ > ud ? shyreq_-ud : 0; }
+                else { yreq_ = yreq_ > ud ? yreq_-ud : 0; }
+            }
+        }
+    }
+}
+
 void Table_impl::recalc() {
     for (auto & p: cols_) { p.second.rmin_ = p.second.rmax_ = 0; }
     for (auto & p: rows_) { p.second.rmin_ = p.second.rmax_ = 0; }
-
-    for (auto & p: holders_) {
-        if (!p.second.wp_->hidden()) {
-            alloc_child(p.second);
-        }
-    }
-
-    rshcol_ = rshrow_ = 0;
-
-    for (auto & p: cols_) {
-        if (p.second.visible_ && p.second.shrank_) {
-            unsigned px = std::max(p.second.rmin_, p.second.rmax_);
-            px = std::max(px, p.second.umin_);
-            if (p.second.umax_) { px = std::min(px, p.second.umax_); }
-            rshcol_ += px;
-        }
-    }
-
-    for (auto & p: rows_) {
-        if (p.second.visible_ && p.second.shrank_) {
-            unsigned px = std::max(p.second.rmin_, p.second.rmax_);
-            px = std::max(px, p.second.umin_);
-            if (p.second.umax_) { px = std::min(px, p.second.umax_); }
-            rshrow_ += px;
-        }
-    }
-
+    for (auto & p: holders_) { alloc_child(p.second); }
+    recalc_cols(cols_.begin(), cols_.end());
+    recalc_rows(rows_.begin(), rows_.end());
     update_requisition();
-}
-
-void Table_impl::arrange() {
-    alloc_cols();
-    alloc_rows();
-    place_widgets();
-}
-
-void Table_impl::rearrange1() {
-    recalc();
-    queue_arrange();
-}
-
-void Table_impl::rearrange2() {
-    update_requisition();
-    queue_arrange();
 }
 
 void Table_impl::update_requisition() {
-    rshcol_ = rshrow_ = 0;
-
-    for (auto & p: cols_) {
-        if (p.second.visible_) {
-            if (0 == p.second.usize_) {
-                unsigned px = 0;
-                px = std::max(p.second.rmin_, p.second.rmax_);
-                px = std::max(px, p.second.umin_);
-                if (p.second.umax_) { px = std::min(px, p.second.umax_); }
-                if (p.second.shrank_) { rshcol_ += px; }
-            }
-        }
-    }
-
-
-    for (auto & p: rows_) {
-        if (p.second.visible_) {
-            if (0 == p.second.usize_) {
-                unsigned px = 0;
-                px = std::max(p.second.rmin_, p.second.rmax_);
-                px = std::max(px, p.second.umin_);
-                if (p.second.umax_) { px = std::min(px, p.second.umax_); }
-                if (p.second.shrank_) { rshrow_ += px; }
-            }
-        }
-    }
-
     unsigned avail = size().width();
-    unsigned req = xspc_+rucol_+rshcol_;
+    unsigned req = xspc_+rucol_+shxreq_;
     avail = avail > req ? avail-req : 0;
     unsigned nfree = nvcol_-nucol_-nshcol_;
     unsigned nextra = nfree ? nfree : nshcol_;
@@ -381,14 +376,14 @@ void Table_impl::update_requisition() {
     xrem_ = nextra ? avail%nextra : 0;
 
     avail = size().height();
-    req = yspc_+rurow_+rshrow_;
+    req = yspc_+rurow_+shyreq_;
     avail = avail > req ? avail-req : 0;
     nfree = nvrow_-nurow_-nshrow_;
     nextra = nfree ? nfree : nshrow_;
     yextra_ = nextra ? avail/nextra : 0;
     yrem_ = nextra ? avail%nextra : 0;
 
-    require_size(xspc_+rucol_+rshcol_, yspc_+rurow_+rshrow_);
+    require_size(xspc_+rucol_+shxreq_+xreq_, yspc_+rurow_+shyreq_+yreq_);
 }
 
 void Table_impl::alloc_cols() {
@@ -1027,7 +1022,7 @@ void Table_impl::erase(Col_iter & i) {
             if (nvcol_) { --nvcol_; }
         }
 
-        i->second.x_ = i->second.lx_ = i->second.w_ = i->second.lw_ = i->second.ref_ = i->second.shrank_ = i->second.fill_ = 0;
+        i->second.lr_ = i->second.x_ = i->second.lx_ = i->second.w_ = i->second.lw_ = i->second.ref_ = i->second.shrank_ = i->second.fill_ = 0;
         if (erasable(i->second)) { cols_.erase(i); }
     }
 }
@@ -1049,7 +1044,7 @@ void Table_impl::erase(Row_iter & i) {
             if (nvrow_) { --nvrow_; }
         }
 
-        i->second.y_ = i->second.ly_ = i->second.h_ = i->second.lh_ = i->second.ref_ = i->second.shrank_ = i->second.fill_ = 0;
+        i->second.lr_ = i->second.y_ = i->second.ly_ = i->second.h_ = i->second.lh_ = i->second.ref_ = i->second.shrank_ = i->second.fill_ = 0;
         if (erasable(i->second)) { rows_.erase(i); }
     }
 }
@@ -1083,107 +1078,107 @@ Table_impl::Row & Table_impl::new_row(int yy, const Row & src) {
 }
 
 void Table_impl::change_visibility(Col & col, bool show, bool shrank) {
+    unsigned px = std::max(col.umin_, (col.usize_ ? col.usize_ : std::max(col.rmin_, col.rmax_)));
+    if (col.umax_) { px = std::min(px, col.umax_); }
+
     if (show) {
-        if (shrank) {
-            if (0 == col.shrank_++) { ++nshcol_; }
+        if (shrank && 0 == col.shrank_++) {
+            ++nshcol_;
+            xreq_ = xreq_ > px ? xreq_-px : 0;
+            shxreq_ += px;
         }
 
         if (0 == col.visible_++) {
             if (++nvcol_ > 1) { xspc_ += xspacing_; }
             xspc_ += col.left_+col.right_;
-            if (col.usize_) { ++nucol_; }
 
             if (col.usize_) {
-                unsigned px = std::max(col.usize_, col.umin_);
-                if (col.umax_) { px = std::min(px, col.umax_); }
+                ++nucol_;
                 rucol_ += px;
             }
 
-            else if (col.shrank_) {
-                unsigned px = std::max(col.rmin_, col.rmax_);
-                px = std::max(px, col.umin_);
-                if (col.umax_) { px = std::min(px, col.umax_); }
-                rshcol_ += px;
+            else {
+                if (!col.shrank_) { xreq_ += px; }
             }
+
+            col.lr_ = px;
         }
     }
 
     else {
-        if (shrank && 0 != col.shrank_) {
-            if (--col.shrank_ == 0 && nshcol_) { --nshcol_; }
-        }
-
-        if (0 != col.visible_ && --col.visible_ == 0) {
+        if (col.visible_ && --col.visible_ == 0) {
             if (1 < nvcol_--) { xspc_ -= xspacing_; }
-            unsigned d = col.left_+col.right_;
-            xspc_ = xspc_ > d ? xspc_-d : 0;
-            if (col.usize_ && nucol_) { ++nucol_; }
+            xspc_ = xspc_ > col.left_+col.right_ ? xspc_-col.left_-col.right_ : 0;
 
-            if (0 != col.usize_) {
-                unsigned px = std::max(col.usize_, col.umin_);
-                if (col.umax_) { px = std::min(px, col.umax_); }
+            if (col.usize_) {
+                if (nucol_) { --nucol_; }
                 rucol_ = rucol_ > px ? rucol_-px: 0;
             }
 
-            else if (col.shrank_) {
-                unsigned px = std::max(col.rmin_, col.rmax_);
-                px = std::max(px, col.umin_);
-                if (col.umax_) { px = std::min(px, col.umax_); }
-                rshcol_ = rshcol_ > px ? rshcol_-px : 0;
+            else {
+                if (col.shrank_) { shxreq_ = shxreq_ > px ? shxreq_-px : 0; }
+                else { xreq_ = xreq_ > px ? xreq_-px : 0; }
             }
+
+            col.lr_ = 0;
+        }
+
+        if (shrank && col.shrank_ && --col.shrank_ == 0) {
+            if (nshcol_) { --nshcol_; }
+            if (col.visible_) { shxreq_ = shxreq_ > px ? shxreq_-px : 0; xreq_ += px; }
         }
     }
 }
 
 void Table_impl::change_visibility(Row & row, bool show, bool shrank) {
+    unsigned px = std::max(row.umin_, (row.usize_ ? row.usize_ : std::max(row.rmin_, row.rmax_)));
+    if (row.umax_) { px = std::min(px, row.umax_); }
+
     if (show) {
-        if (shrank) {
-            if (0 == row.shrank_++) { ++nshrow_; }
+        if (shrank && 0 == row.shrank_++) {
+            yreq_ = yreq_ > px ? yreq_-px : 0;
+            shyreq_ += px;
+            ++nshrow_;
         }
 
         if (0 == row.visible_++) {
             if (++nvrow_ > 1) { yspc_ += yspacing_; }
             yspc_ += row.top_+row.bottom_;
-            if (row.usize_) { ++nurow_; }
 
-            if (0 != row.usize_) {
-                unsigned ud = std::max(row.usize_, row.umin_);
-                if (row.umax_) { ud = std::min(ud, row.umax_); }
-                rurow_ += ud;
+            if (row.usize_) {
+                ++nurow_;
+                rurow_ += px;
             }
 
-            else if (row.shrank_) {
-                unsigned px = std::max(row.rmin_, row.rmax_);
-                px = std::max(px, row.umin_);
-                if (row.umax_) { px = std::min(px, row.umax_); }
-                rshrow_ += px;
+            else {
+                if (!row.shrank_) { yreq_ += px; }
             }
+
+            row.lr_ = px;
         }
     }
 
     else {
-        if (shrank && 0 != row.shrank_) {
-            if (--row.shrank_ == 0 && nshrow_) { --nshrow_; }
-        }
-
-        if (0 != row.visible_ && --row.visible_ == 0) {
+        if (row.visible_ && --row.visible_ == 0) {
             if (1 < nvrow_--) { yspc_ -= yspacing_; }
-            unsigned d = row.top_+row.bottom_;
-            yspc_ = yspc_ > d ? yspc_-d : 0;
-            if (row.usize_ && nurow_) { ++nurow_; }
+            yspc_ = yspc_ > row.top_+row.bottom_ ? yspc_-row.top_-row.bottom_ : 0;
 
-            if (0 != row.usize_) {
-                unsigned px = std::max(row.usize_, row.umin_);
-                if (row.umax_) { px = std::min(px, row.umax_); }
+            if (row.usize_) {
+                if (nurow_) { --nurow_; }
                 rurow_ = rurow_ > px ? rurow_-px: 0;
             }
 
-            else if (row.shrank_) {
-                unsigned px = std::max(row.rmin_, row.rmax_);
-                px = std::max(px, row.umin_);
-                if (row.umax_) { px = std::min(px, row.umax_); }
-                rshrow_ = rshrow_ > px ? rshrow_-px : 0;
+            else {
+                if (row.shrank_) { shyreq_ = shyreq_ > px ? shyreq_-px : 0; }
+                else { yreq_ = yreq_ > px ? yreq_-px : 0; }
             }
+
+            row.lr_ = 0;
+        }
+
+        if (shrank && 0 != row.shrank_ && --row.shrank_ == 0) {
+            if (nshrow_) { --nshrow_; }
+            if (row.visible_) { shyreq_ = shyreq_ > px ? shyreq_-px : 0; yreq_ += px; }
         }
     }
 }
@@ -1219,7 +1214,7 @@ void Table_impl::dist_holder(Holder & hol) {
         }
     }
 
-    rearrange1();
+    if (child_requisition(hol.wp_)) { rearrange1(); }
 }
 
 void Table_impl::wipe_holder(Holder & hol) {
@@ -1560,7 +1555,7 @@ void Table_impl::insert_columns(int xmin, unsigned n_columns) {
     // Process marks.
     Marks marks(marks_);
 
-    for (Table::Span & m: marks) {
+    for (Span & m: marks) {
         if (m.xmax > xmin && m.xmin < xmax) {
             unmark(m.xmin, m.ymin, m.xmax, m.ymax);
         }
@@ -1568,7 +1563,7 @@ void Table_impl::insert_columns(int xmin, unsigned n_columns) {
 
     marks.clear();
 
-    for (Table::Span & m: marks_) {
+    for (Span & m: marks_) {
         if (m.xmin >= xmax) {
             m.xmin += n_columns;
             m.xmax += n_columns;
@@ -1641,7 +1636,7 @@ void Table_impl::insert_rows(int ymin, unsigned n_rows) {
     // Process marks.
     Marks marks(marks_);
 
-    for (Table::Span & m: marks) {
+    for (Span & m: marks) {
         if (m.ymax > ymin && m.ymin < ymax) {
             unmark(m.xmin, m.ymin, m.xmax, m.ymax);
         }
@@ -1649,7 +1644,7 @@ void Table_impl::insert_rows(int ymin, unsigned n_rows) {
 
     marks.clear();
 
-    for (Table::Span & m: marks_) {
+    for (Span & m: marks_) {
         if (m.ymin >= ymax) {
             m.ymin += n_rows;
             m.ymax += n_rows;
@@ -1706,7 +1701,7 @@ void Table_impl::remove_columns(int xmin, unsigned n_columns) {
     int last = cols_.rbegin()->first;
     if (xmin > last) { return; }
     int xmax = xmin+n_columns;
-    std::list<Widget_impl *> rem;
+    std::vector<Widget_impl *> rem;
 
     // Trim and move children.
     for (auto i = holders_.begin(); i != holders_.end(); ++i) {
@@ -1766,7 +1761,7 @@ void Table_impl::remove_rows(int ymin, unsigned n_rows) {
     int last = rows_.rbegin()->first;
     if (ymin > last) { return; }
     int ymax = ymin+n_rows;
-    std::list<Widget_impl *> rem;
+    std::vector<Widget_impl *> rem;
 
     // Trim and move children.
     for (auto i = holders_.begin(); i != holders_.end(); ++i) {
@@ -1970,7 +1965,7 @@ void Table_impl::unmark_row(int y) {
 }
 
 std::vector<Table::Span> Table_impl::marks() const {
-    std::vector<Table::Span> v;
+    std::vector<Span> v;
     for (auto & m: marks_) { v.emplace_back(m); }
     return v;
 }

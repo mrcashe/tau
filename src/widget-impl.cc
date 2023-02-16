@@ -63,7 +63,7 @@ Widget_impl::Widget_impl():
     signal_backpaint_.connect(fun(this, &Widget_impl::on_backpaint));
 
     signal_visible_.connect(fun(this, &Widget_impl::update_pdata));
-    signal_visible_.connect(bind(fun(this, &Widget_impl::invalidate), Rect()));
+    signal_visible_.connect(tau::bind(fun(this, &Widget_impl::invalidate), Rect()));
 
     signal_invisible_.connect(fun(this, &Widget_impl::update_pdata));
     signal_invisible_.connect(fun(this, &Widget_impl::hide_tooltip));
@@ -225,7 +225,8 @@ bool Widget_impl::hidden() const {
 void Widget_impl::invalidate(const Rect & r) {
     if (!shut_ && parent_) {
         Rect inval(r ? r : visible_area());
-        inval.translate(origin()-scroll_position());
+        inval.intersect(visible_area());
+        inval.translate(origin_-scroll_position());
         if (inval) { parent_->invalidate(inval); }
     }
 }
@@ -372,8 +373,8 @@ bool Widget_impl::hint_max_size(unsigned width, unsigned height) {
     return hint_max_size(Size(width, height));
 }
 
-bool Widget_impl::require_size(const Size & size) {
-    if (required_size_.update(size) && !shut_) {
+bool Widget_impl::require_size(const Size & sz) {
+    if (required_size_.update(sz) && !shut_) {
         if (parent_) { parent_->on_child_requisition(this); }
         signal_requisition_changed_();
         return true;

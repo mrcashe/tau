@@ -111,7 +111,7 @@ void Font_face::preload(char32_t first, char32_t last) {
 Master_glyph_ptr Font_face::glyph(char32_t wc) {
     Lock lock(mx_);
 
-    // Peload ASCII glyphs.
+    // Preload ASCII glyphs.
     if (glyphs_.empty()) {
         preload(0x0020, 0x007e);
     }

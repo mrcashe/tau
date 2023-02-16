@@ -95,6 +95,7 @@ private:
     Entry_ptr               entry_;
     History                 history_;
     std::size_t             ihistory_ = 0;
+    Timer                   apply_timer_;
 
     Button_ptr              up_button_;
     Button_ptr              conf_button_;
@@ -120,6 +121,7 @@ private:
     bool next_avail() const;
     bool prev_avail() const;
     void add_to_history(const ustring & path);
+    void enable_apply(bool yes);
     void next();
     void prev();
     void updir();

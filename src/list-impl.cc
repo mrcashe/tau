@@ -919,10 +919,13 @@ int List_impl::page_up_row() {
 
             if (max.height()) {
                 int yt = rsel.top()-(7*r.height()/8);
+                auto i = selectables_.find(sel.ymin);
 
-                for (auto & p: selectables_) {
-                    r = table_->bounds(rng.xmin, p.first, rng.xmax-rng.xmin, 1);
-                    if (r.top() >= yt) { return p.first; }
+                if (i != selectables_.end()) {
+                    for (; i != selectables_.begin(); --i) {
+                        r = table_->bounds(rng.xmin, i->first, rng.xmax-rng.xmin, 1);
+                        if (r.top() <= yt) { return i->first; }
+                    }
                 }
             }
         }

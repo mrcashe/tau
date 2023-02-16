@@ -228,10 +228,7 @@ void Fileman_impl::on_file_select(const ustring & filename) {
     }
 
     ustring p = path_build(navi_->uri(), filename);
-
-    if (file_is_dir(p) && !navi_->dir_select_allowed()) { apply_action_.disable(); }
-    else { apply_action_.enable(); }
-
+    enable_apply(!file_is_dir(p) || navi_->dir_select_allowed());
     entry_from_selection();
     entry_->move_to(entry_->buffer().cend());
 }
@@ -251,7 +248,7 @@ void Fileman_impl::on_file_unselect(const ustring & filename) {
 void Fileman_impl::on_dir_changed(const ustring & path) {
     entry_->clear();
     selection_.clear();
-    apply_action_.disable();
+    enable_apply(false);
     pathbox_->clear();
 
     if (up_button_) {
@@ -355,7 +352,7 @@ void Fileman_impl::on_cancel() {
 
 void Fileman_impl::on_entry_changed(const ustring & s) {
     if (selection_.size() > 1) {
-        apply_action_.enable();
+        enable_apply(true);
     }
 
     else {
@@ -364,13 +361,13 @@ void Fileman_impl::on_entry_changed(const ustring & s) {
         if (("." == s || ".." == s || ustring::npos != s.find_first_of("/\\")) || s.empty()
             || ((!navi_->dir_select_allowed()) && file_is_dir(p)))
         {
-            apply_action_.disable();
+            enable_apply(false);
         }
 
         else {
             if (FILEMAN_OPEN == mode_) {
                 if (!file_exists(p)) {
-                    apply_action_.disable();
+                    enable_apply(false);
                 }
 
                 else {
@@ -380,12 +377,12 @@ void Fileman_impl::on_entry_changed(const ustring & s) {
                         }
                     }
 
-                    apply_action_.enable();
+                    enable_apply(true);
                 }
             }
 
             else {
-                apply_action_.enable();
+                enable_apply(true);
             }
         }
     }
@@ -754,6 +751,18 @@ ustring Fileman_impl::invisible_info_items(char32_t sep) const {
     ustring s = navi_->invisible_info_items(sep);
     if (!places_visible_) { s += sep; s += NAVIGATOR_INFO_PLACES; }
     return s;
+}
+
+void Fileman_impl::enable_apply(bool yes) {
+    if (yes) {
+        apply_timer_.stop();
+        apply_action_.enable();
+    }
+
+    else {
+        if (apply_timer_.signal_alarm().empty()) { apply_timer_.signal_alarm().connect(fun(apply_action_, &Action::disable)); }
+        apply_timer_.start(131);
+    }
 }
 
 } // namespace tau

@@ -192,6 +192,7 @@ private:
         bool            align_set_ = false; // Align set by the user.
         unsigned        rmax_ = 0;          // Maximal requisition.
         unsigned        rmin_ = 0;          // Minimal requisition.
+        unsigned        lr_ = 0;            // Last requisition.
         unsigned        ref_ = 0;           // Widget count.
         unsigned        shrank_ = 0;        // Shrank widget count.
         unsigned        visible_ = 0;       // Visible widget count.
@@ -212,6 +213,7 @@ private:
         bool            align_set_ = false; // Align set by the user.
         unsigned        rmax_ = 0;          // Maximal requisition.
         unsigned        rmin_ = 0;          // Minimal requisition.
+        unsigned        lr_ = 0;            // Last requisition.
         unsigned        ref_ = 0;           // Widget count.
         unsigned        shrank_ = 0;        // Shrank widget count.
         unsigned        visible_ = 0;       // Visible widget count.
@@ -252,13 +254,15 @@ private:
     unsigned            yspc_ = 0;          // Current Y space value (calculated).
 
     unsigned            rucol_ = 0;         // Requisition of columns having width set by user.
-    unsigned            rshcol_ = 0;        // Shrank columns requisition.
     unsigned            rurow_ = 0;         // Requisition of rows having width set by user.
-    unsigned            rshrow_ = 0;        // Shrank rows requisition.
     unsigned            xextra_ = 0;        // Extra space along X axis per free column.
     unsigned            xrem_ = 0;          // Extra space remainder along X axis per free column.
     unsigned            yextra_ = 0;        // Extra space along Y axis per free row.
     unsigned            yrem_ = 0;          // Extra space remainder along Y axis per free row.
+    unsigned            xreq_ = 0;          // Requisition along X axis.
+    unsigned            yreq_ = 0;          // Requisition along Y axis.
+    unsigned            shxreq_ = 0;        // Shrank columns requisition.
+    unsigned            shyreq_ = 0;        // Shrank rows requisition.
 
     signal<void(int)> * signal_column_bounds_changed_ = nullptr;
     signal<void(int)> * signal_row_bounds_changed_ = nullptr;
@@ -269,6 +273,8 @@ private:
     void init();
     void arrange();
     void recalc();
+    void recalc_cols(Col_iter b, Col_iter e);
+    void recalc_rows(Row_iter b, Row_iter e);
     void rearrange1();
     void rearrange2();
     void update_requisition();
@@ -295,6 +301,7 @@ private:
     bool set_column_spacing_i(unsigned xspacing);
     bool set_row_spacing_i(unsigned yspacing);
     Rect range_bounds(const Span & rng) const;
+    Size child_requisition(Widget_impl * wp);
     std::forward_list<Widget_impl *> fchildren(const Span & rng);
 
     bool on_backpaint(Painter pr, const Rect & inval);
