@@ -24,6 +24,7 @@
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ----------------------------------------------------------------------------
 
+#include <tau/exception.hh>
 #include <brush-impl.hh>
 #include <container-impl.hh>
 #include <glyph-impl.hh>
@@ -1174,34 +1175,43 @@ void Painter_impl::raster_cubic_to(Raster & ras, int64_t cx1, int64_t cy1, int64
 void Painter_impl::sort_raster_profiles(Raster & ras, RP_list & v) {
     for (auto prof: v) {
         prof->height_--;
+        std::size_t rs = ras.xs_.size();
+        if (prof->ix_ >= rs) { throw internal_error(str_format("Painter_impl::sort_raster_profiles(): ix_ out of bounds: ", prof->ix_, " >= ", rs)); }
         prof->x_ = ras.xs_[prof->ix_];
         if (prof->ascend_) { prof->ix_++; }
         else  { prof->ix_--; }
     }
 
-    v.sort([ras](Raster_profile * i, Raster_profile * j) { return i->x_ > j->x_; });
+    v.sort([&ras](Raster_profile * i, Raster_profile * j) { return i->x_ > j->x_; });
 }
 
 // private
 void Painter_impl::raster_sweep(Raster & ras, bool vert) {
     constexpr double mul = 1.0/65536;
     double fade;
-    v_allocator<Raster_profile *> alloc;
-    RP_list dl(alloc), dr(alloc);
+//     v_allocator<Raster_profile *> alloc;
+//     RP_list dl(alloc), dr(alloc);
+    RP_list dl, dr;
 
     // first, compute min and max Y
     int ymin = INT_MAX, ymax = INT_MIN;
 
     for (auto & p: ras.pros_) {
-        int bottom = p.start_;
-        int top = p.start_+p.height_-1;
-        ymin = std::min(ymin, bottom);
-        ymax = std::max(ymax, top);
-        p.x_ = 0;
+        if (p.height_) {
+            int bottom = p.start_;
+            int top = p.start_+p.height_-1;
+            ymin = std::min(ymin, bottom);
+            ymax = std::max(ymax, top);
+            p.x_ = 0;
+        }
     }
 
     // compute the distance of each profile from ymin
-    for (auto & p: ras.pros_) { p.count_ = p.start_-ymin; }
+    for (auto & p: ras.pros_) {
+        if (p.height_) {
+            p.count_ = p.start_-ymin;
+        }
+    }
 
     // let's go
     int y = ymin, y_height = 0;
@@ -1212,11 +1222,13 @@ void Painter_impl::raster_sweep(Raster & ras, bool vert) {
     for (int y_change: ras.turns_) {
         if (y_change != ymin) {
             for (auto & prof: ras.pros_) {
-                prof.count_ -= y_height;
+                if (prof.height_) {
+                    prof.count_ -= y_height;
 
-                if (0 == prof.count_) {
-                    if (prof.ascend_) { dl.push_front(&prof); }
-                    else { dr.push_front(&prof); }
+                    if (0 == prof.count_) {
+                        if (prof.ascend_) { dl.push_front(&prof); }
+                        else { dr.push_front(&prof); }
+                    }
                 }
             }
 
@@ -1322,6 +1334,7 @@ void Painter_impl::raster_pass(Raster & ras, const Contour * ctrs, std::size_t n
 
     // finalize.
     for (Raster_profile & p: ras.pros_) {
+        if (!p.height_) { throw internal_error("Painter_impl::raster_pass(): zero height profile"); }
         int bottom, top;
 
         if (p.ascend_) {
@@ -1360,8 +1373,13 @@ void Painter_impl::raster_contours(const Contour * ctrs, std::size_t nctrs, cons
     Raster ras;
     ras.pros_.reserve(64);
     ras.color_ = color;
-    raster_pass(ras, ctrs, nctrs, false);
-    raster_pass(ras, ctrs, nctrs, true);
+
+    try {
+        raster_pass(ras, ctrs, nctrs, false);
+        raster_pass(ras, ctrs, nctrs, true);
+    }
+
+    catch (exception & x) { std::cerr << "** " << x.what() << std::endl; }
 }
 
 } // namespace tau

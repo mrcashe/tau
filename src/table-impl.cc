@@ -1898,7 +1898,7 @@ void Table_impl::mark(int xmin, int ymin, unsigned width, unsigned height) {
     if (ymax > rng.ymax) { ymax = rng.ymax; }
     if (xmax <= xmin || ymax <= ymin) { return; }
 
-    Span m { xmin, ymin, xmax, ymax };
+    Span m(xmin, ymin, xmax, ymax);
     auto i = std::find(marks_.begin(), marks_.end(), m);
 
     if (i == marks_.end()) {

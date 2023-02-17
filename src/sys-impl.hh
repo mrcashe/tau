@@ -38,20 +38,32 @@ template <class T>
 struct v_allocator {
     using value_type = T;
 
-    static constexpr std::size_t delta_ = 256;
     std::vector<T>  v_;
     std::size_t     pos_ = 0;
 
-    v_allocator(std::size_t size=0) noexcept { v_.resize(size ? size : delta_); }
-    v_allocator(const v_allocator & other) noexcept {}
+    v_allocator() noexcept: v_(256) {}
+    v_allocator(const v_allocator &) noexcept {}
     template <class U> v_allocator (const v_allocator<U> &) noexcept {}
-    void deallocate (T *, std::size_t) {}
+    void deallocate (value_type *, std::size_t) {}
 
-    T * allocate (std::size_t n) {
-        if (pos_ == v_.size()) { v_.resize(pos_+delta_); }
-        return v_.data()+pos_++;
+    value_type * allocate(std::size_t n) {
+        if (!n) { return nullptr; }
+        if (pos_+n > v_.size()) { v_.resize(pos_+(std::max(n, std::size_t(256)))); }
+        value_type * res = v_.data()+pos_;
+        pos_ += n;
+        return res;
     }
 };
+
+template <class T, class U>
+bool operator==(v_allocator<T> const &, v_allocator<U> const &) noexcept {
+    return true;
+}
+
+template <class T, class U>
+bool operator!=(v_allocator<T> const & x, v_allocator<U> const & y) noexcept {
+    return !(x == y);
+}
 
 }
 

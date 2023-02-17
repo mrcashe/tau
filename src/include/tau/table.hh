@@ -63,6 +63,8 @@ public:
         /// Maximal row index outside of specified range.
         int     ymax = INT_MIN;
 
+        Span() {}
+        Span(int x1, int y1, int x2, int y2): xmin(x1), ymin(y1), xmax(x2), ymax(y2) {}
         bool operator==(const Span & other) { return xmin == other.xmin && xmax == other.xmax && ymin == other.ymin && ymax == other.ymax; }
     };
 

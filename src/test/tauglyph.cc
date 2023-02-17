@@ -386,8 +386,8 @@ private:
 
     void on_family_selected(int, const tau::ustring &) {
         font_spec_ = font_spec_build(families_.selection(), faces_.selection(), tau::font_size_from_spec(font_spec_));
-        fill_faces();
         update_font();
+        fill_faces();
     }
 
     void on_face_selected(int, const tau::ustring &) {

@@ -141,21 +141,23 @@ public:
 protected:
 
     struct Raster_profile {
-        int64_t         x_;         // current coordinate during sweep
-        bool            ascend_;
-        bool            overtop_;
-        bool            overbot_;
-        int             height_;    // profile's height in scanlines
-        int             start_;     // profile's starting scanline
-        std::size_t     count_;     // number of lines to step before this profile becomes drawable
-        std::size_t     ix_;
+        int64_t         x_ = 0;             // current coordinate during sweep
+        bool            ascend_ = false;
+        bool            overtop_ = false;
+        bool            overbot_ = false;
+        int             height_ = 0;        // profile's height in scanlines
+        int             start_ = 0;         // profile's starting scanline
+        std::size_t     count_ = 0;         // number of lines to step before this profile becomes drawable
+        std::size_t     ix_ = 0;
     };
 
-    using Turns = std::forward_list<int, v_allocator<int>>;
+//     using Turns = std::forward_list<int, v_allocator<int>>;
+    using Turns = std::forward_list<int>;
     using Raster_profiles = std::vector<Raster_profile>;
     using Arcs = std::vector<Point64>;
     using Points = std::vector<int64_t>;
-    using RP_list = std::forward_list<Raster_profile *, v_allocator<Raster_profile *>>;
+//     using RP_list = std::forward_list<Raster_profile *, v_allocator<Raster_profile *>>;
+    using RP_list = std::forward_list<Raster_profile *>;
 
     struct Raster {
         int64_t         x_;
