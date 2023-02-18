@@ -51,7 +51,7 @@ const char32_t path_sep_ = U':';
 
 sys_error::sys_error(const ustring & extra_msg) {
     gerror_ = errno;
-    msg_ = strerror(gerror_);
+    msg_ = str_format("system error, code is ", gerror_, ": ", strerror(gerror_));
     if (!extra_msg.empty()) { msg_ += " ("+extra_msg+")"; }
 }
 

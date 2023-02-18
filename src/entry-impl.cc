@@ -213,8 +213,11 @@ void Entry_impl::on_enter() {
 bool Entry_impl::on_mouse_down(int mbt, int mm, const Point & where) {
     if (MBT_LEFT == mbt) {
         if (!edit_->focused()) {
+            edit_->select_all(); edit_->grab_focus();
+        }
+
+        else {
             if (edit_->has_selection()) { edit_->unselect(); }
-            else { edit_->select_all(); edit_->grab_focus(); }
         }
 
         return true;

@@ -97,6 +97,10 @@ using Entry_cptr = std::shared_ptr<const Entry_impl>;
 class File_monitor;
 using File_monitor_ptr = std::shared_ptr<File_monitor>;
 
+class Fontsel_impl;
+using Fontsel_ptr = std::shared_ptr<Fontsel_impl>;
+using Fontsel_cptr = std::shared_ptr<const Fontsel_impl>;
+
 class Frame_impl;
 using Frame_ptr = std::shared_ptr<Frame_impl>;
 using Frame_cptr = std::shared_ptr<const Frame_impl>;

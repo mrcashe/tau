@@ -28,22 +28,15 @@
 #define TAU_LOOP_IMPL_HH
 
 #include <types-impl.hh>
+#include <object-impl.hh>
 #include <sys-impl.hh>
-#include <tau/signal.hh>
 #include <map>
 #include <thread>
-#include <vector>
 
 namespace tau {
 
-class Loop_impl: public trackable {
+class Loop_impl: public Object_impl {
 public:
-
-    Loop_impl(const Loop_impl & other) = delete;
-    Loop_impl(Loop_impl && other) = delete;
-    Loop_impl & operator=(const Loop_impl & other) = delete;
-    Loop_impl & operator=(Loop_impl && other) = delete;
-    virtual ~Loop_impl() {}
 
     static Loop_ptr this_loop();
     static Loop_ptr that_loop(std::thread::id tid);

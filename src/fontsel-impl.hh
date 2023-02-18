@@ -62,13 +62,14 @@ private:
     Text_ptr        psname_;
     Entry_ptr       entry_;
     unsigned        hsample_ = 0;
-    ustring         sample_;    // User defined sample string.
+    ustring         sample_;        // User defined sample string.
     ustring         family_;
     ustring         face_;
-    ustring         aspec_;     // Spec which was applied.
-    ustring         uspec_;     // Font specification defined by user.
-    ustring         uface_;     // Font face defined by user.
-    ustring         spec_;      // Currenttly selected specification.
+    ustring         aspec_;         // Spec which was applied.
+    ustring         uspec_;         // Font specification defined by user.
+    ustring         uface_;         // Font face defined by user.
+    ustring         spec_;          // Currenttly selected specification.
+    Timer           apply_timer_;
 
     Action          zin_    { ustring("<Ctrl>= <Ctrl>+") }; // Increase font size action.
     Action          zout_   { ustring("<Ctrl>-") }; // Decrease size action.
@@ -85,6 +86,7 @@ private:
     void init();
     void update_font();
     void update_tooltips();
+    void enable_apply(bool yes);
 
     void on_display();
     void on_family_selected(int row, const ustring & str);
@@ -102,9 +104,6 @@ private:
     void focus_next();
     void focus_previous();
 };
-
-using Fontsel_ptr = std::shared_ptr<Fontsel_impl>;
-using Fontsel_cptr = std::shared_ptr<const Fontsel_impl>;
 
 } // namespace tau
 

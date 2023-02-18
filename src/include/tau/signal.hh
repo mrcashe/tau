@@ -723,7 +723,7 @@ public:
             std::size_t n = std::min(size(), (512*1024U)/sizeof(ptr_type)), nn = n;
             ptr_type tmp[n], * d = tmp;
 
-            for (auto i = slots_.begin(); nn && i != slots_.end(); ++i, --nn) {
+            for (auto i = slots_.begin(); nn; ++i, --nn) {
                 *(d++) = std::static_pointer_cast<impl_type>(i->impl_);
             }
 

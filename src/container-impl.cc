@@ -179,27 +179,21 @@ void Container_impl::on_child_hide(Widget_impl * wi) {
     signal_child_hide_(wi);
 }
 
-bool Container_impl::on_accel(char32_t kc, int km) {
+// Overrides Widget_impl.
+bool Container_impl::handle_accel(char32_t kc, int km) {
     if (enabled()) {
         if (modal_child_) {
             return modal_child_->handle_accel(kc, km);
         }
 
-        if (focused_child_) {
-            if (focused_child_->handle_accel(kc, km)) {
-                return true;
-            }
+        if (focused_child_ && focused_child_->handle_accel(kc, km)) {
+            return true;
         }
 
-        return !signal_accel_ && Widget_impl::handle_accel(kc, km);
+        return Widget_impl::handle_accel(kc, km);
     }
 
     return false;
-}
-
-// Overrides Widget_impl.
-bool Container_impl::handle_accel(char32_t kc, int km) {
-    return signal_accel_ ? Widget_impl::handle_accel(kc, km) : on_accel(kc, km);
 }
 
 bool Container_impl::on_input(const ustring & s) {
@@ -908,13 +902,6 @@ signal<bool(int, int, Point)> & Container_impl::signal_mouse_wheel() {
 signal<void()> & Container_impl::signal_parent() {
     auto & sig = Widget_impl::signal_parent();
     sig.connect(fun(this, &Container_impl::on_parent));
-    return sig;
-}
-
-// Overrides Widget_impl.
-signal<bool(char32_t, int)> & Container_impl::signal_accel() {
-    auto & sig = Widget_impl::signal_accel();
-    sig.connect(fun(this, &Container_impl::on_accel));
     return sig;
 }
 

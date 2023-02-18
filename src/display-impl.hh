@@ -33,20 +33,15 @@
 #include <tau/style.hh>
 #include <tau/timer.hh>
 #include <tau/timeval.hh>
+#include <object-impl.hh>
 #include <timer-impl.hh>
 #include <window-impl.hh>
 #include <thread>
 
 namespace tau {
 
-class Display_impl: public trackable {
+class Display_impl: public Object_impl {
 public:
-
-    Display_impl(const Display_impl & other) = delete;
-    Display_impl(Display_impl && other) = delete;
-    Display_impl & operator=(const Display_impl & other) = delete;
-    Display_impl & operator=(Display_impl && other) = delete;
-    virtual ~Display_impl() {}
 
     static Display_ptr this_display();
     static Display_ptr open(const ustring & args);

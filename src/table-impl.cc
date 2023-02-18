@@ -144,6 +144,31 @@ void Table_impl::clear() {
 // Both hints & requisitions come here.
 void Table_impl::on_child_requisition(Widget_impl * wi) {
     if (!shut_) {
+        // auto hi = holders_.find(wi);
+        //
+        // if (hi != holders_.end()) {
+        //     auto cb = cols_.find(hi->second.xmin_), ce = cols_.find(hi->second.xmax_);
+        //     unsigned r1 = cols_req(cb, ce);   // old requisition.
+        //     for (auto i = cb; i != ce && i->first < hi->second.xmax_; ++i) { i->second.rmin_ = i->second.rmax_ = 0; }
+        //     hi->second.wmax_ = 0;
+        //     hi->second.wmin_ = 0;
+        //
+        //     if (!hi->second.wp_->hidden()) {
+        //         Size req = child_requisition(hi->second.wp_), min = hi->second.wp_->min_size_hint();
+        //         hi->second.wmax_ = req.width();
+        //         hi->second.wmin_ = min.width();
+        //     }
+        //
+        //     alloc_child_horz(hi->second, hi->second.xmin_, hi->second.xmax_);
+        //     unsigned r2 = cols_req(cb, ce);   // new requisition.
+        //     int d = r2-r1;
+        //
+        //     if (d > 0) {
+        //         recalc_cols(cb, ce);
+        //     }
+        //
+        // }
+
         rearrange1();
     }
 }
@@ -218,28 +243,15 @@ Size Table_impl::child_requisition(Widget_impl * wp) {
     return req;
 }
 
-void Table_impl::alloc_child(Holder & hol) {
-    unsigned wmin = 0, wmax = 0, hmin = 0, hmax = 0;
-
-    if (!hol.wp_->hidden()) {
-        Size req = child_requisition(hol.wp_), min = hol.wp_->min_size_hint();
-        wmin = min.width();
-        wmax = req.width();
-        hmin = min.height();
-        hmax = req.height();
-    }
-
-    // --------------------------------------------------------------------------------
-    // X Axis.
-    // --------------------------------------------------------------------------------
-
+void Table_impl::alloc_child_horz(Holder & hol, int xmin, int xmax) {
     auto cb = cols_.find(hol.xmin_), ce = cols_.end();
-    unsigned nc = hol.xmax_-hol.xmin_;
-    unsigned spc = 0;
+    unsigned nc = hol.xmax_-hol.xmin_, spc = 0;
 
     if (1 == nc) {
-        cb->second.rmax_ = std::max(cb->second.rmax_, wmax);
-        cb->second.rmin_ = std::max(cb->second.rmin_, wmin);
+        if (cb->first >= xmin && cb->first <= xmax) {
+            cb->second.rmax_ = std::max(cb->second.rmax_, hol.wmax_);
+            cb->second.rmin_ = std::max(cb->second.rmin_, hol.wmin_);
+        }
     }
 
     else {
@@ -249,8 +261,8 @@ void Table_impl::alloc_child(Holder & hol) {
             if (i->second.shrank_) { nc = std::max(1U, nc-1); }
         }
 
-        unsigned wwmax = wmax > spc ? wmax-spc : 0;  // maximal width.
-        unsigned wwmin = wmin > spc ? wmin-spc : 0;  // minimal width.
+        unsigned wwmax = hol.wmax_ > spc ? hol.wmax_-spc : 0;  // maximal width.
+        unsigned wwmin = hol.wmin_ > spc ? hol.wmin_-spc : 0;  // minimal width.
 
         // Calculate width per cell and remainder per cell.
         unsigned wpc_max = wwmax/nc;
@@ -263,23 +275,25 @@ void Table_impl::alloc_child(Holder & hol) {
                 unsigned w1 = wpc_max, w2 = wpc_min;
                 if (w1 && rem_max) { ++w1, --rem_max; }
                 if (w2 && rem_min) { ++w2, --rem_min; }
-                i->second.rmax_ = std::max(i->second.rmax_, w1);
-                i->second.rmin_ = std::max(i->second.rmin_, w2);
+
+                if (cb->first >= xmin && cb->first <= xmax) {
+                    i->second.rmax_ = std::max(i->second.rmax_, w1);
+                    i->second.rmin_ = std::max(i->second.rmin_, w2);
+                }
             }
         }
     }
+}
 
-    // --------------------------------------------------------------------------------
-    // Y Axis.
-    // --------------------------------------------------------------------------------
-
+void Table_impl::alloc_child_vert(Holder & hol, int ymin, int ymax) {
     auto rb = rows_.find(hol.ymin_), re = rows_.end();
-    nc = hol.ymax_-hol.ymin_;
-    spc = 0;
+    unsigned nc = hol.ymax_-hol.ymin_, spc = 0;
 
     if (1 == nc) {
-        rb->second.rmax_ = std::max(rb->second.rmax_, hmax);
-        rb->second.rmin_ = std::max(rb->second.rmin_, hmin);
+        if (rb->first >= ymin && rb->first <= ymax) {
+            rb->second.rmax_ = std::max(rb->second.rmax_, hol.hmax_);
+            rb->second.rmin_ = std::max(rb->second.rmin_, hol.hmin_);
+        }
     }
 
     else {
@@ -289,8 +303,8 @@ void Table_impl::alloc_child(Holder & hol) {
             if (i->second.shrank_) { nc = std::max(1U, nc-1); }
         }
 
-        unsigned hhmax = hmax > spc ? hol.hmax_-spc : 0;
-        unsigned hhmin = hmin > spc ? hol.hmin_-spc : 0;
+        unsigned hhmax = hol.hmax_ > spc ? hol.hmax_-spc : 0;
+        unsigned hhmin = hol.hmin_ > spc ? hol.hmin_-spc : 0;
 
         // Calculate height per cell and remainder per cell.
         unsigned hpc_max = hhmax/nc;
@@ -303,16 +317,42 @@ void Table_impl::alloc_child(Holder & hol) {
                 unsigned h1 = hpc_max, h2 = hpc_min;
                 if (h1 && rem_max) { ++h1; --rem_max; }
                 if (h2 && rem_min) { ++h2; --rem_min; }
-                i->second.rmax_ = std::max(i->second.rmax_, h1);
-                i->second.rmin_ = std::max(i->second.rmin_, h2);
+
+                if (rb->first >= ymin && rb->first <= ymax) {
+                    i->second.rmax_ = std::max(i->second.rmax_, h1);
+                    i->second.rmin_ = std::max(i->second.rmin_, h2);
+                }
             }
         }
     }
+}
 
-    hol.wmin_ = wmin;
-    hol.wmax_ = wmax;
-    hol.hmin_ = hmin;
-    hol.hmax_ = hmax;
+unsigned Table_impl::cols_req(Col_citer b, Col_citer e) {
+    unsigned w = 0;
+
+    for (auto i(b); i != e; ++i) {
+        if (i->second.visible_) {
+            unsigned px = std::max(i->second.umin_, (i->second.usize_ ? i->second.usize_ : std::max(i->second.rmin_, i->second.rmax_)));
+            if (i->second.umax_) { px = std::min(px, i->second.umax_); }
+            w += px;
+        }
+    }
+
+    return w;
+}
+
+unsigned Table_impl::rows_req(Row_citer b, Row_citer e) {
+    unsigned h = 0;
+
+    for (auto i(b); i != e; ++i) {
+        if (i->second.visible_) {
+            unsigned px = std::max(i->second.umin_, (i->second.usize_ ? i->second.usize_ : std::max(i->second.rmin_, i->second.rmax_)));
+            if (i->second.umax_) { px = std::min(px, i->second.umax_); }
+            h += px;
+        }
+    }
+
+    return h;
 }
 
 void Table_impl::recalc_cols(Col_iter b, Col_iter e) {
@@ -358,11 +398,32 @@ void Table_impl::recalc_rows(Row_iter b, Row_iter e) {
 }
 
 void Table_impl::recalc() {
-    for (auto & p: cols_) { p.second.rmin_ = p.second.rmax_ = 0; }
-    for (auto & p: rows_) { p.second.rmin_ = p.second.rmax_ = 0; }
-    for (auto & p: holders_) { alloc_child(p.second); }
-    recalc_cols(cols_.begin(), cols_.end());
-    recalc_rows(rows_.begin(), rows_.end());
+    if (!cols_.empty() && !rows_.empty()) {
+        for (auto & p: cols_) { p.second.rmin_ = p.second.rmax_ = 0; }
+        for (auto & p: rows_) { p.second.rmin_ = p.second.rmax_ = 0; }
+
+        for (auto & p: holders_) {
+            p.second.wmax_ = 0;
+            p.second.hmax_ = 0;
+            p.second.wmin_ = 0;
+            p.second.hmin_ = 0;
+
+            if (!p.second.wp_->hidden()) {
+                Size req = child_requisition(p.second.wp_), min = p.second.wp_->min_size_hint();
+                p.second.wmax_ = req.width();
+                p.second.hmax_ = req.height();
+                p.second.wmin_ = min.width();
+                p.second.hmin_ = min.height();
+            }
+
+            alloc_child_horz(p.second, cols_.begin()->first, cols_.rbegin()->first);
+            alloc_child_vert(p.second, rows_.begin()->first, rows_.rbegin()->first);
+        }
+
+        recalc_cols(cols_.begin(), cols_.end());
+        recalc_rows(rows_.begin(), rows_.end());
+    }
+
     update_requisition();
 }
 

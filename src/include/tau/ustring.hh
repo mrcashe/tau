@@ -139,11 +139,11 @@ public:
     /// @param src A source <tt>std::string</tt> containing text encoded as UTF-8.
     ustring(std::string && src);
 
-    /// Construct a ustring as a copy of another std::u16string.
+    /// Construct a ustring as a copy of <tt>std::u16string</tt>.
     /// @param src A source @c std::u16string.
     ustring(const std::u16string & src);
 
-    /// Construct a ustring as a copy of another std::u32string.
+    /// Construct a ustring as a copy of <tt>std::u32string</tt>.
     /// @param src A source @c std::u32string.
     ustring(const std::u32string & src);
 

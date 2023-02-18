@@ -230,16 +230,14 @@ ustring str_env(const std::string & env, const ustring & fallback) {
     return res;
 }
 
-exception::~exception() throw() {}
-
 internal_error::internal_error(const ustring & msg): msg_(msg) {}
 
-ustring internal_error::what() const { return msg_; }
+const ustring & internal_error::what() const noexcept { return msg_; }
 
 user_error::user_error(const ustring & msg): internal_error("user error: "+msg) {}
 
-ustring sys_error::what() const { return str_format("system error, code is ", gerror_, ": ", msg_); }
-int sys_error::gerror() const { return gerror_; }
+const ustring & sys_error::what() const noexcept { return msg_; }
+int sys_error::gerror() const noexcept { return gerror_; }
 
 graphics_error::graphics_error(const ustring & msg): internal_error("graphics error: "+msg) {}
 

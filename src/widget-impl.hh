@@ -33,22 +33,19 @@
 #include <tau/style.hh>
 #include <tau/timer.hh>
 #include <tau/ustring.hh>
+#include <object-impl.hh>
 #include <climits>
 
 namespace tau {
 
 // The base class of whole graphics object hierarchy.
 // Almost every descendant derives this class to extend it's capabilities.
-class Widget_impl: public trackable {
+class Widget_impl: public Object_impl {
     friend class Widget;
 
 public:
 
     Widget_impl();
-    Widget_impl(const Widget_impl & other) = delete;
-    Widget_impl & operator=(const Widget_impl & other) = delete;
-    Widget_impl(Widget_impl && other) = delete;
-    Widget_impl & operator=(Widget_impl && other) = delete;
 
     virtual ~Widget_impl();
 
@@ -249,9 +246,6 @@ public:
     virtual signal<void()> & signal_parent();
 
     // Overriden by Container_impl.
-    virtual signal<bool(char32_t, int)> & signal_accel();
-
-    // Overriden by Container_impl.
     virtual signal<bool(char32_t, int)> & signal_key_down();
 
     // Overriden by Container_impl.
@@ -398,6 +392,8 @@ public:
     signal<bool()> & signal_take_focus() { return signal_take_focus_; }
     signal<void()> & signal_origin_changed() { return signal_origin_changed_; }
     signal<void()> & signal_scroll_changed();
+    signal<bool(char32_t, int)> & signal_accel();
+
 
 protected:
 

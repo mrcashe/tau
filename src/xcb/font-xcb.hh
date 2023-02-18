@@ -45,7 +45,11 @@ public:
 
 private:
 
+#if TAU_HAS_VALLOCATOR
     using Chars = std::set<uint32_t, std::less<uint32_t>, v_allocator<uint32_t>>;
+#else
+    using Chars = std::set<uint32_t>;
+#endif
 
     Display_xcb_ptr         dp_;
     xcb_connection_t *      cx_;

@@ -24,33 +24,29 @@
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ----------------------------------------------------------------------------
 
-/// @file tauhello.cc
+#ifndef TAU_OBJECT_IMPL_HH
+#define TAU_OBJECT_IMPL_HH
 
-#include <tau.hh>
-#include <iostream>
+#include <types-impl.hh>
+#include <tau/signal.hh>
 
-int main(int, char **) {
-    try {
-        tau::ustring hello("Hello, world!");
-        tau::Toplevel wnd(hello);
-        tau::Text text(hello);
-        wnd.insert(text);
-        tau::Loop().run();
-    }
+namespace tau {
 
-    catch (tau::exception & x) {
-        std::cerr << "** tau::exception thrown: " << x.what() << std::endl;
-    }
+class Object_impl: public trackable {
+protected:
 
-    catch (std::exception & x) {
-        std::cerr << "** std::exception thrown: " << x.what() << std::endl;
-    }
+    Object_impl() {}
 
-    catch (...) {
-        std::cerr << "** unknown exception thrown" << std::endl;
-    }
+public:
 
-    return 0;
-}
+    virtual ~Object_impl() {}
 
-//END
+    Object_impl(const Object_impl & other) = delete;
+    Object_impl & operator=(const Object_impl & other) = delete;
+    Object_impl(Object_impl && other) = delete;
+    Object_impl & operator=(Object_impl && other) = delete;
+};
+
+} // namespace tau
+
+#endif // TAU_OBJECT_IMPL_HH

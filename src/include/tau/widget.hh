@@ -30,9 +30,8 @@
 #define TAU_WIDGET_HH
 
 #include <tau/enums.hh>
-#include <tau/types.hh>
 #include <tau/geometry.hh>
-#include <tau/signal.hh>
+#include <tau/object.hh>
 
 namespace tau {
 

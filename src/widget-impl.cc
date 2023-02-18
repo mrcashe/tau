@@ -42,7 +42,7 @@
 namespace tau {
 
 Widget_impl::Widget_impl():
-    trackable(),
+    Object_impl(),
     cursor_hidden_(false),
     focus_allowed_(false),
     shut_(false),
@@ -977,7 +977,6 @@ bool Widget_impl::handle_input(const ustring & s) {
     return enabled() && signal_input_ && (*signal_input_)(std::cref(s));
 }
 
-// Overriden by Container_impl.
 signal<bool(char32_t, int)> & Widget_impl::signal_accel() {
     if (!signal_accel_) { signal_accel_ = new signal<bool(char32_t, int)>; }
     return *signal_accel_;

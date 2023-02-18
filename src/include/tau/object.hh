@@ -24,33 +24,32 @@
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ----------------------------------------------------------------------------
 
-/// @file tauhello.cc
+/// @file widget.hh The Object class.
 
-#include <tau.hh>
-#include <iostream>
+#ifndef TAU_OBJECT_HH
+#define TAU_OBJECT_HH
 
-int main(int, char **) {
-    try {
-        tau::ustring hello("Hello, world!");
-        tau::Toplevel wnd(hello);
-        tau::Text text(hello);
-        wnd.insert(text);
-        tau::Loop().run();
-    }
+#include <tau/types.hh>
+#include <tau/signal.hh>
 
-    catch (tau::exception & x) {
-        std::cerr << "** tau::exception thrown: " << x.what() << std::endl;
-    }
+namespace tau {
 
-    catch (std::exception & x) {
-        std::cerr << "** std::exception thrown: " << x.what() << std::endl;
-    }
+/// The base class for widgets and some other objects.
+class Object: public trackable {
+protected:
 
-    catch (...) {
-        std::cerr << "** unknown exception thrown" << std::endl;
-    }
+    Object() {}
 
-    return 0;
-}
+public:
 
-//END
+   ~Object() {}
+
+    Object(const Object & other) = default;
+
+    Object & operator=(const Object & other) = default;
+
+};
+
+} // namespace tau
+
+#endif // TAU_OBJECT_HH

@@ -168,9 +168,6 @@ public:
     signal<void()> & signal_parent() override;
 
     // Overrides Widget_impl.
-    signal<bool(char32_t, int)> & signal_accel() override;
-
-    // Overrides Widget_impl.
     signal<bool(char32_t, int)> & signal_key_down() override;
 
     // Overrides Widget_impl.
@@ -272,7 +269,6 @@ private:
     void on_mouse_leave();
     bool on_mouse_wheel(int delta, int mm, const Point & pt);
     void on_parent();
-    bool on_accel(char32_t kc, int km);
     bool on_key_down(char32_t kc, int km);
     bool on_key_up(char32_t kc, int km);
     bool on_input(const ustring & s);

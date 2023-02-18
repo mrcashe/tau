@@ -1182,16 +1182,19 @@ void Painter_impl::sort_raster_profiles(Raster & ras, RP_list & v) {
         else  { prof->ix_--; }
     }
 
-    v.sort([&ras](Raster_profile * i, Raster_profile * j) { return i->x_ > j->x_; });
+    v.sort([](Raster_profile * i, Raster_profile * j) { return i->x_ > j->x_; });
 }
 
 // private
 void Painter_impl::raster_sweep(Raster & ras, bool vert) {
     constexpr double mul = 1.0/65536;
     double fade;
-//     v_allocator<Raster_profile *> alloc;
-//     RP_list dl(alloc), dr(alloc);
+#if TAU_HAS_VALLOCATOR
+    v_allocator<Raster_profile *> alloc;
+    RP_list dl(alloc), dr(alloc);
+#else
     RP_list dl, dr;
+#endif
 
     // first, compute min and max Y
     int ymin = INT_MAX, ymax = INT_MIN;

@@ -34,6 +34,8 @@ namespace tau {
 
 extern Sysinfo sysinfo_;
 
+#if (defined(__GNUC__) && (__GNUC__ >= 11)) || (defined(__clang__) && (__clang_major__ >= 15))
+
 template <class T>
 struct v_allocator {
     using value_type = T;
@@ -48,7 +50,7 @@ struct v_allocator {
 
     value_type * allocate(std::size_t n) {
         if (!n) { return nullptr; }
-        if (pos_+n > v_.size()) { v_.resize(pos_+(std::max(n, std::size_t(256)))); }
+        if (pos_+n > v_.size()) { v_.resize(pos_+(std::max(n, 256LU))); }
         value_type * res = v_.data()+pos_;
         pos_ += n;
         return res;
@@ -64,6 +66,11 @@ template <class T, class U>
 bool operator!=(v_allocator<T> const & x, v_allocator<U> const & y) noexcept {
     return !(x == y);
 }
+
+#define TAU_HAS_VALLOCATOR 1
+#else
+#define TAU_HAS_VALLOCATOR 0
+#endif
 
 }
 

@@ -37,10 +37,19 @@ namespace tau {
 /// Base exception class.
 /// @ingroup throw_group
 class exception {
+protected:
+
+    exception() noexcept = default;
+    exception(const exception &) = default;
+    exception(exception &&) = default;
+
 public:
 
-    virtual ~exception() throw();
-    virtual ustring what() const = 0;
+    exception & operator=(const exception &) = default;
+    exception & operator=(exception &&) = default;
+
+    virtual ~exception() noexcept {}
+    virtual const ustring & what() const noexcept = 0;
 };
 
 /// Internal error exception.
@@ -51,7 +60,7 @@ class internal_error: public exception {
 public:
 
     explicit internal_error(const ustring & msg);
-    ustring what() const override;
+    const ustring & what() const noexcept override;
 };
 
 /// Library user error.
@@ -69,8 +78,8 @@ class sys_error: public exception {
 public:
 
     explicit sys_error(const ustring & extra_msg=ustring());
-    ustring what() const override;
-    int gerror() const;
+    const ustring & what() const noexcept override;
+    int gerror() const noexcept;
 };
 
 /// Graphics system error.

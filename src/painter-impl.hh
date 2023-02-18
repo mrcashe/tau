@@ -151,13 +151,16 @@ protected:
         std::size_t     ix_ = 0;
     };
 
-//     using Turns = std::forward_list<int, v_allocator<int>>;
+#if TAU_HAS_VALLOCATOR
+    using Turns = std::forward_list<int, v_allocator<int>>;
+    using RP_list = std::forward_list<Raster_profile *, v_allocator<Raster_profile *>>;
+#else
     using Turns = std::forward_list<int>;
+    using RP_list = std::forward_list<Raster_profile *>;
+#endif
     using Raster_profiles = std::vector<Raster_profile>;
     using Arcs = std::vector<Point64>;
     using Points = std::vector<int64_t>;
-//     using RP_list = std::forward_list<Raster_profile *, v_allocator<Raster_profile *>>;
-    using RP_list = std::forward_list<Raster_profile *>;
 
     struct Raster {
         int64_t         x_;

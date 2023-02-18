@@ -29,9 +29,7 @@
 #ifndef TAU_LOOP_HH
 #define TAU_LOOP_HH
 
-#include <tau/types.hh>
-#include <tau/signal.hh>
-#include <vector>
+#include <tau/object.hh>
 
 namespace tau {
 
@@ -40,7 +38,7 @@ namespace tau {
 /// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup sys_group
-class Loop {
+class Loop: public Object {
 public:
 
     /// Default constructor creates a current thread %Loop.

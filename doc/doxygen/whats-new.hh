@@ -30,6 +30,20 @@ namespace tau {
 
 @page whats_new Whats New in 0.4.0
 
+@section changed_object_hierarchy_040 Class hierarchy changed
+
+Class hierarchy changed by adding new base class named Object. Affected classes are:
+
+- Widget
+- Display
+- Loop
+
+@section broken_exception_methods_040 Broken exception methods
+
+- exception::what() -> return value changed from ustring to const ustring &, noexcept qualifier added.
+- internal_error::what() -> return value changed from ustring to const ustring &, noexcept qualifier added.
+- sys_error::what() -> return value changed from ustring to const ustring &, noexcept qualifier added.
+
 @section broken_text_methods_040 Broken Widget methods
 
 - Widget::exposed_area()

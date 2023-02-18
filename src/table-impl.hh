@@ -273,12 +273,15 @@ private:
     void init();
     void arrange();
     void recalc();
+    unsigned cols_req(Col_citer b, Col_citer e);
+    unsigned rows_req(Row_citer b, Row_citer e);
     void recalc_cols(Col_iter b, Col_iter e);
     void recalc_rows(Row_iter b, Row_iter e);
     void rearrange1();
     void rearrange2();
     void update_requisition();
-    void alloc_child(Holder & hol);
+    void alloc_child_horz(Holder & hol, int xmin, int xmax);
+    void alloc_child_vert(Holder & hol, int ymin, int ymax);
     void alloc_cols();
     void alloc_rows();
     void place_widgets();

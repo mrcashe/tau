@@ -29,10 +29,8 @@
 #ifndef TAU_DISPLAY_HH
 #define TAU_DISPLAY_HH
 
-#include <tau/types.hh>
-#include <tau/signal.hh>
+#include <tau/object.hh>
 #include <tau/ustring.hh>
-#include <vector>
 
 namespace tau {
 
@@ -41,7 +39,7 @@ namespace tau {
 /// @note This class is a wrapper around its implementation shared pointer.
 ///
 /// @ingroup sys_group
-class Display {
+class Display: public Object {
 public:
 
     /// Default constructor.

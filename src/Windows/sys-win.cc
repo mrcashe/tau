@@ -98,14 +98,14 @@ sys_error::sys_error(const ustring & extra_msg) {
 
     if (!err.empty()) {
         gerror_ = error;
-        msg_ = err;
     }
 
     else {
         gerror_ = 0;
-        msg_ = "No error";
+        err.assign("No error");
     }
 
+    msg_ = str_format("system error, code is ", gerror_, ": ", err);
     if (!extra_msg.empty()) { msg_ += " ("+extra_msg+")"; }
 }
 
